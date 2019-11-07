@@ -1,0 +1,22 @@
+#ifndef qgis_umesh_VERSION
+#define qgis_umesh_VERSION
+            
+#define qgis_umesh_major "VN_MAJOR"
+#define qgis_umesh_minor "VN_MINOR"
+#define qgis_umesh_revision "VN_REVISION"
+#define qgis_umesh_build "VN_BUILD_NUMBER"
+            
+#define qgis_umesh_company "Deltares"
+#define qgis_umesh_company_url  = "http://www.deltares.nl"
+#define qgis_umesh_program "PlotCFTS"
+
+/*=================================================== DO NOT MAKE CHANGES BELOW THIS LINE ===================================================================== */
+
+extern "C" {
+    extern char * getcompanystring_qgis_umesh(void);
+    extern char * getfullversionstring_qgis_umesh(void);
+    extern char * getprogramstring_qgis_umesh(void);
+    extern char * getversionstring_qgis_umesh(void);
+}
+
+#endif 
