@@ -1,0 +1,58 @@
+\documentclass{deltares_memo}
+\svnid{$Id: qumesh_installation.tex 2196 2019-10-01 20:02:12Z mooiman $}
+\svnid{$URL: file:///D:/SVNrepository/examples/qt/qgis/qgis_umesh/doc/qumesh_installation.tex $}
+
+\newcommand{\menuarrow}{$\rightarrow$}
+\newcommand{\qumesh}{qgis\_umesh\xspace}
+\newcommand\Cpp{C\nolinebreak[4]\hspace{-.05em}\raisebox{.25ex}{{\textbf{++}}}\xspace}
+\newcommand{\netcdf}{netCDF\xspace}
+
+\newcommand\T{\rule{0pt}{2.6ex}}       % Top T
+\newcommand\B{\rule[-1.2ex]{0pt}{0pt}} % Bottom T
+
+\begin{document}
+\memoTo{To whom it may concern}
+\memoDate{\today}
+\memoVersion{001}
+\memoFrom{Jan Mooiman}
+\memoTelephone{+31\,(0)88\,335\,8568}
+\memoEmail{jan.mooiman@deltares nl}
+\memoSubject{Installation of the \qumesh plugin in QGIS 3.8 on a Windows 10 PC.}
+\memoCopy{---}
+
+\deltarestitle
+
+{{\footnotesize
+	{\textbf{Version control information}}
+	
+	\begin{tabular}{@{}p{12,5mm}@{}p{0mm}p{\textwidth-27mm-24pt}}
+		\textbf{Location} & \textbf{:} & \url{\svnkw{HeadURL}} \\
+		\textbf{Revision} & \textbf{:} & \svnrev 
+	\end{tabular}
+}}
+
+
+\tableofcontents
+
+%--------------------------------------------------------------------------------
+\section{Installation}
+
+Copy the \qumesh-dll to the \Cpp plugin directory of QGIS. 
+In my development installation it is:\newline
+\dir{c:\textbackslash OSGeo4W64\textbackslash apps\textbackslash qgis\textbackslash plugins\textbackslash qgis\_umesh.dll}
+
+The \qumesh.dll need the following dll's, so they should be in the \%PATH\%-environment variable:
+\begin{itemize}
+    \item qt5core.dll
+    \item qt5gui.dll
+    \item qt5widgets.dll
+\end{itemize}
+Next dll's are probably already placed in the \%PATH\%-environment variable when installing QGIS:
+\begin{itemize} 
+    \item qgis\_core.dll
+    \item qgis\_gui.dll
+\end{itemize} 
+
+%--------------------------------------------------------------------------------
+
+\end{document}

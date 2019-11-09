@@ -28,7 +28,7 @@ LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION VN_MAJOR,VN_MINOR,VN_REVISION,VN_BUILD_NUMBER
+ FILEVERSION VN_MAJOR,VN_MINOR,VN_REVISION,VN_BUILD_HASH
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x29L
@@ -46,7 +46,7 @@ BEGIN
             VALUE "Comments", "-\0"
             VALUE "CompanyName", "Deltares\0"
             VALUE "FileDescription", "Plot UGRID meshes in QGIS\0"
-            VALUE "FileVersion", "VN_MAJOR.VN_MINOR.VN_REVISION.VN_BUILD_NUMBER\0"
+            VALUE "FileVersion", "VN_MAJOR.VN_MINOR.VN_REVISION.VN_BUILD_HASH\0"
             VALUE "InternalName", "QGIS_UMESH\0"
             VALUE "LegalCopyright", "Copyright © 2019\0"
             VALUE "LegalTrademarks", "Copyright Deltares\0"

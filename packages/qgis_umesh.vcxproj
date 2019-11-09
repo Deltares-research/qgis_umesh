@@ -146,16 +146,15 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
-      <Command>call ..\scripts_lgpl\win32\update_version.cmd .\include\qgis_umesh_version.h . .\include\version_number.ini
-call ..\scripts_lgpl\win32\update_version.cmd .\include\qgis_umesh_version.rc . .\include\version_number.ini
-</Command>
+      <Command>call ..\scripts\git_insert_hash.cmd .\include qgis_umesh_version.h
+call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     </PreBuildEvent>
     <Midl>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -187,7 +186,7 @@ call ..\scripts_lgpl\win32\update_version.cmd .\include\qgis_umesh_version.rc . 
       <AdditionalDependencies>qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;qgis_core.lib;qgis_gui.lib;qgis_analysis.lib;netcdf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>c:\OSGeo4W64\apps\qgis\plugins\$(ProjectName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(QT5DIR64)\lib;..\qgis-lib\;..\mfe_app\lib\;.\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QT5DIR64)\lib;..\mfe_app\lib\;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -200,9 +199,8 @@ call ..\scripts_lgpl\win32\update_version.cmd .\include\qgis_umesh_version.rc . 
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
-      <Command>call ..\scripts_lgpl\win32\update_version.cmd .\include\qgis_umesh_version.h . .\include\version_number.ini
-call ..\scripts_lgpl\win32\update_version.cmd .\include\qgis_umesh_version.rc . .\include\version_number.ini
-</Command>
+      <Command>call ..\scripts\git_insert_hash.cmd .\include qgis_umesh_version.h
+call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     </PreBuildEvent>
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -231,7 +229,7 @@ call ..\scripts_lgpl\win32\update_version.cmd .\include\qgis_umesh_version.rc . 
       <AdditionalDependencies>qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;qgis_core.lib;qgis_gui.lib;qgis_analysis.lib;netcdf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>c:\OSGeo4W64\apps\qgis\plugins\$(ProjectName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(QT5DIR64)\lib;..\qgis-lib\;..\mfe_app\lib\;.\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QT5DIR64)\lib;..\mfe_app\lib\;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
