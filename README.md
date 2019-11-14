@@ -4,11 +4,16 @@ QGIS plugin to plot 1D, 1D2D and 2D time series map results as animation. The ma
 
 To build the plugin qgis_umesh you have to install QGIS (OSGeo4W network installer (64 bit), https://qgis.org/en/site/forusers/download.html ), QT 5.12 LTS and netCDF4.
 The windows solution will place the qgis_umesh.dll on the qgis plugin directory (ex. c:\OSGeo4W64\apps\qgis\plugins\qgis_umesh.dll)
+
+## Development environment
+At this moment the environment environemnt is based on Visual Studio 2015
  
+## Environment variables
 Environment variables (example)
 QT5DIR64=c:\Qt\Qt5.12.1\5.12.1\msvc2015_64\
 QT5DIR64OSGEO=c:\OSGeo4W64\apps\Qt5
 
+## Link Libraries
 netCDF library:
 debug and release folder contain the same libraries
 ./lib/x64/release/netcdf.lib
@@ -25,6 +30,7 @@ debug and release folder contain the same libraries
                /qgis_gui.lib
                /qgis_networkanalysis.lib
 
+## Installing QGIS from OSGeo4W
 Installing QGIS from OSGeo4W network installer (64 bit)
 After a few screens.
 Selectpackages to install.
@@ -42,6 +48,13 @@ Probably not needed
     qt5-qml: Qt5 QML
     qt5-tools: Qt5Designe & linguist (Development)
             
+## NOte
+When compiling the source code I had to adjusted the file
+c:\OSGeo4W64\apps\qgis\include\qgsabstractgeometry.h
+An extra define of M_PI is added.
+
+Line 501
+#define M_PI 3.14159265358979323846264338327950288
 
 end document
           
