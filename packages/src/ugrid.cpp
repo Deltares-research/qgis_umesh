@@ -565,6 +565,7 @@ long UGRID::read_variables()
             mesh_vars->nr_vars = nr_mesh_var;
 
             mesh_vars->variable[nr_mesh_var - 1]->var_name = var_name;
+            mesh_vars->variable[nr_mesh_var - 1]->nc_type = nc_type;
             status = get_attribute(this->ncid, i_var, "location", &mesh_vars->variable[nr_mesh_var - 1]->location);
             status = get_attribute(this->ncid, i_var, "mesh", &mesh_vars->variable[nr_mesh_var - 1]->mesh);
             status = get_attribute(this->ncid, i_var, "coordinates", &mesh_vars->variable[nr_mesh_var - 1]->coordinates);
@@ -704,6 +705,7 @@ struct _mapping * UGRID::get_grid_mapping()
 }
 //------------------------------------------------------------------------------
 vector<vector <double *>> UGRID::get_variable_values(const string var_name)
+// return: 1d dimensional value(x), ie time independent
 // return: 2d dimensional value(time, x)
 {
     int var_id;
@@ -735,15 +737,28 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                 values.reserve(length);
                 vector<double *> z_value;
                 int k = -1;
-                for (int m = 0; m < mesh_vars->variable[i]->dims[0]; m++)  // time steps
+                if (mesh_vars->variable[i]->dims.size() == 1)
                 {
-                    for (int n = 0; n < mesh_vars->variable[i]->dims[1]; n++)  // nodes
+                    for (int n = 0; n < mesh_vars->variable[i]->dims[0]; n++)  // nodes
                     {
                         k++;
                         z_value.push_back(values_c + k);
                     }
                     values.push_back(z_value);
                     z_value.clear();
+                }
+                else if (mesh_vars->variable[i]->dims.size() == 2)
+                {
+                    for (int m = 0; m < mesh_vars->variable[i]->dims[0]; m++)  // time steps
+                    {
+                        for (int n = 0; n < mesh_vars->variable[i]->dims[1]; n++)  // nodes
+                        {
+                            k++;
+                            z_value.push_back(values_c + k);
+                        }
+                        values.push_back(z_value);
+                        z_value.clear();
+                    }
                 }
                 // HACK: do not free the values_c memory
                 mesh_vars->variable[i]->read = true;

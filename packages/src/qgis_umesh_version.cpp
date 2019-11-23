@@ -67,3 +67,7 @@ char * getprogramstring_qgis_umesh(void)
 {
     return strdup(qgis_umesh_program_name);
 };
+char * getsourceurlstring_qgis_umesh(void)
+{
+    return strdup(qgis_umesh_source_url);
+};

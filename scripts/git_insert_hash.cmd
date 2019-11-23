@@ -1,26 +1,29 @@
-rem @ECHO off
+ECHO on
 
 REM This script is used for adding the GIT (short) hash to the properties of
 REM a *version.h and a *version.rc file
 
 setlocal enabledelayedexpansion
 
-SET SEARCHTEXT=VN_BUILD_HASH
+SET SEARCHTEXT=VCS_BUILD_HASH
+SET SEARCHSOURCEURL=VCS_SOURCE_URL
 SET ORG_DIR=%CD%
-SET INTEXTFILE=%CD%\%1\%2.cvs
+SET INTEXTFILE=%CD%\%1\%2.vcs
 SET OUTTEXTFILE=%CD%\%1\%2
 SET TEMPTEXTFILE=%OUTTEXTFILE%.temp
+set JANM=janm
 
 
 CD /D %CD%\%1
 
-REM GET THE GIT SHORT HASH
-FOR /f %%i in ('git rev-parse --short HEAD') do set GIT_HASH=%%i
 
 REM REMOVE PREVIOUS FILE
 IF EXIST %TEMPTEXTFILE% (
     DEL %TEMPTEXTFILE% 
 )
+
+REM GET THE GIT SHORT HASH
+FOR /f %%i in ('git rev-parse --short HEAD') do set GIT_HASH=%%i
 
 REM SUBSTITUTE THE GIT SHORT HASH IN TEMPLATE
 FOR /f "tokens=1,* delims=¶" %%A IN ( '"type %INTEXTFILE%"') DO (
@@ -28,6 +31,16 @@ FOR /f "tokens=1,* delims=¶" %%A IN ( '"type %INTEXTFILE%"') DO (
     SET modified=!string:%SEARCHTEXT%=%GIT_HASH%!
     ECHO !modified! >> %TEMPTEXTFILE%
 )
+
+REM GET THE SOURCE_URL
+FOR /f %%i in ('git ls-remote --get-url') do set SOURCE_URL=%%i
+
+FOR /f "tokens=1,* delims=¶" %%A IN ( '"type %TEMPTEXTFILE%"') DO (
+    SET string=%%A
+    SET modified=!string:%SEARCHSOURCEURL%=%SOURCE_URL%!
+    ECHO !modified! >> %JANM%
+)
+MOVE /Y %JANM% %TEMPTEXTFILE% > NUL
 
 rem update the version numbers major, minor and revision, these values are taken from the file version_number.ini
 
@@ -46,7 +59,6 @@ rem echo %vn_revision%
 
 rem substitute the major, minor and revision numbers 
 
-set JANM=janm
 FOR /f "tokens=1,* delims=¶" %%A IN ( '"type %TEMPTEXTFILE%"') DO (
     SET string=%%A
     SET modified=!string:VN_MAJOR=%vn_major%!

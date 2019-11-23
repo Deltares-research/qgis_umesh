@@ -77,6 +77,8 @@ class qgis_umesh
 
         //  qgis_umesh functions
         char* stripSpaces(char *);
+        void create_data_on_edges_vector_layer(_variable * var, struct _feature *, struct _edge *, vector<double *>, long, QgsLayerTreeGroup *);
+        void create_data_on_nodes_vector_layer(_variable * var, struct _feature *, vector<double *>, long, QgsLayerTreeGroup *);
         void create_nodes_vector_layer(QString, struct _feature *, long, QgsLayerTreeGroup *);
         void create_edges_vector_layer(QString, struct _feature *, struct _edge *, long, QgsLayerTreeGroup *);
         void create_geometry_vector_layer(QString, struct _ntw_geom *, long, QgsLayerTreeGroup *);

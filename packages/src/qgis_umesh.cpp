@@ -393,14 +393,20 @@ void qgis_umesh::mapPropertyWindow()
 void qgis_umesh::about()
 {
     char * text;
+    char * source_url;
     QString * qtext;
+    QString * qsource_url;
     QString * msg_text;
     text = getversionstring_qgis_umesh();
     qtext = new QString(text);
+    source_url = getsourceurlstring_qgis_umesh();
+    qsource_url = new QString(source_url);
 
     msg_text = new QString("Deltares\n");
     msg_text->append("Plot UGRID compliant 1D mesh and geometry, and 2D meshes\n");
     msg_text->append(qtext);
+    msg_text->append("\nSource: ");
+    msg_text->append(qsource_url);
     QMessageBox::about(NULL, tr("About"), *msg_text);
 }
 //
@@ -793,7 +799,7 @@ void qgis_umesh::activate_layers()
 
             mesh1d = ugrid_file->get_mesh1d();
             //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes"));
-            if (mesh1d != NULL)
+            if (mesh1d != nullptr)
             {
                 create_nodes_vector_layer(QString("Mesh1D nodes"), mesh1d->node[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
@@ -809,7 +815,7 @@ void qgis_umesh::activate_layers()
             ntw_edges = ugrid_file->get_network_edges();
             ntw_geom = ugrid_file->get_network_geometry();
 
-            if (ntw_nodes != NULL)
+            if (ntw_nodes != nullptr)
             {
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Connection nodes"));
                 QString layer_name = QString("Mesh1D Connection nodes");
@@ -832,7 +838,7 @@ void qgis_umesh::activate_layers()
 
             mesh_contact = ugrid_file->get_mesh_contact();
 
-            if (mesh_contact != NULL)
+            if (mesh_contact != nullptr)
             {
                 create_edges_vector_layer(QString("Mesh contact edges"), mesh_contact->node[0], mesh_contact->edge[0], mapping->epsg, treeGroup);
             }
@@ -840,7 +846,7 @@ void qgis_umesh::activate_layers()
             // Mesh 2D edges and Mesh 2D nodes
 
             mesh2d = ugrid_file->get_mesh2d();
-            if (mesh2d != NULL)
+            if (mesh2d != nullptr)
             {
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes"));
                 create_nodes_vector_layer(QString("Mesh2D faces"), mesh2d->face[0], mapping->epsg, treeGroup);
@@ -858,8 +864,65 @@ void qgis_umesh::activate_layers()
                 this->pgBar->setValue(pgbar_value);
             }
             pgbar_value = 600;  // start of pgbar counter
+
             this->pgBar->setValue(pgbar_value);
+
+            // get the time independent variables and list them in the layer-panel as treegroup
+            struct _mesh_variable * var = ugrid_file->get_variables();
+            int k = 0;
+            if (mesh2d != nullptr)
+            {
+                for (int i = 0; i < var->nr_vars; i++)
+                {
+                    if (!var->variable[i]->time_series)
+                    {
+                        k += 1;
+                        if (k == 1)
+                        {
+                            QString name = QString("Time independent data");
+                            treeGroup->addGroup(name);
+                            QgsLayerTreeGroup * subTreeGroup = treeGroup->findGroup(name);
+
+                            subTreeGroup->setExpanded(true);  // true is the default 
+                            subTreeGroup->setItemVisibilityChecked(true);
+                            //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
+                            subTreeGroup->setItemVisibilityCheckedRecursive(true);
+
+                            //cb->blockSignals(true);
+                            for (int i = 0; i < var->nr_vars; i++)
+                            {
+                                if (!var->variable[i]->time_series)
+                                {
+                                    QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
+                                    if (var->variable[i]->location == "edge" && var->variable[i]->mesh == "mesh2d" && var->variable[i]->nc_type == NC_DOUBLE)
+                                    {
+                                        vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                        vector<double *> z_value = std_data_at_face[0];
+                                        //create_edges_vector_layer(name, mesh2d->node[0], mesh2d->edge[0], mapping->epsg, subTreeGroup);
+                                        create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], z_value, mapping->epsg, subTreeGroup);
+                                    }
+                                    if (var->variable[i]->location == "face" && var->variable[i]->mesh == "mesh2d" && var->variable[i]->nc_type == NC_DOUBLE)
+                                    {
+                                        vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                        vector<double *> z_value = std_data_at_face[0];
+                                        create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, subTreeGroup);
+                                    }
+                                    if (var->variable[i]->location == "node" && var->variable[i]->mesh == "mesh2d"&& var->variable[i]->nc_type == NC_DOUBLE)
+                                    {
+                                        vector<vector <double *>>  std_data_at_node = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                        vector<double *> z_value = std_data_at_node[0];
+                                        create_data_on_nodes_vector_layer(var->variable[i], mesh2d->node[0], z_value, mapping->epsg, subTreeGroup);
+                                    }
+                                }
+                            }
+                            //cb->blockSignals(false);
+
+                        }
+                    }
+                }
+            }  // end mesh2d != nullptr
         }
+
     }
     else
     {
@@ -1175,7 +1238,153 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
         }
     }
 }
+void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feature * nodes, struct _edge * edges, vector<double *> z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
+{
+    if (nodes != nullptr)
+    {
+        QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+        QList <QgsField> lMyAttribField;
+        QString layer_name = QString::fromStdString(var->long_name).trimmed();
+        bool layer_found = false;
+        for (int i = 0; i < tmp_layers.length(); i++)
+        {
+            if (layer_name == tmp_layers[i]->name())
+            {
+                layer_found = true;
+            }
+        }
 
+        if (!layer_found)
+        {
+            QgsVectorLayer * vl;
+            QgsVectorDataProvider * dp_vl;
+            QList <QgsField> lMyAttribField;
+
+            int nr_attrib_fields = 1;
+            lMyAttribField << QgsField("Value", QVariant::Double);
+
+            QString uri = QString("MultiPoint?crs=epsg:") + QString::number(epsg_code);
+            vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->startEditing();
+            dp_vl = vl->dataProvider();
+            dp_vl->addAttributes(lMyAttribField);
+            //dp_vl->createSpatialIndex();
+            vl->updatedFields();
+
+            QgsMultiLineString * polylines = new QgsMultiLineString();
+            QVector<QgsPointXY> point;
+            QgsMultiPolylineXY lines;
+
+            for (int j = 0; j < edges->count; j++)
+            {
+                lines.clear();
+                point.clear();
+                int p1 = edges->edge_nodes[j][0];
+                int p2 = edges->edge_nodes[j][1];
+                double x1 = nodes->x[p1];
+                double y1 = nodes->y[p1];
+                double x2 = nodes->x[p2];
+                double y2 = nodes->y[p2];
+                point.append(QgsPointXY(x1, y1));
+                point.append(QgsPointXY(x2, y2));
+                //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5)").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
+                lines.append(point);
+
+                QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
+                QgsFeature MyFeature;
+                MyFeature.setGeometry(MyEdge);
+
+                MyFeature.initAttributes(nr_attrib_fields);
+                MyFeature.setAttribute(0, *z_value[j]);
+                MyFeature.setValid(true);
+
+                dp_vl->addFeature(MyFeature);
+                vl->commitChanges();
+            }
+            add_layer_to_group(vl, treeGroup);
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+
+            QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+            int ind = tmp_layers.size() - 1;
+            tmp_layers[ind]->setItemVisibilityChecked(false);
+
+        }
+    }
+}
+void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feature * nodes, vector<double *> z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
+{
+    if (nodes != nullptr)
+    {
+        QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+        QList <QgsField> lMyAttribField;
+        QString layer_name = QString::fromStdString(var->long_name).trimmed();
+        bool layer_found = false;
+        for (int i = 0; i < tmp_layers.length(); i++)
+        {
+            //QMessageBox::warning(0, tr("Message: create_nodes_vector_layer"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
+            if (layer_name == tmp_layers[i]->name())
+            {
+                layer_found = true;
+            }
+        }
+
+        if (!layer_found)
+        {
+            QgsVectorLayer * vl;
+            QgsVectorDataProvider * dp_vl;
+            QList <QgsField> lMyAttribField;
+
+            int nr_attrib_fields = 1;
+            lMyAttribField << QgsField("Value", QVariant::Double);
+
+            QString uri = QString("MultiPoint?crs=epsg:") + QString::number(epsg_code);
+            vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->startEditing();
+            dp_vl = vl->dataProvider();
+            dp_vl->addAttributes(lMyAttribField);
+            //dp_vl->createSpatialIndex();
+            vl->updatedFields();
+
+            QVector<QgsPointXY> janm;
+
+
+            for (int j = 0; j < nodes->count; j++)
+            {
+                //QMessageBox::warning(0, tr("Warning"), tr("Count: %1, %5\nCoord: (%2,%3)\nName : %4\nLong name: %5").arg(ntw_nodes->nodes[i]->count).arg(ntw_nodes->nodes[i]->x[j]).arg(ntw_nodes->nodes[i]->y[j]).arg(ntw_nodes->nodes[i]->id[j]).arg(ntw_nodes->nodes[i]->name[j]));
+
+                janm.append(QgsPointXY(nodes->x[j], nodes->y[j]));
+                QgsGeometry MyPoints = QgsGeometry::fromMultiPointXY(janm);
+                janm.clear();
+                QgsFeature MyFeature;
+                MyFeature.setGeometry(MyPoints);
+
+                MyFeature.initAttributes(nr_attrib_fields);
+                MyFeature.setAttribute(0, *z_value[j]);
+
+                dp_vl->addFeature(MyFeature);
+            }
+            vl->commitChanges();
+
+            QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
+            simple_marker->setStrokeStyle(Qt::NoPen) ;
+
+            QgsSymbol * marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            marker->changeSymbolLayer(0, simple_marker);
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
+            vl->setRenderer(mypRenderer);
+
+            add_layer_to_group(vl, treeGroup);
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+
+            QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+            int ind = tmp_layers.size()-1;
+            tmp_layers[ind]->setItemVisibilityChecked(false);
+
+
+        }
+    }
+}
 void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_geom * ntw_geom, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (ntw_geom != NULL)
