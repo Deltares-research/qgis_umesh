@@ -18,5 +18,6 @@ MyFeature.setAttribute(QString("TimeStamp"), MyTime.currentDateTime().toString("
 
 --------------------------------------------------------------------------------
 
-
-git diff --name-status  ! geeft een lijst van files die nog gecommit moeten worden, gecommitte files staan er niet in
+git ls-remote --get-url // get the remote URL, ex. https://github.com/Deltares/qgis_umesh
+git diff --name-status  // geeft een lijst van files die nog gecommit moeten worden, gecommitte files staan er niet in
+git log @{u}.. // list there was a not pushed commit, but what file (is that necessary)
