@@ -17,3 +17,6 @@ C:\OSGeo4W64\bin\qgis-bin-g7.exe --project d:\mooiman\home\models\delft3d\GIS\Ne
 MyFeature.setAttribute(QString("TimeStamp"), MyTime.currentDateTime().toString("dd.MM.yyyy hh:mm:ss.zzz"));
 
 --------------------------------------------------------------------------------
+
+
+git diff --name-status  ! geeft een lijst van files die nog gecommit moeten worden, gecommitte files staan er niet in
