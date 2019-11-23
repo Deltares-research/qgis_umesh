@@ -17,6 +17,7 @@
 #include <QtGui/QIcon>
 
 #include "data_struct.h"
+#include "netcdf.h"
 
 using namespace std;
 
@@ -32,6 +33,7 @@ struct _time_series {
 struct _variable {
     double fill_value;
     vector<long> dims;
+    nc_type nc_type;
     string var_name;
     string location;
     string mesh;
