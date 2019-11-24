@@ -336,16 +336,14 @@ int QColorRampEditor::updatePos(QColorRampEditorSlider* sl)
     {
         crec.adjust(bspace_,0,-bspace_,0);
         pos = (sl->val- mi_)/(ma_-mi_)*crec.width();
-        pos -= sl->width()/2;
-        pos += bspace_;
+        pos += bspace_ - sl->width()/2.;
         sl->move(pos,0);
     }
     else
     {
         crec.adjust(0, bspace_,0,-bspace_);
         pos = (sl->val- mi_)/(ma_-mi_)*crec.height();
-        pos -= sl->height()/2;
-        pos += bspace_;
+        pos += bspace_ - sl->width()/2.;
         sl->move(0,pos);
     }
     return pos;
@@ -426,7 +424,7 @@ void QColorRampEditor::updateRamp()
 // -----------------------------------------------------------
 void QColorRampEditor::msg()
 {
-    QMessageBox::information(0, "Message", "QColorRampEditor::msg()");
+    //QMessageBox::information(0, "Message", "QColorRampEditor::msg()");
 }
 
 
@@ -451,13 +449,13 @@ void QRampWidget::paintEvent(QPaintEvent* e)
     QRect crec = contentsRect();
     if (rampeditor_->ori_==Qt::Horizontal)
     {
-        crec.adjust(rampeditor_->bspace_,0,-rampeditor_->bspace_,-1);
-        grad = QLinearGradient( 0, 0, crec.width()-1, 0);
+        crec.adjust(rampeditor_->bspace_, 0, -rampeditor_->bspace_-1, -1);
+        grad = QLinearGradient((qreal)crec.left(), 0, (qreal)crec.right(), 0);
     }
     else
     {
-        crec.adjust(0,rampeditor_->bspace_,-1,-rampeditor_->bspace_);
-        grad = QLinearGradient( 0, 0, 0, crec.height()-1);
+        crec.adjust(0, rampeditor_->bspace_, -1, -rampeditor_->bspace_-1);
+        grad = QLinearGradient( 0., (qreal)crec.bottom(), 0., (qreal)crec.top());
     }
 
     for (int i=0; i<rampeditor_->sliders_.size(); i++)
@@ -466,7 +464,7 @@ void QRampWidget::paintEvent(QPaintEvent* e)
         grad.setColorAt(nval, rampeditor_->sliders_[i]->getColor());
     }
 
-    painter.fillRect( crec, grad);
+    painter.fillRect(crec, grad);
     painter.drawRect(crec);
 
     QWidget::paintEvent(e);
@@ -614,7 +612,7 @@ void QColorRampEditorSlider::paintEvent(QPaintEvent* e)
         QRect rec(0,7,8,8);
         painter.drawRect(rec);
         QPolygon pp;
-        pp << QPoint(0,7) << QPoint(4,0) << QPoint(8,7);
+        pp << QPoint(0,7) << QPoint(4,0) << QPoint(9,7);
         painter.drawPolygon(pp, Qt::OddEvenFill);
     }
     else
@@ -622,10 +620,9 @@ void QColorRampEditorSlider::paintEvent(QPaintEvent* e)
         QRect rec(7,0,8,8);
         painter.drawRect(rec);
         QPolygon pp;
-        pp << QPoint(7,0) << QPoint(0,4) << QPoint(7,8);
+        pp << QPoint(7,0) << QPoint(0,4) << QPoint(7,9);
         painter.drawPolygon(pp, Qt::OddEvenFill);
     }
-
 }
 
 
