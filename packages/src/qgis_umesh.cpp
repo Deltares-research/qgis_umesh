@@ -139,11 +139,13 @@ void qgis_umesh::initGui()
     connect(this->mQGisIface, SIGNAL(projectRead()), this, SLOT(project_read()));
     connect(this->mQGisIface, SIGNAL(currentLayerChanged(QgsMapLayer *)), this, SLOT(set_enabled()));
 
-    QString pluginsHome = QString("d:/bin/qgis_umesh");
-    QDir plugins_home_dir = QDir(pluginsHome);
-    if (!plugins_home_dir.exists())
+    QProcessEnvironment env;
+    QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
+    program_files = program_files + QString("/deltares/qgis_umesh");
+    QDir program_files_dir = QDir(program_files);
+    if (!program_files_dir.exists())
     {
-        QMessageBox::warning(0, tr("Message"), QString(tr("Missing installation directory:\n")) + pluginsHome);
+        QMessageBox::warning(0, tr("Message"), QString(tr("Missing installation directory:\n")) + program_files);
     }
     executable_dir = QDir::currentPath();  // get directory where the executable is located
     current_dir = QDir::currentPath();  // get current working directory  (_getcwd(current_dir, _MAX_PATH);)
@@ -174,28 +176,28 @@ void qgis_umesh::initGui()
     
 
     //------------------------------------------------------------------------------
-    icon_open = get_icon_file(plugins_home_dir, "/icons/file_open.png");
+    icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
     openAction = new QAction(icon_open, tr("&Open Map"));
     openAction->setToolTip(tr("Open UGRID 1D2D file"));
     openAction->setStatusTip(tr("Open UGRID file containing 1D, 2D and/or 1D2D meshes"));
     openAction->setEnabled(true);
     connect(openAction, SIGNAL(triggered()), this, SLOT(openFile()));
 
-    icon_open_his_cf = get_icon_file(plugins_home_dir, "/icons/file_open.png");
+    icon_open_his_cf = get_icon_file(program_files_dir, "/icons/file_open.png");
     open_action_his_cf = new QAction(icon_open_his_cf, tr("&Open HIS"));
     open_action_his_cf->setToolTip(tr("Open CF compliant time series file"));
     open_action_his_cf->setStatusTip(tr("Open Climate and Forecast compliant time series file"));
     open_action_his_cf->setEnabled(true);
     connect(open_action_his_cf, SIGNAL(triggered()), this, SLOT(open_file_his_cf()));
 
-    icon_inspect = get_icon_file(plugins_home_dir, "/icons/remoteolv_icon.png");
+    icon_inspect = get_icon_file(program_files_dir, "/icons/remoteolv_icon.png");
     inspectAction = new QAction(icon_inspect, tr("&Show map output"));
     inspectAction->setToolTip(tr("Show map output time manager"));
     inspectAction->setStatusTip(tr("Show time dependent map output as animation via time manager"));
     inspectAction->setEnabled(true);
     connect(inspectAction, SIGNAL(triggered()), this, SLOT(set_show_map_output()));
 
-    icon_plotcfts = get_icon_file(plugins_home_dir, "/icons/plotcfts.png");
+    icon_plotcfts = get_icon_file(program_files_dir, "/icons/plotcfts.png");
     plotcftsAction = new QAction();
     plotcftsAction->setIcon(icon_plotcfts);
     plotcftsAction->setText("PlotCFTS");
@@ -203,7 +205,7 @@ void qgis_umesh::initGui()
     plotcftsAction->setStatusTip(tr("Start plot program PlotCFTS to view Climate and Forecast compliant time series"));
     connect(plotcftsAction, SIGNAL(triggered()), this, SLOT(start_plotcfts()));
 
-    icon_mapoutput = get_icon_file(plugins_home_dir, "/icons/map_output.png");
+    icon_mapoutput = get_icon_file(program_files_dir, "/icons/map_output.png");
     mapoutputAction = new QAction();
     mapoutputAction->setIcon(icon_mapoutput);
     mapoutputAction->setText("Map settings ...");
@@ -213,7 +215,7 @@ void qgis_umesh::initGui()
     connect(mapoutputAction, SIGNAL(triggered()), this, SLOT(mapPropertyWindow()));
     //connect(mapoutputAction, &QAction::triggered, MapTimeManagerWindow, &MapTimeManagerWindow::contextMenu);
 
-    icon_open = get_icon_file(plugins_home_dir, "/icons/file_open.png");
+    icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
     QAction * saveAction = new QAction(icon_open, tr("&Save"));
     saveAction->setToolTip(tr("Dummmy Item"));
     saveAction->setStatusTip(tr("Dummy item shown in statusbar"));
@@ -578,6 +580,15 @@ void qgis_umesh::set_show_map_output()
 //
 void qgis_umesh::start_plotcfts()
 {
+    QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
+    QString prgm_env = program_files + QString("/deltares/plotcfts");
+    QString prgm = program_files + QString("/deltares/plotcfts/plotcfts.exe");
+    QDir program_files_dir = QDir(prgm_env);
+    if (!program_files_dir.exists())
+    {
+        QMessageBox::warning(0, tr("Message"), QString(tr("Missing installation directory:\n")) + prgm_env + QString(".\nProgram PlotCFTS will not start."));
+        return;
+    }
     //QMessageBox::information(0, tr("qgis_umesh::start_plotcfts()"), tr("start_plotcfts"));
     HISCF * _his_cf_file = get_active_his_cf_file("");
     if (_his_cf_file == nullptr)
@@ -594,9 +605,9 @@ void qgis_umesh::start_plotcfts()
         QString fname = _his_cf_file->get_filename().canonicalFilePath();
         argList.append(fname);
     }
-    QString prgm = QString("d:/bin/plotcfts/plotcfts.exe");
+
     QProcessEnvironment env;
-    env.insert("PATH", "d:/bin/plotcfts"); // Add an environment variable
+    env.insert("PATH", prgm_env); // Add an environment variable
     proc->setProcessEnvironment(env);
     proc->start(prgm, argList);
     if (proc->state() == QProcess::NotRunning)

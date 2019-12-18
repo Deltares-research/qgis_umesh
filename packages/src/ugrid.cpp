@@ -1734,10 +1734,14 @@ int UGRID::read_network_attributes(struct _ntw_string * ntw_strings, int i_var, 
     // Non ugrid standard attributes
 
     // ids and long_names of nodes and branches
-    status = get_attribute(this->ncid, i_var, "node_ids", &ntw_strings->node_names);
-    status = get_attribute(this->ncid, i_var, "node_long_names", &ntw_strings->node_long_names);
-    status = get_attribute(this->ncid, i_var, "branch_ids", &ntw_strings->edge_names);
-    status = get_attribute(this->ncid, i_var, "branch_long_names", &ntw_strings->edge_long_names);
+    status = get_attribute(this->ncid, i_var, "node_id", &ntw_strings->node_names);
+    if (status != NC_NOERR) { status = get_attribute(this->ncid, i_var, "node_ids", &ntw_strings->node_names); }
+    status = get_attribute(this->ncid, i_var, "node_long_name", &ntw_strings->node_long_names);
+    if (status != NC_NOERR) { status = get_attribute(this->ncid, i_var, "node_long_names", &ntw_strings->node_long_names); }
+    status = get_attribute(this->ncid, i_var, "branch_id", &ntw_strings->edge_names);
+    if (status != NC_NOERR) { status = get_attribute(this->ncid, i_var, "branch_ids", &ntw_strings->edge_names); }
+    status = get_attribute(this->ncid, i_var, "branch_long_name", &ntw_strings->edge_long_names);
+    if (status != NC_NOERR) { status = get_attribute(this->ncid, i_var, "branch_long_names", &ntw_strings->edge_long_names); }
     status = get_attribute(this->ncid, i_var, "branch_order", &ntw_strings->edge_order);
 
     return status;
@@ -1856,11 +1860,14 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
     }
 
     // ids and long_names of nodes and branches
-    status = get_attribute(this->ncid, i_var, "node_ids", &mesh1d_strings->node_names);
-    status = get_attribute(this->ncid, i_var, "node_long_names", &mesh1d_strings->node_long_names);
-
-    status = get_attribute(this->ncid, i_var, "branch_ids", &mesh1d_strings->edge_names);
-    status = get_attribute(this->ncid, i_var, "branch_long_names", &mesh1d_strings->edge_long_names);
+    status = get_attribute(this->ncid, i_var, "node_id", &mesh1d_strings->node_names);
+    if (status != NC_NOERR) { status = get_attribute(this->ncid, i_var, "node_ids", &mesh1d_strings->node_names); }
+    status = get_attribute(this->ncid, i_var, "node_long_name", &mesh1d_strings->node_long_names);
+    if (status != NC_NOERR) { status = get_attribute(this->ncid, i_var, "node_long_names", &mesh1d_strings->node_long_names); }
+    status = get_attribute(this->ncid, i_var, "branch_id", &mesh1d_strings->edge_names);
+    if (status != NC_NOERR) { status = get_attribute(this->ncid, i_var, "branch_ids", &mesh1d_strings->edge_names); }
+    status = get_attribute(this->ncid, i_var, "branch_long_name", &mesh1d_strings->edge_long_names);
+    if (status != NC_NOERR) { status = get_attribute(this->ncid, i_var, "branch_long_names", &mesh1d_strings->edge_long_names); }
 
     return status;
     }
