@@ -29,6 +29,7 @@
     <ClCompile Include="src\QColorRampEditor.cpp" />
     <ClCompile Include="src\qgis_umesh.cpp" />
     <ClCompile Include="src\qgis_umesh_version.cpp" />
+    <ClCompile Include="src\read_json.cpp" />
     <ClCompile Include="src\ugrid.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +106,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
     </CustomBuild>
+    <ClInclude Include="include\read_json.h" />
     <ClInclude Include="include\ugrid.h" />
   </ItemGroup>
   <ItemGroup>
@@ -147,9 +149,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\</OutDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\boost\boost_1_72_0;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\</OutDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\boost\boost_1_72_0;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
@@ -167,7 +171,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>.\include;..\mfe_app\include;c:\OSGeo4W64\apps\qgis\include;$(QT5DIR64OSGEO)\include;$(QT5DIR64OSGEO)\include\ActiveQt\;$(QT5DIR64OSGEO)\include\Qt\;$(QT5DIR64OSGEO)\include\QtCore\;$(QT5DIR64OSGEO)\include\QtGui\;$(QT5DIR64OSGEO)\include\QtSvg\;$(QT5DIR64OSGEO)\include\QtWidgets\;$(QT5DIR64OSGEO)\include\QtXml\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\include;..\mfe_app\include;c:\OSGeo4W64\include\;c:\OSGeo4W64\apps\qgis\include;$(QT5DIR64OSGEO)\include;$(QT5DIR64OSGEO)\include\ActiveQt\;$(QT5DIR64OSGEO)\include\Qt\;$(QT5DIR64OSGEO)\include\QtCore\;$(QT5DIR64OSGEO)\include\QtGui\;$(QT5DIR64OSGEO)\include\QtSvg\;$(QT5DIR64OSGEO)\include\QtWidgets\;$(QT5DIR64OSGEO)\include\QtXml\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;QT_DLL;QT_THREAD_SUPPORT;CORE_EXPORT=;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -212,7 +216,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\include;..\mfe_app\include;c:\OSGeo4W64\apps\qgis\include;$(QT5DIR64OSGEO)\include;$(QT5DIR64OSGEO)\include\ActiveQt\;$(QT5DIR64OSGEO)\include\Qt\;$(QT5DIR64OSGEO)\include\QtCore\;$(QT5DIR64OSGEO)\include\QtGui\;$(QT5DIR64OSGEO)\include\QtSvg\;$(QT5DIR64OSGEO)\include\QtWidgets\;$(QT5DIR64OSGEO)\include\QtXml\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\include;..\mfe_app\include;c:\OSGeo4W64\include\;c:\OSGeo4W64\apps\qgis\include;$(QT5DIR64OSGEO)\include;$(QT5DIR64OSGEO)\include\ActiveQt\;$(QT5DIR64OSGEO)\include\Qt\;$(QT5DIR64OSGEO)\include\QtCore\;$(QT5DIR64OSGEO)\include\QtGui\;$(QT5DIR64OSGEO)\include\QtSvg\;$(QT5DIR64OSGEO)\include\QtWidgets\;$(QT5DIR64OSGEO)\include\QtXml\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;CORE_EXPORT=;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AssemblerListingLocation>.\Debug/</AssemblerListingLocation>

@@ -1,6 +1,10 @@
 #ifndef QGIS_UMESH_H
 #define QGIS_UMESH_H
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 #include "QObject"
 #include <iostream>
 
@@ -53,6 +57,7 @@
 #include "netcdf.h"
 #include "ugrid.h"
 #include "his_cf.h"
+#include "read_json.h"
 #include "map_time_manager_window.h"
 #include "map_property_window.h"
 
@@ -85,6 +90,13 @@ class qgis_umesh
         void create_observation_point_vector_layer(QString, _location_type *, long, QgsLayerTreeGroup *);
         void create_observation_polyline_vector_layer(QString, _location_type *, long, QgsLayerTreeGroup *);
 
+        void create_1D_structure_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_1D_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_1D_external_forcing_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, string, double, double *, double *, double *);
+        long find_location_boundary(struct _ntw_nodes *, string, double *, double *);
+
+
         void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
         void show_map_output(UGRID *);
 
@@ -94,6 +106,8 @@ class qgis_umesh
         void openFile(QFileInfo);
         void open_file_his_cf();
         void open_file_his_cf(QFileInfo);
+        void open_file_mdu();
+        void open_file_mdu(QFileInfo);
         void set_enabled();
         void about();
         void activate_layers();
@@ -122,8 +136,9 @@ class qgis_umesh
         QgsStatusBar * status_bar;
 
         QAction * mainAction;
-        QAction * openAction;
+        QAction * open_action_map;
         QAction * open_action_his_cf;
+        QAction * open_action_mdu;
         QAction * inspectAction;
         QAction * plotcftsAction;
         QAction * mapoutputAction;
@@ -157,6 +172,8 @@ class qgis_umesh
         vector<UGRID *> _UgridFiles;
         int _his_cf_fil_index;
         vector<HISCF *> _his_cf_files;
+        int _mdu_fil_index;
+        vector<READ_JSON *> _mdu_files;
 
         QgsCoordinateReferenceSystem m_crs;
 };
