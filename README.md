@@ -48,9 +48,9 @@ Probably not needed
     qt5-qml: Qt5 QML
     qt5-tools: Qt5Designe & linguist (Development)
             
-## NOte
-When compiling the source code I had to adjusted the file
-c:\OSGeo4W64\apps\qgis\include\qgsabstractgeometry.h
+## Note
+When compiling the source code I had to adjusted the file:
+c:\OSGeo4W64\apps\qgis\include\qgsabstractgeometry.h.
 An extra define of M_PI is added.
 
 Line 501
