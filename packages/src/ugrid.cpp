@@ -586,17 +586,16 @@ long UGRID::read_variables()
             status = get_attribute(this->ncid, i_var, "comment", &mesh_vars->variable[nr_mesh_var - 1]->comment);
 
             mesh_vars->variable[nr_mesh_var - 1]->time_series = false;
-            if (time_series->nr_times != 0)
+
+            for (int j = 0; j < ndims; j++)
             {
-                for (int j = 0; j < ndims; j++)
+                mesh_vars->variable[nr_mesh_var - 1]->dims.push_back((long)_dimids[var_dimids[j]]);  // HACK typecast
+                if (time_series->nr_times != 0 && QString::fromStdString(_dim_names[var_dimids[j]]) == time_series->dim_name)
                 {
-                    mesh_vars->variable[nr_mesh_var - 1]->dims.push_back((long)_dimids[var_dimids[j]]);  // HACK typecast
-                    if (QString::fromStdString(_dim_names[var_dimids[j]]) == time_series->dim_name)
-                    {
-                        mesh_vars->variable[nr_mesh_var - 1]->time_series = true;
-                    }
+                    mesh_vars->variable[nr_mesh_var - 1]->time_series = true;
                 }
             }
+
         }
     }
     if (mesh2d_strings != nullptr)
