@@ -607,7 +607,7 @@ void MyCanvas::canvasReleaseEvent(QgsMapMouseEvent * me )
                 int a = -1;
             }
     }
-    emit MouseReleaseEvent( me );
+    emit MyMouseReleaseEvent( me );
 }
 void MyCanvas::wheelEvent( QWheelEvent * we )
 {
@@ -1230,9 +1230,9 @@ void MyCanvas::MyMousePressEvent     ( QMouseEvent * me)
 //
 //-----------------------------------------------------------------------------
 //
-void MyCanvas::MyMouseReleaseEvent   (QMouseEvent * me)
+void MyCanvas::MyMouseReleaseEvent   (QgsMapMouseEvent * me)
 {
-    QMessageBox::warning( 0, "Message", QString(tr("MyCanvas::MyMouseReleaseEvent")));
+    QMessageBox::warning( 0, "Message", QString("MyCanvas::MyMouseReleaseEvent\n(x,y) = (%1, %2)").arg(QString::number(wx(me->x()))).arg(QString::number(wy(me->y())))  );
     if (listener != NULL)
     {
         listener->onMouseUp(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );

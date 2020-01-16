@@ -420,7 +420,7 @@ void qgis_umesh::edit_1d_obs_points()
             return;
         }
         QList< QgsLayerTreeLayer * > layers = myGroup->findLayers();
-        editObs_widget = new EditObsPoints(layers, mMyCanvas);
+        editObs_widget = new EditObsPoints(layers, ugrid_file, mMyCanvas);
         mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, editObs_widget);
     }
 }
@@ -698,11 +698,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     status = pt_mdu->get(values, struct_file);
     if (struct_file.size() == 1)
     {
-        QFileInfo file = QFileInfo(QString::fromStdString(struct_file[0]));
-        QString b_name = file.baseName();
-        QString b_ext = file.suffix();
-        QString s_file = b_name + "_" + b_ext + ".json";
-        QString struc_file = jsonfile.absolutePath() + "/" + s_file;
+        QString struc_file = jsonfile.absolutePath() + "/" + QString::fromStdString(struct_file[0]);
         if (!QFileInfo(struc_file).exists())
         {
             QMessageBox::information(0, tr("Structure file"), tr("File:\n\"%1\",\nReferenced by tag: \"%2\" does not exist. Structures are skipped.").arg(struc_file).arg(QString::fromStdString(values)));
@@ -732,11 +728,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     status = pt_mdu->get(values, obs_file);
     if (obs_file.size() == 1)
     {
-        QFileInfo file = QFileInfo(QString::fromStdString(obs_file[0]));
-        QString b_name = file.baseName();
-        QString b_ext = file.suffix();
-        QString s_file = b_name + "_" + b_ext + ".json";
-        QString obser_file = jsonfile.absolutePath() + "/" + s_file;
+        QString obser_file = jsonfile.absolutePath() + "/" + QString::fromStdString(obs_file[0]);
         if (!QFileInfo(obser_file).exists())
         {
             QMessageBox::information(0, tr("Observation point file"), tr("File:\n\"%1\",\nReferenced by tag: \"%2\" does not exist. Observation points are skipped.").arg(obser_file).arg(QString::fromStdString(values)));
@@ -767,11 +759,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
 
     if (ext_file_name.size() == 1)
     {
-        QFileInfo file = QFileInfo(QString::fromStdString(ext_file_name[0]));
-        QString b_name = file.baseName();
-        QString b_ext = file.suffix();
-        QString s_file = b_name + "_" + b_ext + ".json";
-        QString ext_file = jsonfile.absolutePath() + "/" + s_file;
+        QString ext_file = jsonfile.absolutePath() + "/" + QString::fromStdString(ext_file_name[0]);
         if (!QFileInfo(ext_file).exists())
         {
             QMessageBox::information(0, tr("External forcings file"), tr("File:\n\"%1\",\nReferenced by tag: \"%2\" does not exist. External forcings are skipped.").arg(ext_file).arg(QString::fromStdString(values)));
