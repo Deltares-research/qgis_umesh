@@ -177,28 +177,28 @@ void qgis_umesh::initGui()
 
     //------------------------------------------------------------------------------
     icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
-    open_action_mdu = new QAction(icon_open, tr("&Open D-Flow FM (json)"));
+    open_action_mdu = new QAction(icon_open, tr("&Open D-Flow FM (json) ..."));
     open_action_mdu->setToolTip(tr("Open D-Flow FM MDU, json file"));
     open_action_mdu->setStatusTip(tr("Open D-Flow FM Master Definition file, json format"));
     open_action_mdu->setEnabled(true);
     connect(open_action_mdu, SIGNAL(triggered()), this, SLOT(open_file_mdu()));
 
     icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
-    open_action_map = new QAction(icon_open, tr("&Open Map"));
+    open_action_map = new QAction(icon_open, tr("&Open Map ..."));
     open_action_map->setToolTip(tr("Open UGRID 1D2D file"));
     open_action_map->setStatusTip(tr("Open UGRID file containing 1D, 2D and/or 1D2D meshes"));
     open_action_map->setEnabled(true);
     connect(open_action_map, SIGNAL(triggered()), this, SLOT(openFile()));
 
     icon_open_his_cf = get_icon_file(program_files_dir, "/icons/file_open.png");
-    open_action_his_cf = new QAction(icon_open_his_cf, tr("&Open HIS"));
+    open_action_his_cf = new QAction(icon_open_his_cf, tr("&Open HIS ..."));
     open_action_his_cf->setToolTip(tr("Open CF compliant time series file"));
     open_action_his_cf->setStatusTip(tr("Open Climate and Forecast compliant time series file"));
     open_action_his_cf->setEnabled(true);
     connect(open_action_his_cf, SIGNAL(triggered()), this, SLOT(open_file_his_cf()));
 
     icon_inspect = get_icon_file(program_files_dir, "/icons/remoteolv_icon.png");
-    inspectAction = new QAction(icon_inspect, tr("&Show map output"));
+    inspectAction = new QAction(icon_inspect, tr("&Show map output ..."));
     inspectAction->setToolTip(tr("Show map output time manager"));
     inspectAction->setStatusTip(tr("Show time dependent map output as animation via time manager"));
     inspectAction->setEnabled(true);
@@ -230,7 +230,7 @@ void qgis_umesh::initGui()
     connect(saveAction, SIGNAL(triggered()), this, SLOT(openFile()));
 
     aboutAction = new QAction(tr("&About"), this);
-    aboutAction->setToolTip(tr("Show the About box"));
+    aboutAction->setToolTip(tr("Show the About box ..."));
     aboutAction->setStatusTip(tr("Show the application's About box"));
     aboutAction->setEnabled(true);
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
