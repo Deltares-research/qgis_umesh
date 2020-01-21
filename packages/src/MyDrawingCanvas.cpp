@@ -664,7 +664,8 @@ void MyCanvas::drawDot(double x, double y)
 
 void MyCanvas::drawMultiDot(vector<double> xs , vector<double> ys , vector<int> rgb)
 {
-    int    i, j, k;
+    int    i, j;
+    size_t k;
     int    index;
     QPen   current_pen;
     double xMin, xMax, yMin, yMax;
@@ -672,7 +673,7 @@ void MyCanvas::drawMultiDot(vector<double> xs , vector<double> ys , vector<int> 
     int    sizeI, sizeJ;
     double sx, sy;
 
-    int nrPoints = xs.size();
+    size_t nrPoints = xs.size();
 
     if (radius==0) {return;}
     if (radius < 4.0) { // i.e. 1, 2 and 3
@@ -758,7 +759,8 @@ void MyCanvas::drawPoint(double x, double y)
 // Draw an array of points according the given array of colours
 void MyCanvas::drawMultiPoint(vector<double> xs, vector<double> ys, vector<int> rgb)
 {
-    int    i, j, k;
+    int    i, j;
+    size_t k;
     double xMin, xMax, yMin, yMax;
     int    iMin, iMax, jMin, jMax;
     int    sizeI, sizeJ;
@@ -766,7 +768,7 @@ void MyCanvas::drawMultiPoint(vector<double> xs, vector<double> ys, vector<int> 
     unsigned int transparent;
     unsigned int colour;
 
-    int nrPoints = xs.size();
+    size_t nrPoints = xs.size();
 
     // NOTE that in this function is a check if the coordinates are outside the screen/display
     //
@@ -1232,7 +1234,8 @@ void MyCanvas::MyMousePressEvent     ( QMouseEvent * me)
 //
 void MyCanvas::MyMouseReleaseEvent   (QgsMapMouseEvent * me)
 {
-    QMessageBox::warning( 0, "Message", QString("MyCanvas::MyMouseReleaseEvent\n(x,y) = (%1, %2)").arg(QString::number(wx(me->x()))).arg(QString::number(wy(me->y())))  );
+    QMessageBox::warning( 0, "Message", QString("MyCanvas::MyMouseReleaseEvent\n(x,y) = (%1, %2) [%3, %4]").arg(QString::number(wx(me->x()))).arg(QString::number(wy(me->y()))
+        .arg(QString::number(me->x())).arg(QString::number(me->y()))  ));
     if (listener != NULL)
     {
         listener->onMouseUp(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
