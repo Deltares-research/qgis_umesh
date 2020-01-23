@@ -1234,9 +1234,11 @@ void MyCanvas::MyMousePressEvent     ( QMouseEvent * me)
 //
 void MyCanvas::MyMouseReleaseEvent   (QgsMapMouseEvent * me)
 {
-    QMessageBox::warning( 0, "Message", QString("MyCanvas::MyMouseReleaseEvent\n(x,y) = (%1, %2) [%3, %4]").arg(QString::number(wx(me->x()))).arg(QString::number(wy(me->y()))
-        .arg(QString::number(me->x())).arg(QString::number(me->y()))  ));
-    if (listener != NULL)
+    QgsPointXY p = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x(), me->y()));
+    QMessageBox::warning(0, "Message", QString("MyCanvas::MyMouseReleaseEvent\n(x,y): (%1, %2)")
+        .arg(QString::number(p.x())).arg(QString::number(p.y()))
+    );
+        if (listener != NULL)
     {
         listener->onMouseUp(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
     }
