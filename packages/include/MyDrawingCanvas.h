@@ -86,7 +86,7 @@ private slots:
 
 
 public:
-    MyCanvas(QgsMapCanvas*);
+    MyCanvas(QgisInterface *);
     ~MyCanvas();
 
     void empty_caches();

@@ -282,7 +282,7 @@ void qgis_umesh::initGui()
 // create our map tool
 //
     mMyEditTool = new MyEditTool(mQGisIface->mapCanvas());
-    mMyCanvas = new MyCanvas(mQGisIface->mapCanvas());
+    mMyCanvas = new MyCanvas(mQGisIface);
 }
 //
 //-----------------------------------------------------------------------------
@@ -292,7 +292,6 @@ void qgis_umesh::set_enabled()
     if (mainAction->isChecked())
     {
         mainAction->setChecked(true);
-        mQGisIface->mapCanvas()->setMapTool(mMyCanvas);
         //QMessageBox::warning(0, tr("Message"), QString("Plugin will be enabled \n"));
         _menuToolBar->setEnabled(true);
         open_action_map->setEnabled(true);
@@ -309,7 +308,6 @@ void qgis_umesh::set_enabled()
     else
     {
         mainAction->setChecked(false);
-        mQGisIface->mapCanvas()->unsetMapTool(mMyCanvas);
         //QMessageBox::warning(0, tr("Message"), QString("Plugin will be disabled \n"));
         _menuToolBar->setEnabled(false);
         open_action_map->setEnabled(false);
@@ -409,6 +407,11 @@ void qgis_umesh::edit_1d_obs_points()
 {
     //QMessageBox::information(0, "Information", QString("qgis_umesh::edit_1d_obs_points()"));
     UGRID * ugrid_file = get_active_ugrid_file("");
+    if (ugrid_file == nullptr)
+    {
+        QMessageBox::information(0, "Information", QString("qgis_umesh::edit_1d_obs_points()\nSelect first a layer which is a result of a UGRID file."));
+        return;
+    }
     EditObsPoints * editObs_widget;
     if (EditObsPoints::get_count() == 0)  // create a docked window if it is not already there.
     {
@@ -420,7 +423,7 @@ void qgis_umesh::edit_1d_obs_points()
             return;
         }
         QList< QgsLayerTreeLayer * > layers = myGroup->findLayers();
-        editObs_widget = new EditObsPoints(layers, ugrid_file, mMyCanvas);
+        editObs_widget = new EditObsPoints(layers, ugrid_file, mQGisIface);
         mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, editObs_widget);
     }
 }
@@ -969,8 +972,6 @@ void qgis_umesh::activate_layers()
 
     if (mainAction->isChecked())
     {
-        mQGisIface->mapCanvas()->setMapTool(mMyCanvas);
-
         QList <QgsLayerTreeGroup *> groups = treeRoot->findGroups();
         for (int i = 0; i< groups.length(); i++)
         {
@@ -1161,8 +1162,6 @@ void qgis_umesh::activate_layers()
             QgsLayerTreeGroup * myGroup = treeRoot->findGroup(name);
             myGroup->setItemVisibilityChecked(false);
         }
-
-        mQGisIface->mapCanvas()->unsetMapTool(mMyCanvas);
     }
 }
 //
@@ -1176,8 +1175,6 @@ void qgis_umesh::activate_observation_layers()
 
     if (mainAction->isChecked())
     {
-        mQGisIface->mapCanvas()->setMapTool(mMyCanvas);
-
         QList <QgsLayerTreeGroup *> groups = treeRoot->findGroups();
         for (int i = 0; i< groups.length(); i++)
         {
@@ -1252,8 +1249,6 @@ void qgis_umesh::activate_observation_layers()
             QgsLayerTreeGroup * myGroup = treeRoot->findGroup(name);
             myGroup->setItemVisibilityChecked(false);
         }
-
-        mQGisIface->mapCanvas()->unsetMapTool(mMyCanvas);
     }
 }
 //
@@ -1282,7 +1277,6 @@ void qgis_umesh::unload()
     delete this->mainAction;  // delete main Icon on the Delft3D toolbar tbar
     delete this->tbar;  // delete main icon and combobox with plugins
     unload_vector_layers();
-    mQGisIface->mapCanvas()->unsetMapTool(mMyCanvas);
 
     // clean the Mesh (unstructured) group
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible

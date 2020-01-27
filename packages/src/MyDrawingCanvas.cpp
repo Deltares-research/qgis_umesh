@@ -16,6 +16,7 @@
 #include "qgsmaptool.h"
 #include "qgspoint.h"
 #include "qgsapplication.h"
+#include <qgsdistancearea.h>
 
 #if defined(WIN32) || defined(WIN64)
 #  include <windows.h>
@@ -35,16 +36,17 @@
 //MapProperty * MapProperty::obj;  // Initialize static member of class MapProperty (Singleton)
 //
 //
-MyCanvas::MyCanvas(QgsMapCanvas* mapCanvas) :
-    QgsMapTool( mapCanvas ),
-    QgsMapCanvasItem( mapCanvas ),
+MyCanvas::MyCanvas(QgisInterface * QGisIface) :
+    QgsMapTool(QGisIface->mapCanvas()),
+    QgsMapCanvasItem(QGisIface->mapCanvas()),
     printing(false)
     {
     QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CrossHair));
     m_property = MapProperty::getInstance();
 
-    mMapCanvas = mapCanvas;
-    mMapCanvasItem = mapCanvas;
+    mQGisIface = QGisIface;
+    mMapCanvas = QGisIface->mapCanvas();
+    mMapCanvasItem = QGisIface->mapCanvas();
     drawing = true;
     _ugrid_file = nullptr;
     _variable = nullptr;
@@ -1234,11 +1236,27 @@ void MyCanvas::MyMousePressEvent     ( QMouseEvent * me)
 //
 void MyCanvas::MyMouseReleaseEvent   (QgsMapMouseEvent * me)
 {
-    QgsPointXY p = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x(), me->y()));
-    QMessageBox::warning(0, "Message", QString("MyCanvas::MyMouseReleaseEvent\n(x,y): (%1, %2)")
-        .arg(QString::number(p.x())).arg(QString::number(p.y()))
+    double length; 
+    QgsPointXY p1 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x(), me->y()));
+    // afstand  bepaling
+    //  crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+    //distance_calc = QgsDistanceArea()
+    //    distance_calc.setSourceCrs(crs)
+    //    distance_calc.setEllipsoid(crs.ellipsoidAcronym())
+    //    distance_calc.setEllipsoidalMode(crs.geographicFlag())
+    //    distance = distance_calc.measureLine([self._startPt, endPt]) / 1000
+    QgsPointXY p2 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x()+20, me->y()));  // 
+    length = 12345.0;
+    QgsDistanceArea da;
+    // QgsCoordinateReferenceSystem new_crs = layer[0]->layer()->crs();
+    //da.setSourceCrs(new_crs);
+    length = da.measureLine(p1, p2);
+    QMessageBox::warning(0, "Message", QString("MyCanvas::MyMouseReleaseEvent\n(x,y): (%1, %2), (%3, %4), length: %5")
+        .arg(QString::number(p1.x())).arg(QString::number(p1.y()))
+        .arg(QString::number(p2.x())).arg(QString::number(p2.y()))
+                .arg(QString::number(length))
     );
-        if (listener != NULL)
+    if (listener != NULL)
     {
         listener->onMouseUp(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
     }
