@@ -24,6 +24,8 @@
 
 #include <qmath.h>
 #include <qgsapplication.h>
+#include <qgsmapmouseevent.h>
+
 #include <qgisplugin.h>
 
 #include <direct.h> // for getcwd
@@ -43,7 +45,7 @@ class EditObsPoints
 
     public slots:
         void cb_clicked(int);
-    private slots:
+    public slots:
         void MyMouseReleaseEvent(QgsMapMouseEvent *);
 
     public:
@@ -56,6 +58,7 @@ class EditObsPoints
 
     private:
         QgisInterface * m_QGisIface;
+        QgsMapCanvas * m_QgsMapcanvas;
         QList< QgsLayerTreeLayer * > m_Layers;
         UGRID * m_ugrid_files;
         MyCanvas * m_MyCanvas;

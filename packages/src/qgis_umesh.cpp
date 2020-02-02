@@ -1078,9 +1078,12 @@ void qgis_umesh::activate_layers()
             if (mesh2d != nullptr)
             {
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes"));
-                create_nodes_vector_layer(QString("Mesh2D faces"), mesh2d->face[0], mapping->epsg, treeGroup);
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
+                if (mesh2d->face[0]->count > 0)
+                {
+                    create_nodes_vector_layer(QString("Mesh2D faces"), mesh2d->face[0], mapping->epsg, treeGroup);
+                    pgbar_value += 10;
+                    this->pgBar->setValue(pgbar_value);
+                }
 
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes"));
                 create_nodes_vector_layer(QString("Mesh2D nodes"), mesh2d->node[0], mapping->epsg, treeGroup);
@@ -1088,9 +1091,12 @@ void qgis_umesh::activate_layers()
                 this->pgBar->setValue(pgbar_value);
 
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D edges"));
-                create_edges_vector_layer(QString("Mesh2D edges"), mesh2d->node[0], mesh2d->edge[0], mapping->epsg, treeGroup);
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
+                if (mesh2d->edge[0]->count > 0)
+                {
+                    create_edges_vector_layer(QString("Mesh2D edges"), mesh2d->node[0], mesh2d->edge[0], mapping->epsg, treeGroup);
+                    pgbar_value += 10;
+                    this->pgBar->setValue(pgbar_value);
+                }
             }
             pgbar_value = 600;  // start of pgbar counter
 
@@ -1123,20 +1129,20 @@ void qgis_umesh::activate_layers()
                                 if (!var->variable[i]->time_series)
                                 {
                                     QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
-                                    if (var->variable[i]->location == "edge" && var->variable[i]->mesh == "mesh2d" && var->variable[i]->nc_type == NC_DOUBLE)
+                                    if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                                     {
                                         vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
                                         vector<double *> z_value = std_data_at_face[0];
                                         //create_edges_vector_layer(name, mesh2d->node[0], mesh2d->edge[0], mapping->epsg, subTreeGroup);
                                         create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], z_value, mapping->epsg, subTreeGroup);
                                     }
-                                    if (var->variable[i]->location == "face" && var->variable[i]->mesh == "mesh2d" && var->variable[i]->nc_type == NC_DOUBLE)
+                                    if (var->variable[i]->location == "face" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                                     {
                                         vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
                                         vector<double *> z_value = std_data_at_face[0];
                                         create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, subTreeGroup);
                                     }
-                                    if (var->variable[i]->location == "node" && var->variable[i]->mesh == "mesh2d"&& var->variable[i]->nc_type == NC_DOUBLE)
+                                    if (var->variable[i]->location == "node" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                                     {
                                         vector<vector <double *>>  std_data_at_node = ugrid_file->get_variable_values(var->variable[i]->var_name);
                                         vector<double *> z_value = std_data_at_node[0];

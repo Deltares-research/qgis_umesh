@@ -34,6 +34,7 @@ struct _variable {
     double fill_value;
     vector<long> dims;
     nc_type nc_type;
+    int topology_dimension;
     string var_name;
     string location;
     string mesh;

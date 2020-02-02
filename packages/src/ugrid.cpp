@@ -546,11 +546,11 @@ long UGRID::read_variables()
         }
         status = nc_inq_var(this->ncid, i_var, var_name_c, &nc_type, &ndims, var_dimids, &natts);
         string var_name = var_name_c;
-        status = get_attribute(this->ncid, i_var, "mesh", &tmp_string);  // statement, just to detect if this is a variable on a mesh
+        status = get_attribute(this->ncid, i_var, "mesh", &tmp_string);  // statement, to detect if this is a variable on a mesh
         if (status == NC_NOERR) { status = get_attribute(this->ncid, i_var, "location", &tmp_string); } // each variable does have a location
         if (status == NC_NOERR)
         {
-            // This variable is defined on a mesh
+            // This variable is defined on a mesh and has a dimension
             nr_mesh_var += 1;
             if (nr_mesh_var == 1)
             {
@@ -586,7 +586,6 @@ long UGRID::read_variables()
             status = get_attribute(this->ncid, i_var, "comment", &mesh_vars->variable[nr_mesh_var - 1]->comment);
 
             mesh_vars->variable[nr_mesh_var - 1]->time_series = false;
-
             for (int j = 0; j < ndims; j++)
             {
                 mesh_vars->variable[nr_mesh_var - 1]->dims.push_back((long)_dimids[var_dimids[j]]);  // HACK typecast
@@ -596,6 +595,11 @@ long UGRID::read_variables()
                 }
             }
 
+            int topo_dim;
+            int mesh_id;
+            status = nc_inq_varid(this->ncid, mesh_vars->variable[nr_mesh_var - 1]->mesh.c_str(), &mesh_id);
+            status = get_attribute(this->ncid, mesh_id, "topology_dimension", &topo_dim);
+            mesh_vars->variable[nr_mesh_var - 1]->topology_dimension = topo_dim;
         }
     }
     if (mesh2d_strings != nullptr)
@@ -1478,7 +1482,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
                 //QMessageBox::information(0, "Information", "End of reading 1D mesh");
 #endif
             }
-       }
+        }
         ///////////////////////////////////////////////////////////////////////////////////////////
         if (topology_dimension == 2)  // it is a unstructured mesh
         {
@@ -1515,46 +1519,51 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
             fprintf(stderr, "\tVariables with \'mesh_topology\' attribute: %s\n", var_name.c_str());
 #endif
 
-            //get edge nodes
-            status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity.c_str(), &var_id);
+            //get edge nodes, optional required
             int ndims;
-            status = nc_inq_varndims(this->ncid, var_id, &ndims);
-            int * dimids = (int *)malloc(sizeof(int) * ndims);
-            status = nc_inq_vardimid(this->ncid, var_id, dimids);
-            if (_dimids[dimids[0]] != _two)  // one of the dimension is always 2
-            {
-                mesh2d->edge[nr_mesh2d - 1]->count = _dimids[dimids[0]];
-            }
-            else
-            {
-                mesh2d->edge[nr_mesh2d - 1]->count = _dimids[dimids[1]];
-            }
-            free(dimids);
-
-            mesh2d_edge_nodes = (int *)malloc(sizeof(int) * mesh2d->edge[nr_mesh2d - 1]->count * _two);
-            mesh2d->edge[nr_mesh2d - 1]->edge_nodes = (int **)malloc(sizeof(int *) * mesh2d->edge[nr_mesh2d - 1]->count);
-            for (int i = 0; i < mesh2d->edge[nr_mesh2d - 1]->count; i++)
-            {
-                mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i] = mesh2d_edge_nodes + _two * i;
-            }
-            size_t start2[] = { 0, 0 };
-            size_t count2[] = { mesh2d->edge[nr_mesh2d - 1]->count, _two };
-            status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity.c_str(), &var_id);
-            status = nc_get_vara_int(this->ncid, var_id, start2, count2, mesh2d_edge_nodes);
-
-            // get the branch length
-            mesh2d->edge[nr_mesh2d - 1]->branch_length = vector<double>(mesh2d->edge[nr_mesh2d - 1]->count);
-
+            int * dimids;
             int start_index;
-            status = get_attribute(this->ncid, var_id, "start_index", &start_index);
-            if (status == NC_NOERR)
+            if (mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity != "")
             {
+                status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity.c_str(), &var_id);
+                status = nc_inq_varndims(this->ncid, var_id, &ndims);
+                dimids = (int *)malloc(sizeof(int) * ndims);
+                status = nc_inq_vardimid(this->ncid, var_id, dimids);
+                if (_dimids[dimids[0]] != _two)  // one of the dimension is always 2
+                {
+                    mesh2d->edge[nr_mesh2d - 1]->count = _dimids[dimids[0]];
+                }
+                else
+                {
+                    mesh2d->edge[nr_mesh2d - 1]->count = _dimids[dimids[1]];
+                }
+
+                mesh2d_edge_nodes = (int *)malloc(sizeof(int) * mesh2d->edge[nr_mesh2d - 1]->count * _two);
+                mesh2d->edge[nr_mesh2d - 1]->edge_nodes = (int **)malloc(sizeof(int *) * mesh2d->edge[nr_mesh2d - 1]->count);
                 for (int i = 0; i < mesh2d->edge[nr_mesh2d - 1]->count; i++)
                 {
-                    mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] -= start_index;
-                    mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] -= start_index;
+                    mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i] = mesh2d_edge_nodes + _two * i;
                 }
+                size_t start2[] = { 0, 0 };
+                size_t count2[] = { mesh2d->edge[nr_mesh2d - 1]->count, _two };
+                status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity.c_str(), &var_id);
+                status = nc_get_vara_int(this->ncid, var_id, start2, count2, mesh2d_edge_nodes);
+
+                // get the branch length
+                mesh2d->edge[nr_mesh2d - 1]->branch_length = vector<double>(mesh2d->edge[nr_mesh2d - 1]->count);
+
+                status = get_attribute(this->ncid, var_id, "start_index", &start_index);
+                if (status == NC_NOERR)
+                {
+                    for (int i = 0; i < mesh2d->edge[nr_mesh2d - 1]->count; i++)
+                    {
+                        mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] -= start_index;
+                        mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] -= start_index;
+                    }
+                }
+                free(dimids);
             }
+
             /* Read the data (x, y)-coordinate of each node */
             status = get_dimension_var(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_node_name, &mesh2d->node[nr_mesh2d - 1]->count);
 
@@ -1577,35 +1586,37 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
             }
 
             /* Read the data (x, y)-coordinate of each face */
-            status = get_dimension_var(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_face_name, &mesh2d->face[nr_mesh2d - 1]->count);
-
-            if (mesh2d->face[nr_mesh2d - 1]->count != 0)  // not required attribute
+            if (mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity != "")
             {
-                mesh2d->face[nr_mesh2d - 1]->x = vector<double>(mesh2d->face[nr_mesh2d - 1]->count);
-                mesh2d->face[nr_mesh2d - 1]->y = vector<double>(mesh2d->face[nr_mesh2d - 1]->count);
-                status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_face_name.c_str(), &var_id);
-                status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
-                if (att_value == "projection_x_coordinate" || att_value == "longitude")
+
+                status = get_dimension_var(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_face_name, &mesh2d->face[nr_mesh2d - 1]->count);
+
+                if (mesh2d->face[nr_mesh2d - 1]->count != 0)  // not required attribute
                 {
-                    status = nc_get_var_double(this->ncid, var_id, mesh2d->face[nr_mesh2d - 1]->x.data());
-                    status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
-                    status = nc_get_var_double(this->ncid, var_id, mesh2d->face[nr_mesh2d - 1]->y.data());
+                    mesh2d->face[nr_mesh2d - 1]->x = vector<double>(mesh2d->face[nr_mesh2d - 1]->count);
+                    mesh2d->face[nr_mesh2d - 1]->y = vector<double>(mesh2d->face[nr_mesh2d - 1]->count);
+                    status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_face_name.c_str(), &var_id);
+                    status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
+                    if (att_value == "projection_x_coordinate" || att_value == "longitude")
+                    {
+                        status = nc_get_var_double(this->ncid, var_id, mesh2d->face[nr_mesh2d - 1]->x.data());
+                        status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
+                        status = nc_get_var_double(this->ncid, var_id, mesh2d->face[nr_mesh2d - 1]->y.data());
+                    }
+                    else
+                    {
+                        status = nc_get_var_double(this->ncid, var_id, mesh2d->face[nr_mesh2d - 1]->y.data());
+                        status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
+                        status = nc_get_var_double(this->ncid, var_id, mesh2d->face[nr_mesh2d - 1]->x.data());
+                    }
                 }
                 else
                 {
-                    status = nc_get_var_double(this->ncid, var_id, mesh2d->face[nr_mesh2d - 1]->y.data());
-                    status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
-                    status = nc_get_var_double(this->ncid, var_id, mesh2d->face[nr_mesh2d - 1]->x.data());
+                    // Compute the edge coordinates from the node coordinates, halfway on distance between nodes. But is it needed?
                 }
             }
-            else
-            {
-                // Compute the edge coordinates from the node coordinates, halfway on distance between nodes. But is it needed?
-            }
-
             /* Read the nodes indices for each face */
             status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->face_node_connectivity.c_str(), &var_id);
-
             status = nc_inq_varndims(this->ncid, var_id, &ndims);
             dimids = (int *)malloc(sizeof(int) * ndims);
             status = nc_inq_vardimid(this->ncid, var_id, dimids);
@@ -1637,6 +1648,63 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
                 value.clear();
             }
             // start_index
+
+            // if edge connectivity is not given create the arrays for the face_node_connectivity array which is required by the UGRID standard
+            if (mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity == "")
+            {
+                // TODO improve the performance of this algorithm
+                int max_edges_per_face = _dimids[dimids[0]] + _dimids[dimids[1]] - mesh2d->face_nodes.size();  // only applicable if number of dimensions is two
+                int total_edges = _dimids[dimids[0]] * _dimids[dimids[1]];
+                mesh2d_edge_nodes = (int *)malloc(sizeof(int) * total_edges * _two);
+                mesh2d->edge[nr_mesh2d - 1]->edge_nodes = (int **)malloc(sizeof(int *) *total_edges);
+                for (int i = 0; i < total_edges; i++)
+                {
+                    mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i] = mesh2d_edge_nodes + _two * i;
+                }
+                
+                int edge_i;
+                int jp;
+                for (int k = 0; k < mesh2d->face_nodes.size(); k++)
+                {
+                    for (int j = 0; j < max_edges_per_face; j++)
+                    {
+                        edge_i = k * max_edges_per_face + j;  // edge number
+                        jp = j < max_edges_per_face-1 ? j + 1 : 0;
+                        mesh2d->edge[nr_mesh2d - 1]->edge_nodes[edge_i][0] = mesh2d->face_nodes[k][j];
+                        mesh2d->edge[nr_mesh2d - 1]->edge_nodes[edge_i][1] = mesh2d->face_nodes[k][jp];
+                    }
+                }
+                mesh2d->edge[nr_mesh2d - 1]->count = mesh2d->face_nodes.size() * max_edges_per_face;
+
+                // Edge array contains double entries: ex. a->b and b->a then retain a->b
+                int cnt = 0;
+                for (int i = 0; i < mesh2d->edge[nr_mesh2d - 1]->count; i++)
+                {
+                    for (int j = i + 1; j < mesh2d->edge[nr_mesh2d - 1]->count; j++)
+                    {
+                        if (mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] == mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][1] &&
+                            mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] == mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][0])
+                        {
+                            mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][0] = -1;
+                            mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][1] = -1;
+                            cnt += 1;
+                            break;
+                        }
+                    }
+                }
+                int k = 0;
+                for (int i = 0; i < mesh2d->edge[nr_mesh2d - 1]->count; i++)
+                {
+                    if (mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] != -1 &&
+                        mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] != -1)
+                    {
+                        mesh2d->edge[nr_mesh2d - 1]->edge_nodes[k][0] = mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0];
+                        mesh2d->edge[nr_mesh2d - 1]->edge_nodes[k][1] = mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1];
+                        k++;
+                    }
+                }
+                mesh2d->edge[nr_mesh2d - 1]->count = k;
+            }
             free(dimids);
 
             // Do not name the mesh2d nodes, because the 2D mesh can be very large
