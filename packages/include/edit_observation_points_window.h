@@ -24,6 +24,7 @@
 
 #include <qmath.h>
 #include <qgsapplication.h>
+#include <QgsLayerTreeView.h>
 #include <qgsmapmouseevent.h>
 
 #include <qgisplugin.h>
@@ -49,7 +50,7 @@ class EditObsPoints
         void MyMouseReleaseEvent(QgsMapMouseEvent *);
 
     public:
-        EditObsPoints(QList< QgsLayerTreeLayer * >, UGRID *, QgisInterface *);
+        EditObsPoints(QgsMapLayer *, QgsMapLayer *, UGRID *, QgisInterface *);
         ~EditObsPoints();
         static int get_count();
 
@@ -59,7 +60,8 @@ class EditObsPoints
     private:
         QgisInterface * m_QGisIface;
         QgsMapCanvas * m_QgsMapcanvas;
-        QList< QgsLayerTreeLayer * > m_Layers;
+        QgsMapLayer * m_obs_layer;
+        QgsMapLayer * m_geom_layer;
         UGRID * m_ugrid_files;
         MyCanvas * m_MyCanvas;
         struct _ntw_geom * m_ntw_geom;

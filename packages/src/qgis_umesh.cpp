@@ -412,19 +412,85 @@ void qgis_umesh::edit_1d_obs_points()
         QMessageBox::information(0, "Information", QString("qgis_umesh::edit_1d_obs_points()\nSelect first a layer which is a result of a UGRID file."));
         return;
     }
-    EditObsPoints * editObs_widget;
-    if (EditObsPoints::get_count() == 0)  // create a docked window if it is not already there.
+
+    // get UGRID Mesh group
+    QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
+    QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID Mesh - %1").arg(_fil_index + 1));
+    if (myGroup == nullptr)
     {
-        QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
-        QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID Mesh - %1").arg(_fil_index + 1));
-        if (myGroup == nullptr)
+        QMessageBox::information(0, "Information", QString("Group layer with name \"UGRID Mesh - %1\" not found").arg(_fil_index + 1));
+        return;
+    }
+
+    // Get selected geometry space and/or observation point layer
+    QList<QgsMapLayer *> geom_layers = QgsProject::instance()->mapLayersByName("Mesh1D geometry");
+    QList<QgsMapLayer *> obs_layers = QgsProject::instance()->mapLayersByName("Observation points");
+    // Look for the selected layers
+    QgsMapLayer * geom_layer;
+    QgsMapLayer * obs_layer;
+    if (geom_layers.size() == 0 && obs_layers.size() == 1)
+    {
+        // there is a no 1D geometry and one observation point layer available, is it selected
+        geom_layer = nullptr;
+        obs_layer = obs_layers[0];
+    }
+    else if (geom_layers.size() == 1 && obs_layers.size() == 1)
+    {
+        // there is one 1D geometry and one observation point layer available, are they selected
+        geom_layer = geom_layers[0];
+        obs_layer = obs_layers[0];
+    }
+    else
+    {
+        return;
+    }
+    // Are geom_layer and obs_layer from the same UGRID Mesh group, i.e. the same ugrid_file
+    // Are geom_layer and obs_layer selected
+    QList<QgsLayerTreeNode *> selNodes = mQGisIface->layerTreeView()->selectedNodes(true);
+    QList< QgsLayerTreeLayer * > layers = myGroup->findLayers();
+    int obs_index = -1;
+    int geom_index = -1;
+    for (int i = 0; i < layers.size(); i++)
+    {
+        if (obs_layer->name() == layers[i]->name())
         {
-            QMessageBox::information(0, "Information", QString("Group layer with name \"UGRID Mesh - %1\" not found").arg(_fil_index + 1));
-            return;
+            obs_index = i;
         }
-        QList< QgsLayerTreeLayer * > layers = myGroup->findLayers();
-        editObs_widget = new EditObsPoints(layers, ugrid_file, mQGisIface);
-        mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, editObs_widget);
+        if (geom_layer != nullptr && geom_layer->name() == layers[i]->name())
+        {
+            geom_index = i;
+        }
+    }
+    // 1D: obs!=-1 and geom!=-1  (both in same UGRID Mesh group)
+    // Names are in myGroup but are they selected?
+    bool geom_ok = false;
+    bool obs_ok = false;
+    for (int i = 0; i < selNodes.size(); i++)
+    {
+        if (geom_index != -1 && selNodes[i]->name() == layers[geom_index]->name())
+        {
+            geom_ok = true;
+        }
+        if (selNodes[i]->name() == layers[obs_index]->name())
+        {
+            obs_ok = true;
+        }
+    }
+    // 2D: obs==true
+    if (!obs_ok || geom_index == -1 && geom_layers.size() == 1)
+    {
+        // Selected geometry layer is not in the UGRID Mesh group
+        return;
+    }
+    if (obs_index >= 0)  // 1D 
+    {
+        EditObsPoints * editObs_widget;
+        if (EditObsPoints::get_count() == 0)  // create a docked window if it is not already there.
+        {
+            if (!geom_ok) { geom_layer = nullptr; }
+            editObs_widget = new EditObsPoints(obs_layer, geom_layer, ugrid_file, mQGisIface);
+            mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, editObs_widget);
+        }
     }
 }
 //

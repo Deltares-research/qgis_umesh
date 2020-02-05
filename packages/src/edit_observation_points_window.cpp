@@ -6,14 +6,15 @@
 int EditObsPoints::object_count = 0;
 
 
-EditObsPoints::EditObsPoints(QList< QgsLayerTreeLayer * > layers, UGRID * ugrid_file, QgisInterface * QGisIface) :
+EditObsPoints::EditObsPoints(QgsMapLayer * obs_layer, QgsMapLayer * geom_layer, UGRID * ugrid_file, QgisInterface * QGisIface) :
     QDockWidget()
 {
     object_count++;
     m_QGisIface = QGisIface;
     m_MyCanvas = new MyCanvas(QGisIface);
     QGisIface->mapCanvas();
-    m_Layers = layers;
+    m_obs_layer = obs_layer;
+    m_geom_layer = geom_layer;
     m_ugrid_files = ugrid_file;
     m_ntw_geom = ugrid_file->get_network_geometry();
 
@@ -49,34 +50,32 @@ void EditObsPoints::create_window()
     //QFont serifFont("Times", 10, QFont::Bold);
     //this->setFont(serifFont);
     this->setWindowTitle(QString("Edit observation points"));
-
-    QWidget * wid = new QWidget();
+    QFrame * frame = new QFrame(this);
+    QWidget * wid = new QWidget(frame);
     QVBoxLayout * vl = new QVBoxLayout();
-    QHBoxLayout * hl= new QHBoxLayout();
+    QHBoxLayout * hl = new QHBoxLayout();
+    QGridLayout * gl = new QGridLayout();
     QAction * _show_p = new QAction();
 
     QFrame* line = new QFrame();
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
-    vl->addWidget(line);
+    //gl->addWidget(line);
 
-    QLabel * lbl = new QLabel("Geometry Layer");
-    vl->addWidget(lbl);
-    QComboBox * cb = new QComboBox();
-    cb->setMinimumSize(100, 22);
-    for (int i = 0; i < m_Layers.length(); i++)
+    QLabel * lbl00 = new QLabel("Coordinate space: ");
+    QLabel * lbl01 = new QLabel("---");;
+    if (m_geom_layer != nullptr)
     {
-        QString tmp = m_Layers[i]->name();
-        if (m_Layers[i]->name() == QString("Mesh1D geometry"))
-        {
-            cb->addItem(m_Layers[i]->name());
-        }
-        if (m_Layers[i]->name() == "Mesh2D")
-        {
-            cb->addItem(m_Layers[i]->name());
-        }
-
+        lbl01 = new QLabel(m_geom_layer->name());
     }
+    QLabel * lbl10 = new QLabel("Observation points: ");
+    QLabel * lbl11 = new QLabel(m_obs_layer->name());
+
+    gl->addWidget(lbl00, 0, 0);
+    gl->addWidget(lbl01, 0, 1);
+    gl->addWidget(lbl10, 1, 0);
+    gl->addWidget(lbl11, 1, 1);
+
     //int i = 0;
     //for (int j = 0; j < m_ntw_geom->geom[0]->count; j++)
     //{
@@ -89,13 +88,10 @@ void EditObsPoints::create_window()
     //}
     //m_MyCanvas->
 
-    hl->addWidget(cb, 99);
-    vl->addLayout(hl);
-    connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked(int)));
     //QObject::connect(cb, &QComboBox::activated, this, &EditObsPoints::cb_clicked);
 
-    vl->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-    wid->setLayout(vl);
+    gl->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    wid->setLayout(gl);
     this->setWidget(wid);
     return;
 }

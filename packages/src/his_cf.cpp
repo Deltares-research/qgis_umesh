@@ -195,7 +195,9 @@ long HISCF::read_locations()
     int nr_par_loc = 0;
 
     dim_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
+    dim_name_c[0] = '\0';
     var_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
+    var_name_c[0] = '\0';
 
     status = nc_inq(this->ncid, &ndims, &nvars, &natts, &nunlimited);
     // cf_role = timeseries_id
@@ -206,6 +208,7 @@ long HISCF::read_locations()
         if (status == NC_NOERR)
         {
             cf_role = (char *)malloc(sizeof(char) * (length + 1));
+            cf_role[0] = '\0';
             status = nc_get_att(this->ncid, i, "cf_role", cf_role);
             cf_role[length] = '\0';
 
@@ -251,6 +254,7 @@ long HISCF::read_locations()
                 if (status == NC_NOERR)
                 {
                     char * long_name = (char *)malloc(sizeof(char) * (length + 1));
+                    long_name[0] = '\0';
                     status = nc_get_att(this->ncid, location_name_varid, "long_name", long_name);
                     long_name[length] = '\0';
                     loc_type[i_par_loc]->location_long_name = strdup(long_name);
@@ -309,6 +313,7 @@ long HISCF::read_locations()
                 else if (nc_type == NC_CHAR)
                 {
                     char * location_chars = (char *)malloc(sizeof(char *) * (mem_length)+1);
+                    location_chars[0] = '\0';
                     status = nc_get_var_text(this->ncid, location_name_varid, location_chars);
                     char * janm = (char *)malloc(sizeof(char)*(name_len + 1));
                     janm[name_len] = '\0';
@@ -363,6 +368,7 @@ long HISCF::read_parameters()
     status = -1;
 
     var_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
+    var_name_c[0] = '\0';
 
     status = nc_inq(this->ncid, &ndims, &nvars, &natts, &nunlimited);
     for (long i_var = 0; i_var < nvars; i_var++)
@@ -526,6 +532,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, char ** att_value
 
     status = nc_inq_attlen(this->ncid, i_var, att_name, &length);
     *att_value = (char *)malloc(sizeof(char) * (length + 1));
+    *att_value[0] = '\0';
     if (status != NC_NOERR)
     {
         *att_value = '\0';
@@ -551,6 +558,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, string * att_valu
     else
     {
         char * tmp_value = (char *)malloc(sizeof(char) * (length + 1));
+        tmp_value[0] = '\0';
         status = nc_get_att(this->ncid, i_var, att_name, tmp_value);
         tmp_value[length] = '\0';
         *att_value = string(tmp_value, length);
@@ -572,6 +580,7 @@ int HISCF::get_attribute(int ncid, int i_var, string att_name, string * att_valu
     else
     {
         char * tmp_value = (char *)malloc(sizeof(char) * (length + 1));
+        tmp_value[0] = '\0';
         status = nc_get_att(this->ncid, i_var, att_name.c_str(), tmp_value);
         tmp_value[length] = '\0';
         *att_value = string(tmp_value, length);
@@ -648,6 +657,7 @@ int HISCF::get_dimension_var(int ncid, string var_name, size_t * dim_length)
         status = nc_inq_varid(this->ncid, var_name.c_str(), &dimid);
         status = nc_inq_vardimid(this->ncid, dimid, &janm);
         char * name = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
+        name[0] = '\0';
         status = nc_inq_dimname(this->ncid, janm, name);
         status = get_dimension(this->ncid, name, dim_length);
         free(name);
@@ -666,6 +676,7 @@ vector<string>  HISCF::get_dimension_names(int ncid, string var_name)
         status = nc_inq_varid(this->ncid, var_name.c_str(), &dimid);
         status = nc_inq_vardimid(this->ncid, dimid, &janm);
         char * name = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
+        name[0] = '\0';
         status = nc_inq_dimname(this->ncid, janm, name);
         dim_names.push_back(name);
         free(name);
@@ -684,17 +695,19 @@ vector<string> HISCF::get_names(int ncid, string names, size_t count)
     {
         int ndims[2];
         char * length_name = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
+        length_name[0] = '\0';
         status = nc_inq_vardimid(ncid, var_id, (int*)ndims);
         status = nc_inq_dimname(ncid, ndims[1], length_name);
         size_t strlen;
         status = get_dimension(ncid, length_name, &strlen);
 
         char * c = (char *)malloc(sizeof(char) * (count * strlen));
+        c[0] = '\0';
         status = nc_get_var_text(ncid, var_id, c);
 
         token = tokenize(c, count);
-        delete c;
-        delete length_name;
+        free(c);
+        free(length_name);
     }
     return token;
 }

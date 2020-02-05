@@ -126,14 +126,14 @@ long UGRID::read_global_attributes()
     {
         status = nc_inq_attname(this->ncid, NC_GLOBAL, i, att_name_c);
         status = nc_inq_att(this->ncid, NC_GLOBAL, att_name_c, &att_type, &att_length);
-        this->global_attributes->attribute[i]->name = string(att_name_c);
+        this->global_attributes->attribute[i]->name = string(strdup(att_name_c));
         this->global_attributes->attribute[i]->type = att_type;
         this->global_attributes->attribute[i]->length = att_length;
         if (att_type == NC_CHAR)
         {
             status = nc_get_att_text(this->ncid, NC_GLOBAL, att_name_c, att_value_c);
             att_value_c[att_length] = '\0';
-            this->global_attributes->attribute[i]->cvalue = string(att_value_c);
+            this->global_attributes->attribute[i]->cvalue = string(strdup(att_value_c));
         }
         else
         {
@@ -196,7 +196,7 @@ long UGRID::read_mesh()
     {
         status = nc_inq_dimlen(this->ncid, i, &_dimids[i]);
         status = nc_inq_dimname(this->ncid, i, var_name_c);
-        _dim_names.push_back(var_name_c);
+        _dim_names.push_back(string(var_name_c));
     }
     status = nc_inq_unlimdim(this->ncid, &unlimid);
     for (int i_var = 0; i_var < nvars; i_var++)
@@ -208,7 +208,7 @@ long UGRID::read_mesh()
             var_dimids = (int *)malloc(sizeof(int) * ndims);
         }
         status = nc_inq_var(this->ncid, i_var, var_name_c, &nc_type, &ndims, var_dimids, &natts);
-        string var_name = var_name_c;
+        string var_name(var_name_c);
 #ifdef NATIVE_C
         fprintf(stderr, "UGRID::read_mesh()\n\tVariable name: %d - %s\n", i_var + 1, var_name.c_str());
 #else
@@ -255,7 +255,7 @@ long UGRID::read_mesh()
         for (int i_var = 0; i_var < nvars; i_var++)
         {
             status = nc_inq_varname(this->ncid, i_var, var_name_c);
-            string var_name = var_name_c;
+            string var_name(var_name_c);
             if (var_name == mesh_contact->mesh_a)
             {
                 mesh_a = mesh_contact->mesh_a;
@@ -545,7 +545,7 @@ long UGRID::read_variables()
             var_dimids = (int *)malloc(sizeof(int) * ndims);
         }
         status = nc_inq_var(this->ncid, i_var, var_name_c, &nc_type, &ndims, var_dimids, &natts);
-        string var_name = var_name_c;
+        string var_name(var_name_c);
         status = get_attribute(this->ncid, i_var, "mesh", &tmp_string);  // statement, to detect if this is a variable on a mesh
         if (status == NC_NOERR) { status = get_attribute(this->ncid, i_var, "location", &tmp_string); } // each variable does have a location
         if (status == NC_NOERR)
@@ -1005,8 +1005,8 @@ vector<string> UGRID::get_names(int ncid, string names, size_t count)
         status = nc_get_var_text(ncid, var_id, c);
 
         token = tokenize(c, count);
-        delete c;
-        delete length_name;
+        free(c);
+        free(length_name);
     }
     return token;
 }
