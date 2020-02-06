@@ -749,8 +749,7 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                     for (int n = 0; n < mesh_vars->variable[i]->dims[0]; n++)  // nodes
                     {
                         k++;
-                        double a = *(values_c + k);  // do really make a copy
-                        z_value.push_back(&a);
+                        z_value.push_back(values_c + k);
                     }
                     values.push_back(z_value);
                     z_value.clear();
@@ -762,16 +761,15 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                         for (int n = 0; n < mesh_vars->variable[i]->dims[1]; n++)  // nodes
                         {
                             k++;
-                            double a = *(values_c + k);  // do really make a copy
-                            z_value.push_back(&a);
+                            z_value.push_back(values_c + k);
                         }
                         values.push_back(z_value);
                         z_value.clear();
                     }
                 }
                 // HACK: do not free the values_c memory
-                free(values_c);
-                values_c = nullptr;
+                //free(values_c);
+                //values_c = nullptr;
 
                 mesh_vars->variable[i]->read = true;
                 mesh_vars->variable[i]->z_value = values;
@@ -830,6 +828,8 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                     values_2d.clear();
                 }
                 // HACK: do not free the values_c memory
+                //free(values_c);
+                //values_c = nullptr;
                 mesh_vars->variable[i]->read = true;
                 mesh_vars->variable[i]->z_3d = values_3d;
             }
