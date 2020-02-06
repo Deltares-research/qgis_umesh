@@ -105,8 +105,6 @@ long HISCF::read_global_attributes()
 
     char * att_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
     att_name_c[0] = '\0';
-    char * att_value_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
-    att_value_c[0] = '\0';
 
     status = nc_inq(this->ncid, &ndims, &nvars, &natts, &nunlimited);
 
@@ -127,9 +125,13 @@ long HISCF::read_global_attributes()
         this->global_attributes->attribute[i]->length = att_length;
         if (att_type == NC_CHAR)
         {
+            char * att_value_c = (char *)malloc(sizeof(char) * (att_length + 1));
+            att_value_c[0] = '\0';
             status = nc_get_att_text(this->ncid, NC_GLOBAL, att_name_c, att_value_c);
             att_value_c[att_length] = '\0';
-            this->global_attributes->attribute[i]->cvalue = string(att_value_c);
+            this->global_attributes->attribute[i]->cvalue = string(strdup(att_value_c));
+            free(att_value_c);
+            att_value_c = nullptr;
         }
         else
         {
@@ -139,7 +141,7 @@ long HISCF::read_global_attributes()
         }
     }
     free(att_name_c);
-    free(att_value_c);
+    att_name_c = nullptr;
 
     return status;
 }
