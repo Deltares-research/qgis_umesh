@@ -83,10 +83,8 @@ long UGRID::read()
         QMessageBox::critical(0, QString("Error"), QString("UGRID::read()\n\tFailed to open file: %1").arg(ug_fname));
         return status;
     }
-
-
-    delete ug_fname;
-    ug_fname = NULL;
+    free(ug_fname);
+    ug_fname = nullptr;
 #endif
     status = this->read_global_attributes();
     status = this->read_mesh();
@@ -109,8 +107,6 @@ long UGRID::read_global_attributes()
 
     char * att_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
     att_name_c[0] = '\0';
-    char * att_value_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
-    att_value_c[0] = '\0';
 
     status = nc_inq(this->ncid, &ndims, &nvars, &natts, &nunlimited);
 
@@ -131,9 +127,13 @@ long UGRID::read_global_attributes()
         this->global_attributes->attribute[i]->length = att_length;
         if (att_type == NC_CHAR)
         {
+            char * att_value_c = (char *)malloc(sizeof(char) * (att_length + 1));
+            att_value_c[0] = '\0';
             status = nc_get_att_text(this->ncid, NC_GLOBAL, att_name_c, att_value_c);
             att_value_c[att_length] = '\0';
             this->global_attributes->attribute[i]->cvalue = string(strdup(att_value_c));
+            free(att_value_c);
+            att_value_c = nullptr;
         }
         else
         {
@@ -143,7 +143,7 @@ long UGRID::read_global_attributes()
         }
     }
     free(att_name_c);
-    free(att_value_c);
+    att_name_c = nullptr;
 
     return status;
 }
@@ -235,6 +235,7 @@ long UGRID::read_mesh()
             status = read_grid_mapping(i_var, var_name, grid_mapping_name);
         }
         free(var_dimids);
+        var_dimids = nullptr;
     }
 
 #ifndef NATIVE_C
@@ -325,7 +326,7 @@ long UGRID::read_mesh()
     _pgBar->setValue(700);
 #endif
     free(var_name_c);
-    var_name_c = NULL;
+    var_name_c = nullptr;
 
     return status;
 }
@@ -360,6 +361,7 @@ long UGRID::read_times()
     _pgBar->setValue(700);
 #endif
     var_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
+    var_name_c[0] = '\0';
     status = nc_inq(this->ncid, &ndims, &nvars, &natts, &nunlimited);
     for (long i_var = 0; i_var < nvars; i_var++)
     {
@@ -390,7 +392,7 @@ long UGRID::read_times()
                         status = nc_get_att(this->ncid, i_var, "long_name", c_label);
                         time_series->long_name = new QString(c_label);
                         free(c_label); 
-                        c_label = NULL;
+                        c_label = nullptr;
                     }
                     else
                     {
@@ -490,10 +492,11 @@ long UGRID::read_times()
                 }
             }
             free(units_c);
+            units_c = nullptr;
         }
     }
     free(var_name_c); 
-    var_name_c = NULL;
+    var_name_c = nullptr;
 #ifndef NATIVE_C
     _pgBar->setValue(800);
 #endif
@@ -610,6 +613,7 @@ long UGRID::read_variables()
     }
 
     free(var_name_c);
+    var_name_c = nullptr;
 #ifndef NATIVE_C
     _pgBar->setValue(900);
 #endif
@@ -745,7 +749,8 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                     for (int n = 0; n < mesh_vars->variable[i]->dims[0]; n++)  // nodes
                     {
                         k++;
-                        z_value.push_back(values_c + k);
+                        double a = *(values_c + k);  // do really make a copy
+                        z_value.push_back(&a);
                     }
                     values.push_back(z_value);
                     z_value.clear();
@@ -757,13 +762,17 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                         for (int n = 0; n < mesh_vars->variable[i]->dims[1]; n++)  // nodes
                         {
                             k++;
-                            z_value.push_back(values_c + k);
+                            double a = *(values_c + k);  // do really make a copy
+                            z_value.push_back(&a);
                         }
                         values.push_back(z_value);
                         z_value.clear();
                     }
                 }
                 // HACK: do not free the values_c memory
+                free(values_c);
+                values_c = nullptr;
+
                 mesh_vars->variable[i]->read = true;
                 mesh_vars->variable[i]->z_value = values;
             }
@@ -867,6 +876,7 @@ int UGRID::get_attribute(int ncid, int i_var, char * att_name, string * att_valu
         tmp_value[length] = '\0';
         *att_value = string(tmp_value, length);
         free(tmp_value);
+        tmp_value = nullptr;
     }
     return status;
 }
@@ -888,6 +898,7 @@ int UGRID::get_attribute(int ncid, int i_var, string att_name, string * att_valu
         tmp_value[length] = '\0';
         *att_value = string(tmp_value, length);
         free(tmp_value);
+        tmp_value = nullptr;
     }
     return status;
 }
@@ -959,10 +970,11 @@ int UGRID::get_dimension_var(int ncid, string var_name, size_t * dim_length)
         int janm;
         status = nc_inq_varid(this->ncid, var_name.c_str(), &dimid);
         status = nc_inq_vardimid(this->ncid, dimid, &janm);
-        char * name = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
-        status = nc_inq_dimname(this->ncid, janm, name);
-        status = get_dimension(this->ncid, name, dim_length);
-        free(name);
+        char * tmp_value = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
+        status = nc_inq_dimname(this->ncid, janm, tmp_value);
+        status = get_dimension(this->ncid, tmp_value, dim_length);
+        free(tmp_value);
+        tmp_value = nullptr;
     }
     return status;
 }
@@ -977,10 +989,11 @@ vector<string>  UGRID::get_dimension_names(int ncid, string var_name)
         int janm;
         status = nc_inq_varid(this->ncid, var_name.c_str(), &dimid);
         status = nc_inq_vardimid(this->ncid, dimid, &janm);
-        char * name = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
-        status = nc_inq_dimname(this->ncid, janm, name);
-        dim_names.push_back(name);
-        free(name);
+        char * tmp_value = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
+        status = nc_inq_dimname(this->ncid, janm, tmp_value);
+        dim_names.push_back(tmp_value);
+        free(tmp_value);
+        tmp_value = nullptr;
     }
     return dim_names;
 }
@@ -1006,7 +1019,9 @@ vector<string> UGRID::get_names(int ncid, string names, size_t count)
 
         token = tokenize(c, count);
         free(c);
+        c = nullptr;
         free(length_name);
+        length_name = nullptr;
     }
     return token;
 }
@@ -1024,7 +1039,6 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
     long k;
 
     string att_value;
-    char * att_value_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
 
     if (cf_role == "parent_mesh_topology")  // 1D + 2D mesh
     {
@@ -1273,6 +1287,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
                 status = nc_inq_vardimid(this->ncid, var_id, dimids);
                 ntw_geom->geom[nr_ntw - 1]->count = _dimids[dimids[0]];
                 free(dimids);
+                dimids = nullptr;
 
                 /* Read the data (x, y)-coordinates of the geometries */
                 status = nc_inq_varid(this->ncid, geom_strings[nr_ntw - 1]->node_count.c_str(), &var_id);
@@ -1397,6 +1412,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
                         mesh1d->edge[nr_mesh1d - 1]->count = _dimids[dimids[1]];
                     }
                     free(dimids);
+                    dimids = nullptr;
 
                     mesh1d_edge_nodes = (int *)malloc(sizeof(int) * mesh1d->edge[nr_mesh1d - 1]->count * _two);
                     mesh1d->edge[nr_mesh1d - 1]->edge_nodes = (int **)malloc(sizeof(int *) * mesh1d->edge[nr_mesh1d - 1]->count);
@@ -1562,6 +1578,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
                     }
                 }
                 free(dimids);
+                dimids = nullptr;
             }
 
             /* Read the data (x, y)-coordinate of each node */
@@ -1570,7 +1587,6 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
             mesh2d->node[nr_mesh2d - 1]->x = vector<double>(mesh2d->node[nr_mesh2d - 1]->count);
             mesh2d->node[nr_mesh2d - 1]->y = vector<double>(mesh2d->node[nr_mesh2d - 1]->count);
             status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
-            string att_value;
             status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
             if (att_value == "projection_x_coordinate" || att_value == "longitude")
             {
@@ -1706,6 +1722,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
                 mesh2d->edge[nr_mesh2d - 1]->count = k;
             }
             free(dimids);
+            dimids = nullptr;
 
             // Do not name the mesh2d nodes, because the 2D mesh can be very large
             length = mesh2d->node[nr_mesh2d - 1]->name.size();
@@ -1724,6 +1741,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
             }
         }
     }
+
     return status;
 }
 //------------------------------------------------------------------------------
@@ -1908,6 +1926,7 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
                     mesh1d_strings->branch = token[i];
                 }
                 free(att_value_c);
+                att_value_c = nullptr;
             }
         }
         else  // no standard name found, so it can be a coordinate
@@ -1923,6 +1942,7 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
                 mesh1d_strings->branch = token[i];
             }
             free(att_value_c);
+            att_value_c = nullptr;
         }
     }
 
