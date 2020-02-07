@@ -206,6 +206,8 @@ struct _mesh2d_string {
     string face_node_connectivity;
     string max_face_nodes_dimension;
     string node_edge_exchange;
+    string layer_dimension;
+    string layer_interface_dimension;
     //
     string sigma_dim_name;  // in case of 3D-sigma simualtion
 };

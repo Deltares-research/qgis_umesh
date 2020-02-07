@@ -814,7 +814,7 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 int k = -1;
                 for (int t = 0; t < mesh_vars->variable[i]->dims[0]; t++)  // time steps
                 {
-                    for (int lay = 0; lay < mesh_vars->variable[lay]->dims[1]; lay++)  // layers
+                    for (int lay = 0; lay < mesh_vars->variable[i]->dims[1]; lay++)  // layers
                     {
                         for (int n = 0; n < mesh_vars->variable[i]->dims[2]; n++)  // nodes
                         {
@@ -2001,6 +2001,14 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
     status = get_attribute(this->ncid, i_var, "edge_face_connectivity", &mesh2d_strings->edge_face_connectivity);
     status = get_attribute(this->ncid, i_var, "face_coordinates", &mesh2d_strings->face_coordinates);
 
+    status = get_attribute(this->ncid, i_var, "layer_dimension", &mesh2d_strings->layer_dimension);
+    if (status == NC_NOERR) { status = get_attribute(this->ncid, i_var, "face_coordinates", &mesh2d_strings->layer_interface_dimension); }
+    if (status != NC_NOERR)
+    {
+        mesh2d_strings->layer_dimension = "";
+        mesh2d_strings->layer_interface_dimension = "";
+    }
+    status = get_attribute(this->ncid, i_var, "face_coordinates", &mesh2d_strings->layer_interface_dimension);
     // split required 'node coordinate' string
     vector<string> token = tokenize(mesh2d_strings->node_coordinates, ' ');
     if (token.size() == 2)
