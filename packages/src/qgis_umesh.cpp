@@ -1501,13 +1501,13 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
                 }
                 else if (layer_name.contains("Mesh1D nodes"))
                 {
-                    simple_marker->setSize(1.0);
+                    simple_marker->setSize(1.5);
                     simple_marker->setColor(QColor(0, 0, 0));
                     simple_marker->setFillColor(QColor(255, 255, 255));  // water level point
                 }
                 else if (layer_name.contains("Mesh2D faces") )
                 {
-                    simple_marker->setSize(1.0);
+                    simple_marker->setSize(1.5);
                     simple_marker->setColor(QColor(0, 0, 0));
                     simple_marker->setFillColor(QColor(255, 255, 255));  // water level point
                     vl->setSubLayerVisibility(layer_name, false);
@@ -1763,7 +1763,7 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
             if (layer_name == QString("Mesh1D geometry"))
             {
                 QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
-                line_marker->setWidth(0.25);
+                line_marker->setWidth(0.5);
                 line_marker->setColor(QColor(0, 0, 255));
 
                 QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
@@ -1951,7 +1951,7 @@ void qgis_umesh::create_observation_point_vector_layer(QString layer_name, _loca
             vl->commitChanges();
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-            simple_marker->setSize(3.0);
+            simple_marker->setSize(4.0);
             simple_marker->setColor(QColor(0, 0, 0));
             simple_marker->setFillColor(QColor(255, 255, 255));
             simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
@@ -2152,7 +2152,7 @@ void qgis_umesh::create_1D_structure_vector_layer(UGRID * ugrid_file, READ_JSON 
         vl->commitChanges();
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-        simple_marker->setSize(2.5);
+        simple_marker->setSize(3.5);
         simple_marker->setColor(QColor(0, 0, 0));
         simple_marker->setFillColor(QColor(255, 0, 0));
         simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Triangle);
@@ -2277,7 +2277,7 @@ void qgis_umesh::create_1D_observation_point_vector_layer(UGRID * ugrid_file, RE
         vl->commitChanges();
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-        simple_marker->setSize(3.0);
+        simple_marker->setSize(4.0);
         simple_marker->setColor(QColor(255, 0, 0));
         simple_marker->setFillColor(QColor(255, 255, 255));
         simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
@@ -2398,13 +2398,11 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             }
             vl->commitChanges();
 
-            //QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
             QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/OSGeo4W64/apps/qgis/svg/arrows/NorthArrow_11.svg"));
-            simple_marker->setSize(2.5);
+            simple_marker->setSize(4.0);
             simple_marker->setColor(QColor(0, 255, 0));
             simple_marker->setFillColor(QColor(0, 255, 0));
-            //simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Square);
-            simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Observation point rotation")));
+            simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Lateral point rotation")));
 
             QgsSymbol * marker = new QgsMarkerSymbol();
             marker->changeSymbolLayer(0, simple_marker);
@@ -2495,7 +2493,6 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             simple_marker->setColor(QColor(0, 255, 0));
             simple_marker->setFillColor(QColor(0, 255, 0));
             simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Diamond);
-            //simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Observation point rotation")));
 
             QgsSymbol * marker = new QgsMarkerSymbol();
             marker->changeSymbolLayer(0, simple_marker);

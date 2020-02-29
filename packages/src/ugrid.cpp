@@ -623,6 +623,7 @@ long UGRID::read_variables()
             status = get_attribute(this->ncid, mesh_id, "topology_dimension", &topo_dim);
             mesh_vars->variable[nr_mesh_var - 1]->topology_dimension = topo_dim;
 
+            /*
             int nr_mesh2d = 1;
             if (var_name == mesh2d_strings[nr_mesh2d - 1]->x_bound_edge_name)
             {
@@ -640,6 +641,7 @@ long UGRID::read_variables()
             {
                 mesh_vars->variable[nr_mesh_var - 1]->location = "face_boundary";
             }
+            */
         }
     }
 
