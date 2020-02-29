@@ -101,15 +101,5 @@ void EditObsPoints::cb_clicked(int)
 }
 void EditObsPoints::MyMouseReleaseEvent(QgsMapMouseEvent * me)
 {
-    double length;
-    QgsPointXY p1 = QPoint(me->x(), me->y()); //QgsMapCanvasItem::toMapCoordinates(QPoint(me->x(), me->y()));
-    QgsPointXY p2 = QPoint(0, 0); //QgsMapCanvasItem::toMapCoordinates(QPoint(me->x() + 20, me->y()));  // 
-    length = 12345.0;
-    QgsDistanceArea da;
-    length = da.measureLine(p1, p2);
-    QMessageBox::warning(0, "Message", QString("EditObsPoints::MyMouseReleaseEvent\n(x,y): (%1, %2), (%3, %4), length: %5")
-        .arg(QString::number(p1.x())).arg(QString::number(p1.y()))
-        .arg(QString::number(p2.x())).arg(QString::number(p2.y()))
-        .arg(QString::number(length))
-    );
+    double length = 0.0;
 }

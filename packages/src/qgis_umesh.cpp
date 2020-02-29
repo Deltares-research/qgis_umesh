@@ -177,21 +177,21 @@ void qgis_umesh::initGui()
 
     //------------------------------------------------------------------------------
     icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
-    open_action_mdu = new QAction(icon_open, tr("&Open D-Flow FM (json)"));
+    open_action_mdu = new QAction(icon_open, tr("&Open D-Flow FM (json) ..."));
     open_action_mdu->setToolTip(tr("Open D-Flow FM MDU, json file"));
     open_action_mdu->setStatusTip(tr("Open D-Flow FM Master Definition file, json format"));
     open_action_mdu->setEnabled(true);
     connect(open_action_mdu, SIGNAL(triggered()), this, SLOT(open_file_mdu()));
 
     icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
-    open_action_map = new QAction(icon_open, tr("&Open Map"));
+    open_action_map = new QAction(icon_open, tr("&Open Map ..."));
     open_action_map->setToolTip(tr("Open UGRID 1D2D file"));
     open_action_map->setStatusTip(tr("Open UGRID file containing 1D, 2D and/or 1D2D meshes"));
     open_action_map->setEnabled(true);
     connect(open_action_map, SIGNAL(triggered()), this, SLOT(openFile()));
 
     icon_open_his_cf = get_icon_file(program_files_dir, "/icons/file_open.png");
-    open_action_his_cf = new QAction(icon_open_his_cf, tr("&Open HIS"));
+    open_action_his_cf = new QAction(icon_open_his_cf, tr("&Open HIS ..."));
     open_action_his_cf->setToolTip(tr("Open CF compliant time series file"));
     open_action_his_cf->setStatusTip(tr("Open Climate and Forecast compliant time series file"));
     open_action_his_cf->setEnabled(true);
@@ -236,7 +236,7 @@ void qgis_umesh::initGui()
     saveAction->setEnabled(true);
     connect(saveAction, SIGNAL(triggered()), this, SLOT(openFile()));
 
-    aboutAction = new QAction(tr("&About"), this);
+    aboutAction = new QAction(tr("&About ..."), this);
     aboutAction->setToolTip(tr("Show the About box"));
     aboutAction->setStatusTip(tr("Show the application's About box"));
     aboutAction->setEnabled(true);
@@ -442,6 +442,7 @@ void qgis_umesh::edit_1d_obs_points()
     }
     else
     {
+        QMessageBox::information(0, "Information", QString("Select a layer with name: 'Observation points' selected"));
         return;
     }
     // Are geom_layer and obs_layer from the same UGRID Mesh group, i.e. the same ugrid_file
@@ -1168,54 +1169,58 @@ void qgis_umesh::activate_layers()
 
             this->pgBar->setValue(pgbar_value);
 
+            //
             // get the time independent variables and list them in the layer-panel as treegroup
+            //
             struct _mesh_variable * var = ugrid_file->get_variables();
-            int k = 0;
+
+            bool time_independent_data = false;
             if (mesh2d != nullptr)
             {
                 for (int i = 0; i < var->nr_vars; i++)
                 {
                     if (!var->variable[i]->time_series)
                     {
-                        k += 1;
-                        if (k == 1)
+                        time_independent_data = true;
+                        break;
+                    }
+                }
+                if (time_independent_data)
+                {
+                    QString name = QString("Time independent data");
+                    treeGroup->addGroup(name);
+                    QgsLayerTreeGroup * subTreeGroup = treeGroup->findGroup(name);
+
+                    subTreeGroup->setExpanded(true);  // true is the default 
+                    subTreeGroup->setItemVisibilityChecked(true);
+                    //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
+                    subTreeGroup->setItemVisibilityCheckedRecursive(true);
+
+                    //cb->blockSignals(true);
+                    for (int i = 0; i < var->nr_vars; i++)
+                    {
+                        if (!var->variable[i]->time_series && var->variable[i]->coordinates != "")
                         {
-                            QString name = QString("Time independent data");
-                            treeGroup->addGroup(name);
-                            QgsLayerTreeGroup * subTreeGroup = treeGroup->findGroup(name);
-
-                            subTreeGroup->setExpanded(true);  // true is the default 
-                            subTreeGroup->setItemVisibilityChecked(true);
-                            //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
-                            subTreeGroup->setItemVisibilityCheckedRecursive(true);
-
-                            //cb->blockSignals(true);
-                            for (int i = 0; i < var->nr_vars; i++)
+                            QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
+                            QString var_name = QString::fromStdString(var->variable[i]->var_name).trimmed();
+                            if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                             {
-                                if (!var->variable[i]->time_series)
-                                {
-                                    QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
-                                    if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
-                                    {
-                                        vector<vector <double *>>  std_data_at_edge = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                        create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], std_data_at_edge[0], mapping->epsg, subTreeGroup);
-                                    }
-                                    if (var->variable[i]->location == "face" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
-                                    {
-                                        vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                        create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], std_data_at_face[0], mapping->epsg, subTreeGroup);
-                                    }
-                                    if (var->variable[i]->location == "node" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
-                                    {
-                                        vector<vector <double *>>  std_data_at_node = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                        create_data_on_nodes_vector_layer(var->variable[i], mesh2d->node[0], std_data_at_node[0], mapping->epsg, subTreeGroup);
-                                    }
-                                }
+                                vector<vector <double *>>  std_data_at_edge = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], std_data_at_edge[0], mapping->epsg, subTreeGroup);
                             }
-                            //cb->blockSignals(false);
-
+                            if (var->variable[i]->location == "face" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
+                            {
+                                vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], std_data_at_face[0], mapping->epsg, subTreeGroup);
+                            }
+                            if (var->variable[i]->location == "node" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
+                            {
+                                vector<vector <double *>>  std_data_at_node = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->node[0], std_data_at_node[0], mapping->epsg, subTreeGroup);
+                            }
                         }
                     }
+                    //cb->blockSignals(false);
                 }
             }  // end mesh2d != nullptr
         }

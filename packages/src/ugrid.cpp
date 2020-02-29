@@ -176,7 +176,7 @@ long UGRID::read_mesh()
     string cf_role;
     string grid_mapping_name;
     string std_name;
-    vector<string> sigma_dim_names;
+    vector<string> tmp_dim_names;
     int status = 1;
     size_t length;
 
@@ -197,6 +197,7 @@ long UGRID::read_mesh()
         status = nc_inq_dimlen(this->ncid, i, &_dimids[i]);
         status = nc_inq_dimname(this->ncid, i, var_name_c);
         _dim_names.push_back(string(var_name_c));
+        _map_dim[string(var_name_c)] = _dimids[i];
     }
     status = nc_inq_unlimdim(this->ncid, &unlimid);
     for (int i_var = 0; i_var < nvars; i_var++)
@@ -226,7 +227,35 @@ long UGRID::read_mesh()
         if (std_name == "ocean_sigma_coordinate")
         {
             // this grid contains sigma layers, find sigma dimension name
-            sigma_dim_names = get_dimension_names(this->ncid, var_name);
+            tmp_dim_names = get_dimension_names(this->ncid, var_name);
+            for (int i = 0; i < tmp_dim_names.size(); i++)
+            {
+                if (var_name.find("interface") != string::npos)
+                {
+                    _map_dim_name["z_sigma_interface"] = tmp_dim_names[i];
+                }
+                else
+                {
+                    _map_dim_name["z_sigma_layer"] = tmp_dim_names[i];
+                }
+            }
+        }
+        status = get_attribute(this->ncid, i_var, "standard_name", &std_name);
+        if (std_name == "altitude")
+        {
+            // this grid contains z- layers, find z-dimension name
+            tmp_dim_names = get_dimension_names(this->ncid, var_name);
+            for (int i = 0; i < tmp_dim_names.size(); i++)
+            {
+                if (var_name.find("interface") != string::npos)
+                {
+                    _map_dim_name["z_sigma_interface"] = tmp_dim_names[i];
+                }
+                else
+                {
+                    _map_dim_name["z_sigma_layer"] = tmp_dim_names[i];
+                }
+            }
         }
 
         status = get_attribute(this->ncid, i_var, "grid_mapping_name", &grid_mapping_name);
@@ -305,23 +334,6 @@ long UGRID::read_mesh()
     }
     //status = create_mesh_contacts(mesh_a, location_a, mesh_b, location_b);
 
-    //each grid need to have the sigma_layer dimension name
-    // TODO Hack just one grid of each type and just one sigma distribution for all grids
-    if (sigma_dim_names.size() == 1)
-    {
-        if (mesh1d_strings != nullptr)
-        {
-            mesh1d_strings[0]->sigma_dim_name = sigma_dim_names[0];
-        }
-        if (mesh2d_strings != nullptr)
-        {
-            mesh2d_strings[0]->sigma_dim_name = sigma_dim_names[0];
-        }
-        if (mesh_contact_strings != nullptr)
-        {
-            mesh_contact_strings[0]->sigma_dim_name = sigma_dim_names[0];
-        }
-    }
 #ifndef NATIVE_C
     _pgBar->setValue(700);
 #endif
@@ -410,8 +422,12 @@ long UGRID::read_times()
 #endif
                         continue;
                     }
-                    time_var_name = strdup(var_name_c);
+
                     status = nc_inq_dimlen(this->ncid, dimids, &time_series->nr_times);
+                    time_var_name = strdup(var_name_c);
+                    _map_dim[time_var_name] = time_series->nr_times;
+                    _map_dim_name["time"] = time_var_name;
+
                     qdt_times.reserve((int)time_series->nr_times);  // HACK typecast
                     // ex. date_time = "seconds since 2017-02-25 15:26:00"   year, yr, day, d, hour, hr, h, minute, min, second, sec, s and all plural forms
                     time_series->unit = new QString(date_time.at(0));
@@ -591,11 +607,14 @@ long UGRID::read_variables()
             mesh_vars->variable[nr_mesh_var - 1]->time_series = false;
             for (int j = 0; j < ndims; j++)
             {
-                mesh_vars->variable[nr_mesh_var - 1]->dims.push_back((long)_dimids[var_dimids[j]]);  // HACK typecast
+                status = nc_inq_dimname(this->ncid, var_dimids[j], var_name_c);
+                
+                mesh_vars->variable[nr_mesh_var - 1]->dims.push_back((long)_dimids[var_dimids[j]]);  // HACK typecast: size_t -> long
                 if (time_series->nr_times != 0 && QString::fromStdString(_dim_names[var_dimids[j]]) == time_series->dim_name)
                 {
                     mesh_vars->variable[nr_mesh_var - 1]->time_series = true;
                 }
+                mesh_vars->variable[nr_mesh_var - 1]->dim_names.push_back(_dim_names[var_dimids[j]]);
             }
 
             int topo_dim;
@@ -603,13 +622,25 @@ long UGRID::read_variables()
             status = nc_inq_varid(this->ncid, mesh_vars->variable[nr_mesh_var - 1]->mesh.c_str(), &mesh_id);
             status = get_attribute(this->ncid, mesh_id, "topology_dimension", &topo_dim);
             mesh_vars->variable[nr_mesh_var - 1]->topology_dimension = topo_dim;
+
+            int nr_mesh2d = 1;
+            if (var_name == mesh2d_strings[nr_mesh2d - 1]->x_bound_edge_name)
+            {
+                mesh_vars->variable[nr_mesh_var - 1]->location = "edge_boundary";
+            }
+            if (var_name == mesh2d_strings[nr_mesh2d - 1]->y_bound_edge_name)
+            {
+                mesh_vars->variable[nr_mesh_var - 1]->location = "edge_boundary";
+            }
+            if (var_name == mesh2d_strings[nr_mesh2d - 1]->x_bound_face_name)
+            {
+                mesh_vars->variable[nr_mesh_var - 1]->location = "face_boundary";
+            }
+            if (var_name == mesh2d_strings[nr_mesh2d - 1]->y_bound_face_name)
+            {
+                mesh_vars->variable[nr_mesh_var - 1]->location = "face_boundary";
+            }
         }
-    }
-    if (mesh2d_strings != nullptr)
-    {
-        size_t nr_layer;
-        status = get_dimension(this->ncid, mesh2d_strings[0]->sigma_dim_name, &nr_layer);
-        mesh_vars->variable[nr_mesh_var - 1]->nr_sigma_layers = (int)nr_layer;
     }
 
     free(var_name_c);
@@ -793,7 +824,7 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
 
     for (int i = 0; i < mesh_vars->nr_vars; i++)
     {
-        if (var_name == mesh_vars->variable[i]->var_name)
+        if (var_name == mesh_vars->variable[i]->var_name)  //var_name is a three dimensio
         {
             if (mesh_vars->variable[i]->read)  // are the z_values already read
             {
@@ -810,15 +841,51 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 double * values_c = (double *)malloc(sizeof(double) * length);
                 status = nc_get_var_double(this->ncid, var_id, values_c);
                 values_3d.reserve(length);
+                
+                
+                //for (int j = 0; j < ndims; j++)
+                //{
+                //    mesh_vars->variable[nr_mesh_var - 1]->dims.push_back((long)_dimids[var_dimids[j]]);  // HACK typecast
+                //    if (time_series->nr_times != 0 && QString::fromStdString(_dim_names[var_dimids[j]]) == time_series->dim_name)
+                //    {
+                //        mesh_vars->variable[nr_mesh_var - 1]->time_series = true;
+                //    }
+                //}
+
+                int time_dim = mesh_vars->variable[i]->dims[0];
+                int lyer_dim = mesh_vars->variable[i]->dims[1];
+                int node_dim = mesh_vars->variable[i]->dims[2];
+                //HACK assumed is that the time is the first dimension
+                //HACK just the variables at the layers, interfaces are skipped
+                if (_map_dim_name["z_sigma_layer"] == mesh_vars->variable[i]->dim_names[2])
+                {
+                    lyer_dim = mesh_vars->variable[i]->dims[2];
+                    node_dim = mesh_vars->variable[i]->dims[1];
+                }
+                for (int j = 0; j < mesh_vars->variable[i]->dim_names.size(); j++)
+                {
+                    if (_map_dim_name["z_sigma_interface"] == mesh_vars->variable[i]->dim_names[j])
+                    {
+#ifdef NATIVE_C
+                        fprintf(stderr, "\t3D data on interfaces not yet supported.\n");
+#else
+                        QMessageBox::warning(0, QString("Warning"), QString("3D data on interfaces not yet supported,\ndata: %1").arg(var_name.c_str()));
+#endif
+                        return values_3d;
+                    }
+
+                }
+
                 vector<double *> z_value;
                 int k = -1;
-                for (int t = 0; t < mesh_vars->variable[i]->dims[0]; t++)  // time steps
+                for (int t = 0; t < time_dim; t++)  // time steps
                 {
-                    for (int lay = 0; lay < mesh_vars->variable[i]->dims[1]; lay++)  // layers
+                    for (int lay = 0; lay < lyer_dim; lay++)  // layers
                     {
-                        for (int n = 0; n < mesh_vars->variable[i]->dims[2]; n++)  // nodes
+                        for (int n = 0; n < node_dim; n++)  // nodes
                         {
-                            k++;
+                            k = lyer_dim * node_dim * t  + node_dim * lay + n;
+                            //k++;
                             z_value.push_back(values_c + k);
                         }
                         values_2d.push_back(z_value);
@@ -840,6 +907,15 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
 //==============================================================================
 // PRIVATE functions
 //==============================================================================
+int UGRID::get_attribute_by_var_name(int ncid, string var_name, string att_name, string * att_value)
+{
+    int status = -1;
+    int i_var;
+    status = nc_inq_varid(ncid, var_name.c_str(), &i_var);
+    status = get_attribute(ncid, i_var, att_name, att_value);
+    return status;
+}
+//------------------------------------------------------------------------------
 int UGRID::get_attribute(int ncid, int i_var, char * att_name, char ** att_value)
 {
     size_t length = 0;
@@ -1026,7 +1102,7 @@ vector<string> UGRID::get_names(int ncid, string names, size_t count)
     return token;
 }
 //------------------------------------------------------------------------------
-int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role, int ndims, int * var_dimids)
+int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_role, int ndims, int * var_dimids)
 {
     int topology_dimension;
     int status = 1;
@@ -1201,7 +1277,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
                 {
                     ntw_edges->edge[nr_ntw - 1]->count = _dimids[dimids[1]];
                 }
-                delete[] dimids;
+                free(dimids);
+                dimids = nullptr;
                 // get the branch length
                 ntw_edges->edge[nr_ntw - 1]->branch_length = vector<double>(ntw_edges->edge[nr_ntw - 1]->count);
 
@@ -1280,6 +1357,9 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
 
                 status = nc_inq_varid(this->ncid, ntw_strings[nr_ntw - 1]->edge_geometry.c_str(), &var_id);
                 status = read_geometry_attributes(geom_strings[nr_ntw-1], var_id, ntw_strings[nr_ntw - 1]->edge_geometry, topology_dimension);
+                if (status != 0) {
+                    return status;
+                }
 
                 status = nc_inq_varid(this->ncid, geom_strings[nr_ntw - 1]->node_count.c_str(), &var_id);  // nodes per edge
                 status = nc_inq_varndims(this->ncid, var_id, &ndims);
@@ -1601,8 +1681,43 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
                 status = nc_get_var_double(this->ncid, var_id, mesh2d->node[nr_mesh2d - 1]->x.data());
             }
 
+            /* Read the data (x, y)-coordinate of each edge */
+            if (mesh2d_strings[nr_mesh2d - 1]->x_edge_name != "")
+            {
+                status = get_dimension_var(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_edge_name, &mesh2d->edge[nr_mesh2d - 1]->count);
+                if (mesh2d->edge[nr_mesh2d - 1]->count != 0)  // not required attribute
+                {
+                    mesh2d->edge[nr_mesh2d - 1]->x = vector<double>(mesh2d->edge[nr_mesh2d - 1]->count);
+                    mesh2d->edge[nr_mesh2d - 1]->y = vector<double>(mesh2d->edge[nr_mesh2d - 1]->count);
+                    status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_edge_name.c_str(), &var_id);
+                    status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
+                    if (att_value == "projection_x_coordinate" || att_value == "longitude")
+                    {
+                        status = nc_get_var_double(this->ncid, var_id, mesh2d->edge[nr_mesh2d - 1]->x.data());
+                        status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
+                        status = nc_get_var_double(this->ncid, var_id, mesh2d->edge[nr_mesh2d - 1]->y.data());
+                    }
+                    else
+                    {
+                        status = nc_get_var_double(this->ncid, var_id, mesh2d->edge[nr_mesh2d - 1]->y.data());
+                        status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
+                        status = nc_get_var_double(this->ncid, var_id, mesh2d->edge[nr_mesh2d - 1]->x.data());
+                    }
+
+                    string janm;
+                    status = get_attribute_by_var_name(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_edge_name, "bounds", &mesh2d_strings[nr_mesh2d - 1]->x_bound_edge_name);
+                    status = get_attribute_by_var_name(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_edge_name, "bounds", &mesh2d_strings[nr_mesh2d - 1]->y_bound_edge_name);
+                    int a = 1;
+                }
+            }
+            else
+            {
+                // Compute the edge coordinates from the node coordinates, halfway on distance between nodes. But is it needed?
+                // Boundary of the edge is determined by the node coordinates (edge_nodes)
+            }
+
             /* Read the data (x, y)-coordinate of each face */
-            if (mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity != "")
+            if (mesh2d_strings[nr_mesh2d - 1]->x_face_name != "")
             {
 
                 status = get_dimension_var(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_face_name, &mesh2d->face[nr_mesh2d - 1]->count);
@@ -1625,11 +1740,16 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name,string cf_role
                         status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
                         status = nc_get_var_double(this->ncid, var_id, mesh2d->face[nr_mesh2d - 1]->x.data());
                     }
+                    string janm;
+                    status = get_attribute_by_var_name(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_face_name, "bounds", &mesh2d_strings[nr_mesh2d - 1]->x_bound_face_name);
+                    status = get_attribute_by_var_name(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name, "bounds", &mesh2d_strings[nr_mesh2d - 1]->y_bound_face_name);
+                    int a = 1;
                 }
-                else
-                {
-                    // Compute the edge coordinates from the node coordinates, halfway on distance between nodes. But is it needed?
-                }
+            }
+            else
+            {
+                // Compute the face coordinates from the node coordinates, mass centre of face. But is it needed?
+                // Boundary of the face is determined by the node coordinates (face_nodes)
             }
             /* Read the nodes indices for each face */
             status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->face_node_connectivity.c_str(), &var_id);
@@ -1868,8 +1988,16 @@ int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_va
     // get geometry nodes (x_geom_name y_geom_name) of the network geometry (thalweg)
     // split the geom_node_coordinates string into two separate strings (x_geom_name and y_geom_name)
     vector<string> token = tokenize(geom_strings->node_coordinates, ' ');
-    geom_strings->x_geom_name = token[0];
-    geom_strings->y_geom_name = token[1];
+    if (token.size() == 2)
+    {
+        geom_strings->x_geom_name = token[0];
+        geom_strings->y_geom_name = token[1];
+    }
+    else
+    {
+        QMessageBox::critical(0, "Critical message", QString("UGRID::read_geometry_attributes\nFile does not contain the geometry coordinates attribute\n"));
+        status = 1;
+    }
 
     return status;
 }
@@ -2023,6 +2151,8 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
     {
         mesh2d_strings->x_edge_name = token[0];
         mesh2d_strings->y_edge_name = token[1];
+        status = get_attribute_by_var_name(this->ncid, mesh2d_strings->x_edge_name, "bounds", &mesh2d_strings->x_bound_edge_name);
+        status = get_attribute_by_var_name(this->ncid, mesh2d_strings->y_edge_name, "bounds", &mesh2d_strings->y_bound_edge_name);
     }
 
     // split 'face_coordinates' string
@@ -2031,6 +2161,8 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
     {
         mesh2d_strings->x_face_name = token[0];
         mesh2d_strings->y_face_name = token[1];
+        status = get_attribute_by_var_name(this->ncid, mesh2d_strings->x_face_name, "bounds", &mesh2d_strings->x_bound_edge_name);
+        status = get_attribute_by_var_name(this->ncid, mesh2d_strings->y_face_name, "bounds", &mesh2d_strings->y_bound_edge_name);
     }
 
     return status;
