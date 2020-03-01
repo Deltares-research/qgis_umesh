@@ -6,11 +6,11 @@ To build the plugin qgis_umesh you have to install QGIS (OSGeo4W network install
 The windows solution will place the qgis_umesh.dll on the qgis plugin directory (ex. c:\OSGeo4W64\apps\qgis\plugins\qgis_umesh.dll)
 
 ## Development environment
-At this moment the environment environemnt is based on Visual Studio 2015
+At this moment the environment environment is based on Visual Studio 2017
  
 ## Environment variables
 Environment variables (example)
-QT5DIR64=c:\Qt\Qt5.12.1\5.12.1\msvc2015_64\
+QT5DIR64=c:\Qt\Qt5.12.6\5.12.6\msvc2017_64\
 QT5DIR64OSGEO=c:\OSGeo4W64\apps\Qt5
 
 ## Link Libraries
@@ -48,7 +48,7 @@ Probably not needed
     qt5-qml: Qt5 QML
     qt5-tools: Qt5Designe & linguist (Development)
             
-## NOte
+## Note
 When compiling the source code I had to adjusted the file
 c:\OSGeo4W64\apps\qgis\include\qgsabstractgeometry.h
 An extra define of M_PI is added.
