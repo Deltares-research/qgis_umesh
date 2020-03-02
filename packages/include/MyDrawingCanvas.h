@@ -78,7 +78,7 @@ private slots:
     void MyMouseDoubleClickEvent(QMouseEvent*);
     void MyMouseMoveEvent(QMouseEvent*);
     void MyMousePressEvent(QMouseEvent*);
-    void MyMouseReleaseEvent(QMouseEvent*);
+    void MyMouseReleaseEvent(QgsMapMouseEvent *);
     void MyWheelEvent(QWheelEvent* e);
 
     void MyKeyPressEvent(QKeyEvent*);
@@ -86,7 +86,7 @@ private slots:
 
 
 public:
-    MyCanvas(QgsMapCanvas*);
+    MyCanvas(QgisInterface *);
     ~MyCanvas();
 
     void empty_caches();

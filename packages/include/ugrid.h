@@ -27,6 +27,7 @@ struct _time_series {
     QString * unit;
     QString * dim_name;
     double * times;
+    map<string, string> map_dim_name;
 };
 
 
@@ -34,6 +35,7 @@ struct _variable {
     double fill_value;
     vector<long> dims;
     nc_type nc_type;
+    int topology_dimension;
     string var_name;
     string location;
     string mesh;
@@ -51,6 +53,7 @@ struct _variable {
     int nr_sigma_layers;
     vector<vector <double *>> z_value;
     vector<vector<vector <double *>>> z_3d;
+    map<string, string> map_dim_name;
 };
 struct _feature {
     size_t count;
@@ -113,6 +116,10 @@ struct _ntw_nodes {
 
 struct _edge {
     size_t count;
+    vector<double> x;
+    vector<double> y;
+    vector<vector<double>> x_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
+    vector<vector<double>> y_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
     int ** edge_nodes;
     vector<double> branch_length;
     vector<string> name;
@@ -122,6 +129,8 @@ struct _faces {
     size_t count;
     vector<double> x;
     vector<double> y;
+    vector<vector<double>> x_bounds;  // polygon used when drawing quantities, not necessarily the total face
+    vector<vector<double>> y_bounds;  // polygon used when drawing quantities, not necessarily the total face
 };
 
 struct _ntw_string {
@@ -178,7 +187,7 @@ struct _mesh1d_string {
     string edge_dimension;
     string node_edge_exchange;
     //
-    string sigma_dim_name;  // in case of 2DV simualtion
+    vector<string> dim_name;;  // in case of 2DV simualtion
 };
 struct _mesh2d_string {
     string var_name;
@@ -205,8 +214,14 @@ struct _mesh2d_string {
     string face_node_connectivity;
     string max_face_nodes_dimension;
     string node_edge_exchange;
+    string layer_dimension;
+    string layer_interface_dimension;
     //
-    string sigma_dim_name;  // in case of 3D-sigma simualtion
+    vector<string> dim_name;  // in case of 3D-sigma simualtion
+    string x_bound_edge_name;
+    string y_bound_edge_name;
+    string x_bound_face_name;
+    string y_bound_face_name;
 };
 
 struct _mesh_contact_string {
@@ -216,7 +231,7 @@ struct _mesh_contact_string {
     string mesh_b;
     string mesh_contact;
     //
-    string sigma_dim_name;  // in case of 2DV + 3D-sigma simualtion
+    vector<string> dim_name;  // in case of 2DV + 3D-sigma simualtion
 };
 
 class UGRID
@@ -278,6 +293,7 @@ private:
     int read_mesh2d_attributes(struct _mesh2d_string *, int, string, int);
     int read_composite_mesh_attributes(struct _mesh_contact_string *, int, string);
 
+    int get_attribute_by_var_name(int, string, string, string *);
     int get_attribute(int, int, char *, char **);
     int get_attribute(int, int, char *, string *);
     int get_attribute(int, int, string, string *);
@@ -312,13 +328,14 @@ private:
     struct _mesh2d_string ** mesh2d_strings = NULL;
     struct _mesh_contact_string ** mesh_contact_strings = NULL;
 
-
     struct _time_series * time_series = NULL;
 
     long _nr_mesh_contacts;
     size_t _two;
     size_t * _dimids;
     vector<string> _dim_names;
+    map<string, long> _map_dim;
+    map<string, string> _map_dim_name;
 
     int ncid;
     int * topo_edge_nodes;

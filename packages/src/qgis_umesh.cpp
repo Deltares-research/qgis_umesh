@@ -57,7 +57,7 @@ qgis_umesh::qgis_umesh(QgisInterface* iface):
 }
 void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, int indexTo)
 {
-    //QMessageBox::information(0, "qgis_umesh::onWillRemoveChildren()", QString("Node: %1").arg(node->name()));
+    //QMessageBox::information(0, "qgis_umesh::onWillRemoveChildren()", QString("Node: %1.").arg(node->name()));
     // Remove the file entry belonging to this group
     // if available: deactivate the map_time_manager_window
 }
@@ -96,7 +96,7 @@ void qgis_umesh::CrsChanged()
                 new_crs = layer[0]->layer()->crs();
                 layer_name = layer[0]->layer()->name();
                 //QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Selected group: %1\nNew CRS: %2\nPrev. CRS: %3\nScreen CRS: %4").arg(selNode->name()).arg(new_crs.authid()).arg(m_crs.authid()).arg(s_crs.authid()));
-                //QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Layer[0] name: %1").arg(layer[0]->layer()->name()));
+                //QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Layer[0] name: %1.").arg(layer[0]->layer()->name()));
                 // Change coordinates to new_crs, by overwriting the mapping->epsg and mapping->epsg_code
                 UGRID * ugrid_file = get_active_ugrid_file(layer[0]->layer()->id());
                 QString epsg_code = new_crs.authid();
@@ -107,7 +107,7 @@ void qgis_umesh::CrsChanged()
         }
         if (checked == 0)
         {
-            QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Layer name: %1\nChecked: %2").arg(active_layer->name()).arg(checked));
+            QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Layer name: %1\nChecked: %2.").arg(active_layer->name()).arg(checked));
         }
     }
     else
@@ -197,6 +197,13 @@ void qgis_umesh::initGui()
     open_action_his_cf->setEnabled(true);
     connect(open_action_his_cf, SIGNAL(triggered()), this, SLOT(open_file_his_cf()));
 
+    icon_edit_1d_obs_points = get_icon_file(program_files_dir, "/icons/edit_observation_points.png");
+    edit_action_1d_obs_points = new QAction(icon_edit_1d_obs_points, tr("&1D: Observation points ..."));
+    edit_action_1d_obs_points->setToolTip(tr("Add/Remove observation points"));
+    edit_action_1d_obs_points->setStatusTip(tr("Add/Remove observation points on 1D geometry network"));
+    edit_action_1d_obs_points->setEnabled(true);
+    connect(edit_action_1d_obs_points, &QAction::triggered, this, &qgis_umesh::edit_1d_obs_points);
+
     icon_inspect = get_icon_file(program_files_dir, "/icons/remoteolv_icon.png");
     inspectAction = new QAction(icon_inspect, tr("&Show map output ..."));
     inspectAction->setToolTip(tr("Show map output time manager"));
@@ -229,7 +236,7 @@ void qgis_umesh::initGui()
     saveAction->setEnabled(true);
     connect(saveAction, SIGNAL(triggered()), this, SLOT(openFile()));
 
-    aboutAction = new QAction(tr("&About"), this);
+    aboutAction = new QAction(tr("&About ..."), this);
     aboutAction->setToolTip(tr("Show the About box ..."));
     aboutAction->setStatusTip(tr("Show the application's About box"));
     aboutAction->setEnabled(true);
@@ -242,7 +249,6 @@ void qgis_umesh::initGui()
     janm->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
     QMenu * janm1 = janm->addMenu("File");
-    janm1->addAction(open_action_mdu);
     janm1->addAction(open_action_map);
     janm1->addAction(open_action_his_cf);
 
@@ -255,6 +261,10 @@ void qgis_umesh::initGui()
 
     janm1 = janm->addMenu("Help");
     janm1->addAction(aboutAction);
+
+    janm1 = janm->addMenu("Trials");
+    janm1->addAction(open_action_mdu);
+    janm1->addAction(edit_action_1d_obs_points);
 
     _menuToolBar->addWidget(janm);
     tbar->addWidget(_menuToolBar);
@@ -272,7 +282,7 @@ void qgis_umesh::initGui()
 // create our map tool
 //
     mMyEditTool = new MyEditTool(mQGisIface->mapCanvas());
-    mMyCanvas = new MyCanvas(mQGisIface->mapCanvas());
+    mMyCanvas = new MyCanvas(mQGisIface);
 }
 //
 //-----------------------------------------------------------------------------
@@ -282,8 +292,7 @@ void qgis_umesh::set_enabled()
     if (mainAction->isChecked())
     {
         mainAction->setChecked(true);
-        mQGisIface->mapCanvas()->setMapTool(mMyCanvas);
-        //QMessageBox::warning(0, tr("Message"), QString("Plugin will be enabled \n"));
+        //QMessageBox::warning(0, tr("Message"), QString("Plugin will be enabled.\n"));
         _menuToolBar->setEnabled(true);
         open_action_map->setEnabled(true);
         open_action_his_cf->setEnabled(true);
@@ -299,8 +308,7 @@ void qgis_umesh::set_enabled()
     else
     {
         mainAction->setChecked(false);
-        mQGisIface->mapCanvas()->unsetMapTool(mMyCanvas);
-        //QMessageBox::warning(0, tr("Message"), QString("Plugin will be disabled \n"));
+        //QMessageBox::warning(0, tr("Message"), QString("Plugin will be disabled.\n"));
         _menuToolBar->setEnabled(false);
         open_action_map->setEnabled(false);
         inspectAction->setEnabled(false);
@@ -332,7 +340,7 @@ QIcon qgis_umesh::get_icon_file(QDir home_dir, QString file)
 //
 void qgis_umesh::show_map_output(UGRID * ugrid_file)
 {
-    //QMessageBox::information(0, "Information", QString("qgis_umesh::show_map_output()\nTime manager: %1").arg(MapTimeManagerWindow::get_count()));
+    //QMessageBox::information(0, "Information", QString("qgis_umesh::show_map_output()\nTime manager: %1.").arg(MapTimeManagerWindow::get_count()));
 
     // Check on at least UGRID-1.0 file formaat
     long nr_times = 0;
@@ -346,7 +354,7 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
     }
     else
     {
-        QMessageBox::warning(0, "Fatal error", QString("qgis_umesh::show_map_output()\nVariable ugrid_file is a nullptr"));
+        QMessageBox::warning(0, "Fatal error", QString("qgis_umesh::show_map_output().\nVariable ugrid_file is a nullptr."));
         return;
     }
     for (int i = 0; i < globals->count; i++)
@@ -356,7 +364,7 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
             conventions_found = true;
             if (globals->attribute[i]->cvalue.find("UGRID-1.") == string::npos)
             {
-                QMessageBox::information(0, "Information", QString("Time manager will not start because this file is not UGRID-1.* compliant.\nThis file has file format: %1").arg(globals->attribute[i]->cvalue.c_str()));
+                QMessageBox::information(0, "Information", QString("Time manager will not start because this file is not UGRID-1.* compliant.\nThis file has file format: %1.").arg(globals->attribute[i]->cvalue.c_str()));
                 return;
             }
         }
@@ -383,13 +391,128 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
             mtm_widget = new MapTimeManagerWindow(ugrid_file, mMyCanvas);
             mtm_widget->setContextMenuPolicy(Qt::CustomContextMenu);
             mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, mtm_widget);
-            connect(mtm_widget, &MapTimeManagerWindow::customContextMenuRequested, mtm_widget, &MapTimeManagerWindow::contextMenu);
+            QObject::connect(mtm_widget, &MapTimeManagerWindow::customContextMenuRequested, mtm_widget, &MapTimeManagerWindow::contextMenu);
         }
     }
     else
     {
         QString fname = ugrid_file->get_filename().canonicalFilePath();
-        QMessageBox::information(0, tr("Message"), QString("No time-series available in file:\n%1").arg(fname));
+        QMessageBox::information(0, tr("Message"), QString("No time-series available in file:\n%1.").arg(fname));
+    }
+}
+//
+//-----------------------------------------------------------------------------
+//
+void qgis_umesh::edit_1d_obs_points()
+{
+    //QMessageBox::information(0, "Information", QString("qgis_umesh::edit_1d_obs_points()."));
+    UGRID * ugrid_file = get_active_ugrid_file("");
+    if (ugrid_file == nullptr)
+    {
+        QMessageBox::information(0, "Information", QString("qgis_umesh::edit_1d_obs_points()\nSelect first a layer of a UGRID file."));
+        return;
+    }
+
+    // get UGRID Mesh group
+    QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
+    QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID Mesh - %1").arg(_fil_index + 1));
+    if (myGroup == nullptr)
+    {
+        QMessageBox::information(0, "Information", QString("Group layer with name \"UGRID Mesh - %1\" not found.").arg(_fil_index + 1));
+        return;
+    }
+
+    // Get selected geometry space and/or observation point layer
+    QList<QgsMapLayer *> geom_layers = QgsProject::instance()->mapLayersByName("Mesh1D geometry");
+    QList<QgsMapLayer *> obs_layers = QgsProject::instance()->mapLayersByName("Observation points");
+    // Look for the selected layers
+    QgsMapLayer * geom_layer;
+    QgsMapLayer * obs_layer;
+    if (geom_layers.size() > 1 || obs_layers.size() > 1)
+    {
+        QMessageBox::information(0, "Information", QString("Please load just one UGRID file."));
+        return;
+    }
+    if (geom_layers.size() == 0 && obs_layers.size() == 1)
+    {
+        // there is a no 1D geometry and one observation point layer available, is it selected
+        geom_layer = nullptr;
+        obs_layer = obs_layers[0];
+    }
+    else if (geom_layers.size() == 1 && obs_layers.size() == 0)
+    {
+        // there is one 1D geometry layer available, is it selected
+        geom_layer = geom_layers[0];
+        obs_layer = nullptr;
+    }
+    else if (geom_layers.size() == 1 && obs_layers.size() == 1)
+    {
+        // there is one 1D geometry and one observation point layer available, are they selected
+        geom_layer = geom_layers[0];
+        obs_layer = obs_layers[0];
+    }
+    else
+    {
+        QMessageBox::information(0, "Information", QString("Select a layer with name: 'Observation points' and/or 'Mesh1D Geometry'."));
+        return;
+    }
+    // Are geom_layer and obs_layer from the same UGRID Mesh group, i.e. the same ugrid_file
+    // Are geom_layer and obs_layer selected
+    QList<QgsLayerTreeNode *> selNodes = mQGisIface->layerTreeView()->selectedNodes(true);
+    QList< QgsLayerTreeLayer * > myLayers = myGroup->findLayers();
+    int obs_index = -1;
+    int geom_index = -1;
+    for (int i = 0; i < myLayers.size(); i++)
+    {
+        if (obs_layer->name() == myLayers[i]->name())
+        {
+            obs_index = i;
+        }
+        if (geom_layer != nullptr && geom_layer->name() == myLayers[i]->name())
+        {
+            geom_index = i;
+        }
+    }
+    // 1D: obs!=-1 and geom!=-1  (both in same UGRID Mesh group)
+    // Names are in myGroup but are they selected?
+    bool geom_ok = false;
+    bool obs_ok = false;
+    for (int i = 0; i < selNodes.size(); i++)
+    {
+        if (geom_index != -1 && selNodes[i]->name() == myLayers[geom_index]->name())
+        {
+            geom_ok = true;
+        }
+        if (selNodes[i]->name() == myLayers[obs_index]->name())
+        {
+            obs_ok = true;
+        }
+    }
+    // 2D: obs==true
+    if (!obs_ok && !geom_ok)  // 1D observation point at branch
+    {
+        QMessageBox::information(0, "qgis_umesh::edit_1d_obs_points()", QString("Please select 'Observation point' and/or 'Mesh1D geometry' layer."));
+        return;
+    }
+    if (!geom_ok && geom_layers.size() == 1)
+    {
+        // Selected geometry layer is not in the UGRID Mesh group
+        return;
+    }
+    if (!obs_ok && geom_ok)  //  no observation point layer selected, geometry space is selected
+    {
+        // add first 1D Observation point, so create first a layer 
+        QMessageBox::information(0, "qgis_umesh::edit_1d_obs_points()", QString("Development: Add first 1D observation point.\nCreate a new 'Observation point' layer OR\nAdd to exiting 'Observation point' layer."));
+    }
+    if (obs_ok && geom_ok)  // 1D observation point at branch
+    {
+        EditObsPoints * editObs_widget;
+        if (EditObsPoints::get_count() == 0)  // create a docked window if it is not already there.
+        {
+            if (!geom_ok) { geom_layer = nullptr; }
+            editObs_widget = new EditObsPoints(obs_layer, geom_layer, ugrid_file, mQGisIface);
+            mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, editObs_widget);
+        }
     }
 }
 //
@@ -415,7 +538,7 @@ void qgis_umesh::about()
     qsource_url = new QString(source_url);
 
     msg_text = new QString("Deltares\n");
-    msg_text->append("Plot UGRID compliant 1D mesh and geometry, and 2D meshes\n");
+    msg_text->append("Plot UGRID compliant 1D mesh with its geometry, and 2D meshes\n");
     msg_text->append(qtext);
     msg_text->append("\nSource: ");
     msg_text->append(qsource_url);
@@ -498,7 +621,7 @@ void qgis_umesh::openFile(QFileInfo ncfile)
     _fil_index++;
     _UgridFiles.push_back(new UGRID(ncfile, this->pgBar));
     UGRID * ugrid_file = new UGRID(ncfile, this->pgBar);
-    //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1").arg(ncfile.absoluteFilePath()));
+    //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1.").arg(ncfile.absoluteFilePath()));
     ugrid_file->read();
     _UgridFiles[_fil_index] = ugrid_file;
     activate_layers();
@@ -572,7 +695,7 @@ void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
     _his_cf_fil_index++;
     _his_cf_files.push_back(new HISCF(ncfile, this->pgBar));
     HISCF * _his_cf_file = new HISCF(ncfile, this->pgBar);
-    //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1").arg(ncfile.absoluteFilePath()));
+    //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1.").arg(ncfile.absoluteFilePath()));
     _his_cf_file->read();
     _his_cf_files[_his_cf_fil_index] = _his_cf_file;
     activate_observation_layers();
@@ -650,7 +773,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     if (ncfile.size() == 1)
     {
         mesh = jsonfile.absolutePath() + "/" + QString::fromStdString(ncfile[0]);
-        //QMessageBox::warning(0, tr("Warning"), tr("JSON file opened: %1\nMesh file opened: %2").arg(jsonfile.absoluteFilePath()).arg(mesh));
+        //QMessageBox::warning(0, tr("Warning"), tr("JSON file opened: %1\nMesh file opened: %2.").arg(jsonfile.absoluteFilePath()).arg(mesh));
         openFile(mesh);
     }
     else
@@ -666,22 +789,25 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     status = pt_mdu->get(values, struct_file);
     if (struct_file.size() == 1)
     {
-        QFileInfo file = QFileInfo(QString::fromStdString(struct_file[0]));
-        QString b_name = file.baseName();
-        QString b_ext = file.suffix();
-        QString s_file = b_name + "_" + b_ext + ".json";
-        QString struc_file = jsonfile.absolutePath() + "/" + s_file;
-        fname = struc_file.toStdString();
-        READ_JSON * pt_structures = new READ_JSON(fname);
-        UGRID * ugrid_file = _UgridFiles[_fil_index];
-        if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+        QString struc_file = jsonfile.absolutePath() + "/" + QString::fromStdString(struct_file[0]);
+        if (!QFileInfo(struc_file).exists())
         {
-            QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\"").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-            return;
+            QMessageBox::information(0, tr("Structure file"), tr("File:\n\"%1\",\nReferenced by tag: \"%2\" does not exist. Structures are skipped.").arg(struc_file).arg(QString::fromStdString(values)));
         }
-        struct _mapping * mapping;
-        mapping = ugrid_file->get_grid_mapping();
-        create_1D_structure_vector_layer(ugrid_file, pt_structures, mapping->epsg, myGroup);  // i.e. a JSON file
+        else
+        {
+            fname = struc_file.toStdString();
+            READ_JSON * pt_structures = new READ_JSON(fname);
+            UGRID * ugrid_file = _UgridFiles[_fil_index];
+            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            {
+                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                return;
+            }
+            struct _mapping * mapping;
+            mapping = ugrid_file->get_grid_mapping();
+            create_1D_structure_vector_layer(ugrid_file, pt_structures, mapping->epsg, myGroup);  // i.e. a JSON file
+        }
     }
     else
     {
@@ -693,22 +819,25 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     status = pt_mdu->get(values, obs_file);
     if (obs_file.size() == 1)
     {
-        QFileInfo file = QFileInfo(QString::fromStdString(obs_file[0]));
-        QString b_name = file.baseName();
-        QString b_ext = file.suffix();
-        QString s_file = b_name + "_" + b_ext + ".json";
-        QString obser_file = jsonfile.absolutePath() + "/" + s_file;
-        fname = obser_file.toStdString();
-        READ_JSON * pt_obs = new READ_JSON(fname);
-        UGRID * ugrid_file = _UgridFiles[_fil_index];
-        if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+        QString obser_file = jsonfile.absolutePath() + "/" + QString::fromStdString(obs_file[0]);
+        if (!QFileInfo(obser_file).exists())
         {
-            QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\"").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-            return;
+            QMessageBox::information(0, tr("Observation point file"), tr("File:\n\"%1\",\nReferenced by tag: \"%2\" does not exist. Observation points are skipped.").arg(obser_file).arg(QString::fromStdString(values)));
         }
-        struct _mapping * mapping;
-        mapping = ugrid_file->get_grid_mapping();
-        create_1D_observation_point_vector_layer(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
+        else
+        {
+            fname = obser_file.toStdString();
+            READ_JSON * pt_obs = new READ_JSON(fname);
+            UGRID * ugrid_file = _UgridFiles[_fil_index];
+            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            {
+                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                return;
+            }
+            struct _mapping * mapping;
+            mapping = ugrid_file->get_grid_mapping();
+            create_1D_observation_point_vector_layer(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
+        }
     }
     else
     {
@@ -721,22 +850,25 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
 
     if (ext_file_name.size() == 1)
     {
-        QFileInfo file = QFileInfo(QString::fromStdString(ext_file_name[0]));
-        QString b_name = file.baseName();
-        QString b_ext = file.suffix();
-        QString s_file = b_name + "_" + b_ext + ".json";
-        QString ext_file = jsonfile.absolutePath() + "/" + s_file;
-        fname = ext_file.toStdString();
-        READ_JSON * pt_ext_file = new READ_JSON(fname);
-        UGRID * ugrid_file = _UgridFiles[_fil_index];
-        if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+        QString ext_file = jsonfile.absolutePath() + "/" + QString::fromStdString(ext_file_name[0]);
+        if (!QFileInfo(ext_file).exists())
         {
-            QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\"").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-            return;
+            QMessageBox::information(0, tr("External forcings file"), tr("File:\n\"%1\",\nReferenced by tag: \"%2\" does not exist. External forcings are skipped.").arg(ext_file).arg(QString::fromStdString(values)));
         }
-        struct _mapping * mapping;
-        mapping = ugrid_file->get_grid_mapping();
-        create_1D_external_forcing_vector_layer(ugrid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
+        else
+        {
+            fname = ext_file.toStdString();
+            READ_JSON * pt_ext_file = new READ_JSON(fname);
+            UGRID * ugrid_file = _UgridFiles[_fil_index];
+            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            {
+                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                return;
+            }
+            struct _mapping * mapping;
+            mapping = ugrid_file->get_grid_mapping();
+            create_1D_external_forcing_vector_layer(ugrid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
+        }
     }
     else
     {
@@ -765,7 +897,7 @@ void qgis_umesh::start_plotcfts()
         QMessageBox::warning(0, tr("Message"), QString(tr("Missing installation directory:\n")) + prgm_env + QString(".\nProgram PlotCFTS will not start."));
         return;
     }
-    //QMessageBox::information(0, tr("qgis_umesh::start_plotcfts()"), tr("start_plotcfts"));
+    //QMessageBox::information(0, tr("qgis_umesh::start_plotcfts()"), tr("start_plotcfts."));
     HISCF * _his_cf_file = get_active_his_cf_file("");
     if (_his_cf_file == nullptr)
     {
@@ -816,7 +948,7 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
     }
     if (layer_id != "")
     {
-        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nActive layer: %1").arg(active_layer->name()));
+        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nActive layer: %1.").arg(active_layer->name()));
         // if there is an active layer, belongs it to a Mesh-group?
         for (int j = 0; j < _fil_index + 1; j++)
         {
@@ -829,7 +961,7 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
                     // belong the active layer to this group?
                     if (layers[k]->layerId() == layer_id)
                     {
-                        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2").arg(myGroup->name()).arg(active_layer->name()));
+                        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2.").arg(myGroup->name()).arg(active_layer->name()));
                         // get the full file name
                         ugrid_file = _UgridFiles[j];
                     }
@@ -879,7 +1011,7 @@ HISCF * qgis_umesh::get_active_his_cf_file(QString layer_id)
     }
     if (layer_id != "")
     {
-        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nActive layer: %1").arg(active_layer->name()));
+        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nActive layer: %1.").arg(active_layer->name()));
         // if there is an active layer, belongs it to a Mesh-group?
         for (int j = 0; j < _his_cf_fil_index + 1; j++)
         {
@@ -892,7 +1024,7 @@ HISCF * qgis_umesh::get_active_his_cf_file(QString layer_id)
                     // belong the active layer to this group?
                     if (layers[k]->layerId() == layer_id)
                     {
-                        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2").arg(myGroup->name()).arg(active_layer->name()));
+                        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2.").arg(myGroup->name()).arg(active_layer->name()));
                         // get the full file name
                         _his_cf_file = _his_cf_files[j];
                     }
@@ -928,12 +1060,10 @@ void qgis_umesh::activate_layers()
 
     if (mainAction->isChecked())
     {
-        mQGisIface->mapCanvas()->setMapTool(mMyCanvas);
-
         QList <QgsLayerTreeGroup *> groups = treeRoot->findGroups();
         for (int i = 0; i< groups.length(); i++)
         {
-            //QMessageBox::warning(0, "Message", QString("_fil_index: %1+1").arg(_fil_index+1));
+            //QMessageBox::warning(0, "Message", QString("_fil_index: %1+1.").arg(_fil_index+1));
             for (int j = 0; j < _fil_index+1; j++)
             {
                 QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID Mesh - %1").arg(j + 1));
@@ -951,7 +1081,7 @@ void qgis_umesh::activate_layers()
             treeGroup = treeRoot->insertGroup(_fil_index, name);
             treeGroup->setExpanded(true);  // true is the default 
             treeGroup->setItemVisibilityChecked(true);
-            //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
+            //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
             treeGroup->setItemVisibilityCheckedRecursive(true);
         }
         //treeGroup->setItemVisibilityCheckedParentRecursive(true);
@@ -985,13 +1115,13 @@ void qgis_umesh::activate_layers()
                                     // Mesh 1D edges and mesh 1D nodes
 
             mesh1d = ugrid_file->get_mesh1d();
-            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes"));
+            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes."));
             if (mesh1d != nullptr)
             {
                 create_nodes_vector_layer(QString("Mesh1D nodes"), mesh1d->node[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D edges"));
+                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D edges."));
                 create_edges_vector_layer(QString("Mesh1D edges"), mesh1d->node[0], mesh1d->edge[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
@@ -1004,18 +1134,18 @@ void qgis_umesh::activate_layers()
 
             if (ntw_nodes != nullptr)
             {
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Connection nodes"));
+                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Connection nodes."));
                 QString layer_name = QString("Mesh1D Connection nodes");
                 create_nodes_vector_layer(layer_name, ntw_nodes->node[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
  
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D geometry"));
+                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D geometry."));
                 create_geometry_vector_layer(QString("Mesh1D geometry"), ntw_geom, mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
 
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Topology edges"));
+                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Topology edges."));
                 create_edges_vector_layer(QString("Mesh1D Topology edges"), ntw_nodes->node[0], ntw_edges->edge[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
@@ -1035,77 +1165,83 @@ void qgis_umesh::activate_layers()
             mesh2d = ugrid_file->get_mesh2d();
             if (mesh2d != nullptr)
             {
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes"));
-                create_nodes_vector_layer(QString("Mesh2D faces"), mesh2d->face[0], mapping->epsg, treeGroup);
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
+                //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes."));
+                if (mesh2d->face[0]->count > 0)
+                {
+                    create_nodes_vector_layer(QString("Mesh2D faces"), mesh2d->face[0], mapping->epsg, treeGroup);
+                    pgbar_value += 10;
+                    this->pgBar->setValue(pgbar_value);
+                }
 
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes"));
+                //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes."));
                 create_nodes_vector_layer(QString("Mesh2D nodes"), mesh2d->node[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
 
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D edges"));
-                create_edges_vector_layer(QString("Mesh2D edges"), mesh2d->node[0], mesh2d->edge[0], mapping->epsg, treeGroup);
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
+                //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D edges."));
+                if (mesh2d->edge[0]->count > 0)
+                {
+                    create_edges_vector_layer(QString("Mesh2D edges"), mesh2d->node[0], mesh2d->edge[0], mapping->epsg, treeGroup);
+                    pgbar_value += 10;
+                    this->pgBar->setValue(pgbar_value);
+                }
             }
             pgbar_value = 600;  // start of pgbar counter
 
             this->pgBar->setValue(pgbar_value);
 
+            //
             // get the time independent variables and list them in the layer-panel as treegroup
+            //
             struct _mesh_variable * var = ugrid_file->get_variables();
-            int k = 0;
+
+            bool time_independent_data = false;
             if (mesh2d != nullptr)
             {
                 for (int i = 0; i < var->nr_vars; i++)
                 {
                     if (!var->variable[i]->time_series)
                     {
-                        k += 1;
-                        if (k == 1)
+                        time_independent_data = true;
+                        break;
+                    }
+                }
+                if (time_independent_data)
+                {
+                    QString name = QString("Time independent data");
+                    treeGroup->addGroup(name);
+                    QgsLayerTreeGroup * subTreeGroup = treeGroup->findGroup(name);
+
+                    subTreeGroup->setExpanded(true);  // true is the default 
+                    subTreeGroup->setItemVisibilityChecked(true);
+                    //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
+                    subTreeGroup->setItemVisibilityCheckedRecursive(true);
+
+                    //cb->blockSignals(true);
+                    for (int i = 0; i < var->nr_vars; i++)
+                    {
+                        if (!var->variable[i]->time_series && var->variable[i]->coordinates != "")
                         {
-                            QString name = QString("Time independent data");
-                            treeGroup->addGroup(name);
-                            QgsLayerTreeGroup * subTreeGroup = treeGroup->findGroup(name);
-
-                            subTreeGroup->setExpanded(true);  // true is the default 
-                            subTreeGroup->setItemVisibilityChecked(true);
-                            //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
-                            subTreeGroup->setItemVisibilityCheckedRecursive(true);
-
-                            //cb->blockSignals(true);
-                            for (int i = 0; i < var->nr_vars; i++)
+                            QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
+                            QString var_name = QString::fromStdString(var->variable[i]->var_name).trimmed();
+                            if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                             {
-                                if (!var->variable[i]->time_series)
-                                {
-                                    QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
-                                    if (var->variable[i]->location == "edge" && var->variable[i]->mesh == "mesh2d" && var->variable[i]->nc_type == NC_DOUBLE)
-                                    {
-                                        vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                        vector<double *> z_value = std_data_at_face[0];
-                                        //create_edges_vector_layer(name, mesh2d->node[0], mesh2d->edge[0], mapping->epsg, subTreeGroup);
-                                        create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], z_value, mapping->epsg, subTreeGroup);
-                                    }
-                                    if (var->variable[i]->location == "face" && var->variable[i]->mesh == "mesh2d" && var->variable[i]->nc_type == NC_DOUBLE)
-                                    {
-                                        vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                        vector<double *> z_value = std_data_at_face[0];
-                                        create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, subTreeGroup);
-                                    }
-                                    if (var->variable[i]->location == "node" && var->variable[i]->mesh == "mesh2d"&& var->variable[i]->nc_type == NC_DOUBLE)
-                                    {
-                                        vector<vector <double *>>  std_data_at_node = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                        vector<double *> z_value = std_data_at_node[0];
-                                        create_data_on_nodes_vector_layer(var->variable[i], mesh2d->node[0], z_value, mapping->epsg, subTreeGroup);
-                                    }
-                                }
+                                vector<vector <double *>>  std_data_at_edge = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], std_data_at_edge[0], mapping->epsg, subTreeGroup);
                             }
-                            //cb->blockSignals(false);
-
+                            if (var->variable[i]->location == "face" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
+                            {
+                                vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], std_data_at_face[0], mapping->epsg, subTreeGroup);
+                            }
+                            if (var->variable[i]->location == "node" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
+                            {
+                                vector<vector <double *>>  std_data_at_node = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->node[0], std_data_at_node[0], mapping->epsg, subTreeGroup);
+                            }
                         }
                     }
+                    //cb->blockSignals(false);
                 }
             }  // end mesh2d != nullptr
         }
@@ -1120,8 +1256,6 @@ void qgis_umesh::activate_layers()
             QgsLayerTreeGroup * myGroup = treeRoot->findGroup(name);
             myGroup->setItemVisibilityChecked(false);
         }
-
-        mQGisIface->mapCanvas()->unsetMapTool(mMyCanvas);
     }
 }
 //
@@ -1135,12 +1269,10 @@ void qgis_umesh::activate_observation_layers()
 
     if (mainAction->isChecked())
     {
-        mQGisIface->mapCanvas()->setMapTool(mMyCanvas);
-
         QList <QgsLayerTreeGroup *> groups = treeRoot->findGroups();
         for (int i = 0; i< groups.length(); i++)
         {
-            //QMessageBox::warning(0, "Message", QString("_fil_index: %1+1").arg(_fil_index+1));
+            //QMessageBox::warning(0, "Message", QString("_fil_index: %1+1.").arg(_fil_index+1));
             for (int j = 0; j < _his_cf_fil_index + 1; j++)
             {
                 QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("History - %1").arg(j + 1));
@@ -1158,7 +1290,7 @@ void qgis_umesh::activate_observation_layers()
             treeGroup = treeRoot->insertGroup(_his_cf_fil_index, name);
             treeGroup->setExpanded(true);  // true is the default 
             treeGroup->setItemVisibilityChecked(true);
-            //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
+            //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
             treeGroup->setItemVisibilityCheckedRecursive(true);
         }
         if (_his_cf_fil_index != -1)
@@ -1182,7 +1314,7 @@ void qgis_umesh::activate_observation_layers()
                                     // Mesh 1D edges and mesh 1D nodes
 
             obs_type = _his_cf_file->get_observation_location();
-            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes"));
+            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes."));
             if (obs_type.size() > 0)
             {
                 for (int i = 0; i < obs_type.size(); i++)
@@ -1211,8 +1343,6 @@ void qgis_umesh::activate_observation_layers()
             QgsLayerTreeGroup * myGroup = treeRoot->findGroup(name);
             myGroup->setItemVisibilityChecked(false);
         }
-
-        mQGisIface->mapCanvas()->unsetMapTool(mMyCanvas);
     }
 }
 //
@@ -1241,7 +1371,6 @@ void qgis_umesh::unload()
     delete this->mainAction;  // delete main Icon on the Delft3D toolbar tbar
     delete this->tbar;  // delete main icon and combobox with plugins
     unload_vector_layers();
-    mQGisIface->mapCanvas()->unsetMapTool(mMyCanvas);
 
     // clean the Mesh (unstructured) group
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
@@ -1274,7 +1403,7 @@ void qgis_umesh::unload()
         mtm_widget = NULL; 
 
     }
-    //QMessageBox::warning(0, tr("Message"), QString("qgis_umesh::unload()"));
+    //QMessageBox::warning(0, tr("Message"), QString("qgis_umesh::unload()."));
 }
 //
 //-----------------------------------------------------------------------------
@@ -1284,7 +1413,7 @@ void qgis_umesh::unload_vector_layers()
     // remove scratch layer
     QList< QgsMapLayer * > layers = mQGisIface->mapCanvas()->layers();
     int cnt = layers.count();
-    //QMessageBox::warning(0, tr("Message"), QString("qgis_umesh::unload_vector_layers()\nActive layers: %1\n").arg(cnt));
+    //QMessageBox::warning(0, tr("Message"), QString("qgis_umesh::unload_vector_layers()\nActive layers: %1.").arg(cnt));
 
     for (int i = 0; i < layers.count(); i++)
     {
@@ -1375,7 +1504,7 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
             }
             vl->commitChanges();
             //QgsCoordinateReferenceSystem crs = vl->crs();
-            //QMessageBox::information(0, tr("Message: create_geometry_vector_layer"), QString("CRS layer: %1").arg(crs.authid()));
+            //QMessageBox::information(0, tr("Message: create_geometry_vector_layer"), QString("CRS layer: %1.").arg(crs.authid()));
 
             // todo: Probeersel symbology adjustements
 
@@ -1393,13 +1522,13 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
                 }
                 else if (layer_name.contains("Mesh1D nodes"))
                 {
-                    simple_marker->setSize(1.0);
+                    simple_marker->setSize(1.5);
                     simple_marker->setColor(QColor(0, 0, 0));
                     simple_marker->setFillColor(QColor(255, 255, 255));  // water level point
                 }
                 else if (layer_name.contains("Mesh2D faces") )
                 {
-                    simple_marker->setSize(1.0);
+                    simple_marker->setSize(1.5);
                     simple_marker->setColor(QColor(0, 0, 0));
                     simple_marker->setFillColor(QColor(255, 255, 255));  // water level point
                     vl->setSubLayerVisibility(layer_name, false);
@@ -1472,7 +1601,7 @@ void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feat
                 double y2 = nodes->y[p2];
                 point.append(QgsPointXY(x1, y1));
                 point.append(QgsPointXY(x2, y2));
-                //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5)").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
+                //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5).").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
                 lines.append(point);
 
                 QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
@@ -1625,7 +1754,7 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
                         double x1 = ntw_geom->geom[i]->nodes[j]->x[k];
                         double y1 = ntw_geom->geom[i]->nodes[j]->y[k];
                         point.append(QgsPointXY(x1, y1));
-                        //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5)").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
+                        //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5).").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
                     }
                     lines.append(point);
                     QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
@@ -1655,7 +1784,7 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
             if (layer_name == QString("Mesh1D geometry"))
             {
                 QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
-                line_marker->setWidth(0.25);
+                line_marker->setWidth(0.5);
                 line_marker->setColor(QColor(0, 0, 255));
 
                 QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
@@ -1732,7 +1861,7 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
                 double y2 = nodes->y[p2];
                 point.append(QgsPointXY(x1, y1));
                 point.append(QgsPointXY(x2, y2));
-                //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5)").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
+                //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5).").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
                 lines.append(point);
 
                 QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
@@ -1843,7 +1972,7 @@ void qgis_umesh::create_observation_point_vector_layer(QString layer_name, _loca
             vl->commitChanges();
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-            simple_marker->setSize(3.0);
+            simple_marker->setSize(4.0);
             simple_marker->setColor(QColor(0, 0, 0));
             simple_marker->setFillColor(QColor(255, 255, 255));
             simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
@@ -1992,7 +2121,7 @@ void qgis_umesh::create_1D_structure_vector_layer(UGRID * ugrid_file, READ_JSON 
             subTreeGroup = treeGroup->findGroup(group_name);
             subTreeGroup->setExpanded(true);  // true is the default 
             subTreeGroup->setItemVisibilityChecked(true);
-            //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
+            //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
             subTreeGroup->setItemVisibilityCheckedRecursive(true);
         }
         // Now there is a tree group with name "Area"
@@ -2044,7 +2173,7 @@ void qgis_umesh::create_1D_structure_vector_layer(UGRID * ugrid_file, READ_JSON 
         vl->commitChanges();
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-        simple_marker->setSize(2.5);
+        simple_marker->setSize(3.5);
         simple_marker->setColor(QColor(0, 0, 0));
         simple_marker->setFillColor(QColor(255, 0, 0));
         simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Triangle);
@@ -2114,7 +2243,7 @@ void qgis_umesh::create_1D_observation_point_vector_layer(UGRID * ugrid_file, RE
             subTreeGroup = treeGroup->findGroup(group_name);
             subTreeGroup->setExpanded(true);  // true is the default 
             subTreeGroup->setItemVisibilityChecked(true);
-            //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
+            //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
             subTreeGroup->setItemVisibilityCheckedRecursive(true);
         }
         // Now there is a tree group with name "Area"
@@ -2169,7 +2298,7 @@ void qgis_umesh::create_1D_observation_point_vector_layer(UGRID * ugrid_file, RE
         vl->commitChanges();
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-        simple_marker->setSize(3.0);
+        simple_marker->setSize(4.0);
         simple_marker->setColor(QColor(255, 0, 0));
         simple_marker->setFillColor(QColor(255, 255, 255));
         simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
@@ -2236,7 +2365,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
                 subTreeGroup = treeGroup->findGroup(group_name);
                 subTreeGroup->setExpanded(true);  // true is the default 
                 subTreeGroup->setItemVisibilityChecked(true);
-                //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
+                //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
                 subTreeGroup->setItemVisibilityCheckedRecursive(true);
             }
             // Now there is a tree group with name "Area"
@@ -2290,13 +2419,13 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             }
             vl->commitChanges();
 
-            //QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-            QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/OSGeo4W64/apps/qgis/svg/arrows/NorthArrow_11.svg"));
-            simple_marker->setSize(2.5);
+            //QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/OSGeo4W64/apps/qgis/svg/arrows/NorthArrow_11.svg"));
+            //QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
+            QgsRasterMarkerSymbolLayer * simple_marker = new QgsRasterMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.png"));
+            simple_marker->setSize(4.0);
             simple_marker->setColor(QColor(0, 255, 0));
             simple_marker->setFillColor(QColor(0, 255, 0));
-            //simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Square);
-            simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Observation point rotation")));
+            simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Lateral point rotation")));
 
             QgsSymbol * marker = new QgsMarkerSymbol();
             marker->changeSymbolLayer(0, simple_marker);
@@ -2331,7 +2460,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
                 subTreeGroup = treeGroup->findGroup(group_name);
                 subTreeGroup->setExpanded(true);  // true is the default 
                 subTreeGroup->setItemVisibilityChecked(true);
-                //QMessageBox::warning(0, "Message", QString("Create group: %1").arg(name));
+                //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
                 subTreeGroup->setItemVisibilityCheckedRecursive(true);
             }
             // Now there is a tree group with name "Area"
@@ -2387,7 +2516,6 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             simple_marker->setColor(QColor(0, 255, 0));
             simple_marker->setFillColor(QColor(0, 255, 0));
             simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Diamond);
-            //simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Observation point rotation")));
 
             QgsSymbol * marker = new QgsMarkerSymbol();
             marker->changeSymbolLayer(0, simple_marker);
@@ -2510,7 +2638,7 @@ void qgis_umesh::add_layer_to_group(QgsVectorLayer * vl, QgsLayerTreeGroup * tre
 //
 void qgis_umesh::dummy_slot()
 {
-    QMessageBox::information(0, tr("Message"), QString("Dummy slot called"));
+    QMessageBox::information(0, tr("Message"), QString("Dummy slot called."));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

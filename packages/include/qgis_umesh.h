@@ -58,6 +58,7 @@
 #include "ugrid.h"
 #include "his_cf.h"
 #include "read_json.h"
+#include "edit_observation_points_window.h"
 #include "map_time_manager_window.h"
 #include "map_property_window.h"
 
@@ -99,6 +100,7 @@ class qgis_umesh
 
         void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
         void show_map_output(UGRID *);
+        void edit_1d_obs_points();
 
         
     private slots:
@@ -139,6 +141,7 @@ class qgis_umesh
         QAction * open_action_map;
         QAction * open_action_his_cf;
         QAction * open_action_mdu;
+        QAction * edit_action_1d_obs_points;
         QAction * inspectAction;
         QAction * plotcftsAction;
         QAction * mapoutputAction;
@@ -155,6 +158,7 @@ class qgis_umesh
         QIcon icon_open;
         QIcon icon_open_his_cf;
         QIcon icon_inspect;
+        QIcon icon_edit_1d_obs_points;
         QIcon icon_plotcfts;
         QIcon icon_mapoutput;
         QDir current_dir;

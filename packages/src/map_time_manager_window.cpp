@@ -297,7 +297,7 @@ QPushButton * MapTimeManagerWindow::show_parameter()
 QComboBox * MapTimeManagerWindow::create_parameter_selection()
 {
     QComboBox * cb = new QComboBox();
-    cb->setMinimumSize(100, 10);
+    cb->setMinimumSize(100, 22);
     struct _mesh_variable * var = _ugrid_file->get_variables();
 
     cb->blockSignals(true);
