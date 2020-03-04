@@ -1102,7 +1102,9 @@ void qgis_umesh::activate_layers()
             if (mapping->epsg == 0)
             {
                 QString fname = ugrid_file->get_filename().canonicalFilePath();
-                QMessageBox::information(0, "Message", QString("The CRS code on file\n\'%1\'\nis not known.\nThe CRS code is set to the same CRS code as the presentation map (see lower right corner).\nPlease change the CRS code after loading the file, if necessary.").arg(fname));
+                QString msg = QString("%1\nThe CRS code on file \'%2\' is not known.\nThe CRS code is set to the same CRS code as the presentation map (see lower right corner).\nPlease change the CRS code after loading the file, if necessary.").arg(ugrid_file->get_filename().fileName()).arg(fname);
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true );
+
                 // get the crs of the presentation (lower right corner of the qgis main-window)
                 QgsCoordinateReferenceSystem _crs = QgsProject::instance()->crs();
                 QString epsg_code = _crs.authid();
@@ -1301,7 +1303,9 @@ void qgis_umesh::activate_observation_layers()
             if (mapping->epsg == 0)
             {
                 QString fname = _his_cf_file->get_filename().canonicalFilePath();
-                QMessageBox::information(0, "Message", QString("The CRS code on file\n\'%1\'\nis not known.\nThe CRS code is set to the same CRS code as the presentation map (see lower right corner).\nPlease change the CRS code after loading the file, if necessary.").arg(fname));
+                QString msg = QString("%1\nThe CRS code on file \'%2\' is not known.\nThe CRS code is set to the same CRS code as the presentation map (see lower right corner).\nPlease change the CRS code after loading the file, if necessary.").arg(_his_cf_file->get_filename().fileName()).arg(fname);
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+
                 // get the crs of the presentation (lower right corner of the qgis main-window)
                 QgsCoordinateReferenceSystem _crs = QgsProject::instance()->crs();
                 QString epsg_code = _crs.authid();

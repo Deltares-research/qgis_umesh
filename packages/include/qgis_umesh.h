@@ -35,6 +35,7 @@
 #include <QgsLayerTreeView.h>
 #include <qgsmapcanvas.h>
 #include <qgsmaplayer.h>
+#include <qgsmessagelog.h>
 #include <qgsvectorlayer.h>
 #include <qgisplugin.h>
 #include <qgisinterface.h>
