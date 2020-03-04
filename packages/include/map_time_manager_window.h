@@ -52,7 +52,9 @@ public:
     public slots:
         void closeEvent(QCloseEvent *);
         void button_group_pressed(int);
-        void cb_clicked(int);
+        void cb_clicked_1d(int);
+        void cb_clicked_1d2d(int);
+        void cb_clicked_2d(int);
 
         void start_reverse();
         void pause_time_loop();
@@ -70,7 +72,9 @@ public:
     public slots:
         void MyMouseReleaseEvent(QMouseEvent* e);
         void ramp_changed();
-        void show_hide_map_data();
+        void show_hide_map_data_1d();
+        void show_hide_map_data_1d2d();
+        void show_hide_map_data_2d();
         void contextMenu(const QPoint &);
 
     public:
@@ -85,8 +89,15 @@ public:
         QHBoxLayout * create_push_buttons_layout_steps();
         QSlider *create_time_slider();
         QPushButton * show_parameter();
-        QComboBox * create_parameter_selection();
+        QCheckBox * check_parameter_1d();
+        QCheckBox * check_parameter_1d2d();
+        QCheckBox * check_parameter_2d();
+        QComboBox * create_parameter_selection_1d(QString);
+        QComboBox * create_parameter_selection_1d2d(QString);
+        QComboBox * create_parameter_selection_2d(QString);
         QColorRampEditor * create_color_ramp();
+        void draw_time_dependent_data_1d(QComboBox *, int);
+        void draw_time_dependent_data(QComboBox *, int);
         QColorRampEditor * m_ramph;
 
         void setValue(int);
@@ -107,8 +118,15 @@ public:
         bool stop_time_loop;
         int first_date_time_indx;
         int last_date_time_indx;
-        QComboBox * _cb;
-        bool m_show_map_data;
+        QComboBox * m_cb_1d = nullptr;
+        QComboBox * m_cb_1d2d = nullptr;
+        QComboBox * m_cb_2d = nullptr;
+        QCheckBox * m_show_check_1d = nullptr;
+        QCheckBox * m_show_check_1d2d = nullptr;
+        QCheckBox * m_show_check_2d = nullptr;
+        bool m_show_map_data_1d;
+        bool m_show_map_data_1d2d;
+        bool m_show_map_data_2d;
 };
 
 #endif

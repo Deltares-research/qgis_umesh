@@ -15,7 +15,9 @@ MapTimeManagerWindow::MapTimeManagerWindow(UGRID * ugrid_file, MyCanvas * MyCanv
     create_window(); //QMessageBox::information(0, "Information", "DockWindow::DockWindow()");
     _current_step = 0;
     _q_times = _ugrid_file->get_qdt_times();
-    m_show_map_data = false;  // releated to pushbutton MapTimeManagerWindow::show_parameter
+    m_show_map_data_1d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d
+    m_show_map_data_1d2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d2d
+    m_show_map_data_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_2d
     MapProperty * m_property = MapProperty::getInstance();
 
     connect(m_ramph, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
@@ -49,7 +51,7 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::~closeEvent()");
     this->object_count--;
     _MyCanvas->set_variable(nullptr);
-    _MyCanvas->empty_caches();
+    //_MyCanvas->empty_caches();
     // TODO Reset timers, ie _current timestep etc
 }
 int MapTimeManagerWindow::get_count()
@@ -63,7 +65,9 @@ void MapTimeManagerWindow::create_window()
 
     QWidget * wid = new QWidget();
     QVBoxLayout * vl = new QVBoxLayout();
-    QHBoxLayout * hl= new QHBoxLayout();
+    QGridLayout * hl= new QGridLayout();
+    hl->setColumnStretch(0, 0);
+    hl->setColumnStretch(1, 100);
     QAction * _show_p = new QAction();
 
     QGridLayout * gl = create_date_time_layout();
@@ -83,10 +87,39 @@ void MapTimeManagerWindow::create_window()
     vl->addWidget(line);
     vl->addWidget(m_slider);
 
-    QPushButton * _show_pb = show_parameter();
-    hl->addWidget(_show_pb, 1);
-    _cb = create_parameter_selection();
-    hl->addWidget(_cb, 99);
+    int row = 0;
+    struct _mesh1d_string ** m1d = _ugrid_file->get_mesh1d_string();
+    if (_ugrid_file->get_mesh1d_string() != nullptr)
+    {
+        m_show_check_1d = check_parameter_1d();
+        hl->addWidget(m_show_check_1d, row, 0);
+        QString txt = QString::fromStdString(m1d[0]->var_name);
+        m_cb_1d = create_parameter_selection_1d(txt);
+        hl->addWidget(m_cb_1d, row, 1);
+    }
+
+    struct _mesh_contact_string ** m1d2d = _ugrid_file->get_mesh_contact_string();
+    if (_ugrid_file->get_mesh_contact_string() != nullptr)
+    {
+        row += 1;
+        m_show_check_1d2d = check_parameter_1d2d();
+        hl->addWidget(m_show_check_1d2d, row, 0);
+        QString txt = QString::fromStdString(m1d2d[0]->mesh_contact);
+        m_cb_1d2d = create_parameter_selection_1d2d(txt);
+        hl->addWidget(m_cb_1d2d, row, 1);
+    }
+
+    struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
+    if (_ugrid_file->get_mesh2d_string() != nullptr)
+    {
+        row += 1;
+        m_show_check_2d = check_parameter_2d();
+        hl->addWidget(m_show_check_2d, row, 0);
+        QString txt = QString::fromStdString(m2d[0]->var_name);
+        m_cb_2d = create_parameter_selection_2d(txt);
+        hl->addWidget(m_cb_2d, row, 1);
+    }
+
     vl->addLayout(hl);
 
     m_ramph = create_color_ramp();
@@ -266,6 +299,52 @@ QSlider * MapTimeManagerWindow::create_time_slider()
 
     return sl;  
 }
+
+QCheckBox * MapTimeManagerWindow::check_parameter_1d()
+{
+    QCheckBox * checkb = new QCheckBox("1D");
+    checkb->setToolTip("Show/Hide Map results");
+    checkb->setStatusTip("Show/Hide Map results");
+    checkb->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
+    checkb->setCheckable(true);
+    checkb->setChecked(false);
+    checkb->setEnabled(true);
+    m_show_map_data_1d = false;
+    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_1d);
+
+    return checkb;
+}
+
+
+QCheckBox * MapTimeManagerWindow::check_parameter_1d2d()
+{
+    QCheckBox * checkb = new QCheckBox("1D2D");
+    checkb->setToolTip("Show/Hide Map results");
+    checkb->setStatusTip("Show/Hide Map results");
+    checkb->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
+    checkb->setCheckable(true);
+    checkb->setChecked(false);
+    checkb->setEnabled(true);
+    m_show_map_data_1d2d = false;
+    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_1d2d);
+
+    return checkb;
+}
+
+QCheckBox * MapTimeManagerWindow::check_parameter_2d()
+{
+    QCheckBox * checkb = new QCheckBox("2D");
+    checkb->setToolTip("Show/Hide Map results");
+    checkb->setStatusTip("Show/Hide Map results");
+    checkb->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
+    checkb->setCheckable(true);
+    checkb->setChecked(false);
+    checkb->setEnabled(true);
+    m_show_map_data_2d = false;
+    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_2d);
+
+    return checkb;
+}
 QPushButton * MapTimeManagerWindow::show_parameter()
 {
 #include "vsi.xpm"
@@ -287,14 +366,14 @@ QPushButton * MapTimeManagerWindow::show_parameter()
     pb->setCheckable(true);
     pb->setChecked(false);
     pb->setEnabled(true);
-    m_show_map_data = false;
+    //m_show_map_data = false;
 
-    connect(pb, &QPushButton::released, this, &MapTimeManagerWindow::show_hide_map_data);
+    //connect(pb, &QPushButton::released, this, &MapTimeManagerWindow::show_hide_map_data);
 
     //pb->setSizeIncrement(vsi_size);
     return pb;
 }
-QComboBox * MapTimeManagerWindow::create_parameter_selection()
+QComboBox * MapTimeManagerWindow::create_parameter_selection_1d(QString text)
 {
     QComboBox * cb = new QComboBox();
     cb->setMinimumSize(100, 22);
@@ -309,24 +388,73 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection()
             QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
             map[name] = i;
             QString mesh_var_name = QString::fromStdString(var->variable[i]->mesh).trimmed();
-            // Tree types of meshes: 1D 1D2D and 2D
-            //struct _mesh1d_string ** m1d = _ugrid_file->get_mesh1d_string();
-            //if (m1d != nullptr)
-            //{
-                //if (mesh_var_name == QString::fromStdString(m1d[0]->var_name))
-                //{
-                    //mesh_var_name = QString::fromStdString(m1d[0]->long_name);
-                //}
-                cb->addItem(mesh_var_name + " - " + name, map[name]);
-            //}
+            if (mesh_var_name == text)
+            {
+                cb->addItem(name, map[name]);
+            }
         }
     }
     cb->blockSignals(false);
 
-    connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked(int)));
+    connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked_1d(int)));
 
     return cb;
 }
+QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
+{
+    QComboBox * cb = new QComboBox();
+    cb->setMinimumSize(100, 22);
+    struct _mesh_variable * var = _ugrid_file->get_variables();
+
+    cb->blockSignals(true);
+    for (int i = 0; i < var->nr_vars; i++)
+    {
+        if (var->variable[i]->time_series)
+        {
+            QMap<QString, int> map;
+            QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
+            map[name] = i;
+            QString mesh_var_name = QString::fromStdString(var->variable[i]->mesh).trimmed();
+            if (mesh_var_name == text)
+            {
+                cb->addItem(name, map[name]);
+            }
+        }
+    }
+    cb->blockSignals(false);
+
+    connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked_1d2d(int)));
+
+    return cb;
+}
+QComboBox * MapTimeManagerWindow::create_parameter_selection_2d(QString text)
+{
+    QComboBox * cb = new QComboBox();
+    cb->setMinimumSize(100, 22);
+    struct _mesh_variable * var = _ugrid_file->get_variables();
+
+    cb->blockSignals(true);
+    for (int i = 0; i < var->nr_vars; i++)
+    {
+        if (var->variable[i]->time_series)
+        {
+            QMap<QString, int> map;
+            QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
+            map[name] = i;
+            QString mesh_var_name = QString::fromStdString(var->variable[i]->mesh).trimmed();
+            if (mesh_var_name == text)
+            {
+                cb->addItem(name, map[name]);
+            }
+        }
+    }
+    cb->blockSignals(false);
+
+    connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked_2d(int)));
+
+    return cb;
+}
+
 void MapTimeManagerWindow::start_reverse()
 {
     //QMessageBox::warning(0, tr("Message"), QString("start_reverse pressed"));
@@ -485,10 +613,10 @@ void MapTimeManagerWindow::last_date_time_changed(const QDateTime & date_time)
     }
 }
 
-void MapTimeManagerWindow::cb_clicked(int item)
+void MapTimeManagerWindow::cb_clicked_1d(int item)
 {
     _MyCanvas->reset_min_max();
-    if (!m_show_map_data)
+    if (!m_show_map_data_1d)
     {
         _MyCanvas->set_variable(nullptr);
         _MyCanvas->empty_caches();
@@ -496,45 +624,125 @@ void MapTimeManagerWindow::cb_clicked(int item)
     }
     else
     {
-        QString str = _cb->itemText(item);
-        QVariant j = _cb->itemData(item);
-        int jj = j.toInt();
-
-        //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
-
-        struct _mesh_variable * vars = _ugrid_file->get_variables();
-        struct _variable * var = vars->variable[jj];
-        string var_name = var->var_name;
-        string location = var->location;
-
-        if (location == "edge")
-        {
-            //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
-            _MyCanvas->set_variable(var);
-            int i = _q_times.indexOf(curr_date_time->dateTime());
-            _MyCanvas->set_current_step(i);
-            _MyCanvas->draw_all();
-        }
-        else if (location == "face")
-        {
-            //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
-            _MyCanvas->set_variable(var);
-            int i = _q_times.indexOf(curr_date_time->dateTime());
-            _MyCanvas->draw_all();
-        }
-        else if (location == "node")
-        {
-            _MyCanvas->set_variable(var);
-            int i = _q_times.indexOf(curr_date_time->dateTime());
-            _MyCanvas->set_current_step(i);
-            _MyCanvas->draw_all();
-        }
-        else
-        {
-            QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
-        }
+        if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
+        if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        draw_time_dependent_data_1d(m_cb_1d, item);
     }
 }
+
+void MapTimeManagerWindow::cb_clicked_1d2d(int item)
+{
+    _MyCanvas->reset_min_max();
+    if (!m_show_map_data_1d2d)
+    {
+        _MyCanvas->set_variable(nullptr);
+        _MyCanvas->empty_caches();
+        return;
+    }
+    else
+    {
+        if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
+        if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        draw_time_dependent_data(m_cb_1d2d, item);
+    }
+}
+void MapTimeManagerWindow::cb_clicked_2d(int item)
+{
+    _MyCanvas->reset_min_max();
+    if (!m_show_map_data_2d)
+    {
+        _MyCanvas->set_variable(nullptr);
+        _MyCanvas->empty_caches();
+        return;
+    }
+    else
+    {
+        if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
+        if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
+        draw_time_dependent_data(m_cb_2d, item);
+    }
+}
+void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
+{
+    QString str = cb->itemText(item);
+    QVariant j = cb->itemData(item);
+    int jj = j.toInt();
+
+    //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
+
+    struct _mesh_variable * vars = _ugrid_file->get_variables();
+    struct _variable * var = vars->variable[jj];
+    string var_name = var->var_name;
+    string location = var->location;
+
+    if (location == "edge")
+    {
+        //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+        _MyCanvas->set_variable(var);
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->draw_all();
+    }
+    else if (location == "face")
+    {
+        //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+        _MyCanvas->set_variable(var);
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->draw_all();
+    }
+    else if (location == "node")
+    {
+        _MyCanvas->set_variable(var);
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->draw_all();
+    }
+    else
+    {
+        QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+    }
+}
+void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
+{
+    QString str = cb->itemText(item);
+    QVariant j = cb->itemData(item);
+    int jj = j.toInt();
+
+    //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
+
+    struct _mesh_variable * vars = _ugrid_file->get_variables();
+    struct _variable * var = vars->variable[jj];
+    string var_name = var->var_name;
+    string location = var->location;
+
+    if (location == "edge")
+    {
+        //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+        _MyCanvas->set_variable(var);
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->draw_all();
+    }
+    else if (location == "face")
+    {
+        //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+        _MyCanvas->set_variable(var);
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->draw_all();
+    }
+    else if (location == "node")
+    {
+        _MyCanvas->set_variable(var);
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->draw_all();
+    }
+    else
+    {
+        QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+    }
+}
+
 void MapTimeManagerWindow::setValue(int i)
 {
     curr_date_time->setDateTime(_q_times[i]);
@@ -550,16 +758,19 @@ void MapTimeManagerWindow::setSliderValue(QDateTime date_time)
     if (j == i) { return; }  // prevent firing a signal by curr_date_time->setDateTime if date_time is already in the edit field
     m_slider->setValue(i);
 }
-void MapTimeManagerWindow::show_hide_map_data()
+void MapTimeManagerWindow::show_hide_map_data_1d()
 {
-    if (m_show_map_data)
-    {
-        m_show_map_data = false;
-    }
-    else
-    {
-        m_show_map_data = true;
-    }
-    cb_clicked(_cb->currentIndex());
+    m_show_map_data_1d = !m_show_map_data_1d;
+    cb_clicked_1d(m_cb_1d->currentIndex());
+}
+void MapTimeManagerWindow::show_hide_map_data_1d2d()
+{
+    m_show_map_data_1d2d = !m_show_map_data_1d2d;
+    cb_clicked_1d2d(m_cb_1d2d->currentIndex());
+}
+void MapTimeManagerWindow::show_hide_map_data_2d()
+{
+    m_show_map_data_2d = !m_show_map_data_2d;
+    cb_clicked_2d(m_cb_2d->currentIndex());
 }
 
