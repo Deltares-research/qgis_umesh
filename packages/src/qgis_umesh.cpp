@@ -2423,9 +2423,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             }
             vl->commitChanges();
 
-            //QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/OSGeo4W64/apps/qgis/svg/arrows/NorthArrow_11.svg"));
-            //QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
-            QgsRasterMarkerSymbolLayer * simple_marker = new QgsRasterMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.png"));
+            QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
             simple_marker->setSize(4.0);
             simple_marker->setColor(QColor(0, 255, 0));
             simple_marker->setFillColor(QColor(0, 255, 0));
