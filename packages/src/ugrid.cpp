@@ -2132,13 +2132,12 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
     status = get_attribute(this->ncid, i_var, "face_coordinates", &mesh2d_strings->face_coordinates);
 
     status = get_attribute(this->ncid, i_var, "layer_dimension", &mesh2d_strings->layer_dimension);
-    if (status == NC_NOERR) { status = get_attribute(this->ncid, i_var, "face_coordinates", &mesh2d_strings->layer_interface_dimension); }
+    if (status == NC_NOERR) { status = get_attribute(this->ncid, i_var, "interface_dimension", &mesh2d_strings->layer_interface_dimension); }
     if (status != NC_NOERR)
     {
         mesh2d_strings->layer_dimension = "";
         mesh2d_strings->layer_interface_dimension = "";
     }
-    status = get_attribute(this->ncid, i_var, "face_coordinates", &mesh2d_strings->layer_interface_dimension);
     // split required 'node coordinate' string
     vector<string> token = tokenize(mesh2d_strings->node_coordinates, ' ');
     if (token.size() == 2)
@@ -2163,8 +2162,8 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
     {
         mesh2d_strings->x_face_name = token[0];
         mesh2d_strings->y_face_name = token[1];
-        status = get_attribute_by_var_name(this->ncid, mesh2d_strings->x_face_name, "bounds", &mesh2d_strings->x_bound_edge_name);
-        status = get_attribute_by_var_name(this->ncid, mesh2d_strings->y_face_name, "bounds", &mesh2d_strings->y_bound_edge_name);
+        status = get_attribute_by_var_name(this->ncid, mesh2d_strings->x_face_name, "bounds", &mesh2d_strings->x_bound_face_name);
+        status = get_attribute_by_var_name(this->ncid, mesh2d_strings->y_face_name, "bounds", &mesh2d_strings->y_bound_face_name);
     }
 
     return status;
