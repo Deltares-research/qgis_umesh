@@ -55,6 +55,7 @@ public:
         void cb_clicked_1d(int);
         void cb_clicked_1d2d(int);
         void cb_clicked_2d(int);
+        void cb_clicked_3d(int);
 
         void start_reverse();
         void pause_time_loop();
@@ -75,6 +76,7 @@ public:
         void show_hide_map_data_1d();
         void show_hide_map_data_1d2d();
         void show_hide_map_data_2d();
+        void show_hide_map_data_3d();
         void contextMenu(const QPoint &);
 
     public:
@@ -92,9 +94,10 @@ public:
         QCheckBox * check_parameter_1d();
         QCheckBox * check_parameter_1d2d();
         QCheckBox * check_parameter_2d();
+        QCheckBox * check_parameter_3d();
         QComboBox * create_parameter_selection_1d(QString);
         QComboBox * create_parameter_selection_1d2d(QString);
-        QComboBox * create_parameter_selection_2d(QString);
+        int create_parameter_selection_2d_3d(QString, QComboBox *, QComboBox *);
         QColorRampEditor * create_color_ramp();
         void draw_time_dependent_data_1d(QComboBox *, int);
         void draw_time_dependent_data(QComboBox *, int);
@@ -121,12 +124,15 @@ public:
         QComboBox * m_cb_1d = nullptr;
         QComboBox * m_cb_1d2d = nullptr;
         QComboBox * m_cb_2d = nullptr;
+        QComboBox * m_cb_3d = nullptr;
         QCheckBox * m_show_check_1d = nullptr;
         QCheckBox * m_show_check_1d2d = nullptr;
         QCheckBox * m_show_check_2d = nullptr;
+        QCheckBox * m_show_check_3d = nullptr;
         bool m_show_map_data_1d;
         bool m_show_map_data_1d2d;
         bool m_show_map_data_2d;
+        bool m_show_map_data_3d;
 };
 
 #endif

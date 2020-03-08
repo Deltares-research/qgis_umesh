@@ -161,11 +161,15 @@ void MyCanvas::draw_data_at_face()
             std_data_at_face = _ugrid_file->get_variable_values(var_name);
             z_value = std_data_at_face[_current_step];
         }
-        else  // 3D: time, layer, nodes
+        else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
         {
             vector<vector<vector <double *>>> std_data_at_face_3d = _ugrid_file->get_variable_3d_values(var_name);
             int i_layer = 1;  // TODO hack, make it user dependent
             z_value = std_data_at_face_3d[_current_step][i_layer-1];
+        }
+        else
+        {
+            QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
         }
         determine_min_max(z_value, &m_z_min, &m_z_max);
         m_ramph->setMinMax(m_z_min, m_z_max);
@@ -313,6 +317,10 @@ void MyCanvas::draw_line_at_edge()
         }
 
         z_value = std_dot_at_edge[_current_step];
+        if (z_value.size() == 0)
+        {
+            return;
+        }
         determine_min_max(z_value, &m_z_min, &m_z_max);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();

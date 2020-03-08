@@ -18,6 +18,7 @@ MapTimeManagerWindow::MapTimeManagerWindow(UGRID * ugrid_file, MyCanvas * MyCanv
     m_show_map_data_1d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d
     m_show_map_data_1d2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d2d
     m_show_map_data_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_2d
+    m_show_map_data_3d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_3d
     MapProperty * m_property = MapProperty::getInstance();
 
     connect(m_ramph, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
@@ -112,12 +113,24 @@ void MapTimeManagerWindow::create_window()
     struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
     if (_ugrid_file->get_mesh2d_string() != nullptr)
     {
-        row += 1;
-        m_show_check_2d = check_parameter_2d();
-        hl->addWidget(m_show_check_2d, row, 0);
-        QString txt = QString::fromStdString(m2d[0]->var_name);
-        m_cb_2d = create_parameter_selection_2d(txt);
-        hl->addWidget(m_cb_2d, row, 1);
+            QString txt = QString::fromStdString(m2d[0]->var_name);
+            m_cb_2d = new QComboBox();
+            m_cb_3d = new QComboBox();
+            int status = create_parameter_selection_2d_3d(txt, m_cb_2d, m_cb_3d);
+            if (m_cb_2d->count() != 0) 
+            {
+                row += 1;
+                m_show_check_2d = check_parameter_2d();
+                hl->addWidget(m_show_check_2d, row, 0);
+                hl->addWidget(m_cb_2d, row, 1);
+            } 
+            if (m_cb_3d->count() != 0) 
+            { 
+                row += 1;
+                m_show_check_3d = check_parameter_3d();
+                hl->addWidget(m_show_check_3d, row, 0);
+                hl->addWidget(m_cb_3d, row, 1);
+            }
     }
 
     vl->addLayout(hl);
@@ -345,6 +358,22 @@ QCheckBox * MapTimeManagerWindow::check_parameter_2d()
 
     return checkb;
 }
+
+QCheckBox * MapTimeManagerWindow::check_parameter_3d()
+{
+    QCheckBox * checkb = new QCheckBox("3D");
+    checkb->setToolTip("Show/Hide Map results");
+    checkb->setStatusTip("Show/Hide Map results");
+    checkb->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
+    checkb->setCheckable(true);
+    checkb->setChecked(false);
+    checkb->setEnabled(true);
+    m_show_map_data_2d = false;
+    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_3d);
+
+    return checkb;
+}
+
 QPushButton * MapTimeManagerWindow::show_parameter()
 {
 #include "vsi.xpm"
@@ -427,13 +456,15 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
 
     return cb;
 }
-QComboBox * MapTimeManagerWindow::create_parameter_selection_2d(QString text)
+int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboBox * cb_2d, QComboBox * cb_3d)
 {
-    QComboBox * cb = new QComboBox();
-    cb->setMinimumSize(100, 22);
+    cb_2d->setMinimumSize(100, 22);
+    cb_3d->setMinimumSize(100, 22);
+
     struct _mesh_variable * var = _ugrid_file->get_variables();
 
-    cb->blockSignals(true);
+    cb_2d->blockSignals(true);
+    cb_3d->blockSignals(true);
     for (int i = 0; i < var->nr_vars; i++)
     {
         if (var->variable[i]->time_series)
@@ -442,17 +473,29 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_2d(QString text)
             QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
             map[name] = i;
             QString mesh_var_name = QString::fromStdString(var->variable[i]->mesh).trimmed();
-            if (mesh_var_name == text)
+            if (var->variable[i]->dims.size() == 2)  // HACK: assumed time, xy-space
             {
-                cb->addItem(name, map[name]);
+                if (mesh_var_name == text)
+                {
+                    cb_2d->addItem(name, map[name]);
+                }
+            }
+            else if (var->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
+            {
+                if (mesh_var_name == text)
+                {
+                    cb_3d->addItem(name, map[name]);
+                }
             }
         }
     }
-    cb->blockSignals(false);
+    cb_3d->blockSignals(false);
+    cb_2d->blockSignals(false);
 
-    connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked_2d(int)));
+    if (cb_2d->count() != 0) { connect(cb_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_2d(int))); }
+    if (cb_3d->count() != 0) { connect(cb_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_3d(int))); }
 
-    return cb;
+    return 0;
 }
 
 void MapTimeManagerWindow::start_reverse()
@@ -626,6 +669,7 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
     {
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         draw_time_dependent_data_1d(m_cb_1d, item);
     }
 }
@@ -643,6 +687,7 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
     {
         if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         draw_time_dependent_data(m_cb_1d2d, item);
     }
 }
@@ -659,7 +704,25 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
     {
         if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
+        if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         draw_time_dependent_data(m_cb_2d, item);
+    }
+}
+void MapTimeManagerWindow::cb_clicked_3d(int item)
+{
+    _MyCanvas->reset_min_max();
+    if (!m_show_map_data_3d)
+    {
+        _MyCanvas->set_variable(nullptr);
+        _MyCanvas->empty_caches();
+        return;
+    }
+    else
+    {
+        if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
+        if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
+        if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        draw_time_dependent_data(m_cb_3d, item);
     }
 }
 void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
@@ -772,5 +835,10 @@ void MapTimeManagerWindow::show_hide_map_data_2d()
 {
     m_show_map_data_2d = !m_show_map_data_2d;
     cb_clicked_2d(m_cb_2d->currentIndex());
+}
+void MapTimeManagerWindow::show_hide_map_data_3d()
+{
+    m_show_map_data_3d = !m_show_map_data_3d;
+    cb_clicked_3d(m_cb_3d->currentIndex());
 }
 

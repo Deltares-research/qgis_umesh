@@ -240,23 +240,22 @@ long UGRID::read_mesh()
                 }
             }
         }
-        status = get_attribute(this->ncid, i_var, "standard_name", &std_name);
-        if (std_name == "altitude")
-        {
-            // this grid contains z- layers, find z-dimension name
-            tmp_dim_names = get_dimension_names(this->ncid, var_name);
-            for (int i = 0; i < tmp_dim_names.size(); i++)
-            {
-                if (var_name.find("interface") != string::npos)
-                {
-                    _map_dim_name["z_sigma_interface"] = tmp_dim_names[i];
-                }
-                else
-                {
-                    _map_dim_name["z_sigma_layer"] = tmp_dim_names[i];
-                }
-            }
-        }
+        //if (std_name == "altitude")
+        //{
+        //    // this grid contains z- layers, find z-dimension name
+        //    tmp_dim_names = get_dimension_names(this->ncid, var_name);
+        //    for (int i = 0; i < tmp_dim_names.size(); i++)
+        //    {
+        //        if (var_name.find("interface") != string::npos)
+        //        {
+        //            _map_dim_name["z_sigma_interface"] = tmp_dim_names[i];
+        //       }
+        //       else
+        //       {
+        //           _map_dim_name["z_sigma_layer"] = tmp_dim_names[i];
+        //        }
+        //    }
+        //}
 
         status = get_attribute(this->ncid, i_var, "grid_mapping_name", &grid_mapping_name);
         if (status == NC_NOERR)
@@ -841,6 +840,7 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                     length *= mesh_vars->variable[i]->dims[j];
                 }
                 double * values_c = (double *)malloc(sizeof(double) * length);
+                double * valuest_c = (double *)malloc(sizeof(double) * length);
                 status = nc_get_var_double(this->ncid, var_id, values_c);
                 values_3d.reserve(length);
                 
@@ -854,9 +854,9 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 //    }
                 //}
 
-                int time_dim = mesh_vars->variable[i]->dims[0];
-                int lyer_dim = mesh_vars->variable[i]->dims[1];
-                int node_dim = mesh_vars->variable[i]->dims[2];
+                long time_dim = mesh_vars->variable[i]->dims[0];
+                long lyer_dim = mesh_vars->variable[i]->dims[1];
+                long node_dim = mesh_vars->variable[i]->dims[2];
                 //HACK assumed is that the time is the first dimension
                 //HACK just the variables at the layers, interfaces are skipped
                 if (_map_dim_name["z_sigma_layer"] == mesh_vars->variable[i]->dim_names[2])
@@ -884,10 +884,12 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 {
                     for (int lay = 0; lay < lyer_dim; lay++)  // layers
                     {
+                        int kk = -1;
                         for (int n = 0; n < node_dim; n++)  // nodes
                         {
                             k = lyer_dim * node_dim * t  + node_dim * lay + n;
-                            //k++;
+                            kk++;
+                            (valuest_c)[kk] = *(values_c + k);
                             z_value.push_back(values_c + k);
                         }
                         values_2d.push_back(z_value);
@@ -1753,6 +1755,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 // Compute the face coordinates from the node coordinates, mass centre of face. But is it needed?
                 // Boundary of the face is determined by the node coordinates (face_nodes)
             }
+
             /* Read the nodes indices for each face */
             status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->face_node_connectivity.c_str(), &var_id);
             status = nc_inq_varndims(this->ncid, var_id, &ndims);
