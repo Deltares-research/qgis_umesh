@@ -130,6 +130,20 @@ void MapTimeManagerWindow::create_window()
                 m_show_check_3d = check_parameter_3d();
                 hl->addWidget(m_show_check_3d, row, 0);
                 hl->addWidget(m_cb_3d, row, 1);
+
+                QLabel * layerLabelPrefix = new QLabel(tr("Layer"));
+                QLabel * layerLabelSuffix = new QLabel(tr("[0,0]"));
+                layerLabelSuffix->setText(tr("[1, %1]").arg(m_cb_3d->count()));
+                m_sb_layer = spinbox_layer(m_cb_3d->count());
+
+                QHBoxLayout * sp_group = new QHBoxLayout();
+                sp_group->addWidget(layerLabelPrefix);
+                sp_group->addWidget(m_sb_layer);
+                sp_group->addWidget(layerLabelSuffix);
+                sp_group->addStretch();
+
+                row += 1;
+                hl->addLayout(sp_group, row, 1);
             }
     }
 
@@ -372,6 +386,15 @@ QCheckBox * MapTimeManagerWindow::check_parameter_3d()
     connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_3d);
 
     return checkb;
+}
+QSpinBox * MapTimeManagerWindow::spinbox_layer(int max_val)
+{
+    QSpinBox * sb_layer = new QSpinBox();
+    sb_layer->setRange(1, max_val);
+    sb_layer->setValue(1);
+    sb_layer->setEnabled(true);
+
+    return sb_layer;
 }
 
 QPushButton * MapTimeManagerWindow::show_parameter()
@@ -841,4 +864,3 @@ void MapTimeManagerWindow::show_hide_map_data_3d()
     m_show_map_data_3d = !m_show_map_data_3d;
     cb_clicked_3d(m_cb_3d->currentIndex());
 }
-

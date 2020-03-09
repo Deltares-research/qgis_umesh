@@ -844,16 +844,6 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 status = nc_get_var_double(this->ncid, var_id, values_c);
                 values_3d.reserve(length);
                 
-                
-                //for (int j = 0; j < ndims; j++)
-                //{
-                //    mesh_vars->variable[nr_mesh_var - 1]->dims.push_back((long)_dimids[var_dimids[j]]);  // HACK typecast
-                //    if (time_series->nr_times != 0 && QString::fromStdString(_dim_names[var_dimids[j]]) == time_series->dim_name)
-                //    {
-                //        mesh_vars->variable[nr_mesh_var - 1]->time_series = true;
-                //    }
-                //}
-
                 long time_dim = mesh_vars->variable[i]->dims[0];
                 long lyer_dim = mesh_vars->variable[i]->dims[1];
                 long node_dim = mesh_vars->variable[i]->dims[2];
@@ -861,6 +851,7 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 //HACK just the variables at the layers, interfaces are skipped
                 if (_map_dim_name["z_sigma_layer"] == mesh_vars->variable[i]->dim_names[2])
                 {
+                    // now swap dimension, so the second dimension is the layer (time, layer, x-space)
                     lyer_dim = mesh_vars->variable[i]->dims[2];
                     node_dim = mesh_vars->variable[i]->dims[1];
                 }

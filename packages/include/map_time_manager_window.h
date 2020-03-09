@@ -18,6 +18,7 @@
 #include <QPushButton>
 #include <QSizePolicy>
 #include <QSlider>
+#include <QSpinBox>
 #include <QToolBar>
 #include <QVBoxLayout>
 
@@ -95,6 +96,8 @@ public:
         QCheckBox * check_parameter_1d2d();
         QCheckBox * check_parameter_2d();
         QCheckBox * check_parameter_3d();
+        QSpinBox * spinbox_layer(int);
+
         QComboBox * create_parameter_selection_1d(QString);
         QComboBox * create_parameter_selection_1d2d(QString);
         int create_parameter_selection_2d_3d(QString, QComboBox *, QComboBox *);
@@ -129,6 +132,7 @@ public:
         QCheckBox * m_show_check_1d2d = nullptr;
         QCheckBox * m_show_check_2d = nullptr;
         QCheckBox * m_show_check_3d = nullptr;
+        QSpinBox * m_sb_layer = nullptr;
         bool m_show_map_data_1d;
         bool m_show_map_data_1d2d;
         bool m_show_map_data_2d;
