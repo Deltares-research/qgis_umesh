@@ -19,6 +19,7 @@ MapTimeManagerWindow::MapTimeManagerWindow(UGRID * ugrid_file, MyCanvas * MyCanv
     m_show_map_data_1d2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d2d
     m_show_map_data_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_2d
     m_show_map_data_3d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_3d
+
     MapProperty * m_property = MapProperty::getInstance();
 
     connect(m_ramph, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
@@ -52,7 +53,7 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::~closeEvent()");
     this->object_count--;
     _MyCanvas->set_variable(nullptr);
-    //_MyCanvas->empty_caches();
+    _MyCanvas->empty_caches();
     // TODO Reset timers, ie _current timestep etc
 }
 int MapTimeManagerWindow::get_count()
@@ -126,20 +127,27 @@ void MapTimeManagerWindow::create_window()
             } 
             if (m_cb_3d->count() != 0) 
             { 
+                
                 row += 1;
+                // checkbox and combobox
                 m_show_check_3d = check_parameter_3d();
                 hl->addWidget(m_show_check_3d, row, 0);
                 hl->addWidget(m_cb_3d, row, 1);
 
-                QLabel * layerLabelPrefix = new QLabel(tr("Layer"));
-                QLabel * layerLabelSuffix = new QLabel(tr("[0,0]"));
-                layerLabelSuffix->setText(tr("[1, %1]").arg(m_cb_3d->count()));
-                m_sb_layer = spinbox_layer(m_cb_3d->count());
+                // spinbox and layer selection
+                QVariant j = m_cb_3d->itemData(0);
+                int jj = j.toInt();
+                struct _mesh_variable * vars = _ugrid_file->get_variables();
+                struct _variable * var = vars->variable[jj];
+                m_layerLabelPrefix = new QLabel(tr("Layer"));
+                m_layerLabelSuffix = new QLabel(tr("[0,0]"));
+                m_layerLabelSuffix->setText(tr("[1, %1]").arg(var->nr_layers));
+                m_sb_layer = spinbox_layer(var->nr_layers);
 
                 QHBoxLayout * sp_group = new QHBoxLayout();
-                sp_group->addWidget(layerLabelPrefix);
+                sp_group->addWidget(m_layerLabelPrefix);
                 sp_group->addWidget(m_sb_layer);
-                sp_group->addWidget(layerLabelSuffix);
+                sp_group->addWidget(m_layerLabelSuffix);
                 sp_group->addStretch();
 
                 row += 1;
@@ -391,7 +399,7 @@ QSpinBox * MapTimeManagerWindow::spinbox_layer(int max_val)
 {
     QSpinBox * sb_layer = new QSpinBox();
     sb_layer->setRange(1, max_val);
-    sb_layer->setValue(1);
+    sb_layer->setValue(max_val);  // surface layer
     sb_layer->setEnabled(true);
 
     return sb_layer;
@@ -429,17 +437,17 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d(QString text)
 {
     QComboBox * cb = new QComboBox();
     cb->setMinimumSize(100, 22);
-    struct _mesh_variable * var = _ugrid_file->get_variables();
+    struct _mesh_variable * vars = _ugrid_file->get_variables();
 
     cb->blockSignals(true);
-    for (int i = 0; i < var->nr_vars; i++)
+    for (int i = 0; i < vars->nr_vars; i++)
     {
-        if (var->variable[i]->time_series)
+        if (vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
+            QString name = QString::fromStdString(vars->variable[i]->long_name).trimmed();
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(var->variable[i]->mesh).trimmed();
+            QString mesh_var_name = QString::fromStdString(vars->variable[i]->mesh).trimmed();
             if (mesh_var_name == text)
             {
                 cb->addItem(name, map[name]);
@@ -484,26 +492,26 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
     cb_2d->setMinimumSize(100, 22);
     cb_3d->setMinimumSize(100, 22);
 
-    struct _mesh_variable * var = _ugrid_file->get_variables();
+    struct _mesh_variable * vars = _ugrid_file->get_variables();
 
     cb_2d->blockSignals(true);
     cb_3d->blockSignals(true);
-    for (int i = 0; i < var->nr_vars; i++)
+    for (int i = 0; i < vars->nr_vars; i++)
     {
-        if (var->variable[i]->time_series)
+        if (vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString name = QString::fromStdString(var->variable[i]->long_name).trimmed();
+            QString name = QString::fromStdString(vars->variable[i]->long_name).trimmed();
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(var->variable[i]->mesh).trimmed();
-            if (var->variable[i]->dims.size() == 2)  // HACK: assumed time, xy-space
+            QString mesh_var_name = QString::fromStdString(vars->variable[i]->mesh).trimmed();
+            if (vars->variable[i]->dims.size() == 2)  // HACK: assumed time, xy-space
             {
                 if (mesh_var_name == text)
                 {
                     cb_2d->addItem(name, map[name]);
                 }
             }
-            else if (var->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
+            else if (vars->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
             {
                 if (mesh_var_name == text)
                 {
@@ -515,8 +523,8 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
     cb_3d->blockSignals(false);
     cb_2d->blockSignals(false);
 
-    if (cb_2d->count() != 0) { connect(cb_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_2d(int))); }
-    if (cb_3d->count() != 0) { connect(cb_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_3d(int))); }
+    connect(cb_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_2d(int)));
+    connect(cb_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_3d(int)));
 
     return 0;
 }
@@ -733,6 +741,16 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
 }
 void MapTimeManagerWindow::cb_clicked_3d(int item)
 {
+    QString str = m_cb_3d->itemText(item);
+    QVariant j = m_cb_3d->itemData(item);
+    int jj = j.toInt();
+
+    struct _mesh_variable * vars = _ugrid_file->get_variables();
+    struct _variable * var = vars->variable[jj];
+    m_layerLabelSuffix->setText(tr("[1, %1]").arg(var->nr_layers));
+    m_sb_layer->setRange(1, var->nr_layers);
+    m_sb_layer->setValue(var->nr_layers);
+
     _MyCanvas->reset_min_max();
     if (!m_show_map_data_3d)
     {
@@ -750,11 +768,11 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
 }
 void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
 {
+    //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
+
     QString str = cb->itemText(item);
     QVariant j = cb->itemData(item);
     int jj = j.toInt();
-
-    //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
 
     struct _mesh_variable * vars = _ugrid_file->get_variables();
     struct _variable * var = vars->variable[jj];
@@ -769,10 +787,13 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
         _MyCanvas->set_current_step(i);
         _MyCanvas->draw_all();
     }
-    else if (location == "face")
+    else if (location == "face")  // || location == "volume")  // volume at same location as face, because of topview in a GIS system
     {
         //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
         _MyCanvas->set_variable(var);
+        if (m_sb_layer != nullptr) {
+            _MyCanvas->set_layer(m_sb_layer->value());
+        }
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->draw_all();
     }

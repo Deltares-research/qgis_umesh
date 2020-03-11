@@ -50,7 +50,7 @@ struct _variable {
     bool read;
     bool time_series;
     vector<string> dim_names;
-    int nr_sigma_layers;
+    int nr_layers;
     vector<vector <double *>> z_value;
     vector<vector<vector <double *>>> z_3d;
     map<string, string> map_dim_name;

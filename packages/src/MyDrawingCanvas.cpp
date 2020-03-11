@@ -50,6 +50,7 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     drawing = true;
     _ugrid_file = nullptr;
     _variable = nullptr;
+    m_layer = 0;
     _current_step = 0;
     m_ramph = new QColorRampEditor();
 
@@ -164,8 +165,7 @@ void MyCanvas::draw_data_at_face()
         else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
         {
             vector<vector<vector <double *>>> std_data_at_face_3d = _ugrid_file->get_variable_3d_values(var_name);
-            int i_layer = 1;  // TODO hack, make it user dependent
-            z_value = std_data_at_face_3d[_current_step][i_layer-1];
+            z_value = std_data_at_face_3d[_current_step][m_layer-1];
         }
         else
         {
@@ -445,6 +445,12 @@ void MyCanvas::set_variable(struct _variable * variable)
     _variable = variable;
     this->reset_min_max();
 }
+//-----------------------------------------------------------------------------
+void MyCanvas::set_layer(int i_layer)
+{
+    this->m_layer = i_layer;;
+}
+
 //-----------------------------------------------------------------------------
 void MyCanvas::setUgridFile(UGRID * ugrid_file)
 {

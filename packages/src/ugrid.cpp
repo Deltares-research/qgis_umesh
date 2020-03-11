@@ -230,13 +230,13 @@ long UGRID::read_mesh()
             tmp_dim_names = get_dimension_names(this->ncid, var_name);
             for (int i = 0; i < tmp_dim_names.size(); i++)
             {
-                if (var_name.find("interface") != string::npos)
+                if (tmp_dim_names[i].find("interface") != string::npos)  // HACK: dimension name should have the sub-string 'interface'
                 {
-                    _map_dim_name["z_sigma_interface"] = tmp_dim_names[i];
+                    _map_dim_name["sigma_interface"] = tmp_dim_names[i];
                 }
                 else
                 {
-                    _map_dim_name["z_sigma_layer"] = tmp_dim_names[i];
+                    _map_dim_name["sigma_layer"] = tmp_dim_names[i];
                 }
             }
         }
@@ -621,6 +621,22 @@ long UGRID::read_variables()
             status = nc_inq_varid(this->ncid, mesh_vars->variable[nr_mesh_var - 1]->mesh.c_str(), &mesh_id);
             status = get_attribute(this->ncid, mesh_id, "topology_dimension", &topo_dim);
             mesh_vars->variable[nr_mesh_var - 1]->topology_dimension = topo_dim;
+            if (mesh_vars->variable[nr_mesh_var - 1]->dims.size() == 3)
+            {
+                for (int i = 0; i < mesh_vars->variable[nr_mesh_var - 1]->dims.size(); i++)
+                {
+                    if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["sigma_layer"])
+                    {
+                        int nr_lay = _map_dim[_map_dim_name["sigma_layer"]];
+                        mesh_vars->variable[nr_mesh_var - 1]->nr_layers = nr_lay;
+                    }
+                    else if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["sigma_interface"])
+                    {
+                        int nr_lay = _map_dim[_map_dim_name["sigma_interface"]];
+                        mesh_vars->variable[nr_mesh_var - 1]->nr_layers = nr_lay;
+                    }
+                }
+            }
 
             /*
             int nr_mesh2d = 1;
@@ -840,20 +856,20 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                     length *= mesh_vars->variable[i]->dims[j];
                 }
                 double * values_c = (double *)malloc(sizeof(double) * length);
-                double * valuest_c = (double *)malloc(sizeof(double) * length);
                 status = nc_get_var_double(this->ncid, var_id, values_c);
                 values_3d.reserve(length);
                 
                 long time_dim = mesh_vars->variable[i]->dims[0];
                 long lyer_dim = mesh_vars->variable[i]->dims[1];
                 long node_dim = mesh_vars->variable[i]->dims[2];
+                bool swap_loops = false;
                 //HACK assumed is that the time is the first dimension
                 //HACK just the variables at the layers, interfaces are skipped
-                if (_map_dim_name["z_sigma_layer"] == mesh_vars->variable[i]->dim_names[2])
+                if (_map_dim_name["sigma_layer"] == mesh_vars->variable[i]->dim_names[2] ||
+                    _map_dim_name["sigma_interface"] == mesh_vars->variable[i]->dim_names[2])
                 {
-                    // now swap dimension, so the second dimension is the layer (time, layer, x-space)
-                    lyer_dim = mesh_vars->variable[i]->dims[2];
-                    node_dim = mesh_vars->variable[i]->dims[1];
+                    // loop over layers and nodes should be swapped
+                    swap_loops = true;
                 }
                 for (int j = 0; j < mesh_vars->variable[i]->dim_names.size(); j++)
                 {
@@ -873,18 +889,31 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 int k = -1;
                 for (int t = 0; t < time_dim; t++)  // time steps
                 {
-                    for (int lay = 0; lay < lyer_dim; lay++)  // layers
+                    if (!swap_loops)
                     {
-                        int kk = -1;
+                        for (int lay = 0; lay < lyer_dim; lay++)  // layers
+                        {
+                            for (int n = 0; n < node_dim; n++)  // nodes
+                            {
+                                k = lyer_dim * node_dim * t + node_dim * lay + n;
+                                z_value.push_back(values_c + k);
+                            }
+                            values_2d.push_back(z_value);
+                            z_value.clear();
+                        }
+                    }
+                    else
+                    {
                         for (int n = 0; n < node_dim; n++)  // nodes
                         {
-                            k = lyer_dim * node_dim * t  + node_dim * lay + n;
-                            kk++;
-                            (valuest_c)[kk] = *(values_c + k);
-                            z_value.push_back(values_c + k);
+                            for (int lay = 0; lay < lyer_dim; lay++)  // layers
+                            {
+                                k = lyer_dim * node_dim * t + node_dim * lay + n;
+                                z_value.push_back(values_c + k);
+                            }
+                            values_2d.push_back(z_value);
+                            z_value.clear();
                         }
-                        values_2d.push_back(z_value);
-                        z_value.clear();
                     }
                     values_3d.push_back(values_2d);
                     values_2d.clear();

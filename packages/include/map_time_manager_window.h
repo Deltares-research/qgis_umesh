@@ -132,7 +132,9 @@ public:
         QCheckBox * m_show_check_1d2d = nullptr;
         QCheckBox * m_show_check_2d = nullptr;
         QCheckBox * m_show_check_3d = nullptr;
-        QSpinBox * m_sb_layer = nullptr;
+        QLabel * m_layerLabelPrefix;
+        QLabel * m_layerLabelSuffix;
+        QSpinBox * m_sb_layer;
         bool m_show_map_data_1d;
         bool m_show_map_data_1d2d;
         bool m_show_map_data_2d;

@@ -159,6 +159,7 @@ public:
     void setUgridFile(UGRID *);
     void reset_min_max();
     void set_variable(struct _variable *);
+    void set_layer(int);
     void set_current_step(int);
     void setColorRamp(QColorRampEditor *);
 
@@ -230,6 +231,7 @@ private:
 
     UGRID * _ugrid_file;
     struct _variable * _variable;
+    int m_layer;
     int _current_step;
     vector<long> dims;
     vector<double> mesh1d_x;
