@@ -295,11 +295,13 @@ QHBoxLayout * MapTimeManagerWindow::create_push_buttons_layout_steps()
 QColorRampEditor * MapTimeManagerWindow::create_color_ramp()
 {
     QVector<QPair<qreal, QColor> > initramp;
-    initramp.push_back(QPair<qreal, QColor>(0.00, QColor(  0,   0, 255)));
-    initramp.push_back(QPair<qreal, QColor>(0.25, QColor(  0, 255, 255)));
-    initramp.push_back(QPair<qreal, QColor>(0.50, QColor(  0, 255,   0)));
-    initramp.push_back(QPair<qreal, QColor>(0.75, QColor(255, 255,   0)));
-    initramp.push_back(QPair<qreal, QColor>(1.00, QColor(255,   0,   0)));
+    initramp.push_back(QPair<qreal, QColor>(0.00, QColor(0, 0, 128)));
+    initramp.push_back(QPair<qreal, QColor>(0.125, QColor(0, 0, 255)));
+    initramp.push_back(QPair<qreal, QColor>(0.375, QColor(0, 255, 255)));
+    initramp.push_back(QPair<qreal, QColor>(0.50, QColor(0, 255, 0)));
+    initramp.push_back(QPair<qreal, QColor>(0.625, QColor(255, 255, 0)));
+    initramp.push_back(QPair<qreal, QColor>(0.875, QColor(255, 0, 0)));
+    initramp.push_back(QPair<qreal, QColor>(1.00, QColor(128, 0, 0)));
 
     QColorRampEditor* ramph = new QColorRampEditor(NULL, Qt::Horizontal);
     ramph->setSlideUpdate(true);
@@ -747,9 +749,12 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
 
     struct _mesh_variable * vars = _ugrid_file->get_variables();
     struct _variable * var = vars->variable[jj];
-    m_layerLabelSuffix->setText(tr("[1, %1]").arg(var->nr_layers));
     m_sb_layer->setRange(1, var->nr_layers);
-    m_sb_layer->setValue(var->nr_layers);
+    m_layerLabelSuffix->setText(tr("[1, %1]").arg(var->nr_layers));
+    if (m_sb_layer->value() == 0)
+    {
+        m_sb_layer->setValue(var->nr_layers);
+    }
 
     _MyCanvas->reset_min_max();
     if (!m_show_map_data_3d)

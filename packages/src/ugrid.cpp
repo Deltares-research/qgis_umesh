@@ -230,7 +230,7 @@ long UGRID::read_mesh()
             tmp_dim_names = get_dimension_names(this->ncid, var_name);
             for (int i = 0; i < tmp_dim_names.size(); i++)
             {
-                if (tmp_dim_names[i].find("interface") != string::npos)  // HACK: dimension name should have the sub-string 'interface'
+                if (tmp_dim_names[i].find("nterface") != string::npos)  // HACK: dimension name should have the sub-string 'interface' or 'Interface'
                 {
                     _map_dim_name["sigma_interface"] = tmp_dim_names[i];
                 }
