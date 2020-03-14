@@ -249,9 +249,21 @@ void MyCanvas::draw_dot_at_edge()
         string var_name = _variable->var_name;
         struct _mesh1d * mesh1d = _ugrid_file->get_mesh1d();
         struct _edge * edges = mesh1d->edge[0];
-        std_dot_at_edge = _ugrid_file->get_variable_values(var_name);
+        if (_variable->dims.size() == 2) // 2D: time, nodes
+        {
+            std_dot_at_edge = _ugrid_file->get_variable_values(var_name);
+            z_value = std_dot_at_edge[_current_step];
+        }
+        else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
+        {
+            vector<vector<vector <double *>>> std_dot_at_edge_3d = _ugrid_file->get_variable_3d_values(var_name);
+            z_value = std_dot_at_edge_3d[_current_step][m_layer - 1];
+        }
+        else
+        {
+            QMessageBox::information(0, tr("MyCanvas::draw_dot_at_edge()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
+        }
 
-        z_value = std_dot_at_edge[_current_step];
         determine_min_max(z_value, &m_z_min, &m_z_max);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
@@ -289,7 +301,27 @@ void MyCanvas::draw_line_at_edge()
         vector<double> edge_x(2);
         vector<double> edge_y(2);
         string var_name = _variable->var_name;
-        std_dot_at_edge = _ugrid_file->get_variable_values(var_name);
+        if (_variable->dims.size() == 2) // 2D: time, nodes
+        {
+            std_dot_at_edge = _ugrid_file->get_variable_values(var_name);
+            z_value = std_dot_at_edge[_current_step];
+        }
+        else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
+        {
+            vector<vector<vector <double *>>> std_dot_at_edge_3d = _ugrid_file->get_variable_3d_values(var_name);
+            z_value = std_dot_at_edge_3d[_current_step][m_layer - 1];
+        }
+        else
+        {
+            QMessageBox::information(0, tr("MyCanvas::draw_dot_at_edge()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
+        }
+        if (z_value.size() == 0)
+        {
+            return;
+        }
+        determine_min_max(z_value, &m_z_min, &m_z_max);
+        m_ramph->setMinMax(m_z_min, m_z_max);
+        m_ramph->update();
 
         struct _edge * edges = nullptr;
         struct _mesh1d * mesh1d = nullptr;
@@ -315,15 +347,6 @@ void MyCanvas::draw_line_at_edge()
             mesh1d2d = _ugrid_file->get_mesh_contact();
             edges = mesh1d2d->edge[0];
         }
-
-        z_value = std_dot_at_edge[_current_step];
-        if (z_value.size() == 0)
-        {
-            return;
-        }
-        determine_min_max(z_value, &m_z_min, &m_z_max);
-        m_ramph->setMinMax(m_z_min, m_z_max);
-        m_ramph->update();
 
         dims = _variable->dims;
         rgb_color.resize(edges->count);

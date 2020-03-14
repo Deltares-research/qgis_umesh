@@ -2,7 +2,7 @@
 
 MapProperty::MapProperty()
 {
-    prop_opacity = 0.85;  // ondoorzichtig == niet transparant
+    prop_opacity = 0.75;  // ondoorzichtig == niet transparant
     prop_dynamic_min_max = true;
     prop_min = -INFINITY;
     prop_max = INFINITY;

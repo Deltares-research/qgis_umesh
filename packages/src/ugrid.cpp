@@ -815,12 +815,18 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                         z_value.clear();
                     }
                 }
+                else if (mesh_vars->variable[i]->dims.size() == 3)
+                {
+                    continue;
+                }
+
                 // HACK: do not free the values_c memory
                 //free(values_c);
                 //values_c = nullptr;
 
                 mesh_vars->variable[i]->read = true;
                 mesh_vars->variable[i]->z_value = values;
+                break;  // variable value is found
             }
         }
     }
