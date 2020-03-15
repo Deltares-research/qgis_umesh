@@ -130,7 +130,8 @@ void MyCanvas::draw_dot_at_face()
         std_data_at_face = _ugrid_file->get_variable_values(var_name);
 
         z_value = std_data_at_face[_current_step];
-        determine_min_max(z_value, &m_z_min, &m_z_max);
+        double missing_value = _variable->fill_value;
+        determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
 
@@ -171,7 +172,8 @@ void MyCanvas::draw_data_at_face()
         {
             QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
         }
-        determine_min_max(z_value, &m_z_min, &m_z_max);
+        double missing_value = _variable->fill_value;
+        determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
 
@@ -218,7 +220,8 @@ void MyCanvas::draw_dot_at_node()
         std_data_at_node = _ugrid_file->get_variable_values(var_name);
 
         z_value = std_data_at_node[_current_step];
-        determine_min_max(z_value, &m_z_min, &m_z_max);
+        double missing_value = _variable->fill_value;
+        determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
 
@@ -264,7 +267,8 @@ void MyCanvas::draw_dot_at_edge()
             QMessageBox::information(0, tr("MyCanvas::draw_dot_at_edge()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
         }
 
-        determine_min_max(z_value, &m_z_min, &m_z_max);
+        double missing_value = _variable->fill_value;
+        determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
 
@@ -319,7 +323,8 @@ void MyCanvas::draw_line_at_edge()
         {
             return;
         }
-        determine_min_max(z_value, &m_z_min, &m_z_max);
+        double missing_value = _variable->fill_value;
+        determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
 
@@ -412,7 +417,8 @@ void MyCanvas::draw_data_along_edge()
         vector<int> edge_color(2);
 
         z_value = std_data_at_node[_current_step];
-        determine_min_max(z_value, &m_z_min, &m_z_max);
+        double missing_value = _variable->fill_value;
+        determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
         if (true)  // boolean to draw gradinet along line?
@@ -480,14 +486,17 @@ void MyCanvas::setUgridFile(UGRID * ugrid_file)
     _ugrid_file = ugrid_file;
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::determine_min_max(vector<double *> z, double * z_min, double * z_max)
+void MyCanvas::determine_min_max(vector<double *> z, double * z_min, double * z_max, double missing_value)
 {
     if (m_property->get_dynamic_legend())
     {
         for (int i = 0; i < z.size(); i++)
         {
-            *z_min = min(*z_min, *z[i]);
-            *z_max = max(*z_max, *z[i]);
+            if (*z[i] != missing_value)
+            {
+                *z_min = min(*z_min, *z[i]);
+                *z_max = max(*z_max, *z[i]);
+            }
         }
     }
     else

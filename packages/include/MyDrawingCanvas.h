@@ -186,7 +186,7 @@ protected:
 private:
     // functions
     void paint( QPainter * );
-    void determine_min_max(vector<double *>, double *, double *);
+    void determine_min_max(vector<double *>, double *, double *, double);
 
     // variables
     QgisInterface* mQGisIface;

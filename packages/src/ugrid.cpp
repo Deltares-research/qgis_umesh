@@ -232,30 +232,30 @@ long UGRID::read_mesh()
             {
                 if (tmp_dim_names[i].find("nterface") != string::npos)  // HACK: dimension name should have the sub-string 'interface' or 'Interface'
                 {
-                    _map_dim_name["sigma_interface"] = tmp_dim_names[i];
+                    _map_dim_name["z_or_sigma_interface"] = tmp_dim_names[i];
                 }
                 else
                 {
-                    _map_dim_name["sigma_layer"] = tmp_dim_names[i];
+                    _map_dim_name["z_or_sigma_layer"] = tmp_dim_names[i];
                 }
             }
         }
-        //if (std_name == "altitude")
-        //{
-        //    // this grid contains z- layers, find z-dimension name
-        //    tmp_dim_names = get_dimension_names(this->ncid, var_name);
-        //    for (int i = 0; i < tmp_dim_names.size(); i++)
-        //    {
-        //        if (var_name.find("interface") != string::npos)
-        //        {
-        //            _map_dim_name["z_sigma_interface"] = tmp_dim_names[i];
-        //       }
-        //       else
-        //       {
-        //           _map_dim_name["z_sigma_layer"] = tmp_dim_names[i];
-        //        }
-        //    }
-        //}
+        if (std_name == "altitude")
+        {
+            // this grid contains z- layers, find z-dimension name
+            tmp_dim_names = get_dimension_names(this->ncid, var_name);
+            for (int i = 0; i < tmp_dim_names.size(); i++)
+            {
+                if (tmp_dim_names[i].find("nterface") != string::npos)
+                {
+                    _map_dim_name["z_or_sigma_interface"] = tmp_dim_names[i];
+                }
+                else if (tmp_dim_names[i].find("Layer") != string::npos)
+                {
+                   _map_dim_name["z_or_sigma_layer"] = tmp_dim_names[i];
+                }
+            }
+        }
 
         status = get_attribute(this->ncid, i_var, "grid_mapping_name", &grid_mapping_name);
         if (status == NC_NOERR)
@@ -625,14 +625,14 @@ long UGRID::read_variables()
             {
                 for (int i = 0; i < mesh_vars->variable[nr_mesh_var - 1]->dims.size(); i++)
                 {
-                    if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["sigma_layer"])
+                    if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["z_or_sigma_layer"])
                     {
-                        int nr_lay = _map_dim[_map_dim_name["sigma_layer"]];
+                        int nr_lay = _map_dim[_map_dim_name["z_or_sigma_layer"]];
                         mesh_vars->variable[nr_mesh_var - 1]->nr_layers = nr_lay;
                     }
-                    else if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["sigma_interface"])
+                    else if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["z_or_sigma_interface"])
                     {
-                        int nr_lay = _map_dim[_map_dim_name["sigma_interface"]];
+                        int nr_lay = _map_dim[_map_dim_name["z_or_sigma_interface"]];
                         mesh_vars->variable[nr_mesh_var - 1]->nr_layers = nr_lay;
                     }
                 }
@@ -871,8 +871,8 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 bool swap_loops = false;
                 //HACK assumed is that the time is the first dimension
                 //HACK just the variables at the layers, interfaces are skipped
-                if (_map_dim_name["sigma_layer"] == mesh_vars->variable[i]->dim_names[2] ||
-                    _map_dim_name["sigma_interface"] == mesh_vars->variable[i]->dim_names[2])
+                if (_map_dim_name["z_or_sigma_layer"] == mesh_vars->variable[i]->dim_names[2] ||
+                    _map_dim_name["z_or_sigma_interface"] == mesh_vars->variable[i]->dim_names[2])
                 {
                     // loop over layers and nodes should be swapped
                     swap_loops = true;
