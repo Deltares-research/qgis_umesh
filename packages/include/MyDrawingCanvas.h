@@ -186,6 +186,7 @@ protected:
 private:
     // functions
     void paint( QPainter * );
+    void determine_min_max(vector<double *>, double *, double *, vector<int> &, double);
     void determine_min_max(vector<double *>, double *, double *, double);
 
     // variables

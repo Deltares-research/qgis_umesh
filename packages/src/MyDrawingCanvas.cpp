@@ -131,16 +131,10 @@ void MyCanvas::draw_dot_at_face()
 
         z_value = std_data_at_face[_current_step];
         double missing_value = _variable->fill_value;
-        determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
+        rgb_color.resize(mesh2d->face[0]->x.size());
+        determine_min_max(z_value, &m_z_min, &m_z_max, rgb_color, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
-
-        dims = _variable->dims;
-        rgb_color.resize(mesh2d->face[0]->x.size());
-        for (int i = 0; i < mesh2d->face[0]->x.size(); i++)
-        {
-            rgb_color[i] = m_ramph->getRgbFromValue(*z_value[i]);
-        }
 
         this->startDrawing(0);
         double opacity = mCache_painter->opacity();
@@ -173,16 +167,10 @@ void MyCanvas::draw_data_at_face()
             QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
         }
         double missing_value = _variable->fill_value;
+        rgb_color.resize(mesh2d->face_nodes.size());
         determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
-
-        dims = _variable->dims;
-        rgb_color.resize(mesh2d->face_nodes.size());
-        for (int i = 0; i < mesh2d->face_nodes.size(); i++)
-        {
-            rgb_color[i] = m_ramph->getRgbFromValue(*z_value[i]);
-        }
 
         this->startDrawing(0);
         mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
@@ -203,8 +191,11 @@ void MyCanvas::draw_data_at_face()
                     vertex_y.push_back(mesh2d->node[0]->y[p1]);
                 }
             }
-            setFillColor(rgb_color[i]);
-            this->drawPolygon(vertex_x, vertex_y);
+            if (*z_value[i] != missing_value)
+            {
+                setFillColor(m_ramph->getRgbFromValue(*z_value[i]));
+                this->drawPolygon(vertex_x, vertex_y);
+            }
         }
         mCache_painter->setOpacity(opacity);
         this->finishDrawing();
@@ -221,16 +212,10 @@ void MyCanvas::draw_dot_at_node()
 
         z_value = std_data_at_node[_current_step];
         double missing_value = _variable->fill_value;
-        determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
+        rgb_color.resize(mesh1d->node[0]->x.size());
+        determine_min_max(z_value, &m_z_min, &m_z_max, rgb_color, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
-
-        dims = _variable->dims;
-        rgb_color.resize(mesh1d->node[0]->x.size());
-        for (int i = 0; i < mesh1d->node[0]->x.size(); i++)
-        {
-            rgb_color[i] = m_ramph->getRgbFromValue(*z_value[i]);
-        }
 
         this->startDrawing(0);
         double opacity = mCache_painter->opacity();
@@ -268,12 +253,11 @@ void MyCanvas::draw_dot_at_edge()
         }
 
         double missing_value = _variable->fill_value;
-        determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
+        rgb_color.resize(edges->count);
+        determine_min_max(z_value, &m_z_min, &m_z_max, rgb_color, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
 
-        dims = _variable->dims;
-        rgb_color.resize(edges->count);
         for (int j = 0; j < edges->count; j++)
         {
             int p1 = edges->edge_nodes[j][0];
@@ -285,7 +269,6 @@ void MyCanvas::draw_dot_at_edge()
 
             edge_x.push_back(0.5*(x1 + x2));
             edge_y.push_back(0.5*(y1 + y2));
-            rgb_color[j] = m_ramph->getRgbFromValue(*z_value[j]);
         }
 
         this->startDrawing(0);
@@ -353,7 +336,6 @@ void MyCanvas::draw_line_at_edge()
             edges = mesh1d2d->edge[0];
         }
 
-        dims = _variable->dims;
         rgb_color.resize(edges->count);
         this->startDrawing(0);
         double opacity = mCache_painter->opacity();
@@ -421,7 +403,7 @@ void MyCanvas::draw_data_along_edge()
         determine_min_max(z_value, &m_z_min, &m_z_max, missing_value);
         m_ramph->setMinMax(m_z_min, m_z_max);
         m_ramph->update();
-        if (true)  // boolean to draw gradinet along line?
+        if (true)  // boolean to draw gradient along line?
         {
             for (int j = 0; j < edges->count; j++)
             {
@@ -486,6 +468,30 @@ void MyCanvas::setUgridFile(UGRID * ugrid_file)
     _ugrid_file = ugrid_file;
 }
 //-----------------------------------------------------------------------------
+void MyCanvas::determine_min_max(vector<double *> z, double * z_min, double * z_max, vector<int> &rgb_color, double missing_value)
+{
+    if (m_property->get_dynamic_legend())
+    {
+        for (int i = 0; i < z.size(); i++)
+        {
+            if (*z[i] != missing_value)
+            {
+                *z_min = min(*z_min, *z[i]);
+                *z_max = max(*z_max, *z[i]);
+                rgb_color[i] = m_ramph->getRgbFromValue(*z[i]);
+            }
+            else
+            {
+                rgb_color[i] = qRgba(255, 0, 0, 255);
+            }
+        }
+    }
+    else
+    {
+        *z_min = m_property->get_minimum();
+        *z_max = m_property->get_maximum();
+    }
+}
 void MyCanvas::determine_min_max(vector<double *> z, double * z_min, double * z_max, double missing_value)
 {
     if (m_property->get_dynamic_legend())
@@ -1030,6 +1036,7 @@ void MyCanvas::setFontName(const char* name)
 //
 void MyCanvas::setFontColor(int rgb)
 {
+    textColour.setRgb( QRgb( rgb ) );
     textColour.setRgb( QRgb( rgb ) );
 }
 //
