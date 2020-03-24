@@ -114,51 +114,50 @@ void MapTimeManagerWindow::create_window()
     struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
     if (_ugrid_file->get_mesh2d_string() != nullptr)
     {
-            QString txt = QString::fromStdString(m2d[0]->var_name);
-            m_cb_2d = new QComboBox();
-            m_cb_3d = new QComboBox();
-            int status = create_parameter_selection_2d_3d(txt, m_cb_2d, m_cb_3d);
-            if (m_cb_2d->count() != 0) 
-            {
-                row += 1;
-                m_show_check_2d = check_parameter_2d();
-                hl->addWidget(m_show_check_2d, row, 0);
-                hl->addWidget(m_cb_2d, row, 1);
-            } 
-            if (m_cb_3d->count() != 0) 
-            { 
-                
-                row += 1;
-                // checkbox and combobox
-                m_show_check_3d = check_parameter_3d();
-                hl->addWidget(m_show_check_3d, row, 0);
-                hl->addWidget(m_cb_3d, row, 1);
+        QString txt = QString::fromStdString(m2d[0]->var_name);
+        m_cb_2d = new QComboBox();
+        m_cb_3d = new QComboBox();
+        int status = create_parameter_selection_2d_3d(txt, m_cb_2d, m_cb_3d);
+        if (m_cb_2d->count() != 0) 
+        {
+            row += 1;
+            m_show_check_2d = check_parameter_2d();
+            hl->addWidget(m_show_check_2d, row, 0);
+            hl->addWidget(m_cb_2d, row, 1);
+        } 
+        if (m_cb_3d->count() != 0) 
+        { 
+            row += 1;
+            // checkbox and combobox
+            m_show_check_3d = check_parameter_3d();
+            hl->addWidget(m_show_check_3d, row, 0);
+            hl->addWidget(m_cb_3d, row, 1);
 
-                // spinbox and layer selection
-                QVariant j = m_cb_3d->itemData(0);
-                int jj = j.toInt();
-                struct _mesh_variable * vars = _ugrid_file->get_variables();
-                struct _variable * var = vars->variable[jj];
-                m_layerLabelPrefix = new QLabel(tr("Layer"));
-                m_layerLabelSuffix = new QLabel(tr("[0,0]"));
-                m_layerLabelSuffix->setText(tr("[1, %1]").arg(var->nr_layers));
-                m_sb_layer = spinbox_layer(var->nr_layers);
+            // spinbox and layer selection
+            QVariant j = m_cb_3d->itemData(0);
+            int jj = j.toInt();
+            struct _mesh_variable * vars = _ugrid_file->get_variables();
+            struct _variable * var = vars->variable[jj];
+            m_layerLabelPrefix = new QLabel(tr("Layer"));
+            m_layerLabelSuffix = new QLabel(tr("[0,0]"));
+            m_layerLabelSuffix->setText(tr("[1, %1]").arg(var->nr_layers));
+            m_sb_layer = spinbox_layer(var->nr_layers);
 
-                QHBoxLayout * sp_group = new QHBoxLayout();
-                sp_group->addWidget(m_layerLabelPrefix);
-                sp_group->addWidget(m_sb_layer);
-                sp_group->addWidget(m_layerLabelSuffix);
-                sp_group->addStretch();
+            QHBoxLayout * sp_group = new QHBoxLayout();
+            sp_group->addWidget(m_layerLabelPrefix);
+            sp_group->addWidget(m_sb_layer);
+            sp_group->addWidget(m_layerLabelSuffix);
+            sp_group->addStretch();
 
-                row += 1;
-                hl->addLayout(sp_group, row, 1);
-            }
+            row += 1;
+            hl->addLayout(sp_group, row, 1);
+        }
     }
-
     vl->addLayout(hl);
 
     m_ramph = create_color_ramp();
     vl->addWidget(m_ramph);
+    vl->addStretch();
 
     vl->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     wid->setLayout(vl);
