@@ -19,6 +19,7 @@ MapTimeManagerWindow::MapTimeManagerWindow(UGRID * ugrid_file, MyCanvas * MyCanv
     m_show_map_data_1d2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d2d
     m_show_map_data_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_2d
     m_show_map_data_3d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_3d
+    m_show_map_vector_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_vec_2d
 
     MapProperty * m_property = MapProperty::getInstance();
 
@@ -33,6 +34,7 @@ void MapTimeManagerWindow::ramp_changed()
 {
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::ramp_changed()");
     _MyCanvas->draw_all();
+    _MyCanvas->draw_vector_at_face();
 }
 
 void MapTimeManagerWindow::contextMenu(const QPoint & point)
@@ -63,13 +65,11 @@ int MapTimeManagerWindow::get_count()
 
 void MapTimeManagerWindow::create_window()
 {
+#include "vsi.xpm"
     this->setWindowTitle(QString("Map Output Animation"));
 
     QWidget * wid = new QWidget();
     QVBoxLayout * vl = new QVBoxLayout();
-    QGridLayout * hl= new QGridLayout();
-    hl->setColumnStretch(0, 0);
-    hl->setColumnStretch(1, 100);
     QAction * _show_p = new QAction();
 
     QGridLayout * gl = create_date_time_layout();
@@ -89,75 +89,34 @@ void MapTimeManagerWindow::create_window()
     vl->addWidget(line);
     vl->addWidget(m_slider);
 
-    int row = 0;
-    struct _mesh1d_string ** m1d = _ugrid_file->get_mesh1d_string();
-    if (_ugrid_file->get_mesh1d_string() != nullptr)
-    {
-        m_show_check_1d = check_parameter_1d();
-        hl->addWidget(m_show_check_1d, row, 0);
-        QString txt = QString::fromStdString(m1d[0]->var_name);
-        m_cb_1d = create_parameter_selection_1d(txt);
-        hl->addWidget(m_cb_1d, row, 1);
-    }
+    // Selection of parameter and/or vector 
 
-    struct _mesh_contact_string ** m1d2d = _ugrid_file->get_mesh_contact_string();
-    if (_ugrid_file->get_mesh_contact_string() != nullptr)
-    {
-        row += 1;
-        m_show_check_1d2d = check_parameter_1d2d();
-        hl->addWidget(m_show_check_1d2d, row, 0);
-        QString txt = QString::fromStdString(m1d2d[0]->mesh_contact);
-        m_cb_1d2d = create_parameter_selection_1d2d(txt);
-        hl->addWidget(m_cb_1d2d, row, 1);
-    }
+    QTabWidget * tw = new QTabWidget();
+    QWidget * iso_patch = new QWidget();
+    QWidget * vectors = new QWidget();
+    QIcon icon_iso_patch;
+    QIcon icon_vectors;
 
-    struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
-    if (_ugrid_file->get_mesh2d_string() != nullptr)
-    {
-        QString txt = QString::fromStdString(m2d[0]->var_name);
-        m_cb_2d = new QComboBox();
-        m_cb_3d = new QComboBox();
-        int status = create_parameter_selection_2d_3d(txt, m_cb_2d, m_cb_3d);
-        if (m_cb_2d->count() != 0) 
-        {
-            row += 1;
-            m_show_check_2d = check_parameter_2d();
-            hl->addWidget(m_show_check_2d, row, 0);
-            hl->addWidget(m_cb_2d, row, 1);
-        } 
-        if (m_cb_3d->count() != 0) 
-        { 
-            row += 1;
-            // checkbox and combobox
-            m_show_check_3d = check_parameter_3d();
-            hl->addWidget(m_show_check_3d, row, 0);
-            hl->addWidget(m_cb_3d, row, 1);
 
-            // spinbox and layer selection
-            QVariant j = m_cb_3d->itemData(0);
-            int jj = j.toInt();
-            struct _mesh_variable * vars = _ugrid_file->get_variables();
-            struct _variable * var = vars->variable[jj];
-            m_layerLabelPrefix = new QLabel(tr("Layer"));
-            m_layerLabelSuffix = new QLabel(tr("[0,0]"));
-            m_layerLabelSuffix->setText(tr("[1, %1]").arg(var->nr_layers));
-            m_sb_layer = spinbox_layer(var->nr_layers);
+    QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
+    program_files = program_files + QString("/deltares/qgis_umesh");
+    QDir program_files_dir = QDir(program_files);
+    icon_iso_patch = get_icon_file(program_files_dir, "/icons/iso_patch.png");
+    icon_vectors = get_icon_file(program_files_dir, "/icons/vectors.png");
 
-            QHBoxLayout * sp_group = new QHBoxLayout();
-            sp_group->addWidget(m_layerLabelPrefix);
-            sp_group->addWidget(m_sb_layer);
-            sp_group->addWidget(m_layerLabelSuffix);
-            sp_group->addStretch();
+    tw->addTab(iso_patch, icon_iso_patch, "");
+    iso_patch->setToolTip("Iso surface");
+    iso_patch->setStatusTip("Draw Iso surface on patches");
 
-            row += 1;
-            hl->addLayout(sp_group, row, 1);
-        }
-    }
-    vl->addLayout(hl);
+    tw->addTab(vectors, icon_vectors, "");
+    vectors->setToolTip("2DH Vector");
+    vectors->setStatusTip("Draw 2DH velocity vector");
 
-    m_ramph = create_color_ramp();
-    vl->addWidget(m_ramph);
-    vl->addStretch();
+    QVBoxLayout * vl_tw_iso = create_scalar_selection_1d_2d_3d();
+    iso_patch->setLayout(vl_tw_iso);
+    QVBoxLayout * vl_tw_vec = create_vector_selection_2d_3d();
+    vectors->setLayout(vl_tw_vec);
+    vl->addWidget(tw);
 
     vl->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     wid->setLayout(vl);
@@ -369,7 +328,8 @@ QCheckBox * MapTimeManagerWindow::check_parameter_1d2d()
 
 QCheckBox * MapTimeManagerWindow::check_parameter_2d()
 {
-    QCheckBox * checkb = new QCheckBox("2D");
+    QCheckBox * checkb = new QCheckBox();
+    checkb->setText("2D");
     checkb->setToolTip("Show/Hide Map results");
     checkb->setStatusTip("Show/Hide Map results");
     checkb->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
@@ -391,11 +351,27 @@ QCheckBox * MapTimeManagerWindow::check_parameter_3d()
     checkb->setCheckable(true);
     checkb->setChecked(false);
     checkb->setEnabled(true);
-    m_show_map_data_2d = false;
+    m_show_map_data_3d = false;
     connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_3d);
 
     return checkb;
 }
+QCheckBox * MapTimeManagerWindow::check_vector_2d()
+{
+    QCheckBox * checkb = new QCheckBox();
+    checkb->setText("2Dvec");
+    checkb->setToolTip("Show/Hide Vector results");
+    checkb->setStatusTip("Show/Hide Vector results");
+    checkb->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
+    checkb->setCheckable(true);
+    checkb->setChecked(false);
+    checkb->setEnabled(true);
+    m_show_map_vector_2d = false;
+    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_vector_2d);
+
+    return checkb;
+}
+
 QSpinBox * MapTimeManagerWindow::spinbox_layer(int max_val)
 {
     QSpinBox * sb_layer = new QSpinBox();
@@ -528,6 +504,181 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
     connect(cb_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_3d(int)));
 
     return 0;
+}
+QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
+{
+    QVBoxLayout * vl_tw_iso = new QVBoxLayout();  // VerticalLayout_TabWidget
+    QGridLayout * hl = new QGridLayout();
+    hl->setColumnStretch(0, 0);
+    hl->setColumnStretch(1, 100);
+
+    int status = 1;
+    int row = 0;
+    struct _mesh1d_string ** m1d = _ugrid_file->get_mesh1d_string();
+    if (_ugrid_file->get_mesh1d_string() != nullptr)
+    {
+        m_show_check_1d = check_parameter_1d();
+        hl->addWidget(m_show_check_1d, row, 0);
+        QString txt = QString::fromStdString(m1d[0]->var_name);
+        m_cb_1d = create_parameter_selection_1d(txt);
+        hl->addWidget(m_cb_1d, row, 1);
+    }
+
+    struct _mesh_contact_string ** m1d2d = _ugrid_file->get_mesh_contact_string();
+    if (_ugrid_file->get_mesh_contact_string() != nullptr)
+    {
+        row += 1;
+        m_show_check_1d2d = check_parameter_1d2d();
+        hl->addWidget(m_show_check_1d2d, row, 0);
+        QString txt = QString::fromStdString(m1d2d[0]->mesh_contact);
+        m_cb_1d2d = create_parameter_selection_1d2d(txt);
+        hl->addWidget(m_cb_1d2d, row, 1);
+    }
+
+    struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
+    if (_ugrid_file->get_mesh2d_string() != nullptr)
+    {
+        QString txt = QString::fromStdString(m2d[0]->var_name);
+        m_cb_2d = new QComboBox();
+        m_cb_3d = new QComboBox();
+        status = create_parameter_selection_2d_3d(txt, m_cb_2d, m_cb_3d);
+        if (m_cb_2d->count() != 0)
+        {
+            row += 1;
+            m_show_check_2d = check_parameter_2d();
+            hl->addWidget(m_show_check_2d, row, 0);
+            hl->addWidget(m_cb_2d, row, 1);
+        }
+        if (m_cb_3d->count() != 0)
+        {
+            row += 1;
+            // checkbox and combobox
+            m_show_check_3d = check_parameter_3d();
+            hl->addWidget(m_show_check_3d, row, 0);
+            hl->addWidget(m_cb_3d, row, 1);
+
+            // spinbox and layer selection
+            QVariant j = m_cb_3d->itemData(0);
+            int jj = j.toInt();
+            struct _mesh_variable * vars = _ugrid_file->get_variables();
+            struct _variable * var = vars->variable[jj];
+            m_layerLabelPrefix = new QLabel(tr("Layer"));
+            m_layerLabelSuffix = new QLabel(tr("[0,0]"));
+            m_layerLabelSuffix->setText(tr("[1, %1]").arg(var->nr_layers));
+            m_sb_layer = spinbox_layer(var->nr_layers);
+
+            QHBoxLayout * sp_group = new QHBoxLayout();
+            sp_group->addWidget(m_layerLabelPrefix);
+            sp_group->addWidget(m_sb_layer);
+            sp_group->addWidget(m_layerLabelSuffix);
+            sp_group->addStretch();
+
+            row += 1;
+            hl->addLayout(sp_group, row, 1);
+        }
+    }
+    vl_tw_iso->addLayout(hl);
+
+
+    m_ramph = create_color_ramp();
+    vl_tw_iso->addWidget(m_ramph);
+    vl_tw_iso->addStretch();
+
+    return vl_tw_iso;
+}
+QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
+{
+    QVBoxLayout * vl_tw_vec = new QVBoxLayout();  // VerticalLayout_TabWidget
+    QGridLayout * hl = new QGridLayout();
+    hl->setColumnStretch(0, 0);
+    hl->setColumnStretch(1, 100);
+
+    m_cb_vec_2d = new QComboBox();
+    m_cb_vec_2d->setMinimumSize(100, 22);
+
+    struct _mesh_variable * vars = _ugrid_file->get_variables();
+    struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
+
+    int row = 0;
+    m_show_check_vec_2d = check_vector_2d();
+    hl->addWidget(m_show_check_vec_2d, row, 0);
+
+    QString text = QString::fromStdString(m2d[0]->var_name);
+
+    m_cb_vec_2d->blockSignals(true);
+    int vec_cartesian_component = 0;
+    int vec_spherical_component = 0;
+    int j = -1;
+    for (int i = 0; i < vars->nr_vars; i++)
+    {
+        if (vars->variable[i]->time_series)
+        {
+            QMap<QString, QString> map;
+            QString std_name = QString::fromStdString(vars->variable[i]->standard_name).trimmed();
+            map[std_name] = i;
+            QString mesh_var_name = QString::fromStdString(vars->variable[i]->mesh).trimmed();
+            if (vars->variable[i]->dims.size() == 2)  // HACK: assumed time, xy-space
+            {
+                if (mesh_var_name == text)
+                {
+                    if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
+                    {
+                        vec_cartesian_component += 1;
+                    }
+                    if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
+                    {
+                        vec_spherical_component += 1;
+                    }
+                    if (vec_cartesian_component == 2 || vec_spherical_component == 2)
+                    {
+                        QString name("Depth Averaged velocity vector");
+                        if (vec_cartesian_component == 2) { 
+                            vec_cartesian_component = 0; 
+                            map[name] = QString("Cartesian");
+                        }
+                        if (vec_spherical_component == 2) { 
+                            vec_spherical_component = 0; 
+                            map[name] = QString("Spherical");
+                        }
+                        m_cb_vec_2d->addItem(name, map[name]);
+                        hl->addWidget(m_cb_vec_2d, row, 1);
+                    }
+                }
+            }
+            else if (vars->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
+            {
+                if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
+                {
+                    vec_cartesian_component += 1;
+                }
+                if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
+                {
+                    vec_spherical_component += 1;
+                }
+                if (vec_cartesian_component == 2 || vec_spherical_component == 2)
+                {
+                    QString name("Horizontal velocity vector");
+                    if (vec_cartesian_component == 2) 
+                    { 
+                        vec_cartesian_component = 0; 
+                        map[name] = QString("Cartesian");
+                    }
+                    if (vec_spherical_component == 2) 
+                    { 
+                        vec_spherical_component = 0; 
+                        map[name] = QString("Spherical");
+                    }
+                    m_cb_vec_2d->addItem(name, map[name]);
+                    hl->addWidget(m_cb_vec_2d, row, 1);
+                }
+            }
+        }
+    }
+    m_cb_vec_2d->blockSignals(false);
+    vl_tw_vec->addLayout(hl);
+    vl_tw_vec->addStretch();
+
+    return vl_tw_vec;
 }
 
 void MapTimeManagerWindow::start_reverse()
@@ -702,6 +853,7 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
+        if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         draw_time_dependent_data_1d(m_cb_1d, item);
     }
 }
@@ -720,6 +872,7 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
         if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
+        if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         draw_time_dependent_data(m_cb_1d2d, item);
     }
 }
@@ -737,6 +890,7 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
         if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
+        if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         draw_time_dependent_data(m_cb_2d, item);
     }
 }
@@ -767,7 +921,57 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
         if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         draw_time_dependent_data(m_cb_3d, item);
+    }
+}
+void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
+{
+    _MyCanvas->reset_min_max();
+    if (!m_show_map_vector_2d)
+    {
+        _MyCanvas->set_variables(nullptr);
+        _MyCanvas->set_coordinate_type("");
+        _MyCanvas->set_variable(nullptr);
+        _MyCanvas->empty_caches();
+        return;
+    }
+    else
+    {
+        if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
+        if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
+        if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
+        draw_time_dependent_vector(m_cb_vec_2d, item);
+    }
+}
+void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
+{
+    // Vectors are only drawn on the cell circumcentres, i.e. the computational location of the pressure point
+    QString str = cb->itemText(item);
+    QVariant j = cb->itemData(item);
+    QString coord = j.toString();
+    struct _mesh_variable * vars = _ugrid_file->get_variables();
+    struct _variable * var;
+    if (str.contains("Depth Averaged"))
+    {
+        if (coord.contains("Cartesian"))
+        {
+            int i = _q_times.indexOf(curr_date_time->dateTime());
+            _MyCanvas->set_current_step(i);
+            _MyCanvas->set_variables(vars);
+            _MyCanvas->set_coordinate_type(coord.toStdString());
+            _MyCanvas->draw_vector_at_face();
+        }
+        else if (coord.contains("Spherical"))
+        {
+            QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Depth averaged velocity for spherical coordinates not yet implemented"));
+        }
+        int a = 1;
+    }
+    else
+    {
+        QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Layer velocities not yet implemented"));
     }
 }
 void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
@@ -800,6 +1004,7 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
         }
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->draw_all();
+        _MyCanvas->draw_vector_at_face();
     }
     else if (location == "node")
     {
@@ -840,6 +1045,7 @@ void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
         _MyCanvas->set_variable(var);
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->draw_all();
+        _MyCanvas->draw_vector_at_face();
     }
     else if (location == "node")
     {
@@ -861,6 +1067,7 @@ void MapTimeManagerWindow::setValue(int i)
 
     _MyCanvas->set_current_step(i);
     _MyCanvas->draw_all();
+    _MyCanvas->draw_vector_at_face();
 }
 void MapTimeManagerWindow::setSliderValue(QDateTime date_time)
 {
@@ -888,4 +1095,29 @@ void MapTimeManagerWindow::show_hide_map_data_3d()
 {
     m_show_map_data_3d = !m_show_map_data_3d;
     cb_clicked_3d(m_cb_3d->currentIndex());
+}
+void MapTimeManagerWindow::show_hide_map_vector_2d()
+{
+    m_show_map_vector_2d = !m_show_map_vector_2d;
+    cb_clicked_vec_2d(m_cb_vec_2d->currentIndex());
+}
+
+//
+//-----------------------------------------------------------------------------
+//
+QIcon MapTimeManagerWindow::get_icon_file(QDir home_dir, QString file)
+{
+    // if file does not exists, return the default icon 
+#include "pattern.xpm"
+    QIcon icon_path;
+    QFileInfo path = QString(home_dir.canonicalPath()) + file;
+    if (path.exists())
+    {
+        icon_path = QIcon(path.absoluteFilePath());  // todo: Should be from the PlotCFTS install directory
+    }
+    else
+    {
+        icon_path = QIcon(QPixmap(pattern));
+    }
+    return icon_path;
 }

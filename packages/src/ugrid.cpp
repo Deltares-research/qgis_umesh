@@ -759,6 +759,19 @@ struct _mapping * UGRID::get_grid_mapping()
     return mapping;
 }
 //------------------------------------------------------------------------------
+struct _variable * UGRID::get_var_by_std_name(struct _mesh_variable * vars, string standard_name)
+{
+    for (int i = 0; i < vars->nr_vars; i++)
+    {
+        if (standard_name == vars->variable[i]->standard_name)
+        {
+            return vars->variable[i];
+        }
+    }
+    return nullptr;
+}
+
+//------------------------------------------------------------------------------
 vector<vector <double *>> UGRID::get_variable_values(const string var_name)
 // return: 1d dimensional value(x), ie time independent
 // return: 2d dimensional value(time, x)

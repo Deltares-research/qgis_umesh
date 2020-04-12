@@ -279,7 +279,7 @@ public:
     vector<vector <double *>> get_variable_values(const string);
     vector<vector<vector <double *>>> get_variable_3d_values(const string);
 
-    struct _variable * get_edge_variables();
+    struct _variable * get_var_by_std_name(struct _mesh_variable *, string);
 
 #if defined (DEBUG)
     char  janm;

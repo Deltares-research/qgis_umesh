@@ -102,6 +102,7 @@ class qgis_umesh
         void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
         void show_map_output(UGRID *);
         void edit_1d_obs_points();
+        void experiment();
 
         
     private slots:
@@ -143,6 +144,7 @@ class qgis_umesh
         QAction * open_action_his_cf;
         QAction * open_action_mdu;
         QAction * edit_action_1d_obs_points;
+        QAction * trial_experiment;
         QAction * inspectAction;
         QAction * plotcftsAction;
         QAction * mapoutputAction;
@@ -160,6 +162,7 @@ class qgis_umesh
         QIcon icon_open_his_cf;
         QIcon icon_inspect;
         QIcon icon_edit_1d_obs_points;
+        QIcon icon_experiment;
         QIcon icon_plotcfts;
         QIcon icon_mapoutput;
         QDir current_dir;

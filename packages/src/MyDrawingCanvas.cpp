@@ -202,6 +202,104 @@ void MyCanvas::draw_data_at_face()
     }
 }
 //-----------------------------------------------------------------------------
+void MyCanvas::draw_vector_at_face()
+{
+    if (_ugrid_file != nullptr)
+    {
+        vector<double> coor_x(5);
+        vector<double> coor_y(5);
+        vector<double> dx(5);
+        vector<double> dy(5);
+        vector<vector <double *>> std_u_vec_at_face;
+        vector<vector <double *>> std_v_vec_at_face;
+        struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
+        struct _variable * var_u;
+        struct _variable * var_v;
+        string * var_name;
+
+        // get average cell size (ie sqrt(area))    
+        double vfac = 150.0; // JanM;  set default to 100 m
+        if (m_coordinate_type == "Cartesian")
+        {
+            // sea_water_x_velocity, sea_water_y_velocity
+            var_u = _ugrid_file->get_var_by_std_name(m_variables, "sea_water_x_velocity");
+            var_v = _ugrid_file->get_var_by_std_name(m_variables, "sea_water_y_velocity");
+            if (var_u->dims.size() == 2) // 2D: time, nodes
+            {
+                std_u_vec_at_face = _ugrid_file->get_variable_values(var_u->var_name);
+                u_value = std_u_vec_at_face[_current_step];
+                std_v_vec_at_face = _ugrid_file->get_variable_values(var_v->var_name);
+                v_value = std_v_vec_at_face[_current_step];
+
+                double opacity = mCache_painter->opacity();
+                mCache_painter->setOpacity(m_property->get_opacity());
+                this->setLineColor(1);
+                this->setFillColor(1);
+                this->setPointSize(7);
+                this->setLineWidth(3);
+                this->startDrawing(0);
+
+                double vlen;
+                double beta;
+                dx[0] = 0.0;  // not used
+                dx[1] = 1.0;
+                dx[2] = 0.8;
+                dx[3] = 0.8;
+                dx[4] = 0.0;  // not used
+
+                dy[0] = 0.0;  // not used
+                dy[1] = 0.0;
+                dy[2] = -0.1;
+                dy[3] = 0.1;
+                dy[4] = 0.0;  // not used
+                for (int i = 0; i < u_value.size(); i++)
+                {
+                    coor_x.clear();
+                    coor_y.clear();
+
+                    vlen = sqrt(*u_value[i] * *u_value[i] + *v_value[i] * *v_value[i]);  // The "length" of the vector
+                    beta = atan2(*v_value[i], *u_value[i]);
+                    vlen = max(vlen, 0.01);
+
+                    coor_x.push_back(mesh2d->face[0]->x[i]);
+                    coor_y.push_back(mesh2d->face[0]->y[i]);
+
+                    for (int k = 1; k < 4; k++)
+                    {
+                        coor_x.push_back(coor_x[0] + vfac * vlen*(dx[k] * cos(beta) - dy[k] * sin(beta)));
+                        coor_y.push_back(coor_y[0] + vfac * vlen*(dy[k] * cos(beta) + dx[k] * sin(beta)));
+                    }
+
+                    coor_x.push_back(coor_x[1]);
+                    coor_y.push_back(coor_y[1]);
+
+                    //this->drawPoint(coor_x[0], coor_y[0]);
+                    this->drawPolyline(coor_x, coor_y);
+                }
+                this->finishDrawing();
+            }
+            else if (var_u->dims.size() == 3) // 3D: time, layer, nodes
+            {
+                vector<vector<vector <double *>>> std_u_vec_at_face_3d = _ugrid_file->get_variable_3d_values("sea_water_x_velocity");
+                u_value = std_u_vec_at_face_3d[_current_step][m_layer - 1];
+                vector<vector<vector <double *>>> std_v_vec_at_face_3d = _ugrid_file->get_variable_3d_values("sea_water_y_velocity");
+                v_value = std_v_vec_at_face_3d[_current_step][m_layer - 1];
+            }
+            else
+            {
+                QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Layer velocities not yet implemented"));
+            }
+
+
+        }
+        else if (m_coordinate_type == "Spherical")
+        {
+            // east_sea_water_velocity, north_sea_water_velocity
+
+        }
+    }
+}
+//-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_node()
 {
     if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "node")
@@ -446,6 +544,11 @@ void MyCanvas::reset_min_max()
     m_z_max = -std::numeric_limits<double>::infinity();
 }
 //-----------------------------------------------------------------------------
+void MyCanvas::set_coordinate_type(string coord_type)
+{
+    m_coordinate_type = coord_type;
+}
+//-----------------------------------------------------------------------------
 void MyCanvas::set_current_step(int current_step)
 {
     _current_step = current_step;
@@ -455,6 +558,11 @@ void MyCanvas::set_variable(struct _variable * variable)
 {
     _variable = variable;
     this->reset_min_max();
+}
+//-----------------------------------------------------------------------------
+void MyCanvas::set_variables(struct _mesh_variable * variables)
+{
+    m_variables = variables;
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::set_layer(int i_layer)
@@ -626,6 +734,7 @@ void MyCanvas::renderPlugin( QPainter * Painter )
     draw_dot_at_node();
     draw_data_along_edge();
     draw_line_at_edge();
+    draw_vector_at_face();
 }
 //
 //-----------------------------------------------------------------------------

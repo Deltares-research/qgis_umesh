@@ -5,6 +5,7 @@
 #define _INC_MyCanvas
 
 #include <assert.h>
+#include <math.h>       /* sqrt */
 
 #include "AbstractCanvas.h"
 #include "ugrid.h"
@@ -159,6 +160,9 @@ public:
     void setUgridFile(UGRID *);
     void reset_min_max();
     void set_variable(struct _variable *);
+    void set_variables(struct _mesh_variable * variables);
+    void set_coordinate_type(string);
+
     void set_layer(int);
     void set_current_step(int);
     void setColorRamp(QColorRampEditor *);
@@ -169,8 +173,11 @@ public:
     void draw_data_along_edge();
     void draw_data_at_face();
     void draw_line_at_edge();
+    void draw_vector_at_face();
 
     vector<double *> z_value;
+    vector<double *> u_value;
+    vector<double *> v_value;
     double m_z_min;
     double m_z_max;
     QColorRampEditor * m_ramph;
@@ -232,6 +239,8 @@ private:
 
     UGRID * _ugrid_file;
     struct _variable * _variable;
+    struct _mesh_variable * m_variables;
+    string  m_coordinate_type;
     int m_layer;
     int _current_step;
     vector<long> dims;

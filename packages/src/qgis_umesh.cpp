@@ -15,6 +15,7 @@
 #define QGIS_UMESH_VERSION "0.00.01"
 #define COMPANY "Deltares"
 #define ARCH "Win64"
+#define EXPERIMENT 0
 
 static const QString ident = QObject::tr( "@(#)" COMPANY ", " PROGRAM ", " QGIS_UMESH_VERSION ", " ARCH", " __DATE__", " __TIME__ );
 static const QString sName = QObject::tr( "" COMPANY ", " PROGRAM " Development");
@@ -204,6 +205,13 @@ void qgis_umesh::initGui()
     edit_action_1d_obs_points->setEnabled(true);
     connect(edit_action_1d_obs_points, &QAction::triggered, this, &qgis_umesh::edit_1d_obs_points);
 
+    icon_experiment = get_icon_file(program_files_dir, "/icons/experiment.png");
+    trial_experiment = new QAction(icon_experiment, tr("&Experiment"));
+    trial_experiment->setToolTip(tr("Experiment"));
+    trial_experiment->setStatusTip(tr("Experiment"));
+    trial_experiment->setEnabled(true);
+    connect(trial_experiment, &QAction::triggered, this, &qgis_umesh::experiment);
+    
     icon_inspect = get_icon_file(program_files_dir, "/icons/remoteolv_icon.png");
     inspectAction = new QAction(icon_inspect, tr("&Show map output ..."));
     inspectAction->setToolTip(tr("Show map output time manager"));
@@ -264,8 +272,10 @@ void qgis_umesh::initGui()
 
     janm1 = janm->addMenu("Trials");
     janm1->addAction(open_action_mdu);
+#if EXPERIMENT
     janm1->addAction(edit_action_1d_obs_points);
-
+    janm1->addAction(trial_experiment);
+#endif
     _menuToolBar->addWidget(janm);
     tbar->addWidget(_menuToolBar);
     tbar->addSeparator();
@@ -387,7 +397,7 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
             {
                 QMessageBox::information(0, "Message", QString("Screen CRS \"%1\" not equal to layer CRS: \"%2\"\nPlease set first the screen CRS equal to the layer CRS.").arg(s_crs.authid()).arg(new_crs.authid()));
             }
-
+            //active_layer->setDataSource()
             mtm_widget = new MapTimeManagerWindow(ugrid_file, mMyCanvas);
             mtm_widget->setContextMenuPolicy(Qt::CustomContextMenu);
             mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, mtm_widget);
@@ -513,6 +523,42 @@ void qgis_umesh::edit_1d_obs_points()
             editObs_widget = new EditObsPoints(obs_layer, geom_layer, ugrid_file, mQGisIface);
             mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, editObs_widget);
         }
+    }
+}
+//
+//-----------------------------------------------------------------------------
+//
+void qgis_umesh::experiment()
+{
+    QMessageBox::information(0, "Information", QString("qgis_umesh::experiment()\nExperiment."));
+    QgsMapLayer * layer = mQGisIface->activeLayer();
+    QgsVectorLayer *vlayer = (QgsVectorLayer*)layer;
+    //QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>(layer);
+    QString layer_name("mesh2d_s1");  
+    UGRID * ugrid_file = _UgridFiles[_fil_index];
+    struct _mapping * mapping;
+    struct _mesh2d * mesh2d;
+
+    mapping = ugrid_file->get_grid_mapping();
+    mesh2d = ugrid_file->get_mesh2d();
+
+    if (layer->name().contains("cell_area"))
+    {
+        QMessageBox::information(0, "Information", QString("qgis_umesh::experiment()\nExperiment: %1").arg(layer_name));
+        vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(layer_name.toStdString());
+        vector<double *> z_value = std_data_at_face[0];
+        QgsVectorDataProvider * dp_vl = vlayer->dataProvider();
+
+        vlayer->startEditing();
+        for (int i = 0; i < z_value.size(); i++)
+        {
+            *z_value[i] *= 1.1;
+            //dp_vl->deleteFeatures(;
+            QgsFeature feat = vlayer->getFeature(i);
+            feat.setAttribute(0, *z_value[i]);
+            dp_vl->addFeature(feat);
+        }
+        vlayer->commitChanges();
     }
 }
 //
