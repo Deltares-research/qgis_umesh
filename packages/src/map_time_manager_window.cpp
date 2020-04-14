@@ -20,6 +20,9 @@ MapTimeManagerWindow::MapTimeManagerWindow(UGRID * ugrid_file, MyCanvas * MyCanv
     m_show_map_data_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_2d
     m_show_map_data_3d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_3d
     m_show_map_vector_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_vec_2d
+    m_show_map_vector_3d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_vec_2d
+    //m_sb_layer = nullptr;
+    //m_sb_layer_vec = nullptr;
 
     MapProperty * m_property = MapProperty::getInstance();
 
@@ -34,7 +37,6 @@ void MapTimeManagerWindow::ramp_changed()
 {
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::ramp_changed()");
     _MyCanvas->draw_all();
-    _MyCanvas->draw_vector_at_face();
 }
 
 void MapTimeManagerWindow::contextMenu(const QPoint & point)
@@ -104,11 +106,11 @@ void MapTimeManagerWindow::create_window()
     icon_iso_patch = get_icon_file(program_files_dir, "/icons/iso_patch.png");
     icon_vectors = get_icon_file(program_files_dir, "/icons/vectors.png");
 
-    tw->addTab(iso_patch, icon_iso_patch, "");
+    tw->addTab(iso_patch, "Scalar");
     iso_patch->setToolTip("Iso surface");
     iso_patch->setStatusTip("Draw Iso surface on patches");
 
-    tw->addTab(vectors, icon_vectors, "");
+    tw->addTab(vectors, "Vector");
     vectors->setToolTip("2DH Vector");
     vectors->setStatusTip("Draw 2DH velocity vector");
 
@@ -359,15 +361,30 @@ QCheckBox * MapTimeManagerWindow::check_parameter_3d()
 QCheckBox * MapTimeManagerWindow::check_vector_2d()
 {
     QCheckBox * checkb = new QCheckBox();
-    checkb->setText("2Dvec");
-    checkb->setToolTip("Show/Hide Vector results");
-    checkb->setStatusTip("Show/Hide Vector results");
+    checkb->setText("2DH");
+    checkb->setToolTip("Show/Hide 2DH vector velocity");
+    checkb->setStatusTip("Show/Hide depth averaged vector velocity");
     checkb->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
     checkb->setCheckable(true);
     checkb->setChecked(false);
     checkb->setEnabled(true);
     m_show_map_vector_2d = false;
     connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_vector_2d);
+
+    return checkb;
+}
+QCheckBox * MapTimeManagerWindow::check_vector_3d()
+{
+    QCheckBox * checkb = new QCheckBox();
+    checkb->setText("2D");
+    checkb->setToolTip("Show/Hide layer velocity");
+    checkb->setStatusTip("Show/Hide layer vector velocity");
+    checkb->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Minimum);
+    checkb->setCheckable(true);
+    checkb->setChecked(false);
+    checkb->setEnabled(true);
+    m_show_map_vector_3d = false;
+    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_vector_3d);
 
     return checkb;
 }
@@ -567,14 +584,14 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             m_layerLabelSuffix->setText(tr("[1, %1]").arg(var->nr_layers));
             m_sb_layer = spinbox_layer(var->nr_layers);
 
-            QHBoxLayout * sp_group = new QHBoxLayout();
-            sp_group->addWidget(m_layerLabelPrefix);
-            sp_group->addWidget(m_sb_layer);
-            sp_group->addWidget(m_layerLabelSuffix);
-            sp_group->addStretch();
+            QHBoxLayout * sp_group_3d = new QHBoxLayout();
+            sp_group_3d->addWidget(m_layerLabelPrefix);
+            sp_group_3d->addWidget(m_sb_layer);
+            sp_group_3d->addWidget(m_layerLabelSuffix);
+            sp_group_3d->addStretch();
 
             row += 1;
-            hl->addLayout(sp_group, row, 1);
+            hl->addLayout(sp_group_3d, row, 1);
         }
     }
     vl_tw_iso->addLayout(hl);
@@ -589,26 +606,40 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
 QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
 {
     QVBoxLayout * vl_tw_vec = new QVBoxLayout();  // VerticalLayout_TabWidget
-    QGridLayout * hl = new QGridLayout();
-    hl->setColumnStretch(0, 0);
-    hl->setColumnStretch(1, 100);
+    QGridLayout * hl2d = new QGridLayout();
+    QGridLayout * hl3d = new QGridLayout();
+    hl2d->setColumnStretch(0, 0);
+    hl2d->setColumnStretch(1, 100);
+    hl3d->setColumnStretch(0, 0);
+    hl3d->setColumnStretch(1, 100);
 
     m_cb_vec_2d = new QComboBox();
+    m_cb_vec_3d = new QComboBox();
     m_cb_vec_2d->setMinimumSize(100, 22);
+    m_cb_vec_3d->setMinimumSize(100, 22);
 
     struct _mesh_variable * vars = _ugrid_file->get_variables();
     struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
 
-    int row = 0;
-    m_show_check_vec_2d = check_vector_2d();
-    hl->addWidget(m_show_check_vec_2d, row, 0);
+    int row = -1;
 
     QString text = QString::fromStdString(m2d[0]->var_name);
 
     m_cb_vec_2d->blockSignals(true);
+    m_cb_vec_3d->blockSignals(true);
+    int vec_cartesian_component_2dh = 0;
+    int vec_spherical_component_2dh = 0;
     int vec_cartesian_component = 0;
     int vec_spherical_component = 0;
     int j = -1;
+    QStringList cart_2dh;
+    QStringList cart_layer;
+    QStringList spher_2dh;
+    QStringList spher_layer;
+    cart_2dh << "" << "" << "";  // JanM: Is there no smarter way to generate a list of 3 items
+    cart_layer << "" << "" << "";
+    spher_2dh << "" << "" << "";
+    spher_layer << "" << "" << "";
     for (int i = 0; i < vars->nr_vars; i++)
     {
         if (vars->variable[i]->time_series)
@@ -623,33 +654,41 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
                 {
                     if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                     {
-                        vec_cartesian_component += 1;
+                        vec_cartesian_component_2dh += 1;
+                        if (std_name.contains("sea_water_x_velocity")) { cart_2dh[1] = QString::fromStdString(vars->variable[i]->var_name).trimmed(); }
+                        if (std_name.contains("sea_water_y_velocity")) { cart_2dh[2] = QString::fromStdString(vars->variable[i]->var_name).trimmed(); }
                     }
                     if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                     {
-                        vec_spherical_component += 1;
+                        vec_spherical_component_2dh += 1;
                     }
-                    if (vec_cartesian_component == 2 || vec_spherical_component == 2)
+                    if (vec_cartesian_component_2dh == 2 || vec_spherical_component_2dh == 2)
                     {
+                        row += 1;
+                        m_show_check_vec_2d = check_vector_2d();
+                        hl2d->addWidget(m_show_check_vec_2d, row, 0);
                         QString name("Depth Averaged velocity vector");
-                        if (vec_cartesian_component == 2) { 
-                            vec_cartesian_component = 0; 
-                            map[name] = QString("Cartesian");
+                        if (vec_cartesian_component_2dh == 2) {
+                            vec_cartesian_component_2dh = 0;
+                            cart_2dh[0] = QString("Cartesian");
+                            m_cb_vec_2d->addItem(name, cart_2dh);
                         }
-                        if (vec_spherical_component == 2) { 
-                            vec_spherical_component = 0; 
-                            map[name] = QString("Spherical");
+                        if (vec_spherical_component_2dh == 2) {
+                            vec_spherical_component_2dh = 0;
+                            spher_2dh[0] = QString("Spherical");
+                            m_cb_vec_2d->addItem(name, spher_2dh);
                         }
-                        m_cb_vec_2d->addItem(name, map[name]);
-                        hl->addWidget(m_cb_vec_2d, row, 1);
+                        hl2d->addWidget(m_cb_vec_2d, row, 1);
                     }
                 }
             }
-            else if (vars->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
+            if (vars->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
             {
                 if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                 {
                     vec_cartesian_component += 1;
+                    if (std_name.contains("sea_water_x_velocity")) { cart_layer[1] = QString::fromStdString(vars->variable[i]->var_name).trimmed(); }
+                    if (std_name.contains("sea_water_y_velocity")) { cart_layer[2] = QString::fromStdString(vars->variable[i]->var_name).trimmed(); }
                 }
                 if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                 {
@@ -657,25 +696,50 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
                 }
                 if (vec_cartesian_component == 2 || vec_spherical_component == 2)
                 {
+                    row += 1;
+                    m_show_check_vec_3d = check_vector_3d();
+                    hl3d->addWidget(m_show_check_vec_3d, row, 0);
                     QString name("Horizontal velocity vector");
                     if (vec_cartesian_component == 2) 
                     { 
                         vec_cartesian_component = 0; 
-                        map[name] = QString("Cartesian");
+                        cart_layer[0] = QString("Cartesian");
+                        m_cb_vec_3d->addItem(name, cart_layer);
                     }
                     if (vec_spherical_component == 2) 
                     { 
                         vec_spherical_component = 0; 
-                        map[name] = QString("Spherical");
+                        spher_layer[0] = QString("Spherical");
+                        m_cb_vec_3d->addItem(name, spher_layer);
                     }
-                    m_cb_vec_2d->addItem(name, map[name]);
-                    hl->addWidget(m_cb_vec_2d, row, 1);
+                    hl3d->addWidget(m_cb_vec_3d, row, 1);
+
+                    // spinbox and layer selection
+                    QVariant j = m_cb_3d->itemData(0);
+                    int jj = j.toInt();
+                    struct _mesh_variable * vars = _ugrid_file->get_variables();
+                    struct _variable * var = vars->variable[jj];
+                    m_layerLabelPrefix_vec = new QLabel(tr("Layer"));
+                    m_layerLabelSuffix_vec = new QLabel(tr("[0,0]"));
+                    m_layerLabelSuffix_vec->setText(tr("[1, %1]").arg(var->nr_layers));
+                    m_sb_layer_vec = spinbox_layer(var->nr_layers);
+
+                    QHBoxLayout * sp_group_vec = new QHBoxLayout();
+                    sp_group_vec->addWidget(m_layerLabelPrefix_vec);
+                    sp_group_vec->addWidget(m_sb_layer_vec);
+                    sp_group_vec->addWidget(m_layerLabelSuffix_vec);
+                    sp_group_vec->addStretch();
+
+                    row += 1;
+                    hl3d->addLayout(sp_group_vec, row, 1);
                 }
             }
         }
     }
     m_cb_vec_2d->blockSignals(false);
-    vl_tw_vec->addLayout(hl);
+    m_cb_vec_3d->blockSignals(false);
+    vl_tw_vec->addLayout(hl2d);
+    vl_tw_vec->addLayout(hl3d);
     vl_tw_vec->addStretch();
 
     return vl_tw_vec;
@@ -854,6 +918,7 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
+        if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
         draw_time_dependent_data_1d(m_cb_1d, item);
     }
 }
@@ -873,6 +938,7 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
+        if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
         draw_time_dependent_data(m_cb_1d2d, item);
     }
 }
@@ -891,6 +957,7 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
+        if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
         draw_time_dependent_data(m_cb_2d, item);
     }
 }
@@ -922,6 +989,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
+        if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
         draw_time_dependent_data(m_cb_3d, item);
     }
 }
@@ -931,7 +999,9 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
     if (!m_show_map_vector_2d)
     {
         _MyCanvas->set_variables(nullptr);
-        _MyCanvas->set_coordinate_type("");
+        QStringList coord;
+        coord << "";
+        _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
         _MyCanvas->empty_caches();
         return;
@@ -942,7 +1012,31 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
+        if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
         draw_time_dependent_vector(m_cb_vec_2d, item);
+    }
+}
+void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
+{
+    _MyCanvas->reset_min_max();
+    if (!m_show_map_vector_3d)
+    {
+        _MyCanvas->set_variables(nullptr);
+        QStringList coord;
+        coord << "";
+        _MyCanvas->set_coordinate_type(coord);
+        _MyCanvas->set_variable(nullptr);
+        _MyCanvas->empty_caches();
+        return;
+    }
+    else
+    {
+        if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
+        if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
+        if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
+        if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
+        draw_time_dependent_vector(m_cb_vec_3d, item);
     }
 }
 void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
@@ -950,28 +1044,40 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
     // Vectors are only drawn on the cell circumcentres, i.e. the computational location of the pressure point
     QString str = cb->itemText(item);
     QVariant j = cb->itemData(item);
-    QString coord = j.toString();
+    QStringList coord = j.toStringList();
     struct _mesh_variable * vars = _ugrid_file->get_variables();
-    struct _variable * var;
     if (str.contains("Depth Averaged"))
     {
-        if (coord.contains("Cartesian"))
+        if (coord[0] == "Cartesian")
         {
             int i = _q_times.indexOf(curr_date_time->dateTime());
             _MyCanvas->set_current_step(i);
             _MyCanvas->set_variables(vars);
-            _MyCanvas->set_coordinate_type(coord.toStdString());
+            _MyCanvas->set_coordinate_type(coord);
             _MyCanvas->draw_vector_at_face();
         }
-        else if (coord.contains("Spherical"))
+        else if (coord[0] == "Spherical")
         {
             QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Depth averaged velocity for spherical coordinates not yet implemented"));
         }
-        int a = 1;
     }
     else
     {
-        QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Layer velocities not yet implemented"));
+         if (coord[0] == "Cartesian")
+         {
+            int i = _q_times.indexOf(curr_date_time->dateTime());
+            _MyCanvas->set_current_step(i);
+            _MyCanvas->set_variables(vars);
+            if (m_sb_layer_vec != nullptr) {
+                _MyCanvas->set_layer(m_sb_layer_vec->value());
+            }
+            _MyCanvas->set_coordinate_type(coord);
+            _MyCanvas->draw_vector_at_face();
+         }
+         else if (coord[0] == "Spherical")
+         {
+            QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Depth averaged velocity for spherical coordinates not yet implemented"));
+         }
     }
 }
 void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
@@ -1004,7 +1110,6 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
         }
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->draw_all();
-        _MyCanvas->draw_vector_at_face();
     }
     else if (location == "node")
     {
@@ -1045,7 +1150,6 @@ void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
         _MyCanvas->set_variable(var);
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->draw_all();
-        _MyCanvas->draw_vector_at_face();
     }
     else if (location == "node")
     {
@@ -1067,7 +1171,6 @@ void MapTimeManagerWindow::setValue(int i)
 
     _MyCanvas->set_current_step(i);
     _MyCanvas->draw_all();
-    _MyCanvas->draw_vector_at_face();
 }
 void MapTimeManagerWindow::setSliderValue(QDateTime date_time)
 {
@@ -1100,6 +1203,11 @@ void MapTimeManagerWindow::show_hide_map_vector_2d()
 {
     m_show_map_vector_2d = !m_show_map_vector_2d;
     cb_clicked_vec_2d(m_cb_vec_2d->currentIndex());
+}
+void MapTimeManagerWindow::show_hide_map_vector_3d()
+{
+    m_show_map_vector_3d = !m_show_map_vector_3d;
+    cb_clicked_vec_3d(m_cb_vec_3d->currentIndex());
 }
 
 //

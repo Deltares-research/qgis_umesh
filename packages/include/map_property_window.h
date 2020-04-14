@@ -16,9 +16,10 @@
 
 struct _bck_property {
     double opacity;
+    bool dynamic_legend;
     double minimum;
     double maximum;
-    bool dynamic_legend;
+    double vector_scaling;
 };
 
 class MapPropertyWindow : public QWidget
@@ -41,8 +42,10 @@ private:
     QCheckBox * ckb;
     QLabel * lbl_min;
     QLabel * lbl_max;
+    QLabel * lbl_vs;  // vector scaling
     QLineEdit * le_min;
     QLineEdit * le_max;
+    QLineEdit * le_vs;  // vector scaling
 
     MapProperty * m_property;
     struct _bck_property * m_bck_property;

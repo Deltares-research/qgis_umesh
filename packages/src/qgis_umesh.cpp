@@ -530,6 +530,7 @@ void qgis_umesh::edit_1d_obs_points()
 //
 void qgis_umesh::experiment()
 {
+    // Experiment: Time dependent data in the cell_area layer, whta is the performance draw back when using layers of QGIS
     QMessageBox::information(0, "Information", QString("qgis_umesh::experiment()\nExperiment."));
     QgsMapLayer * layer = mQGisIface->activeLayer();
     QgsVectorLayer *vlayer = (QgsVectorLayer*)layer;

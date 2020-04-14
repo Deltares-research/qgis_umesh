@@ -53,6 +53,8 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     m_layer = 0;
     _current_step = 0;
     m_ramph = new QColorRampEditor();
+    m_vscale_determined = false;
+    m_mode_length = 0.0;
 
     qgis_painter = NULL;
     mCache_painter = new QPainter();
@@ -118,6 +120,7 @@ void MyCanvas::draw_all()
     draw_dot_at_node();
     draw_data_along_edge();
     draw_line_at_edge();
+    draw_vector_at_face();
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_face()
@@ -210,92 +213,107 @@ void MyCanvas::draw_vector_at_face()
         vector<double> coor_y(5);
         vector<double> dx(5);
         vector<double> dy(5);
-        vector<vector <double *>> std_u_vec_at_face;
-        vector<vector <double *>> std_v_vec_at_face;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
-        struct _variable * var_u;
-        struct _variable * var_v;
-        string * var_name;
+        int dimens;
+        double vscale;
 
+        if (m_coordinate_type.size() == 0) { return; }
+
+        double opacity = mCache_painter->opacity();
+        mCache_painter->setOpacity(m_property->get_opacity());
         // get average cell size (ie sqrt(area))    
-        double vfac = 150.0; // JanM;  set default to 100 m
-        if (m_coordinate_type == "Cartesian")
+        struct _mesh_variable * vars = _ugrid_file->get_variables();
+        if (!m_vscale_determined)
         {
-            // sea_water_x_velocity, sea_water_y_velocity
-            var_u = _ugrid_file->get_var_by_std_name(m_variables, "sea_water_x_velocity");
-            var_v = _ugrid_file->get_var_by_std_name(m_variables, "sea_water_y_velocity");
-            if (var_u->dims.size() == 2) // 2D: time, nodes
+            struct _variable * cell_area = _ugrid_file->get_var_by_std_name(vars, "cell_area");
+            m_mode_length = statistics_mode_length_of_cell(cell_area);
+            m_vscale_determined = true;
+        }
+        double fac = m_property->get_vector_scaling();
+        vscale = fac * m_mode_length;
+
+        double vlen;
+        double beta;
+        dx[0] = 0.0;  // not used
+        dx[1] = 1.0;
+        dx[2] = 0.8;
+        dx[3] = 0.8;
+        dx[4] = 0.0;  // not used
+
+        dy[0] = 0.0;  // not used
+        dy[1] = 0.0;
+        dy[2] = -0.1;
+        dy[3] = 0.1;
+        dy[4] = 0.0;  // not used
+ 
+        this->setLineColor(1);
+        this->setFillColor(1);
+        this->setPointSize(7);
+        this->setLineWidth(3);
+
+        if (m_coordinate_type[0] == "Cartesian" || m_coordinate_type[0] == "Spherical")
+        {
+            // 
+            for (int i = 0; i < vars->nr_vars; i++)
             {
-                std_u_vec_at_face = _ugrid_file->get_variable_values(var_u->var_name);
-                u_value = std_u_vec_at_face[_current_step];
-                std_v_vec_at_face = _ugrid_file->get_variable_values(var_v->var_name);
-                v_value = std_v_vec_at_face[_current_step];
-
-                double opacity = mCache_painter->opacity();
-                mCache_painter->setOpacity(m_property->get_opacity());
-                this->setLineColor(1);
-                this->setFillColor(1);
-                this->setPointSize(7);
-                this->setLineWidth(3);
-                this->startDrawing(0);
-
-                double vlen;
-                double beta;
-                dx[0] = 0.0;  // not used
-                dx[1] = 1.0;
-                dx[2] = 0.8;
-                dx[3] = 0.8;
-                dx[4] = 0.0;  // not used
-
-                dy[0] = 0.0;  // not used
-                dy[1] = 0.0;
-                dy[2] = -0.1;
-                dy[3] = 0.1;
-                dy[4] = 0.0;  // not used
-                for (int i = 0; i < u_value.size(); i++)
+                if (vars->variable[i]->var_name == m_coordinate_type[1].toStdString())
                 {
-                    coor_x.clear();
-                    coor_y.clear();
-
-                    vlen = sqrt(*u_value[i] * *u_value[i] + *v_value[i] * *v_value[i]);  // The "length" of the vector
-                    beta = atan2(*v_value[i], *u_value[i]);
-                    vlen = max(vlen, 0.01);
-
-                    coor_x.push_back(mesh2d->face[0]->x[i]);
-                    coor_y.push_back(mesh2d->face[0]->y[i]);
-
-                    for (int k = 1; k < 4; k++)
-                    {
-                        coor_x.push_back(coor_x[0] + vfac * vlen*(dx[k] * cos(beta) - dy[k] * sin(beta)));
-                        coor_y.push_back(coor_y[0] + vfac * vlen*(dy[k] * cos(beta) + dx[k] * sin(beta)));
-                    }
-
-                    coor_x.push_back(coor_x[1]);
-                    coor_y.push_back(coor_y[1]);
-
-                    //this->drawPoint(coor_x[0], coor_y[0]);
-                    this->drawPolyline(coor_x, coor_y);
+                    dimens = vars->variable[i]->dims.size();
                 }
-                this->finishDrawing();
             }
-            else if (var_u->dims.size() == 3) // 3D: time, layer, nodes
+            if (dimens == 2) // 2D: time, nodes
             {
-                vector<vector<vector <double *>>> std_u_vec_at_face_3d = _ugrid_file->get_variable_3d_values("sea_water_x_velocity");
+                vector<vector <double *>> std_u_vec_at_face = _ugrid_file->get_variable_values(m_coordinate_type[1].toStdString());
+                u_value = std_u_vec_at_face[_current_step];
+                vector<vector <double *>> std_v_vec_at_face = _ugrid_file->get_variable_values(m_coordinate_type[2].toStdString());
+                v_value = std_v_vec_at_face[_current_step];
+            }
+            else if (dimens == 3) // 3D: time, layer, nodes
+            {
+                vector<vector<vector <double *>>> std_u_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
                 u_value = std_u_vec_at_face_3d[_current_step][m_layer - 1];
-                vector<vector<vector <double *>>> std_v_vec_at_face_3d = _ugrid_file->get_variable_3d_values("sea_water_y_velocity");
+                vector<vector<vector <double *>>> std_v_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
                 v_value = std_v_vec_at_face_3d[_current_step][m_layer - 1];
             }
             else
             {
                 QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Layer velocities not yet implemented"));
             }
+            this->startDrawing(0);
+            for (int i = 0; i < u_value.size(); i++)
+            {
+                coor_x.clear();
+                coor_y.clear();
 
+                coor_x.push_back(mesh2d->face[0]->x[i]);
+                coor_y.push_back(mesh2d->face[0]->y[i]);
+
+                if (coor_x[0] < getMinVisibleX() || coor_x[0] > getMaxVisibleX() ||
+                    coor_y[0] < getMinVisibleY() || coor_y[0] > getMaxVisibleY())  
+                {
+                    continue; // root of vector not in visible area, skip this vector
+                }
+
+                vlen = sqrt(*u_value[i] * *u_value[i] + *v_value[i] * *v_value[i]);  // The "length" of the vector
+                beta = atan2(*v_value[i], *u_value[i]);
+                vlen = max(vlen, 0.01);
+                for (int k = 1; k < 4; k++)
+                {
+                    coor_x.push_back(coor_x[0] + vscale * vlen*(dx[k] * cos(beta) - dy[k] * sin(beta)));
+                    coor_y.push_back(coor_y[0] + vscale * vlen*(dy[k] * cos(beta) + dx[k] * sin(beta)));
+                }
+
+                coor_x.push_back(coor_x[1]);
+                coor_y.push_back(coor_y[1]);
+
+                this->drawPolyline(coor_x, coor_y);
+            }
+            this->finishDrawing();
 
         }
-        else if (m_coordinate_type == "Spherical")
+        //else if (m_coordinate_type[0] == "Spherical")
         {
             // east_sea_water_velocity, north_sea_water_velocity
-
         }
     }
 }
@@ -544,7 +562,7 @@ void MyCanvas::reset_min_max()
     m_z_max = -std::numeric_limits<double>::infinity();
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::set_coordinate_type(string coord_type)
+void MyCanvas::set_coordinate_type(QStringList coord_type)
 {
     m_coordinate_type = coord_type;
 }
@@ -567,7 +585,7 @@ void MyCanvas::set_variables(struct _mesh_variable * variables)
 //-----------------------------------------------------------------------------
 void MyCanvas::set_layer(int i_layer)
 {
-    this->m_layer = i_layer;;
+    this->m_layer = i_layer;
 }
 
 //-----------------------------------------------------------------------------
@@ -604,6 +622,8 @@ void MyCanvas::determine_min_max(vector<double *> z, double * z_min, double * z_
 {
     if (m_property->get_dynamic_legend())
     {
+        *z_min = INFINITY;
+        *z_max = -INFINITY;
         for (int i = 0; i < z.size(); i++)
         {
             if (*z[i] != missing_value)
@@ -612,12 +632,34 @@ void MyCanvas::determine_min_max(vector<double *> z, double * z_min, double * z_
                 *z_max = max(*z_max, *z[i]);
             }
         }
+        m_property->set_minimum(*z_min);
+        m_property->set_maximum(*z_max);
     }
     else
     {
         *z_min = m_property->get_minimum();
         *z_max = m_property->get_maximum();
     }
+}
+double MyCanvas::statistics_mode_length_of_cell(struct _variable * var)
+{
+    vector <double *> area = var->z_value[0];
+    
+    std::sort(area.begin(), area.end());
+
+    std::map<int, double> f;
+    double mode;
+    for (int i = 0; i < area.size(); i++)
+    {
+        f[i] = *area[i];
+    }
+    mode = f[0];
+    for (auto e : f) {
+        if (e.second > f[mode]) {
+            mode = e.first;
+        }
+    }
+    return std::sqrt(mode);
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::empty_caches()

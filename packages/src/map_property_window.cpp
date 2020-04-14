@@ -10,6 +10,7 @@ MapPropertyWindow::MapPropertyWindow(MyCanvas * myCanvas)
     m_bck_property->opacity = m_property->get_opacity();
     m_bck_property->minimum = m_property->get_minimum();
     m_bck_property->maximum = m_property->get_maximum();
+    m_bck_property->vector_scaling = m_property->get_vector_scaling();
 
     m_myCanvas = myCanvas;
     create_window();
@@ -26,6 +27,7 @@ void MapPropertyWindow::create_window()
     QVBoxLayout * vl = new QVBoxLayout();
     QHBoxLayout * hl = new QHBoxLayout();
     QGridLayout * gl = new QGridLayout();
+    QGridLayout * gl_vs = new QGridLayout();
 
     QHBoxLayout * hl_transparency = new QHBoxLayout();
     lbl_transparency = new QLabel("Tansparency: ");
@@ -62,6 +64,15 @@ void MapPropertyWindow::create_window()
     gl->addWidget(le_max, 1, 1);
     vl->addLayout(gl);
 
+    QGroupBox * gb_vs = new QGroupBox();  // vector scaling
+    gb_vs->setTitle("Vector scaling");
+    lbl_vs = new QLabel("Vector scaling:");
+    le_vs = new QLineEdit();
+    str = QString("%1").arg(m_property->get_vector_scaling());
+    le_vs->setText(str);
+    gl_vs->addWidget(lbl_vs, 0, 0);
+    gl_vs->addWidget(le_vs, 0, 1);
+
     QPushButton * pb_apply = new QPushButton("Apply");
     QPushButton * pb_ok = new QPushButton("OK");
     QPushButton * pb_cancel = new QPushButton("Cancel");
@@ -71,10 +82,11 @@ void MapPropertyWindow::create_window()
     hl->addWidget(pb_apply);
 
     gb->setLayout(vl);
-    //gb->setLayout(vl);
-    //vl->addWidget(gb);
-    vl_main->addWidget(gb);
-    vl_main->addLayout(hl);
+    gb_vs->setLayout(gl_vs);
+
+    vl_main->addWidget(gb);  // scalar
+    vl_main->addWidget(gb_vs);  // vector scaling
+    vl_main->addLayout(hl);  // push buttons
     wid->setLayout(vl_main);
 
     // Enable/Disable items if the items are already defined
@@ -125,6 +137,7 @@ void MapPropertyWindow::clicked_apply()
     m_property->set_dynamic_legend(ckb->isChecked());
     m_property->set_minimum(le_min->text().toDouble());
     m_property->set_maximum(le_max->text().toDouble());
+    m_property->set_vector_scaling(le_vs->text().toDouble());
 
     emit draw_all();
     return;
@@ -139,6 +152,7 @@ void MapPropertyWindow::clicked_ok()
     m_property->set_dynamic_legend(ckb->isChecked());
     m_property->set_minimum(le_min->text().toDouble());
     m_property->set_maximum(le_max->text().toDouble());
+    m_property->set_vector_scaling(le_vs->text().toDouble());
 
     emit draw_all();
     delete m_bck_property;
@@ -151,6 +165,7 @@ void MapPropertyWindow::clicked_cancel()
      m_property->set_opacity(m_bck_property->opacity);
      m_property->set_minimum(m_bck_property->minimum);
      m_property->set_maximum(m_bck_property->maximum);
+     m_property->set_vector_scaling(m_bck_property->vector_scaling);
 
      emit draw_all();
      delete m_bck_property;

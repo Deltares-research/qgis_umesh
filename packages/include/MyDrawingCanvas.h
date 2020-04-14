@@ -161,7 +161,7 @@ public:
     void reset_min_max();
     void set_variable(struct _variable *);
     void set_variables(struct _mesh_variable * variables);
-    void set_coordinate_type(string);
+    void set_coordinate_type(QStringList);
 
     void set_layer(int);
     void set_current_step(int);
@@ -195,6 +195,7 @@ private:
     void paint( QPainter * );
     void determine_min_max(vector<double *>, double *, double *, vector<int> &, double);
     void determine_min_max(vector<double *>, double *, double *, double);
+    double statistics_mode_length_of_cell(struct _variable *);
 
     // variables
     QgisInterface* mQGisIface;
@@ -240,7 +241,7 @@ private:
     UGRID * _ugrid_file;
     struct _variable * _variable;
     struct _mesh_variable * m_variables;
-    string  m_coordinate_type;
+    QStringList m_coordinate_type;
     int m_layer;
     int _current_step;
     vector<long> dims;
@@ -251,6 +252,9 @@ private:
     vector<vector <double *>> std_data_at_node;
     vector<vector <double *>> std_data_at_face;
     MapProperty * m_property;
+    bool m_vscale_determined;
+    double m_mode_length;
+
 };
 
 #endif  /* _INC_MyCanvas */
