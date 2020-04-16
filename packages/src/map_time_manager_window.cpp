@@ -6,9 +6,12 @@
 int MapTimeManagerWindow::object_count = 0;
 MapProperty * MapProperty::obj;  // Initialize static member of class MapProperty (Singleton)
 
-MapTimeManagerWindow::MapTimeManagerWindow(UGRID * ugrid_file, MyCanvas * MyCanvas) : QDockWidget()
+MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ugrid_file, MyCanvas * MyCanvas) : QDockWidget()
 {
     object_count++;
+    mQGisIface = QGisIface;
+    m_sb_layer = nullptr;
+    m_sb_layer_vec = nullptr;
     _ugrid_file = ugrid_file;
     _MyCanvas = MyCanvas;
     _MyCanvas->setUgridFile(_ugrid_file);
@@ -21,8 +24,6 @@ MapTimeManagerWindow::MapTimeManagerWindow(UGRID * ugrid_file, MyCanvas * MyCanv
     m_show_map_data_3d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_3d
     m_show_map_vector_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_vec_2d
     m_show_map_vector_3d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_vec_2d
-    //m_sb_layer = nullptr;
-    //m_sb_layer_vec = nullptr;
 
     MapProperty * m_property = MapProperty::getInstance();
 
@@ -43,6 +44,7 @@ void MapTimeManagerWindow::contextMenu(const QPoint & point)
 {
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::contextMenu()");
     MapPropertyWindow * map_property = new MapPropertyWindow(_MyCanvas);
+    //mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, map_property);
 }
 //
 //-----------------------------------------------------------------------------
@@ -661,6 +663,8 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
                     if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                     {
                         vec_spherical_component_2dh += 1;
+                        if (std_name.contains("eastward_sea_water_velocity")) { spher_2dh[1] = QString::fromStdString(vars->variable[i]->var_name).trimmed(); }
+                        if (std_name.contains("northward_sea_water_velocity")) { spher_2dh[2] = QString::fromStdString(vars->variable[i]->var_name).trimmed(); }
                     }
                     if (vec_cartesian_component_2dh == 2 || vec_spherical_component_2dh == 2)
                     {
@@ -693,6 +697,8 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
                 if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                 {
                     vec_spherical_component += 1;
+                    if (std_name.contains("eastward_sea_water_velocity")) { spher_layer[1] = QString::fromStdString(vars->variable[i]->var_name).trimmed(); }
+                    if (std_name.contains("northward_sea_water_velocity")) { spher_layer[2] = QString::fromStdString(vars->variable[i]->var_name).trimmed(); }
                 }
                 if (vec_cartesian_component == 2 || vec_spherical_component == 2)
                 {
@@ -1048,36 +1054,24 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
     struct _mesh_variable * vars = _ugrid_file->get_variables();
     if (str.contains("Depth Averaged"))
     {
-        if (coord[0] == "Cartesian")
-        {
-            int i = _q_times.indexOf(curr_date_time->dateTime());
-            _MyCanvas->set_current_step(i);
-            _MyCanvas->set_variables(vars);
-            _MyCanvas->set_coordinate_type(coord);
-            _MyCanvas->draw_vector_at_face();
-        }
-        else if (coord[0] == "Spherical")
-        {
-            QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Depth averaged velocity for spherical coordinates not yet implemented"));
-        }
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->set_variables(vars);
+        _MyCanvas->set_coordinate_type(coord);
+        _MyCanvas->draw_vector_at_face();
     }
     else
     {
-         if (coord[0] == "Cartesian")
-         {
-            int i = _q_times.indexOf(curr_date_time->dateTime());
-            _MyCanvas->set_current_step(i);
-            _MyCanvas->set_variables(vars);
-            if (m_sb_layer_vec != nullptr) {
-                _MyCanvas->set_layer(m_sb_layer_vec->value());
-            }
-            _MyCanvas->set_coordinate_type(coord);
-            _MyCanvas->draw_vector_at_face();
-         }
-         else if (coord[0] == "Spherical")
-         {
-            QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Depth averaged velocity for spherical coordinates not yet implemented"));
-         }
+        // Layers velocity vectors
+        //if (coord[0] == "Cartesian" || coord[0] == "Spherical")
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->set_variables(vars);
+        if (m_sb_layer_vec != nullptr) {
+            _MyCanvas->set_layer(m_sb_layer_vec->value());
+        }
+        _MyCanvas->set_coordinate_type(coord);
+        _MyCanvas->draw_vector_at_face();
     }
 }
 void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)

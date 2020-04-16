@@ -26,6 +26,7 @@
 
 #include <qmath.h>
 #include <qgsapplication.h>
+#include <qgisinterface.h>
 #include <qgisplugin.h>
 
 #include <direct.h> // for getcwd
@@ -48,7 +49,7 @@ public:
     static int object_count;
 
     public:
-        MapTimeManagerWindow(UGRID *, MyCanvas *);
+        MapTimeManagerWindow(QgisInterface *, UGRID *, MyCanvas *);
         ~MapTimeManagerWindow();
         static int get_count();
 
@@ -90,6 +91,7 @@ public:
         QDockWidget * map_panel;
 
     private:
+        QgisInterface * mQGisIface; // Pointer to the QGIS interface object
         UGRID * _ugrid_file;
         MyCanvas * _MyCanvas;
         void create_window();

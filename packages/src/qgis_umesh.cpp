@@ -398,7 +398,7 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
                 QMessageBox::information(0, "Message", QString("Screen CRS \"%1\" not equal to layer CRS: \"%2\"\nPlease set first the screen CRS equal to the layer CRS.").arg(s_crs.authid()).arg(new_crs.authid()));
             }
             //active_layer->setDataSource()
-            mtm_widget = new MapTimeManagerWindow(ugrid_file, mMyCanvas);
+            mtm_widget = new MapTimeManagerWindow(mQGisIface, ugrid_file, mMyCanvas);
             mtm_widget->setContextMenuPolicy(Qt::CustomContextMenu);
             mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, mtm_widget);
             QObject::connect(mtm_widget, &MapTimeManagerWindow::customContextMenuRequested, mtm_widget, &MapTimeManagerWindow::contextMenu);
@@ -568,6 +568,7 @@ void qgis_umesh::experiment()
 void qgis_umesh::mapPropertyWindow()
 {
     MapPropertyWindow * map_property = new MapPropertyWindow(mMyCanvas);
+    //mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, map_property);
 }
 //
 //-----------------------------------------------------------------------------

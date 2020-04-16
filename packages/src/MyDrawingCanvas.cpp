@@ -227,6 +227,12 @@ void MyCanvas::draw_vector_at_face()
         {
             struct _variable * cell_area = _ugrid_file->get_var_by_std_name(vars, "cell_area");
             m_mode_length = statistics_mode_length_of_cell(cell_area);
+            if (m_coordinate_type[0] == "Spherical")
+            {
+                // TODO scale to degrees
+                double radius_earth = 6371008.771;
+                m_mode_length = m_mode_length / (2.0 * M_PI * radius_earth / 360.0);  // 1 degree on the great circle
+            }
             m_vscale_determined = true;
         }
         double fac = m_property->get_vector_scaling();
@@ -296,16 +302,32 @@ void MyCanvas::draw_vector_at_face()
 
                 vlen = sqrt(*u_value[i] * *u_value[i] + *v_value[i] * *v_value[i]);  // The "length" of the vector
                 beta = atan2(*v_value[i], *u_value[i]);
-                vlen = max(vlen, 0.01);
+                if (vlen < 0.001) 
+                {
+                    vlen = 0.0;
+                }
+                else
+                {
+                    vlen = max(vlen, 0.01);
+                }
                 for (int k = 1; k < 4; k++)
                 {
-                    coor_x.push_back(coor_x[0] + vscale * vlen*(dx[k] * cos(beta) - dy[k] * sin(beta)));
-                    coor_y.push_back(coor_y[0] + vscale * vlen*(dy[k] * cos(beta) + dx[k] * sin(beta)));
+                    coor_x.push_back(coor_x[0] + vscale * vlen*(cos(beta) * dx[k] - sin(beta) * dy[k]));
+                    coor_y.push_back(coor_y[0] + vscale * vlen*(sin(beta) * dx[k] + cos(beta) * dy[k]));
                 }
 
                 coor_x.push_back(coor_x[1]);
                 coor_y.push_back(coor_y[1]);
 
+                if (m_coordinate_type[0] == "Spherical")
+                {
+                    // scale the y-coordinate
+                    for (int i = 1; i < 5; i++)
+                    {
+                        double fac = std::cos(M_PI/180.0 * coor_y[0]);
+                        coor_y[i] = coor_y[0] + fac * (coor_y[i] - coor_y[0]);
+                    }
+                }
                 this->drawPolyline(coor_x, coor_y);
             }
             this->finishDrawing();

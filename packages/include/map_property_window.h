@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QDateTimeEdit>
+#include <QDockWidget>
 #include <QGroupBox>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -22,7 +23,8 @@ struct _bck_property {
     double vector_scaling;
 };
 
-class MapPropertyWindow : public QWidget
+class MapPropertyWindow 
+    : public QDockWidget
 {
     Q_OBJECT
     

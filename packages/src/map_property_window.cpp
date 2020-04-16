@@ -1,6 +1,6 @@
 #include "map_property_window.h"
 
-MapPropertyWindow::MapPropertyWindow(MyCanvas * myCanvas)
+MapPropertyWindow::MapPropertyWindow(MyCanvas * myCanvas) : QDockWidget()
 {
     //QMessageBox::information(0, "Information", "MapPropertyWindow::MapPropertyWindow()");
     m_property = MapProperty::getInstance();
@@ -20,9 +20,9 @@ MapPropertyWindow::~MapPropertyWindow()
 }
 void MapPropertyWindow::create_window()
 {
+    this->setWindowTitle(QString("Map properties"));
     QString str;
     wid = new QWidget();
-    wid->setWindowTitle("Map properties");
     QVBoxLayout * vl_main = new QVBoxLayout();
     QVBoxLayout * vl = new QVBoxLayout();
     QHBoxLayout * hl = new QHBoxLayout();
@@ -98,8 +98,8 @@ void MapPropertyWindow::create_window()
     {
         state_changed(Qt::Unchecked);
     }
-
-    wid->show();
+    this->setWidget(wid);
+    this->show();
 
     connect(ckb, &QCheckBox::stateChanged, this, &MapPropertyWindow::state_changed);
     connect(pb_apply, &QPushButton::clicked, this, &MapPropertyWindow::clicked_apply);
