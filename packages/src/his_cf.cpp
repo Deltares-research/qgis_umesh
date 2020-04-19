@@ -40,6 +40,7 @@ using namespace std;
 #else
     m_fname = filename;  // filename without path, just the name
     m_hiscf_file_name = filename.absoluteFilePath();  // filename with complete path
+    m_message_count = 0;
     _pgBar = pgBar;
 #endif
 }
@@ -307,9 +308,9 @@ long HISCF::read_locations()
                         struct _location loc;
                         loc.name = janm;
                         loc_type[i_par_loc]->location.push_back(loc);
-                        loc_type[i_par_loc]->x_location_name = string("---");
-                        loc_type[i_par_loc]->y_location_name = string("---");
                     }
+                    loc_type[i_par_loc]->x_location_name = string("---");
+                    loc_type[i_par_loc]->y_location_name = string("---");
                     free(location_strings);
                 }
                 else if (nc_type == NC_CHAR)
@@ -325,9 +326,9 @@ long HISCF::read_locations()
                         struct _location loc;
                         loc.name = janm;
                         loc_type[i_par_loc]->location.push_back(loc);
-                        loc_type[i_par_loc]->x_location_name = string("---");
-                        loc_type[i_par_loc]->y_location_name = string("---");
                     }
+                    loc_type[i_par_loc]->x_location_name = string("---");
+                    loc_type[i_par_loc]->y_location_name = string("---");
                     free(janm);
                     free(location_chars);
                 }
@@ -357,15 +358,28 @@ long HISCF::read_parameters()
     // Read the parameters with dimension nr_times only (that is a time series without location, so model wide) This is a special case!
     // Read the parameters with coordinate as defined by the variables with attribute timeseries_id
     int ndims, nvars, natts, nunlimited;
-    long status;
+    int status;
     size_t length;
     char * var_name_c;
     char * coord_c = NULL;
     string coord;
+    string geometry;
+    string att_value;
+    string coord_geom;
 
     size_t * par_dim;
     long i_par_loc = -1;
     long i_param = -1;
+    int i_geom_id = -1;
+    int i_node_cnt = -1;
+    int i_geom_node = -1;
+    size_t geom_node_count;
+    int * geom_count;
+    vector<bool> timeseries_geom_found;
+    for (int i = 0; i < loc_type.size(); i++)
+    {
+        timeseries_geom_found.push_back(false);
+    }
 
     status = -1;
 
@@ -388,47 +402,178 @@ long HISCF::read_parameters()
         status = get_attribute(this->ncid, i_var, "coordinates", &coord);
         if (status == NC_NOERR)
         {
-            for (int j = 0; j < loc_type.size(); j++)
+            status = get_attribute(this->ncid, i_var, "geometry", &geometry); 
+            // if status != NC_NOERR then it is an old format
+            if (status == NC_NOERR)
             {
-                // only variables with the attribute "coordinates" are treathed
-                bool found = false;
                 vector<string> token = tokenize(coord, ' ');
-                if (token.size() == 1 && string(loc_type[j]->location_var_name) == "cross_section_name")  // assume it is the cross_section
+                //  loop over the variables with the cf_role == "timeseries_id"
+                for (int j = 0; j < loc_type.size(); j++)
                 {
-                    token.resize(3);
-                    token[2] = token[0];
-                    token[0] = "cross_section_x_coordinate";
-                    token[1] = "cross_section_y_coordinate";
-                }
-                for (int i_token = 0; i_token < token.size(); i_token++)  // var_x, var_y, var_name
-                {
-                    if (!found && string(loc_type[j]->location_var_name) == token[i_token])
+                    bool found = false;
+                    for (int k = 0; k < token.size(); k++)
                     {
-                        found = true;
-                        // location_var_name is found
-                        // loop agian over all tokens to find the x- and y- coordinates, ie doubling the token i_token
-                        for (int i = 0; i < token.size(); i++)  // var_x, var_y, var_name
+                        if (loc_type[j]->location_var_name == token[k])
+                        {
+                            found = true;
+                        }
+                    }
+                    if (!found) { continue; }
+                    if (timeseries_geom_found[j]) { continue; }
+                    // only variables with the attribute "coordinates" and "geometry" are treated
+                    status = nc_inq_varid(this->ncid, geometry.c_str(), &i_geom_id);
+                    status = get_attribute(this->ncid, i_geom_id, "geometry_type", &att_value);
+                    if (att_value == "point")
+                    {
+                        timeseries_geom_found[j] = true;
+                        loc_type[j]->type = OBS_POINT;
+                        // point location, observation points
+                        status = get_attribute(this->ncid, i_geom_id, "node_count", &att_value);
+                        status = get_dimension_var(this->ncid, att_value, &geom_node_count);
+                        geom_count = (int *)malloc(sizeof(int) * geom_node_count);
+                        status = nc_inq_varid(this->ncid, att_value.c_str(), &i_geom_node);
+                        status = nc_get_var_int(this->ncid, i_geom_node, geom_count);
+                        for (int i = 0; i < geom_node_count; i++)
+                        {
+                            loc_type[j]->node_count.push_back(geom_count[i]);
+                        }
+                        //
+                        status = get_attribute(this->ncid, i_geom_id, "node_coordinates", &coord_geom);
+                        vector<string> token_geom = tokenize(coord_geom, ' ');
+                        for (int i = 0; i < token_geom.size(); i++)  // var_x, var_y
+                        {
+                            int var_id = -1;
+                            status = nc_inq_varid(this->ncid, token_geom[i].c_str(), &var_id);
+                            string att_value;
+                            status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
+                            if (att_value == "projection_x_coordinate" || att_value == "longitude")
+                            {
+                                loc_type[j]->x_location_name = token_geom[i];
+                            }
+                            if (att_value == "projection_y_coordinate" || att_value == "latitude")
+                            {
+                                loc_type[j]->y_location_name = token_geom[i];
+                            }
+                        }
+
+                    }
+                    else if (att_value == "line")
+                    {
+                        timeseries_geom_found[j] = true;
+                        loc_type[j]->type = OBS_POLYLINE;
+                        // line location, cross sections
+                        status = get_attribute(this->ncid, i_geom_id, "node_count", &att_value);
+                        status = get_dimension_var(this->ncid, att_value, &geom_node_count);
+                        geom_count = (int *)malloc(sizeof(int) * geom_node_count);
+                        status = nc_inq_varid(this->ncid, att_value.c_str(), &i_geom_node);
+                        status = nc_get_var_int(this->ncid, i_geom_node, geom_count);
+                        for (int i = 0; i < geom_node_count; i++)
+                        {
+                            loc_type[j]->node_count.push_back(geom_count[i]);
+                        }
+                        //
+                        status = get_attribute(this->ncid, i_geom_id, "node_coordinates", &coord_geom);
+                        vector<string> token = tokenize(coord_geom, ' ');
+                        for (int i = 0; i < token.size(); i++)  // var_x, var_y
                         {
                             int var_id = -1;
                             status = nc_inq_varid(this->ncid, token[i].c_str(), &var_id);
                             string att_value;
                             status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
-                            if (status == NC_NOERR)
+                            if (att_value == "projection_x_coordinate" || att_value == "longitude")
                             {
-                                // just ceck the first one, other locations should hev the x,y-coordinate name
-                                if (att_value == "projection_x_coordinate" || att_value == "longitude")
-                                {
-                                    loc_type[j]->x_location_name = token[i];
-                                }
-                                if (att_value == "projection_y_coordinate" || att_value == "latitude")
-                                {
-                                    loc_type[j]->y_location_name = token[i];
-                                }
+                                loc_type[j]->x_location_name = token[i];
+                            }
+                            if (att_value == "projection_y_coordinate" || att_value == "latitude")
+                            {
+                                loc_type[j]->y_location_name = token[i];
                             }
                         }
-                    }  // end coordinate var_name
+
+                    }
+                    else if (att_value != "")
+                    {
+#ifdef NATIVE_C
+                        int a = 1;
+#else
+                        QMessageBox::information(0, QString("HISCF::read_parameters()"), QString("Just \'point\' and \'line\' are supported. But type \'%1\' given").arg(att_value.c_str()));
+#endif
+                    }
+                }  // end location type, observation point, area or line
+            }
+            else
+            {
+#ifdef NATIVE_C
+                int a = 1;
+#else
+                if (m_message_count < 1)
+                {
+                    QString msg = QString("Deprecated history file used, probably not all observation points and/or cross section are visualised.");
+                    QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+                    m_message_count += 1;
                 }
-            }  // end location type, observation point, area or line
+
+                //QMessageBox::information(0, QString("HISCF::read_parameters()"), QString("Old type not anymore supported. Attribute 'geometry' missing."));
+#endif
+                //  loop over the variables with the cf_role == "timeseries_id"
+                vector<string> token = tokenize(coord, ' ');
+                for (int j = 0; j < loc_type.size(); j++)
+                {
+                    // only variables with the attribute "coordinates" are treated
+                    bool found = false;
+                    loc_type[j]->node_count.clear();
+                    if (token.size() == 1 && string(loc_type[j]->location_var_name) == "cross_section_name")  // assume it is the cross_section
+                    {
+                        loc_type[j]->type = OBS_POLYLINE;
+                        token.resize(3);
+                        token[2] = token[0];
+                        token[0] = "cross_section_x_coordinate";
+                        token[1] = "cross_section_y_coordinate";
+                        for (int i = 0; i < loc_type[j]->location.size(); i++)
+                        {
+                            loc_type[j]->node_count.push_back(3);  // 3 == cross_section_pts
+                        }
+                    }
+                    else
+                    {
+                        loc_type[j]->type = OBS_POINT;
+                        for (int i = 0; i < loc_type[j]->location.size(); i++)
+                        {
+                            loc_type[j]->node_count.push_back(1);
+                        }
+
+                    }
+                    for (int i_token = 0; i_token < token.size(); i_token++)  // var_x, var_y, var_name
+                    {
+                        // is one of the tokens equal to one of the loc_types?
+                        if (!found && string(loc_type[j]->location_var_name) == token[i_token])
+                        {
+                            found = true;
+                            // location_var_name is one of the tokens
+                            // loop again over all tokens to find the x- and y- coordinates, ie doubling the token i_token
+                            for (int i = 0; i < token.size(); i++)  // var_x, var_y, var_name
+                            {
+                                int var_id = -1;
+                                status = nc_inq_varid(this->ncid, token[i].c_str(), &var_id);
+                                string att_value;
+                                status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
+                                if (status == NC_NOERR)
+                                {
+                                    // just ceck the first one, other locations should hev the x,y-coordinate name
+                                    if (att_value == "projection_x_coordinate" || att_value == "longitude")
+                                    {
+                                        loc_type[j]->x_location_name = token[i];
+                                    }
+                                    if (att_value == "projection_y_coordinate" || att_value == "latitude")
+                                    {
+                                        loc_type[j]->y_location_name = token[i];
+                                    }
+                                }
+                            }
+                        }  // end test token[i] on loc_type->var_name
+                    }
+                }  // end location type, observation point, area or line
+            }
         }
     }
 
@@ -441,9 +586,8 @@ long HISCF::read_parameters()
         int ndims;
         status = nc_inq_varid(this->ncid, loc_type[j]->x_location_name.c_str(), &var_id);
         if (status == NC_NOERR) { status = nc_inq_varndims(this->ncid, var_id, &ndims); }
-        if (status == NC_NOERR && ndims == 1)
+        if (status == NC_NOERR && loc_type[j]->type == OBS_POINT)
         {
-            loc_type[j]->type = OBS_POINT;
             double * values_c = (double *)malloc(sizeof(double)*loc_type[j]->location.size());
             status = nc_get_var_double(this->ncid, var_id, values_c);
             for (int n = 0; n < loc_type[j]->location.size(); n++)
@@ -459,37 +603,39 @@ long HISCF::read_parameters()
             free(values_c);
             values_c = NULL;
         }
-        else if (ndims == 2)
+        else if (status == NC_NOERR && loc_type[j]->type == OBS_POLYLINE)
         {
-            //  ndims == 2
-            loc_type[j]->type = OBS_POLYLINE;
             long * dims = (long *)malloc(sizeof(long *)*ndims);
             status = nc_inq_vardimid(this->ncid, var_id, (int*)dims);
             size_t mem_length = 1;
-            for (long j = 0; j < ndims; j++)
+            for (long n = 0; n < ndims; n++)
             {
                 length = -1;
-                status = nc_inq_dimlen(this->ncid, dims[j], &length);
+                status = nc_inq_dimlen(this->ncid, dims[n], &length);
                 mem_length = mem_length * length;
             }
             int points_per_line = mem_length/loc_type[j]->location.size();
             double * values_c = (double *)malloc(sizeof(double)*mem_length);
             status = nc_get_var_double(this->ncid, var_id, values_c);
-            for (int n = 0; n < loc_type[j]->location.size(); n++)
+            int k_start = 0;
+            for (int i = 0; i < loc_type[j]->location.size(); i++)
             {
-                for (int k = 0; k < points_per_line; k++)
+                for (int k = k_start; k < k_start + loc_type[j]->node_count[i]; k++)
                 {
-                    loc_type[j]->location[n].x.push_back(*(values_c + points_per_line * n + k));
+                    loc_type[j]->location[i].x.push_back(*(values_c + k));
                 }
+                k_start += loc_type[j]->node_count[i];
             }
             status = nc_inq_varid(this->ncid, loc_type[j]->y_location_name.c_str(), &var_id);
             status = nc_get_var_double(this->ncid, var_id, values_c);
-            for (int n = 0; n < loc_type[j]->location.size(); n++)
+            k_start = 0;
+            for (int i = 0; i < loc_type[j]->location.size(); i++)
             {
-                for (int k = 0; k < points_per_line; k++)
+                for (int k = k_start; k < k_start+loc_type[j]->node_count[i]; k++)
                 {
-                    loc_type[j]->location[n].y.push_back(*(values_c + points_per_line * n + k));
+                    loc_type[j]->location[i].y.push_back(*(values_c + k));
                 }
+                k_start += loc_type[j]->node_count[i];
             }
             free(values_c);
             values_c = NULL;

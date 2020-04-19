@@ -1374,10 +1374,14 @@ void qgis_umesh::activate_observation_layers()
                     if (obs_type[i]->type == OBS_POINT)
                     {
                         create_observation_point_vector_layer(QString("Observation point"), obs_type[i], mapping->epsg, treeGroup);
-                    }
-                    if (obs_type[i]->type == OBS_POLYLINE)
+                    } 
+                    else if (obs_type[i]->type == OBS_POLYLINE)
                     {
                         create_observation_polyline_vector_layer(QString("Cross section"), obs_type[i], mapping->epsg, treeGroup);
+                    }
+                    else
+                    {
+                        QMessageBox::information(0, QString("Information"), QString("Just \'point\' and \'line\' are supported as observation location."));
                     }
                 }
                 pgbar_value += 10;
@@ -2090,26 +2094,26 @@ void qgis_umesh::create_observation_polyline_vector_layer(QString layer_name, _l
 
             QgsMultiLineString * polylines = new QgsMultiLineString();
             QVector<QgsPointXY> point;
-            QgsMultiPolylineXY lines;
+            QgsPolylineXY line;
 
             for (int i = 0; i < obs_points->location.size(); i++)
             {
                 //for (int j = 0; j < obs_points->location[i]; j++)
                 {
-                    lines.clear();
+                    line.clear();
                     point.clear();
-                    for (int k = 0; k < obs_points->location[i].x.size(); k++)
+                    for (int m = 0; m < obs_points->location[i].x.size(); m++)
                     {
-                        if (obs_points->location[i].x[k] != NC_FILL_DOUBLE)
+                        if (obs_points->location[i].x[m] != NC_FILL_DOUBLE)
                         {
-                            double x1 = obs_points->location[i].x[k];
-                            double y1 = obs_points->location[i].y[k];
+                            double x1 = obs_points->location[i].x[m];
+                            double y1 = obs_points->location[i].y[m];
                             point.append(QgsPointXY(x1, y1));
                         }
                     }
 
-                    lines.append(point);
-                    QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
+                    line.append(point);
+                    QgsGeometry MyEdge = QgsGeometry::fromPolylineXY(line);
                     QgsFeature MyFeature;
                     MyFeature.setGeometry(MyEdge);
 

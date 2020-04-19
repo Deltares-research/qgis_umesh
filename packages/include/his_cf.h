@@ -16,6 +16,8 @@
 
 #include <QtGui/QIcon>
 
+#include <qgsmessagelog.h>
+
 #include "data_struct.h"
 
 using namespace std;
@@ -46,9 +48,10 @@ struct _location_type {
     char * location_long_name;  // to present in combobox i.e. observation point or cross-section
     char * location_dim_name;
     long ndim;
-    vector<_location> location; 
-    string x_location_name;  
-    string y_location_name; 
+    vector<int> node_count;
+    vector<_location> location;
+    string x_location_name;
+    string y_location_name;
 };
 
 class HISCF
@@ -104,6 +107,7 @@ private:
     size_t _two;
     size_t * m_dimids;
     vector<string> m_dim_names;
+    int m_message_count;
 
     int ncid;
 
