@@ -286,6 +286,15 @@ void MyCanvas::draw_vector_at_face()
                 QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Layer velocities not yet implemented"));
             }
             this->startDrawing(0);
+            //rgb_color.resize(u_value.size());
+            //for (int i = 0; i < u_value.size(); i++)
+            //{
+            //    rgb_color[i] = qRgba(1, 0, 0, 255);
+            //}
+            this->setPointSize(3);  // draw a plus sign at the root of the vector
+            this->setFillColor(qRgba(1, 0, 0, 255));  // draw a plus sign at the root of the vector
+            //drawMultiDot(mesh2d->face[0]->x, mesh2d->face[0]->y, rgb_color);
+
             for (int i = 0; i < u_value.size(); i++)
             {
                 coor_x.clear();
@@ -312,8 +321,8 @@ void MyCanvas::draw_vector_at_face()
                 }
                 for (int k = 1; k < 4; k++)
                 {
-                    coor_x.push_back(coor_x[0] + vscale * vlen*(cos(beta) * dx[k] - sin(beta) * dy[k]));
-                    coor_y.push_back(coor_y[0] + vscale * vlen*(sin(beta) * dx[k] + cos(beta) * dy[k]));
+                    coor_x.push_back(coor_x[0] + vscale * vlen * (cos(beta) * dx[k] - sin(beta) * dy[k]));
+                    coor_y.push_back(coor_y[0] + vscale * vlen * (sin(beta) * dx[k] + cos(beta) * dy[k]));
                 }
 
                 coor_x.push_back(coor_x[1]);
@@ -321,12 +330,27 @@ void MyCanvas::draw_vector_at_face()
 
                 if (m_coordinate_type[0] == "Spherical")
                 {
-                    // scale the y-coordinate
-                    for (int i = 1; i < 5; i++)
-                    {
-                        double fac = std::cos(M_PI/180.0 * coor_y[0]);
-                        coor_y[i] = coor_y[0] + fac * (coor_y[i] - coor_y[0]);
-                    }
+                    double fac = std::cos(M_PI / 180.0 * coor_y[0]);
+
+                    coor_x[1] = coor_x[1];
+                    coor_y[1] = coor_y[0] + fac * (coor_y[1] - coor_y[0]);
+                    vlen = sqrt((coor_x[1] - coor_x[0]) * (coor_x[1] - coor_x[0]) + (coor_y[1] - coor_y[0]) * (coor_y[1] - coor_y[0]));  // The "length" of the vector
+                    double gamma = atan2((coor_y[1] - coor_y[0]), (coor_x[1] - coor_x[0]));
+
+                    coor_x[2] = coor_x[0] + 0.8 * (coor_x[1] - coor_x[0]);
+                    coor_y[2] = coor_y[0] + 1.25 * (coor_y[1] - coor_y[0]);
+
+                    coor_x[3] = coor_x[0] + 0.8 * (coor_x[1] - coor_x[0]);
+                    coor_y[3] = coor_y[0] + 0.75 * (coor_y[1] - coor_y[0]);
+
+                    drawDot(coor_x[0], coor_y[0]);
+
+                    coor_x[2] = coor_x[1];
+                    coor_y[2] = coor_y[1];
+                    coor_x[3] = coor_x[1];
+                    coor_y[3] = coor_y[1];
+                    coor_x[4] = coor_x[1];
+                    coor_y[4] = coor_y[1];
                 }
                 this->drawPolyline(coor_x, coor_y);
             }
@@ -671,6 +695,7 @@ double MyCanvas::statistics_mode_length_of_cell(struct _variable * var)
 
     std::map<int, double> f;
     double mode;
+    double avg = 0.0;
     for (int i = 0; i < area.size(); i++)
     {
         f[i] = *area[i];
@@ -680,6 +705,15 @@ double MyCanvas::statistics_mode_length_of_cell(struct _variable * var)
         if (e.second > f[mode]) {
             mode = e.first;
         }
+    }
+    if (mode == 0.0)
+    {
+        for (int i = 0; i < area.size(); i++)
+        {
+            avg += *area[i];
+        }
+        avg /= area.size();
+        mode = avg;
     }
     return std::sqrt(mode);
 }
