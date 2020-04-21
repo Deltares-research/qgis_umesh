@@ -195,7 +195,7 @@ private:
     void paint( QPainter * );
     void determine_min_max(vector<double *>, double *, double *, vector<int> &, double);
     void determine_min_max(vector<double *>, double *, double *, double);
-    double statistics_mode_length_of_cell(struct _variable *);
+    double statistics_average_length_of_cell(struct _variable *);
 
     // variables
     QgisInterface* mQGisIface;
@@ -253,7 +253,7 @@ private:
     vector<vector <double *>> std_data_at_face;
     MapProperty * m_property;
     bool m_vscale_determined;
-    double m_mode_length;
+    double m_vec_length;
 
 };
 

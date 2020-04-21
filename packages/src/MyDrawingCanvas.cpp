@@ -54,7 +54,7 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     _current_step = 0;
     m_ramph = new QColorRampEditor();
     m_vscale_determined = false;
-    m_mode_length = 0.0;
+    m_vec_length = 0.0;
 
     qgis_painter = NULL;
     mCache_painter = new QPainter();
@@ -153,6 +153,7 @@ void MyCanvas::draw_data_at_face()
 {
     if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "face")
     {
+        bool in_view = false;
         string var_name = _variable->var_name;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
         if (_variable->dims.size() == 2) // 2D: time, nodes
@@ -192,9 +193,14 @@ void MyCanvas::draw_data_at_face()
                 {
                     vertex_x.push_back(mesh2d->node[0]->x[p1]);
                     vertex_y.push_back(mesh2d->node[0]->y[p1]);
+                    if (mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                        mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY())
+                    {
+                        in_view = true; // point in visible area, do not skip thi polygon
+                    }
                 }
             }
-            if (*z_value[i] != missing_value)
+            if (in_view && *z_value[i] != missing_value)
             {
                 setFillColor(m_ramph->getRgbFromValue(*z_value[i]));
                 this->drawPolygon(vertex_x, vertex_y);
@@ -226,17 +232,17 @@ void MyCanvas::draw_vector_at_face()
         if (!m_vscale_determined)
         {
             struct _variable * cell_area = _ugrid_file->get_var_by_std_name(vars, "cell_area");
-            m_mode_length = statistics_mode_length_of_cell(cell_area);
+            m_vec_length = statistics_average_length_of_cell(cell_area);
             if (m_coordinate_type[0] == "Spherical")
             {
                 // TODO scale to degrees
                 double radius_earth = 6371008.771;
-                m_mode_length = m_mode_length / (2.0 * M_PI * radius_earth / 360.0);  // 1 degree on the great circle
+                m_vec_length = m_vec_length / (2.0 * M_PI * radius_earth / 360.0);  // 1 degree on the great circle
             }
             m_vscale_determined = true;
         }
         double fac = m_property->get_vector_scaling();
-        vscale = fac * m_mode_length;
+        vscale = fac * m_vec_length;
 
         double vlen;
         double beta;
@@ -311,18 +317,18 @@ void MyCanvas::draw_vector_at_face()
 
                 vlen = sqrt(*u_value[i] * *u_value[i] + *v_value[i] * *v_value[i]);  // The "length" of the vector
                 beta = atan2(*v_value[i], *u_value[i]);
-                if (vlen < 0.001) 
+                if (vscale * vlen < 0.001)
                 {
                     vlen = 0.0;
                 }
                 else
                 {
-                    vlen = max(vlen, 0.01);
+                    vlen = max(vscale * vlen, 0.01);
                 }
                 for (int k = 1; k < 4; k++)
                 {
-                    coor_x.push_back(coor_x[0] + vscale * vlen * (cos(beta) * dx[k] - sin(beta) * dy[k]));
-                    coor_y.push_back(coor_y[0] + vscale * vlen * (sin(beta) * dx[k] + cos(beta) * dy[k]));
+                    coor_x.push_back(coor_x[0] + vlen * (cos(beta) * dx[k] - sin(beta) * dy[k]));
+                    coor_y.push_back(coor_y[0] + vlen * (sin(beta) * dx[k] + cos(beta) * dy[k]));
                 }
 
                 coor_x.push_back(coor_x[1]);
@@ -687,35 +693,16 @@ void MyCanvas::determine_min_max(vector<double *> z, double * z_min, double * z_
         *z_max = m_property->get_maximum();
     }
 }
-double MyCanvas::statistics_mode_length_of_cell(struct _variable * var)
+double MyCanvas::statistics_average_length_of_cell(struct _variable * var)
 {
+    double avg_cell_area;
     vector <double *> area = var->z_value[0];
-    
-    std::sort(area.begin(), area.end());
-
-    std::map<int, double> f;
-    double mode;
-    double avg = 0.0;
     for (int i = 0; i < area.size(); i++)
     {
-        f[i] = *area[i];
+        avg_cell_area += *area[i];
     }
-    mode = f[0];
-    for (auto e : f) {
-        if (e.second > f[mode]) {
-            mode = e.first;
-        }
-    }
-    if (mode == 0.0)
-    {
-        for (int i = 0; i < area.size(); i++)
-        {
-            avg += *area[i];
-        }
-        avg /= area.size();
-        mode = avg;
-    }
-    return std::sqrt(mode);
+    avg_cell_area /= area.size();
+    return std::sqrt(avg_cell_area);
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::empty_caches()
@@ -978,6 +965,11 @@ void MyCanvas::drawMultiDot(vector<double> xs , vector<double> ys , vector<int> 
 
     for ( k = 0; k != nrPoints; k++ )
     {
+        if (xs[k] < getMinVisibleX() || xs[k] > getMaxVisibleX() ||
+            ys[k] < getMinVisibleY() || ys[k] > getMaxVisibleY())
+        {
+            continue; // point not in visible area, skip this vector
+        }
         // Convert from world to pixel coordinates.
         // Functions qx() and qy() take into account that (0,0) is upper left corner
         //
