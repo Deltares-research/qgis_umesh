@@ -153,6 +153,7 @@ void MyCanvas::draw_data_at_face()
 {
     if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "face")
     {
+        bool in_view = false;
         string var_name = _variable->var_name;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
         if (_variable->dims.size() == 2) // 2D: time, nodes
@@ -192,9 +193,14 @@ void MyCanvas::draw_data_at_face()
                 {
                     vertex_x.push_back(mesh2d->node[0]->x[p1]);
                     vertex_y.push_back(mesh2d->node[0]->y[p1]);
+                    if (mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                        mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY())
+                    {
+                        in_view = true; // point in visible area, do not skip thi polygon
+                    }
                 }
             }
-            if (*z_value[i] != missing_value)
+            if (in_view && *z_value[i] != missing_value)
             {
                 setFillColor(m_ramph->getRgbFromValue(*z_value[i]));
                 this->drawPolygon(vertex_x, vertex_y);
@@ -216,6 +222,7 @@ void MyCanvas::draw_vector_at_face()
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
         int dimens;
         double vscale;
+        double missing_value;
 
         if (m_coordinate_type.size() == 0) { return; }
 
@@ -226,7 +233,7 @@ void MyCanvas::draw_vector_at_face()
         if (!m_vscale_determined)
         {
             struct _variable * cell_area = _ugrid_file->get_var_by_std_name(vars, "cell_area");
-            m_mode_length = statistics_mode_length_of_cell(cell_area);
+            m_mode_length = statistics_averaged_length_of_cell(cell_area);
             if (m_coordinate_type[0] == "Spherical")
             {
                 // TODO scale to degrees
@@ -265,6 +272,7 @@ void MyCanvas::draw_vector_at_face()
                 if (vars->variable[i]->var_name == m_coordinate_type[1].toStdString())
                 {
                     dimens = vars->variable[i]->dims.size();
+                    missing_value = vars->variable[i]->fill_value;
                 }
             }
             if (dimens == 2) // 2D: time, nodes
@@ -291,12 +299,14 @@ void MyCanvas::draw_vector_at_face()
             //{
             //    rgb_color[i] = qRgba(1, 0, 0, 255);
             //}
-            this->setPointSize(3);  // draw a plus sign at the root of the vector
-            this->setFillColor(qRgba(1, 0, 0, 255));  // draw a plus sign at the root of the vector
-            //drawMultiDot(mesh2d->face[0]->x, mesh2d->face[0]->y, rgb_color);
+            this->setPointSize(1); 
+            this->setFillColor(qRgba(0, 0, 255, 255));  
 
             for (int i = 0; i < u_value.size(); i++)
             {
+                if (*u_value[i] == missing_value) { continue; }  // *u_value[i] = 0.0;
+                if (*v_value[i] == missing_value) { continue; }  // *v_value[i] = 0.0;
+
                 coor_x.clear();
                 coor_y.clear();
 
@@ -343,8 +353,6 @@ void MyCanvas::draw_vector_at_face()
                     coor_x[3] = coor_x[0] + 0.8 * (coor_x[1] - coor_x[0]);
                     coor_y[3] = coor_y[0] + 0.75 * (coor_y[1] - coor_y[0]);
 
-                    drawDot(coor_x[0], coor_y[0]);
-
                     coor_x[2] = coor_x[1];
                     coor_y[2] = coor_y[1];
                     coor_x[3] = coor_x[1];
@@ -353,6 +361,7 @@ void MyCanvas::draw_vector_at_face()
                     coor_y[4] = coor_y[1];
                 }
                 this->drawPolyline(coor_x, coor_y);
+                drawDot(coor_x[0], coor_y[0]);  // dot on top of vector
             }
             this->finishDrawing();
 
@@ -687,35 +696,16 @@ void MyCanvas::determine_min_max(vector<double *> z, double * z_min, double * z_
         *z_max = m_property->get_maximum();
     }
 }
-double MyCanvas::statistics_mode_length_of_cell(struct _variable * var)
+double MyCanvas::statistics_averaged_length_of_cell(struct _variable * var)
 {
     vector <double *> area = var->z_value[0];
-    
-    std::sort(area.begin(), area.end());
-
-    std::map<int, double> f;
-    double mode;
-    double avg = 0.0;
+    double avg;
     for (int i = 0; i < area.size(); i++)
     {
-        f[i] = *area[i];
+        avg += *area[i];
     }
-    mode = f[0];
-    for (auto e : f) {
-        if (e.second > f[mode]) {
-            mode = e.first;
-        }
-    }
-    if (mode == 0.0)
-    {
-        for (int i = 0; i < area.size(); i++)
-        {
-            avg += *area[i];
-        }
-        avg /= area.size();
-        mode = avg;
-    }
-    return std::sqrt(mode);
+    avg /= area.size();
+    return std::sqrt(avg);
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::empty_caches()
@@ -978,6 +968,11 @@ void MyCanvas::drawMultiDot(vector<double> xs , vector<double> ys , vector<int> 
 
     for ( k = 0; k != nrPoints; k++ )
     {
+        if (xs[k] < getMinVisibleX() || xs[k] > getMaxVisibleX() ||
+            ys[k] < getMinVisibleY() || ys[k] > getMaxVisibleY())
+        {
+            continue; // point not in visible area, skip this vector
+        }
         // Convert from world to pixel coordinates.
         // Functions qx() and qy() take into account that (0,0) is upper left corner
         //
