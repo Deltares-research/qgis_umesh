@@ -6,7 +6,7 @@ MapProperty::MapProperty()
     prop_dynamic_min_max = true;
     prop_min = INFINITY;
     prop_max = -INFINITY;
-    prop_vector_scaling = 1.0;  // 1.0 times the average cell length (= sqrt{averaged_cell_area})
+    prop_vector_scaling = 1.0;  // 1.0 times the average cell length (= sqrt{cell_area})
 }
 MapProperty::~MapProperty()
 {

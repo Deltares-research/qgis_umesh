@@ -253,7 +253,7 @@ private:
     vector<vector <double *>> std_data_at_face;
     MapProperty * m_property;
     bool m_vscale_determined;
-    double m_mode_length;
+    double m_vec_length;
 
 };
 
