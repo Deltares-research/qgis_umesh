@@ -350,9 +350,19 @@ void MyCanvas::draw_vector_at_face()
 
                 if (m_coordinate_type[0] == "Spherical")
                 {
+                    // CRS layer should be the same as the presentation CRS
+                    QgsCoordinateReferenceSystem s_crs = QgsProject::instance()->crs();  // CRS of the screen
+                    QgsMapLayer * active_layer = mQGisIface->activeLayer();
+                    QgsCoordinateReferenceSystem new_crs = active_layer->crs(); // CRS of the vector layer
+                    if (s_crs != QgsCoordinateReferenceSystem("EPSG:4326"))
+                    {
+                        QMessageBox::information(0, "Message", QString("The data CRS (EPSG:4326) and the screen CRS (%1) are not both equal to EPSG:4326 (WGS84).\nPlease ensure that both CRS's are equal to EPSG:4326 (WGS84) before vectors will be drawn.").arg(s_crs.authid()));
+                        return;
+                    }
+
                     double x_tmp;
                     double y_tmp;
-                    double fac = std::cos(M_PI / 180.0 * coor_y[0]);
+                    double fac = std::cos(M_PI / 180.0 * coor_y[0]);  // Typical sphere coordinate transformation, only suitable for WGS84 (EPSG:4326)
 
                     coor_x[1] = coor_x[1];
                     coor_y[1] = coor_y[0] + fac * (coor_y[1] - coor_y[0]);
