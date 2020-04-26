@@ -217,12 +217,17 @@ void MyCanvas::draw_vector_at_face()
     {
         vector<double> coor_x(5);
         vector<double> coor_y(5);
+        vector<double> coor_ax(2);
+        vector<double> coor_ay(2);
+        vector<double> coor_bx(2);
+        vector<double> coor_by(2);
         vector<double> dx(5);
         vector<double> dy(5);
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
         int dimens;
         double vscale;
         double missing_value;
+        double b_len;
 
         if (m_coordinate_type.size() == 0) { return; }
 
@@ -300,7 +305,7 @@ void MyCanvas::draw_vector_at_face()
             //{
             //    rgb_color[i] = qRgba(1, 0, 0, 255);
             //}
-            this->setPointSize(1); 
+            this->setPointSize(3); 
             this->setFillColor(qRgba(0, 0, 255, 255));  
 
             for (int i = 0; i < u_value.size(); i++)
@@ -310,6 +315,10 @@ void MyCanvas::draw_vector_at_face()
 
                 coor_x.clear();
                 coor_y.clear();
+                coor_ax.clear();
+                coor_ay.clear();
+                coor_bx.clear();
+                coor_by.clear();
 
                 coor_x.push_back(mesh2d->face[0]->x[i]);
                 coor_y.push_back(mesh2d->face[0]->y[i]);
@@ -341,28 +350,54 @@ void MyCanvas::draw_vector_at_face()
 
                 if (m_coordinate_type[0] == "Spherical")
                 {
+                    double x_tmp;
+                    double y_tmp;
                     double fac = std::cos(M_PI / 180.0 * coor_y[0]);
 
                     coor_x[1] = coor_x[1];
                     coor_y[1] = coor_y[0] + fac * (coor_y[1] - coor_y[0]);
-                    vlen = sqrt((coor_x[1] - coor_x[0]) * (coor_x[1] - coor_x[0]) + (coor_y[1] - coor_y[0]) * (coor_y[1] - coor_y[0]));  // The "length" of the vector
-                    double gamma = atan2((coor_y[1] - coor_y[0]), (coor_x[1] - coor_x[0]));
 
-                    coor_x[2] = coor_x[0] + 0.8 * (coor_x[1] - coor_x[0]);
-                    coor_y[2] = coor_y[0] + 1.25 * (coor_y[1] - coor_y[0]);
+                    coor_bx[0] = coor_x[0] + 0.8 * (coor_x[1] - coor_x[0]);
+                    coor_by[0] = coor_y[0] + 0.8 * (coor_y[1] - coor_y[0]);
 
-                    coor_x[3] = coor_x[0] + 0.8 * (coor_x[1] - coor_x[0]);
-                    coor_y[3] = coor_y[0] + 0.75 * (coor_y[1] - coor_y[0]);
+                    double eps = 1e-8;
+                    if (abs(coor_y[1] - coor_y[0]) > eps)
+                    {
+                        b_len = 0.1 * vlen;
+                        coor_bx[1] = b_len + coor_bx[0];
+                        coor_by[1] = -(coor_x[1] - coor_x[0]) * b_len / (coor_y[1] - coor_y[0]) + coor_by[0];
 
-                    coor_x[2] = coor_x[1];
-                    coor_y[2] = coor_y[1];
-                    coor_x[3] = coor_x[1];
-                    coor_y[3] = coor_y[1];
+                        //double vlen_b = sqrt((coor_bx[1] - coor_bx[0]) * (coor_bx[1] - coor_bx[0]) + (coor_by[1] - coor_by[0]) * (coor_by[1] - coor_by[0]));
+                        double vlen_b = sqrt(b_len * b_len + (coor_by[1] - coor_by[0]) * (coor_by[1] - coor_by[0]));
+                        
+                        //double b_len = 0.1 * vlen / vlen_b;
+                        x_tmp = 0.1 * vlen * (coor_bx[1] - coor_bx[0]) / (vlen_b);
+                        y_tmp = 0.1 * vlen * (coor_by[1] - coor_by[0]) / (vlen_b);
+
+                        coor_x[2] = coor_bx[0] - x_tmp;
+                        coor_y[2] = coor_by[0] - y_tmp;
+                        coor_x[3] = coor_bx[0] + x_tmp;
+                        coor_y[3] = coor_by[0] + y_tmp;
+                    }
+                    else
+                    {
+                        // y_1 - y_0 === 0
+                        b_len = 0.1 * vlen;
+                        coor_bx[1] = b_len + coor_bx[0];
+                        coor_by[1] = b_len + coor_by[0];
+                        //vlen = sqrt((coor_x[1] - coor_x[0]) * (coor_x[1] - coor_x[0]) + (coor_y[1] - coor_y[0]) * (coor_y[1] - coor_y[0]));  // The "length" of the vector
+                        vlen = coor_x[1] - coor_x[0];  // The "length" of the vector
+                        coor_x[2] = coor_x[0] + 0.8 * vlen;
+                        coor_y[2] = coor_y[0] + 0.1 * vlen;
+                        coor_x[3] = coor_x[0] + 0.8 * vlen;
+                        coor_y[3] = coor_y[0] - 0.1 * vlen;
+
+
+                    }
                     coor_x[4] = coor_x[1];
                     coor_y[4] = coor_y[1];
                 }
                 this->drawPolyline(coor_x, coor_y);
-                drawDot(coor_x[0], coor_y[0]);  // dot on top of vector
             }
             this->finishDrawing();
 
@@ -721,7 +756,7 @@ void MyCanvas::empty_caches()
             cacheArray[j]->fill(Qt::transparent);
         }
     }
-    mMapCanvas->update();
+    mMapCanvas->update();  // todo, niet uitvoeren na openen van twee map-files
 }
 //
 //-----------------------------------------------------------------------------
