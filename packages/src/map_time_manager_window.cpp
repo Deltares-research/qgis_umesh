@@ -112,17 +112,20 @@ void MapTimeManagerWindow::create_window()
     icon_vectors = get_icon_file(program_files_dir, "/icons/vectors.png");
 
     tw->addTab(iso_patch, "Scalar");
-    iso_patch->setToolTip("Iso surface");
-    iso_patch->setStatusTip("Draw Iso surface on patches");
-
-    tw->addTab(vectors, "Vector");
-    vectors->setToolTip("2DH Vector");
-    vectors->setStatusTip("Draw 2DH velocity vector");
+    iso_patch->setToolTip("Patches");
+    iso_patch->setStatusTip("Draw patches with colour");
 
     QVBoxLayout * vl_tw_iso = create_scalar_selection_1d_2d_3d();
     iso_patch->setLayout(vl_tw_iso);
+
     QVBoxLayout * vl_tw_vec = create_vector_selection_2d_3d();
-    vectors->setLayout(vl_tw_vec);
+    if (vl_tw_vec != nullptr)
+    {
+        tw->addTab(vectors, "Vector");
+        vectors->setToolTip("Velocity vector");
+        vectors->setStatusTip("Draw horizontal velocity vector");
+        vectors->setLayout(vl_tw_vec);
+    }
     vl->addWidget(tw);
 
     vl->setAlignment(Qt::AlignLeft | Qt::AlignTop);
@@ -625,6 +628,7 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
 
     struct _mesh_variable * vars = _ugrid_file->get_variables();
     struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
+    if (m2d == nullptr) { return nullptr; }
 
     int row = -1;
 

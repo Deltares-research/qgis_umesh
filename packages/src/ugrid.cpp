@@ -759,11 +759,11 @@ struct _mapping * UGRID::get_grid_mapping()
     return mapping;
 }
 //------------------------------------------------------------------------------
-struct _variable * UGRID::get_var_by_std_name(struct _mesh_variable * vars, string standard_name)
+struct _variable * UGRID::get_var_by_std_name(struct _mesh_variable * vars, string mesh, string standard_name)
 {
     for (int i = 0; i < vars->nr_vars; i++)
     {
-        if (standard_name == vars->variable[i]->standard_name)
+        if (standard_name == vars->variable[i]->standard_name && mesh == vars->variable[i]->mesh)
         {
             return vars->variable[i];
         }

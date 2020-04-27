@@ -213,7 +213,10 @@ void MyCanvas::draw_data_at_face()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_vector_at_face()
 {
-    if (_ugrid_file != nullptr)
+    if (_ugrid_file == nullptr) { return; }
+    struct _mesh2d_string ** m2d_string = _ugrid_file->get_mesh2d_string();
+    struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
+    if (mesh2d != nullptr)
     {
         vector<double> coor_x(5);
         vector<double> coor_y(5);
@@ -223,7 +226,6 @@ void MyCanvas::draw_vector_at_face()
         vector<double> coor_by(2);
         vector<double> dx(5);
         vector<double> dy(5);
-        struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
         int dimens;
         double vscale;
         double missing_value;
@@ -240,7 +242,7 @@ void MyCanvas::draw_vector_at_face()
         struct _mesh_variable * vars = _ugrid_file->get_variables();
         if (!m_vscale_determined)
         {
-            struct _variable * cell_area = _ugrid_file->get_var_by_std_name(vars, "cell_area");
+            struct _variable * cell_area = _ugrid_file->get_var_by_std_name(vars, m2d_string[0]->var_name, "cell_area");
             m_vec_length = statistics_averaged_length_of_cell(cell_area);
 
             if (m_coordinate_type[0] == "Spherical")

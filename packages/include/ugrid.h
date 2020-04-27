@@ -279,7 +279,7 @@ public:
     vector<vector <double *>> get_variable_values(const string);
     vector<vector<vector <double *>>> get_variable_3d_values(const string);
 
-    struct _variable * get_var_by_std_name(struct _mesh_variable *, string);
+    struct _variable * get_var_by_std_name(struct _mesh_variable *, string, string);
 
 #if defined (DEBUG)
     char  janm;
@@ -311,24 +311,24 @@ private:
     int create_mesh1d_nodes(struct _mesh1d *, struct _ntw_edges *, struct _ntw_geom *);
     int create_mesh_contacts(struct _ntw_nodes *, struct _ntw_edges *, struct _ntw_geom *);
 
-    struct _ntw_nodes * ntw_nodes = NULL;
-    struct _ntw_edges * ntw_edges = NULL;
-    struct _ntw_geom * ntw_geom = NULL;
-    struct _mesh_contact * mesh_contact= NULL;
-    struct _ntw_nodes * mesh1d_nodes = NULL;
-    struct _ntw_edges * mesh1d_edges = NULL;
-    struct _mesh1d * mesh1d = NULL;
-    struct _mesh2d * mesh2d = NULL;
-    struct _mapping * mapping = NULL;
-    struct _mesh_variable * mesh_vars = NULL;
-    struct _feature * nodes = NULL;
-    struct _ntw_string ** ntw_strings = NULL;
-    struct _geom_string ** geom_strings = NULL;
-    struct _mesh1d_string ** mesh1d_strings = NULL;
-    struct _mesh2d_string ** mesh2d_strings = NULL;
-    struct _mesh_contact_string ** mesh_contact_strings = NULL;
+    struct _ntw_nodes * ntw_nodes = nullptr;
+    struct _ntw_edges * ntw_edges = nullptr;
+    struct _ntw_geom * ntw_geom = nullptr;
+    struct _mesh_contact * mesh_contact= nullptr;
+    struct _ntw_nodes * mesh1d_nodes = nullptr;
+    struct _ntw_edges * mesh1d_edges = nullptr;
+    struct _mesh1d * mesh1d = nullptr;
+    struct _mesh2d * mesh2d = nullptr;
+    struct _mapping * mapping = nullptr;
+    struct _mesh_variable * mesh_vars = nullptr;
+    struct _feature * nodes = nullptr;
+    struct _ntw_string ** ntw_strings = nullptr;
+    struct _geom_string ** geom_strings = nullptr;
+    struct _mesh1d_string ** mesh1d_strings = nullptr;
+    struct _mesh2d_string ** mesh2d_strings = nullptr;
+    struct _mesh_contact_string ** mesh_contact_strings = nullptr;
 
-    struct _time_series * time_series = NULL;
+    struct _time_series * time_series = nullptr;
 
     long _nr_mesh_contacts;
     size_t _two;
