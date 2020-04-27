@@ -374,7 +374,7 @@ void MyCanvas::draw_vector_at_face()
                     double eps = 1e-8;
                     if (abs(coor_y[1] - coor_y[0]) > eps)
                     {
-                        b_len = 0.1 * vlen;
+                        b_len = 0.1 * vlen;  // vlen is length of original vector on the nc-file
                         coor_bx[1] = b_len + coor_bx[0];
                         coor_by[1] = -(coor_x[1] - coor_x[0]) * b_len / (coor_y[1] - coor_y[0]) + coor_by[0];
 
@@ -671,7 +671,7 @@ void MyCanvas::set_coordinate_type(QStringList coord_type)
 //-----------------------------------------------------------------------------
 void MyCanvas::set_determine_grid_size(bool value)
 {
-    m_vscale_determined = value;
+    m_vscale_determined = !value;
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::set_current_step(int current_step)

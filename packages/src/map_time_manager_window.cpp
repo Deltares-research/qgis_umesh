@@ -57,7 +57,10 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
 {
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::~closeEvent()");
     this->object_count--;
-    _MyCanvas->set_determine_grid_size(false);
+    QStringList coord;
+    coord << "";
+    _MyCanvas->set_coordinate_type(coord);
+    _MyCanvas->set_determine_grid_size(true);
     _MyCanvas->set_variable(nullptr);
     _MyCanvas->empty_caches();
     // TODO Reset timers, ie _current timestep etc
@@ -917,6 +920,9 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
     _MyCanvas->reset_min_max();
     if (!m_show_map_data_1d)
     {
+        QStringList coord;
+        coord << "";
+        _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
         _MyCanvas->empty_caches();
         return;
@@ -937,6 +943,9 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
     _MyCanvas->reset_min_max();
     if (!m_show_map_data_1d2d)
     {
+        QStringList coord;
+        coord << "";
+        _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
         _MyCanvas->empty_caches();
         return;
@@ -956,6 +965,9 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
     _MyCanvas->reset_min_max();
     if (!m_show_map_data_2d)
     {
+        QStringList coord;
+        coord << "";
+        _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
         _MyCanvas->empty_caches();
         return;
@@ -988,6 +1000,9 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
     _MyCanvas->reset_min_max();
     if (!m_show_map_data_3d)
     {
+        QStringList coord;
+        coord << "";
+        _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
         _MyCanvas->empty_caches();
         return;
@@ -1053,27 +1068,23 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
     QVariant j = cb->itemData(item);
     QStringList coord = j.toStringList();
     struct _mesh_variable * vars = _ugrid_file->get_variables();
+    int i = _q_times.indexOf(curr_date_time->dateTime());
+    _MyCanvas->set_current_step(i);
+    _MyCanvas->set_determine_grid_size(true);
+    _MyCanvas->set_variables(vars);
+    _MyCanvas->set_coordinate_type(coord);
+
     if (str.contains("Depth Averaged"))
     {
-        int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->set_current_step(i);
-        _MyCanvas->set_variables(vars);
-        _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->draw_vector_at_face();
     }
     else
     {
-        // Layers velocity vectors
-        //if (coord[0] == "Cartesian" || coord[0] == "Spherical")
-        int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->set_current_step(i);
-        _MyCanvas->set_variables(vars);
         if (m_sb_layer_vec != nullptr) {
             _MyCanvas->set_layer(m_sb_layer_vec->value());
         }
-        _MyCanvas->set_coordinate_type(coord);
-        _MyCanvas->draw_vector_at_face();
     }
+    _MyCanvas->draw_vector_at_face();
 }
 void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
 {
