@@ -229,6 +229,9 @@ void MyCanvas::draw_vector_at_face()
         double missing_value;
         double b_len;
 
+        u_value.clear();
+        v_value.clear();
+
         if (m_coordinate_type.size() == 0) { return; }
 
         double opacity = mCache_painter->opacity();
@@ -315,10 +318,10 @@ void MyCanvas::draw_vector_at_face()
 
                 coor_x.clear();
                 coor_y.clear();
-                coor_ax.clear();
-                coor_ay.clear();
-                coor_bx.clear();
-                coor_by.clear();
+                coor_ax.assign(coor_ax.size(), 0.0);
+                coor_ay.assign(coor_ay.size(), 0.0);
+                coor_bx.assign(coor_bx.size(), 0.0);
+                coor_by.assign(coor_by.size(), 0.0);
 
                 coor_x.push_back(mesh2d->face[0]->x[i]);
                 coor_y.push_back(mesh2d->face[0]->y[i]);
@@ -348,12 +351,10 @@ void MyCanvas::draw_vector_at_face()
                 coor_x.push_back(coor_x[1]);
                 coor_y.push_back(coor_y[1]);
 
-                if (m_coordinate_type[0] == "Spherical")
+                QgsCoordinateReferenceSystem s_crs = QgsProject::instance()->crs();  // CRS of the screen
+                if (m_coordinate_type[0] == "Spherical" && s_crs.isGeographic())  // is screen is cartesian, then cartesian vectors are drwan
                 {
-                    // CRS layer should be the same as the presentation CRS
-                    QgsCoordinateReferenceSystem s_crs = QgsProject::instance()->crs();  // CRS of the screen
-                    QgsMapLayer * active_layer = mQGisIface->activeLayer();
-                    QgsCoordinateReferenceSystem new_crs = active_layer->crs(); // CRS of the vector layer
+                    // Screen CRS must be WGS84 4326 CRS layer should be the same as the presentation CRS
                     if (s_crs != QgsCoordinateReferenceSystem("EPSG:4326"))
                     {
                         QMessageBox::information(0, "Message", QString("The data CRS (EPSG:4326) and the screen CRS (%1) are not both equal to EPSG:4326 (WGS84).\nPlease ensure that both CRS's are equal to EPSG:4326 (WGS84) before vectors will be drawn.").arg(s_crs.authid()));
@@ -666,6 +667,11 @@ void MyCanvas::reset_min_max()
 void MyCanvas::set_coordinate_type(QStringList coord_type)
 {
     m_coordinate_type = coord_type;
+}
+//-----------------------------------------------------------------------------
+void MyCanvas::set_determine_grid_size(bool value)
+{
+    m_vscale_determined = value;
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::set_current_step(int current_step)

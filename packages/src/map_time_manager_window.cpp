@@ -16,6 +16,7 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     _MyCanvas = MyCanvas;
     _MyCanvas->setUgridFile(_ugrid_file);
     create_window(); //QMessageBox::information(0, "Information", "DockWindow::DockWindow()");
+    _MyCanvas->empty_caches();
     _current_step = 0;
     _q_times = _ugrid_file->get_qdt_times();
     m_show_map_data_1d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d
@@ -28,7 +29,10 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     MapProperty * m_property = MapProperty::getInstance();
 
     connect(m_ramph, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
-
+}
+MapTimeManagerWindow::~MapTimeManagerWindow()
+{
+    // Not reached because the windows is cleaned by function: MapTimeManagerWindow::closeEvent
 }
 void MapTimeManagerWindow::MyMouseReleaseEvent(QMouseEvent* e)
 {
@@ -49,15 +53,11 @@ void MapTimeManagerWindow::contextMenu(const QPoint & point)
 //
 //-----------------------------------------------------------------------------
 //
-MapTimeManagerWindow::~MapTimeManagerWindow()
-{
-    //QMessageBox::information(0, "Information", "MapTimeManagerWindow::~MapTimeManagerWindow()");
-    closeEvent(NULL);
-}
 void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
 {
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::~closeEvent()");
     this->object_count--;
+    _MyCanvas->set_determine_grid_size(false);
     _MyCanvas->set_variable(nullptr);
     _MyCanvas->empty_caches();
     // TODO Reset timers, ie _current timestep etc
@@ -748,6 +748,9 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
     vl_tw_vec->addLayout(hl3d);
     vl_tw_vec->addStretch();
 
+    connect(m_cb_vec_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_2d(int)));
+    connect(m_cb_vec_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_3d(int)));
+
     return vl_tw_vec;
 }
 
@@ -1004,7 +1007,6 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
     _MyCanvas->reset_min_max();
     if (!m_show_map_vector_2d)
     {
-        _MyCanvas->set_variables(nullptr);
         QStringList coord;
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
@@ -1027,7 +1029,6 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
     _MyCanvas->reset_min_max();
     if (!m_show_map_vector_3d)
     {
-        _MyCanvas->set_variables(nullptr);
         QStringList coord;
         coord << "";
         _MyCanvas->set_coordinate_type(coord);

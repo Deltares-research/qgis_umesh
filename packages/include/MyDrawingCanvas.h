@@ -162,6 +162,7 @@ public:
     void set_variable(struct _variable *);
     void set_variables(struct _mesh_variable * variables);
     void set_coordinate_type(QStringList);
+    void set_determine_grid_size(bool);
 
     void set_layer(int);
     void set_current_step(int);
