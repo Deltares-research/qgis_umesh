@@ -218,12 +218,12 @@ void MyCanvas::draw_vector_at_face()
     struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
     if (mesh2d != nullptr)
     {
-        vector<double> coor_x(5);
-        vector<double> coor_y(5);
-        vector<double> coor_ax(2);
-        vector<double> coor_ay(2);
-        vector<double> coor_bx(2);
-        vector<double> coor_by(2);
+        vector<double> coord_x(5);
+        vector<double> coord_y(5);
+        vector<double> coord_ax(2);
+        vector<double> coord_ay(2);
+        vector<double> coord_bx(2);
+        vector<double> coord_by(2);
         vector<double> dx(5);
         vector<double> dy(5);
         int dimens;
@@ -318,21 +318,15 @@ void MyCanvas::draw_vector_at_face()
                 if (*u_value[i] == missing_value) { continue; }  // *u_value[i] = 0.0;
                 if (*v_value[i] == missing_value) { continue; }  // *v_value[i] = 0.0;
 
-                coor_x.clear();
-                coor_y.clear();
-                coor_ax.assign(coor_ax.size(), 0.0);
-                coor_ay.assign(coor_ay.size(), 0.0);
-                coor_bx.assign(coor_bx.size(), 0.0);
-                coor_by.assign(coor_by.size(), 0.0);
+                coord_x.clear();
+                coord_y.clear();
+                coord_ax.assign(coord_ax.size(), 0.0);
+                coord_ay.assign(coord_ay.size(), 0.0);
+                coord_bx.assign(coord_bx.size(), 0.0);
+                coord_by.assign(coord_by.size(), 0.0);
 
-                coor_x.push_back(mesh2d->face[0]->x[i]);
-                coor_y.push_back(mesh2d->face[0]->y[i]);
-
-                if (coor_x[0] < getMinVisibleX() || coor_x[0] > getMaxVisibleX() ||
-                    coor_y[0] < getMinVisibleY() || coor_y[0] > getMaxVisibleY())  
-                {
-                    continue; // root of vector not in visible area, skip this vector
-                }
+                coord_x.push_back(mesh2d->face[0]->x[i]);
+                coord_y.push_back(mesh2d->face[0]->y[i]);
 
                 vlen = sqrt(*u_value[i] * *u_value[i] + *v_value[i] * *v_value[i]);  // The "length" of the vector
                 beta = atan2(*v_value[i], *u_value[i]);
@@ -346,12 +340,12 @@ void MyCanvas::draw_vector_at_face()
                 }
                 for (int k = 1; k < 4; k++)
                 {
-                    coor_x.push_back(coor_x[0] + vlen * (cos(beta) * dx[k] - sin(beta) * dy[k]));
-                    coor_y.push_back(coor_y[0] + vlen * (sin(beta) * dx[k] + cos(beta) * dy[k]));
+                    coord_x.push_back(coord_x[0] + vlen * (cos(beta) * dx[k] - sin(beta) * dy[k]));
+                    coord_y.push_back(coord_y[0] + vlen * (sin(beta) * dx[k] + cos(beta) * dy[k]));
                 }
 
-                coor_x.push_back(coor_x[1]);
-                coor_y.push_back(coor_y[1]);
+                coord_x.push_back(coord_x[1]);
+                coord_y.push_back(coord_y[1]);
 
                 //TODO: Incase geographic mesh and cartesian projection, arrow need to be transformed to cartesian projection
 
@@ -367,52 +361,63 @@ void MyCanvas::draw_vector_at_face()
 
                     double x_tmp;
                     double y_tmp;
-                    double fac = std::cos(M_PI / 180.0 * coor_y[0]);  // Typical sphere coordinate transformation, only suitable for WGS84 (EPSG:4326)
+                    double fac = std::cos(M_PI / 180.0 * coord_y[0]);  // Typical sphere coordinate transformation, only suitable for WGS84 (EPSG:4326)
 
-                    coor_x[1] = coor_x[1];
-                    coor_y[1] = coor_y[0] + fac * (coor_y[1] - coor_y[0]);
+                    coord_x[1] = coord_x[1];
+                    coord_y[1] = coord_y[0] + fac * (coord_y[1] - coord_y[0]);
 
-                    coor_bx[0] = coor_x[0] + 0.8 * (coor_x[1] - coor_x[0]);
-                    coor_by[0] = coor_y[0] + 0.8 * (coor_y[1] - coor_y[0]);
+                    coord_bx[0] = coord_x[0] + 0.8 * (coord_x[1] - coord_x[0]);
+                    coord_by[0] = coord_y[0] + 0.8 * (coord_y[1] - coord_y[0]);
 
                     double eps = 1e-8;
-                    if (abs(coor_y[1] - coor_y[0]) > eps)
+                    if (abs(coord_y[1] - coord_y[0]) > eps)
                     {
                         b_len = 0.1 * vlen;  // vlen is length of original vector on the nc-file
-                        coor_bx[1] = b_len + coor_bx[0];
-                        coor_by[1] = -(coor_x[1] - coor_x[0]) * b_len / (coor_y[1] - coor_y[0]) + coor_by[0];
+                        coord_bx[1] = b_len + coord_bx[0];
+                        coord_by[1] = -(coord_x[1] - coord_x[0]) * b_len / (coord_y[1] - coord_y[0]) + coord_by[0];
 
-                        //double vlen_b = sqrt((coor_bx[1] - coor_bx[0]) * (coor_bx[1] - coor_bx[0]) + (coor_by[1] - coor_by[0]) * (coor_by[1] - coor_by[0]));
-                        double vlen_b = sqrt(b_len * b_len + (coor_by[1] - coor_by[0]) * (coor_by[1] - coor_by[0]));
+                        //double vlen_b = sqrt((coord_bx[1] - coord_bx[0]) * (coord_bx[1] - coord_bx[0]) + (coord_by[1] - coord_by[0]) * (coord_by[1] - coord_by[0]));
+                        double vlen_b = sqrt(b_len * b_len + (coord_by[1] - coord_by[0]) * (coord_by[1] - coord_by[0]));
                         
                         //double b_len = 0.1 * vlen / vlen_b;
-                        x_tmp = 0.1 * vlen * (coor_bx[1] - coor_bx[0]) / (vlen_b);
-                        y_tmp = 0.1 * vlen * (coor_by[1] - coor_by[0]) / (vlen_b);
+                        x_tmp = 0.1 * vlen * (coord_bx[1] - coord_bx[0]) / (vlen_b);
+                        y_tmp = 0.1 * vlen * (coord_by[1] - coord_by[0]) / (vlen_b);
 
-                        coor_x[2] = coor_bx[0] - x_tmp;
-                        coor_y[2] = coor_by[0] - y_tmp;
-                        coor_x[3] = coor_bx[0] + x_tmp;
-                        coor_y[3] = coor_by[0] + y_tmp;
+                        coord_x[2] = coord_bx[0] - x_tmp;
+                        coord_y[2] = coord_by[0] - y_tmp;
+                        coord_x[3] = coord_bx[0] + x_tmp;
+                        coord_y[3] = coord_by[0] + y_tmp;
                     }
                     else
                     {
                         // y_1 - y_0 === 0
                         b_len = 0.1 * vlen;
-                        coor_bx[1] = b_len + coor_bx[0];
-                        coor_by[1] = b_len + coor_by[0];
-                        //vlen = sqrt((coor_x[1] - coor_x[0]) * (coor_x[1] - coor_x[0]) + (coor_y[1] - coor_y[0]) * (coor_y[1] - coor_y[0]));  // The "length" of the vector
-                        vlen = coor_x[1] - coor_x[0];  // The "length" of the vector
-                        coor_x[2] = coor_x[0] + 0.8 * vlen;
-                        coor_y[2] = coor_y[0] + 0.1 * vlen;
-                        coor_x[3] = coor_x[0] + 0.8 * vlen;
-                        coor_y[3] = coor_y[0] - 0.1 * vlen;
-
-
+                        coord_bx[1] = b_len + coord_bx[0];
+                        coord_by[1] = b_len + coord_by[0];
+                        //vlen = sqrt((coord_x[1] - coord_x[0]) * (coord_x[1] - coord_x[0]) + (coord_y[1] - coord_y[0]) * (coord_y[1] - coord_y[0]));  // The "length" of the vector
+                        vlen = coord_x[1] - coord_x[0];  // The "length" of the vector
+                        coord_x[2] = coord_x[0] + 0.8 * vlen;
+                        coord_y[2] = coord_y[0] + 0.1 * vlen;
+                        coord_x[3] = coord_x[0] + 0.8 * vlen;
+                        coord_y[3] = coord_y[0] - 0.1 * vlen;
                     }
-                    coor_x[4] = coor_x[1];
-                    coor_y[4] = coor_y[1];
+                    coord_x[4] = coord_x[1];
+                    coord_y[4] = coord_y[1];
                 }
-                this->drawPolyline(coor_x, coor_y);
+                bool in_view = false;
+                for (int j = 0; j < coord_x.size(); j++)
+                {
+                    if (coord_x[j] > getMinVisibleX() && coord_x[j] < getMaxVisibleX() &&
+                        coord_y[j] > getMinVisibleY() && coord_y[j] < getMaxVisibleY())
+                    {
+                        in_view = true; // root of vector not in visible area, skip this vector
+                    }
+                }
+
+                if (in_view)
+                {
+                    this->drawPolyline(coord_x, coord_y);
+                }
             }
             this->finishDrawing();
 
