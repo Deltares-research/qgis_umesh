@@ -151,18 +151,24 @@ QGridLayout * MapTimeManagerWindow::create_date_time_layout()
     QString format_date_time = QString("yyyy-MM-dd HH:mm:ss");
 
     // TODO set minimum and maximum within range first datetime and last datetime
+    first_date_time->setTimeSpec(Qt::UTC);
+    first_date_time->setToolTip(QString("Time frame UTC"));
     first_date_time->setDateTime(_q_times[0]);
     first_date_time->setMinimumDateTime(_q_times[0]);
     first_date_time->setMaximumDateTime(_q_times[nr_times - 1]);
     first_date_time->setDisplayFormat(format_date_time);
     first_date_time->setWrapping(true);
     
+    curr_date_time->setTimeSpec(Qt::UTC);
+    curr_date_time->setToolTip(QString("Time frame UTC"));
     curr_date_time->setDateTime(_q_times[0]);
     curr_date_time->setMinimumDateTime(_q_times[0]);
     curr_date_time->setMaximumDateTime(_q_times[nr_times - 1]);
     curr_date_time->setDisplayFormat(format_date_time);
     curr_date_time->setWrapping(true);
     
+    last_date_time->setTimeSpec(Qt::UTC);
+    last_date_time->setToolTip(QString("Time frame UTC"));
     last_date_time->setDateTime(_q_times[_q_times.size() - 1]);
     last_date_time->setMinimumDateTime(_q_times[0]);
     last_date_time->setMaximumDateTime(_q_times[nr_times - 1]);

@@ -26,7 +26,7 @@ struct _time_series {
     QString * long_name;
     QString * unit;
     QString * dim_name;
-    double * times;
+    double * times;  // vector of seconds
     map<string, string> map_dim_name;
 };
 
@@ -271,6 +271,7 @@ public:
     std::vector<std::string> tokenize(const std::string & , std::size_t );
 
     long get_count_times();
+    QDateTime * RefDate;
     double * get_times();
     QVector<QDateTime> get_qdt_times();  // qdt: Qt Date Time
     QVector<QDateTime> qdt_times;

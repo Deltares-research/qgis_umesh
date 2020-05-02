@@ -433,15 +433,12 @@ long UGRID::read_times()
 
                     QDate date = QDate::fromString(date_time.at(2), "yyyy-MM-dd");
                     QTime time = QTime::fromString(date_time.at(3), "hh:mm:ss");
-                    RefDate = new QDateTime(date, time);
+                    RefDate = new QDateTime(date, time, Qt::UTC);
 
 #if defined(DEBUG)
-                    QString janm = date.toString("yyyy-MM-dd");
-                    char * janm1 = strdup(janm.toUtf8());
-                    janm = time.toString();
-                    char * janm2 = strdup(janm.toUtf8());
-                    janm = this->RefDate->toString("yyyy-MM-dd hh:mm:ss.zzz");
-                    char * janm3 = strdup(janm.toUtf8());
+                    QString janm1 = date.toString("yyyy-MM-dd");
+                    QString janm2 = time.toString();
+                    QString janm3 = RefDate->toString("yyyy-MM-dd hh:mm:ss.zzz");
 #endif
                     time_series->times = (double *) malloc(sizeof(double)*time_series->nr_times);  // TODO checkit: not freed?
                     status = nc_get_var_double(this->ncid, i_var, time_series->times);
@@ -496,11 +493,15 @@ long UGRID::read_times()
                         }
 
 #if defined (DEBUG)
+                        QString janm;
                         if (dt < 1.0)
-                            QString janm = qdt_times[j].toString("yyyy-MM-dd hh:mm:ss.zzz");
+                        {
+                            janm = qdt_times[j].toString("yyyy-MM-dd hh:mm:ss.zzz");
+                        }
                         else
-                            QString janm = qdt_times[j].toString("yyyy-MM-dd hh:mm:ss");
-                        char * janm3 = strdup(janm.toUtf8());
+                        {
+                            janm = qdt_times[j].toString("yyyy-MM-dd hh:mm:ss");
+                        }
 #endif
                     }
                     break;

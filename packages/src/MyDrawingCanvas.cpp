@@ -353,6 +353,8 @@ void MyCanvas::draw_vector_at_face()
                 coor_x.push_back(coor_x[1]);
                 coor_y.push_back(coor_y[1]);
 
+                //TODO: Incase geographic mesh and cartesian projection, arrow need to be transformed to cartesian projection
+
                 QgsCoordinateReferenceSystem s_crs = QgsProject::instance()->crs();  // CRS of the screen
                 if (m_coordinate_type[0] == "Spherical" && s_crs.isGeographic())  // is screen is cartesian, then cartesian vectors are drwan
                 {

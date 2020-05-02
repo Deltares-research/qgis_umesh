@@ -70,6 +70,8 @@
 #define PATH_LENGTH 1024
 
 class QAction;
+class UGRID;
+
 class qgis_umesh
     : public QObject, public QgisPlugin
 
@@ -95,6 +97,7 @@ class qgis_umesh
         void create_1D_structure_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
         void create_1D_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
         void create_1D_external_forcing_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_1D2D_link_vector_layer(READ_JSON *, long);
         long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, string, double, double *, double *, double *);
         long find_location_boundary(struct _ntw_nodes *, string, double *, double *);
 
@@ -112,6 +115,8 @@ class qgis_umesh
         void open_file_his_cf(QFileInfo);
         void open_file_mdu();
         void open_file_mdu(QFileInfo);
+        void open_file_link1d2d_json();
+        void open_file_link1d2d_json(QFileInfo);
         void set_enabled();
         void about();
         void activate_layers();
@@ -143,6 +148,7 @@ class qgis_umesh
         QAction * open_action_map;
         QAction * open_action_his_cf;
         QAction * open_action_mdu;
+        QAction * open_action_link1d2d_json;
         QAction * edit_action_1d_obs_points;
         QAction * trial_experiment;
         QAction * inspectAction;

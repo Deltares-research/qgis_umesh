@@ -198,6 +198,13 @@ void qgis_umesh::initGui()
     open_action_his_cf->setEnabled(true);
     connect(open_action_his_cf, SIGNAL(triggered()), this, SLOT(open_file_his_cf()));
 
+    icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
+    open_action_link1d2d_json = new QAction(icon_open, tr("&Open Link1D2D (json) ..."));
+    open_action_link1d2d_json->setToolTip(tr("Open Link1D2D, json file"));
+    open_action_link1d2d_json->setStatusTip(tr("Open for 1D2DCoupler the Link1D2D file, json format"));
+    open_action_link1d2d_json->setEnabled(true);
+    connect(open_action_link1d2d_json, SIGNAL(triggered()), this, SLOT(open_file_link1d2d_json()));
+
     icon_edit_1d_obs_points = get_icon_file(program_files_dir, "/icons/edit_observation_points.png");
     edit_action_1d_obs_points = new QAction(icon_edit_1d_obs_points, tr("&1D: Observation points ..."));
     edit_action_1d_obs_points->setToolTip(tr("Add/Remove observation points"));
@@ -273,6 +280,7 @@ void qgis_umesh::initGui()
     janm1 = janm->addMenu("Trials");
     janm1->addAction(open_action_mdu);
 #if EXPERIMENT
+    janm1->addAction(open_action_link1d2d_json);
     janm1->addAction(edit_action_1d_obs_points);
     janm1->addAction(trial_experiment);
 #endif
@@ -891,37 +899,74 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     {
         QMessageBox::warning(0, tr("Warning"), QString(tr("JSON file opened: %1\nNo keyword \"%2\" in this file.").arg(jsonfile.absoluteFilePath()).arg(QString::fromStdString(values))));
     }
+}
+//
+//-----------------------------------------------------------------------------
+//
+void qgis_umesh::open_file_link1d2d_json()
+{
+    QString fname;
+    QString * str = new QString();
+    QFileDialog * fd = new QFileDialog();
+    QStringList * list = new QStringList();
 
-    values = "data.external_forcing.ExtForceFileNew";
-    vector<string> ext_file_name;  // There is just one name, so size should be 1
-    status = pt_mdu->get(values, ext_file_name);
+    str->clear();
+    str->append("Link1D2D json");
+    str->append(" (*_ini.json)");
+    list->append(*str);
+    str->clear();
+    str->append("All files");
+    str->append(" (*.*)");
+    list->append(*str);
 
-    if (ext_file_name.size() == 1)
+    fd->setWindowTitle("Open Link1D2D json file");
+    fd->setNameFilters(*list);
+    fd->selectNameFilter(list->at(0));
+    fd->setFileMode(QFileDialog::ExistingFiles);  // Enable multiple file selection at once
+
+    QDir path("d:/mooiman/home/models/delft3d/GIS/grids/test_qgis");
+    if (path.exists())
     {
-        QString ext_file = jsonfile.absolutePath() + "/" + QString::fromStdString(ext_file_name[0]);
-        if (!QFileInfo(ext_file).exists())
-        {
-            QMessageBox::information(0, tr("External forcings file"), tr("File:\n\"%1\",\nReferenced by tag: \"%2\" does not exist. External forcings are skipped.").arg(ext_file).arg(QString::fromStdString(values)));
-        }
-        else
-        {
-            fname = ext_file.toStdString();
-            READ_JSON * pt_ext_file = new READ_JSON(fname);
-            UGRID * ugrid_file = _UgridFiles[_fil_index];
-            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
-            {
-                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-                return;
-            }
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
-            create_1D_external_forcing_vector_layer(ugrid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
-        }
+        fd->setDirectory(path);
     }
-    else
+
+    bool canceled = fd->exec() != QDialog::Accepted;
+    if (!canceled)
     {
-        QMessageBox::warning(0, tr("Warning"), QString(tr("JSON file opened: %1\nNo keyword \"%2\" in this file.").arg(jsonfile.absoluteFilePath()).arg(QString::fromStdString(values))));
+        QStringList * QFilenames = new QStringList();
+        QFilenames->append(fd->selectedFiles());
+
+        this->pgBar->show();
+        this->pgBar->setMaximum(1000);
+        this->pgBar->setValue(0);
+
+        for (QStringList::Iterator it = QFilenames->begin(); it != QFilenames->end(); ++it) {
+            fname = *it;
+            open_file_link1d2d_json(fname);
+        }
+
+        this->pgBar->setValue(1000);
+        if (this->pgBar->value() == this->pgBar->maximum())
+        {
+            this->pgBar->hide();
+        }
+
     }
+    delete fd;
+    delete str;
+}
+void qgis_umesh::open_file_link1d2d_json(QFileInfo jsonfile)
+{
+    string fname = jsonfile.absoluteFilePath().toStdString();
+    READ_JSON * pt_link1d2d = new READ_JSON(fname);
+    if (pt_link1d2d == nullptr)
+    {
+        QMessageBox::warning(0, tr("Warning"), tr("Cannot open JSON file:\n%1.").arg(jsonfile.absoluteFilePath()));
+        return;
+    }
+
+    long epsg = 0;
+    create_1D2D_link_vector_layer(pt_link1d2d, epsg);  // i.e. a JSON file
 }
 //
 //-----------------------------------------------------------------------------
@@ -1374,7 +1419,7 @@ void qgis_umesh::activate_observation_layers()
                     if (obs_type[i]->type == OBS_POINT)
                     {
                         create_observation_point_vector_layer(QString("Observation point"), obs_type[i], mapping->epsg, treeGroup);
-                    } 
+                    }
                     else if (obs_type[i]->type == OBS_POLYLINE)
                     {
                         create_observation_polyline_vector_layer(QString("Cross section"), obs_type[i], mapping->epsg, treeGroup);
@@ -2583,6 +2628,109 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         }
     }
 }
+//------------------------------------------------------------------------------
+void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_code)
+{
+    if (prop_tree != nullptr)
+    {
+        long status = -1;
+        string values = "data.Link1D2D.XY_1D";
+        vector<string> link_1d_point;
+        status = prop_tree->get(values, link_1d_point);
+        if (link_1d_point.size() == 0)
+        {
+            QMessageBox::warning(0, tr("Message: create_1D2D_link_vector_layer"), QString(tr("Number of link points on 1D mesh is zero. JSON data: ")) + QString::fromStdString(values));
+        }
+        else
+        {
+            values = "data.Link1D2D.XY_2D";
+            vector<string> link_2d_point;
+            status = prop_tree->get(values, link_2d_point);
+            if (link_2d_point.size() == 0)
+            {
+                QMessageBox::warning(0, tr("Message: create_1D2D_link_vector_layer"), QString(tr("Number of link points on 2D mesh is zero. JSON data: ")) + QString::fromStdString(values));
+                return;
+            }
+            if (link_1d_point.size() != link_2d_point.size())
+            {
+                QMessageBox::warning(0, tr("Message: create_1D2D_link_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(values)
+                    + "\nPoints on 1D mesh: " + (int)link_1d_point.size()
+                    + "\nPoints on 2D mesh: " + (int)link_2d_point.size());
+                return;
+            }
+
+            QString layer_name = QString("Link 1D2D");
+
+            // create the vector 
+            QgsVectorLayer * vl;
+            QgsVectorDataProvider * dp_vl;
+            QList <QgsField> lMyAttribField;
+
+            int nr_attrib_fields = 2;
+
+            lMyAttribField << QgsField("Link Id (0-based)", QVariant::String)
+                           << QgsField("Link Id (1-based)", QVariant::String);
+
+            QString uri = QString("LineString?crs=epsg:") + QString::number(epsg_code);
+            vl = new QgsVectorLayer(uri, layer_name, "memory");
+
+            vl->startEditing();
+            dp_vl = vl->dataProvider();
+            dp_vl->addAttributes(lMyAttribField);
+            //dp_vl->createSpatialIndex();
+            vl->updatedFields();
+
+            QgsMultiLineString * polylines = new QgsMultiLineString();
+            QVector<QgsPointXY> point;
+            QgsPolylineXY line;
+
+            for (int j = 0; j < link_1d_point.size(); j++)
+            {
+                line.clear();
+                point.clear();
+                //vector<string> token = UGRID::tokenize(link_1d_point[j], ' ');
+                //double x1 = (double) token[0];
+                //double y1 = token[1];
+                double x1 = 0.0; double y1 = 0.0;
+                point.append(QgsPointXY(x1, y1));
+                //vector<string> token = tokenize(link_2d_point[j], ' ');
+                //x1 = token[0];
+                //y1 = token[1];
+                x1 = 20.0; y1 = 10.0;
+                point.append(QgsPointXY(x1, y1));
+
+                line.append(point);
+                QgsGeometry MyEdge = QgsGeometry::fromPolylineXY(line);
+                QgsFeature MyFeature;
+                MyFeature.setGeometry(MyEdge);
+
+                MyFeature.initAttributes(nr_attrib_fields);
+                int k = 0;
+                MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                k++;
+                MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+
+                dp_vl->addFeature(MyFeature);
+            }
+            vl->commitChanges();
+
+            QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
+            line_marker->setWidth(0.75);
+            line_marker->setColor(QColor(0, 0, 255));
+
+            QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            symbol->changeSymbolLayer(0, line_marker);
+
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
+            vl->setRenderer(mypRenderer);
+
+            QgsMapLayer * map_layer = QgsProject::instance()->addMapLayer(vl, false);
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+        }
+    }
+}
+//------------------------------------------------------------------------------
 long qgis_umesh::compute_location_along_geometry(struct _ntw_geom * ntw_geom, struct _ntw_edges * ntw_edges, string branch_name, double chainage_node, double * xp, double * yp, double * rotation)
 {
     long status = -1;
