@@ -172,7 +172,7 @@ char * HISCF::get_filename()
 //------------------------------------------------------------------------------
 QFileInfo HISCF::get_filename()
 {
-    return m_hiscf_file_name;
+    return this->m_hiscf_file_name;
 }
 #endif
 //------------------------------------------------------------------------------

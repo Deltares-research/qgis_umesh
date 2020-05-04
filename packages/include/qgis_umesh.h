@@ -183,9 +183,9 @@ class qgis_umesh
         char * actionIcon = (char *)malloc(PATH_LENGTH * sizeof(char *));
 
         int _fil_index;
-        vector<UGRID *> _UgridFiles;
+        vector<UGRID *> m_ugrid_file;
         int _his_cf_fil_index;
-        vector<HISCF *> _his_cf_files;
+        vector<HISCF *> m_his_cf_file;
         int _mdu_fil_index;
         vector<READ_JSON *> _mdu_files;
 
