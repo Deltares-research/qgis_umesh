@@ -1036,26 +1036,35 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
         {
             layer_id = active_layer->id();
         }
-        // no else because the group entry does not have a CRS.
     }
     if (layer_id != "")
     {
         //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nActive layer: %1.").arg(active_layer->name()));
         // if there is an active layer, belongs it to a Mesh-group?
+        QList< QgsLayerTreeGroup * > myGroups = treeRoot->findGroups();
         for (int j = 0; j < _fil_index + 1; j++)
         {
-            QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID Mesh - %1").arg(j + 1));
-            if (myGroup != nullptr)
+            qDebug() << "File: " << j + 1;
+            for (int i = 0; i < myGroups.size(); i++)
             {
-                QList <QgsLayerTreeLayer *> layers = myGroup->findLayers();
-                for (int k = 0; k < layers.length(); k++)
+                qDebug() << "    Group: " << i + 1;
+                if (myGroups[i] != nullptr)
                 {
-                    // belong the active layer to this group?
-                    if (layers[k]->layerId() == layer_id)
+                    QStringList layerIDs = myGroups[i]->findLayerIds();
+                    for (int k = 0; k < layerIDs.size(); k++)
                     {
-                        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2.").arg(myGroup->name()).arg(active_layer->name()));
-                        // get the full file name
-                        ugrid_file = m_ugrid_file[j];
+                        // belong the active layer to this group?
+                        if (layerIDs[k] == layer_id)
+                        {
+                            //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2.").arg(myGroup->name()).arg(active_layer->name()));
+                            // get the full file name
+                            qDebug() << "    "<< layerIDs[k] << " === " << layer_id;
+                            qDebug() << myGroups[i]->name() << " --- " << m_ugrid_file[j]->get_filename().fileName();
+                            if (myGroups[i]->name().contains(m_ugrid_file[j]->get_filename().fileName()))
+                            {
+                                ugrid_file = m_ugrid_file[j];
+                            }
+                        }
                     }
                 }
             }
@@ -1066,6 +1075,7 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
     //    QMessageBox::information(0, "Information", QString("No layer selected, determination of output files is not possible."));
     //}
 
+    qDebug() << "---------------------";
     return ugrid_file;
 }
 //-----------------------------------------------------------------------------
