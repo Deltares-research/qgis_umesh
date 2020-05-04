@@ -1044,10 +1044,8 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
         QList< QgsLayerTreeGroup * > myGroups = treeRoot->findGroups();
         for (int j = 0; j < _fil_index + 1; j++)
         {
-            qDebug() << "File: " << j + 1;
             for (int i = 0; i < myGroups.size(); i++)
             {
-                qDebug() << "    Group: " << i + 1;
                 if (myGroups[i] != nullptr)
                 {
                     QStringList layerIDs = myGroups[i]->findLayerIds();
@@ -1058,8 +1056,6 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
                         {
                             //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2.").arg(myGroup->name()).arg(active_layer->name()));
                             // get the full file name
-                            qDebug() << "    "<< layerIDs[k] << " === " << layer_id;
-                            qDebug() << myGroups[i]->name() << " --- " << m_ugrid_file[j]->get_filename().fileName();
                             if (myGroups[i]->name().contains(m_ugrid_file[j]->get_filename().fileName()))
                             {
                                 ugrid_file = m_ugrid_file[j];
@@ -1074,8 +1070,6 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
     //{
     //    QMessageBox::information(0, "Information", QString("No layer selected, determination of output files is not possible."));
     //}
-
-    qDebug() << "---------------------";
     return ugrid_file;
 }
 //-----------------------------------------------------------------------------
