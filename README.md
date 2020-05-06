@@ -2,11 +2,11 @@
 QGIS plugin to plot 1D, 1D2D and 2D time series map results as animation. The map results should be stored on a netCDF file according the UGRID standard for 1D meshes, 1D2D contact meshes and/or 2D meshes. All types could be in one netCDF file. 
 
 
-To build the plugin qgis_umesh you have to install QGIS (OSGeo4W network installer (64 bit), https://qgis.org/en/site/forusers/download.html ), QT 5.12 LTS and netCDF4.
+To build the plugin qgis_umesh you have to install QGIS (OSGeo4W network installer (64 bit), https://qgis.org/en/site/forusers/download.html ), QT 5.12 LTS, BOOST 1.72.0 and netCDF4.
 The windows solution will place the qgis_umesh.dll on the qgis plugin directory (ex. c:\OSGeo4W64\apps\qgis\plugins\qgis_umesh.dll)
 
 ## Development environment
-At this moment the environment environment is based on Visual Studio 2017
+At this moment the development environment is based on Visual Studio 2017.
  
 ## Environment variables
 Environment variables (example)
@@ -29,6 +29,8 @@ debug and release folder contain the same libraries
                /qgis_core.lib
                /qgis_gui.lib
                /qgis_networkanalysis.lib
+
+
 
 ## Installing QGIS from OSGeo4W
 Installing QGIS from OSGeo4W network installer (64 bit)
