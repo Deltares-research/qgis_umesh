@@ -1191,8 +1191,6 @@ void MapTimeManagerWindow::setValue(int i)
 void MapTimeManagerWindow::setSliderValue(QDateTime date_time)
 {
     int i = _q_times.indexOf(date_time);
-    int j = _q_times.indexOf(curr_date_time->dateTime());
-    if (j == i) { return; }  // prevent firing a signal by curr_date_time->setDateTime if date_time is already in the edit field
     m_slider->setValue(i);
 }
 void MapTimeManagerWindow::show_hide_map_data_1d()

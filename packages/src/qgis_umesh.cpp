@@ -277,9 +277,9 @@ void qgis_umesh::initGui()
     janm1 = janm->addMenu("Help");
     janm1->addAction(aboutAction);
 
+#if EXPERIMENT
     janm1 = janm->addMenu("Trials");
     janm1->addAction(open_action_mdu);
-#if EXPERIMENT
     janm1->addAction(open_action_link1d2d_json);
     janm1->addAction(edit_action_1d_obs_points);
     janm1->addAction(trial_experiment);
