@@ -2,34 +2,23 @@
 \usepackage{CJKutf8}
 \newcommand{\menuarrow}{$\rightarrow$}
 \newcommand{\plotcfts}{PlotCFTS\xspace}
-\newcommand{\qumesh}{QUmesh\xspace}
+\newcommand{\dflowfm}{D-Flow FM\xspace}
+\newcommand{\qumesh}{QGIS\_UMESH\xspace}
 \newcommand{\netcdf}{netCDF\xspace}
 \newcommand{\cfstandard}{Climate and Forecast 1.7 standard\xspace}
 
-\newcommand\T{\rule{0pt}{2.6ex}}       % Top T
-\newcommand\B{\rule[-1.2ex]{0pt}{0pt}} % Bottom T
 \begin{document}
 \memoTo{To whom it may concern}
 \memoConfidentialUntil{}
 \memoDate{\today}
 \memoVersion{001}
 \memoFrom{Jan Mooiman}
-\memoTelephone{+31\,(0)88\,335\,8568}
+\memoTelephone{---}
 \memoEmail{jan.mooiman@deltares nl}
 \memoSubject{Manual to plot result files of \dflowfm in QGIS 3.12 (map- and history-files)}
-\memoCopy{---}
+\memoCopy{}
 
 \deltarestitle
-
-%{{\footnotesize
-%	{\textbf{Version control information}}
-%	
-%	\begin{tabular}{@{}p{12,5mm}@{}p{0mm}p{\textwidth-27mm-24pt}}
-%		\textbf{Location} & \textbf{:} & \url{\svnkw{HeadURL}} \\
-%		\textbf{Revision} & \textbf{:} & \svnrev 
-%	\end{tabular}
-%}}
-
 
 \tableofcontents
 
@@ -73,6 +62,15 @@
 \end{figure}
 
 %--------------------------------------------------------------------------------
+\subsubsection{Open UGRID}
+When selecting this option you are able to select \netcdf files which are meet the UGRID standard. 
+Example files are the mesh- and map-file of the \dflowfm program (\file{$\ast$\_net.nc}, \file{$\ast$\_map.nc}).
+Only the map-file could contain time series.
+%--------------------------------------------------------------------------------
+\subsubsection{Open HisCF}
+When selecting this option you are able to select \netcdf files which are meet the climate and forecast history file standard.
+Example files are the history output files of the program \dflowfm (\file{$\ast$\_his.nc}).
+%--------------------------------------------------------------------------------
 \subsection{Output}
 \phantom{m}\vspace{-\baselineskip}
 \begin{figure}[H]
@@ -83,29 +81,59 @@
 
 %------------------------------------------------------------------------------
 \subsubsection{Show map output}
-\phantom{m}\vspace{-\baselineskip}
+After selecting \menu{Output\menuarrow Show map output} the window \window{Map Output Animation} will open, see as example \autoref{fig:map_output_a}.
 \begin{figure}[H]
-    \centering    
-    \includegraphics[width=0.5\textwidth]{pictures/map_output_animation_window.png}
-    \caption{Map output animation window.}
+\begin{subfigure}[b]{0.48\textwidth}
+	\centering    
+	\includegraphics[width=\textwidth]{pictures/map_output_animation_window_scalar.png}
+	\caption{Layout scalar quantities\label{fig:map_output_a}}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+	\centering    
+	\includegraphics[width=\textwidth]{pictures/map_output_animation_window_vector.png}
+	\caption{Layout vector quantities}
+\end{subfigure}    
+    \caption{\window{Map Output Animation} window for scalars and vector.}
 \end{figure}
 
 %------------------------------------------------------------------------------
 \subsubsection{PlotCFTS}
-After selecting this menu item the program \plotcfts will start.
+After selecting \menu{Output\menuarrow \plotcfts} the program \plotcfts will start, see as example \autoref{fig:plotcfts_main}.
+Select from the menubar of the \plotcfts program menu option \menu{Help \menuarrow User Manual} to open the user manual for the program \plotcfts. 
+
 \begin{figure}[H]
     \centering    
     \includegraphics[width=0.9\textwidth]{pictures/main_plotcfts.png}
-    \caption{Main window of the \plotcfts program.}
+    \caption{Main window of the \plotcfts program.\label{fig:plotcfts_main}}
 \end{figure}
 %--------------------------------------------------------------------------------
 \subsection{Settings}
-\phantom{m}\vspace{-\baselineskip}
+Settings for the presentation of scalars and vectors.
 \begin{figure}[H]
     \centering    
     \includegraphics[width=0.40\textwidth]{pictures/menu_settings.png}
     \caption{Menu \menuarrow Settings}
 \end{figure}
+When selecting this option some settings for the presentation of the variables via the window \window{Map Output Animation} can be set. 
+This window will also pop up when using the right mouse button within the window \window{Map Output Animation}.
+\begin{figure}[H]
+	\centering    
+	\includegraphics[width=0.40\textwidth]{pictures/map_properties.png}
+	\caption{Menu \menuarrow Settings}
+\end{figure}
+where
+\begin{longtable}{p{35mm-12pt} p{\textwidth-35mm-12pt}} 
+	Transparency & Specify the transparency of the iso patches for the scalars. \\
+	\textbf{Colorramp limits} & \\
+	Dynamic colorramp\newline (\textit{checked}) & Colorramp limits are determined by the minimum and maximum value of the scalar. 
+	These values reach their extreme values after all timestep are visualised.\\
+	Dynamic colorramp\newline (\textit{unchecked}) & \\
+	Minimum value & specify the minimum value for the scalar.\\
+	Maximum value & specify the maximum value for the scalar.\\
+	\textbf{Vector scaling} & \\
+	Vector scaling & The vector of length 1 (ex.\ \SI{1}{\metre\per\second}) is scaled with this factor. The drawing length is based on the averaged cell size.
+\end{longtable}
 %--------------------------------------------------------------------------------
 \subsection{Help}
 \phantom{m}\vspace{-\baselineskip}
@@ -133,13 +161,13 @@ Shows the about box.
     \caption{About box}
 \end{figure}
 %--------------------------------------------------------------------------------
-\subsection{Trials}
-\phantom{m}\vspace{-\baselineskip}
-\begin{figure}[H]
-    \centering    
-    \includegraphics[width=0.40\textwidth]{pictures/menu_trials.png}
-    \caption{Menu \menuarrow Trials}
-\end{figure}
+%\subsection{Trials}
+%\phantom{m}\vspace{-\baselineskip}
+%\begin{figure}[H]
+%    \centering    
+%    \includegraphics[width=0.40\textwidth]{pictures/menu_trials.png}
+%    \caption{Menu \menuarrow Trials}
+%\end{figure}
 %------------------------------------------------------------------------------
 \section{Source}
 The source code is available on GitHUB:

@@ -69,6 +69,9 @@
 #define MSG_LENGTH 101
 #define PATH_LENGTH 1024
 
+#define    WAIT_MODE 1
+#define NO_WAIT_MODE 0
+
 class QAction;
 class UGRID;
 
@@ -121,6 +124,7 @@ class qgis_umesh
         void about();
         void activate_layers();
         void activate_observation_layers();
+        void ShowUserManual();
 
         UGRID * get_active_ugrid_file(QString);
         HISCF * get_active_his_cf_file(QString);
@@ -138,6 +142,7 @@ class qgis_umesh
         // functions
         void unload_vector_layers();
         QIcon get_icon_file(QDir, QString);
+        int QT_SpawnProcess(int, char *, char **);
 
         // variables
         QgisInterface * mQGisIface; // Pointer to the QGIS interface object
@@ -154,6 +159,7 @@ class qgis_umesh
         QAction * inspectAction;
         QAction * plotcftsAction;
         QAction * mapoutputAction;
+        QAction * showUserManualAct;
         QAction * aboutAction;
         QMenu * fileMenu;
 

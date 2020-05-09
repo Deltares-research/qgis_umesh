@@ -251,6 +251,12 @@ void qgis_umesh::initGui()
     saveAction->setEnabled(true);
     connect(saveAction, SIGNAL(triggered()), this, SLOT(openFile()));
 
+    // Help menu
+    showUserManualAct = new QAction(tr("&User Manual ..."), this);
+    showUserManualAct->setStatusTip(tr("Opens the User Manual (pdf-format)"));
+    showUserManualAct->setEnabled(true);
+    connect(showUserManualAct, SIGNAL(triggered()), this, SLOT(ShowUserManual()));
+
     aboutAction = new QAction(tr("&About ..."), this);
     aboutAction->setToolTip(tr("Show the About box ..."));
     aboutAction->setStatusTip(tr("Show the application's About box"));
@@ -275,6 +281,8 @@ void qgis_umesh::initGui()
     janm1->addAction(mapoutputAction);
 
     janm1 = janm->addMenu("Help");
+    janm1->addAction(showUserManualAct);
+    janm1->addSeparator();
     janm1->addAction(aboutAction);
 
 #if EXPERIMENT
@@ -581,6 +589,79 @@ void qgis_umesh::mapPropertyWindow()
 //
 //-----------------------------------------------------------------------------
 //
+void qgis_umesh::ShowUserManual()
+{
+    char pdf_reader[1024];
+    int spawn_err = 0;
+
+    QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
+    program_files = program_files + QString("/deltares/qgis_umesh");
+    QDir program_files_dir = QDir(program_files);
+    QString manual_path = program_files_dir.absolutePath();
+    QString user_manual = manual_path + "/doc/" + QString("qgis_umesh_um.pdf");
+    QByteArray manual = user_manual.toUtf8();
+    char * pdf_document = manual.data();
+
+    FILE *fp = fopen(pdf_document, "r");
+    if (fp != NULL)
+    {
+        fclose(fp);
+        long res = (long)FindExecutableA((LPCSTR)pdf_document, NULL, (LPSTR)pdf_reader);
+        if (res >= 32)
+        {
+            spawn_err = QT_SpawnProcess(NO_WAIT_MODE, pdf_reader, &pdf_document);
+        }
+    }
+    else
+    {
+        QMessageBox::warning(NULL, QObject::tr("Warning"), QObject::tr("Cannot open file: %1").arg(user_manual));
+    }
+}
+/* @@-------------------------------------------------
+Function:   QT_SpawnProcess
+Author:     Jan Mooiman
+Function:   Start an process, main program will wait or continue
+depending on argument waiting
+Context:    -
+-------------------------------------------------------*/
+int qgis_umesh::QT_SpawnProcess(int waiting, char * prgm, char ** args)
+{
+    int i;
+    int status;
+    QStringList argList;
+
+    status = -1;  /* set default status as not started*/
+
+    QProcess * proc = new QProcess();
+
+    i = 0;
+    while (args[i] != NULL && i < 1)  // just one argument allowed
+    {
+        argList << args[i];
+        i++;
+    }
+    proc->start(prgm, argList);
+
+    if (proc->state() == QProcess::NotRunning)
+    {
+        delete proc;
+        return status;
+        // error handling
+    }
+    //
+    // Process sstarted succesfully
+    //
+    status = 0;
+    if (waiting == WAIT_MODE)
+    {
+        proc->waitForFinished();
+        delete proc;
+    }
+    return status;
+}
+//
+//-----------------------------------------------------------------------------
+//
 void qgis_umesh::about()
 {
     char * text;
@@ -594,7 +675,7 @@ void qgis_umesh::about()
     qsource_url = new QString(source_url);
 
     msg_text = new QString("Deltares\n");
-    msg_text->append("Plot UGRID compliant 1D mesh with its geometry, and 2D meshes\n");
+    msg_text->append("Plot results on UGRID compliant meshes. 1D mesh with its geometry, 1D2D, 2D and 3D meshes.\n");
     msg_text->append(qtext);
     msg_text->append("\nSource: ");
     msg_text->append(qsource_url);

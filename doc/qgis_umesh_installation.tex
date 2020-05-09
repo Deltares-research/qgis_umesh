@@ -1,6 +1,4 @@
 \documentclass{deltares_memo}
-\svnid{$Id: qumesh_installation.tex 2196 2019-10-01 20:02:12Z mooiman $}
-\svnid{$URL: file:///D:/SVNrepository/examples/qt/qgis/qgis_umesh/doc/qumesh_installation.tex $}
 
 \newcommand{\menuarrow}{$\rightarrow$}
 \newcommand{\qumesh}{qgis\_umesh\xspace}
@@ -19,28 +17,24 @@
 \memoFrom{Jan Mooiman}
 \memoTelephone{+31\,(0)88\,335\,8568}
 \memoEmail{jan.mooiman@deltares nl}
-\memoSubject{Installation of the \qumesh plugin in QGIS 3.10 on a Windows 10 PC.}
+\memoSubject{Installation of the \qumesh plugin in QGIS 3.12 on a Windows 10 PC.}
 \memoCopy{---}
 
 \deltarestitle
-
-%{{\footnotesize
-%	{\textbf{Version control information}}
-%	
-%	\begin{tabular}{@{}p{12,5mm}@{}p{0mm}p{\textwidth-27mm-24pt}}
-%		\textbf{Location} & \textbf{:} & \url{\svnkw{HeadURL}} \\
-%		\textbf{Revision} & \textbf{:} & \svnrev 
-%	\end{tabular}
-%}}
 
 %--------------------------------------------------------------------------------
 
 \section{Installation}
 \phantom{mooiman}\vspace{-\baselineskip}
 \begin{action}
-\item Copy the \qumesh.dll to the \Cpp plugin directory of QGIS. 
+\item Copy the file \file{\qumesh.dll} to the \Cpp plugin directory of QGIS. 
 In my development installation it is:
 \dir{c:\textbackslash OSGeo4W64\textbackslash apps\textbackslash qgis\textbackslash plugins\textbackslash qgis\_umesh.dll}.
+
+\item Install the user manual on the program files directory \dir{c:\textbackslash Program Files\textbackslash Deltares\textbackslash qgis\_umesh\textbackslash doc}
+\begin{itemize}
+	\item qgis\_umesh\_um.pdf
+\end{itemize}
 
 \item Install the icons on the program files directory \dir{c:\textbackslash Program Files\textbackslash Deltares\textbackslash qgis\_umesh\textbackslash icons}
 \begin{itemize}
