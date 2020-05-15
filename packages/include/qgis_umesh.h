@@ -143,6 +143,8 @@ class qgis_umesh
         void unload_vector_layers();
         QIcon get_icon_file(QDir, QString);
         int QT_SpawnProcess(int, char *, char **);
+        std::vector<std::string> tokenize(const std::string &, const char);
+        std::vector<std::string> tokenize(const std::string &, std::size_t);
 
         // variables
         QgisInterface * mQGisIface; // Pointer to the QGIS interface object

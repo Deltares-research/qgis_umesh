@@ -111,20 +111,19 @@ void MapTimeManagerWindow::create_window()
     icon_iso_patch = get_icon_file(program_files_dir, "/icons/iso_patch.png");
     icon_vectors = get_icon_file(program_files_dir, "/icons/vectors.png");
 
-    tw->addTab(iso_patch, "Scalar");
     iso_patch->setToolTip("Patches");
     iso_patch->setStatusTip("Draw patches with colour");
-
     QVBoxLayout * vl_tw_iso = create_scalar_selection_1d_2d_3d();
     iso_patch->setLayout(vl_tw_iso);
+    tw->addTab(iso_patch, "Scalar");
 
+    vectors->setToolTip("Velocity vector");
+    vectors->setStatusTip("Draw horizontal velocity vector");
     QVBoxLayout * vl_tw_vec = create_vector_selection_2d_3d();
     if (vl_tw_vec != nullptr)
     {
-        tw->addTab(vectors, "Vector");
-        vectors->setToolTip("Velocity vector");
-        vectors->setStatusTip("Draw horizontal velocity vector");
         vectors->setLayout(vl_tw_vec);
+        tw->addTab(vectors, "Vector");
     }
     vl->addWidget(tw);
 
@@ -154,24 +153,18 @@ QGridLayout * MapTimeManagerWindow::create_date_time_layout()
     first_date_time->setTimeSpec(Qt::UTC);
     first_date_time->setToolTip(QString("Time frame UTC"));
     first_date_time->setDateTime(_q_times[0]);
-    first_date_time->setMinimumDateTime(_q_times[0]);
-    first_date_time->setMaximumDateTime(_q_times[nr_times - 1]);
     first_date_time->setDisplayFormat(format_date_time);
     first_date_time->setWrapping(true);
     
     curr_date_time->setTimeSpec(Qt::UTC);
     curr_date_time->setToolTip(QString("Time frame UTC"));
     curr_date_time->setDateTime(_q_times[0]);
-    curr_date_time->setMinimumDateTime(_q_times[0]);
-    curr_date_time->setMaximumDateTime(_q_times[nr_times - 1]);
     curr_date_time->setDisplayFormat(format_date_time);
     curr_date_time->setWrapping(true);
     
     last_date_time->setTimeSpec(Qt::UTC);
     last_date_time->setToolTip(QString("Time frame UTC"));
     last_date_time->setDateTime(_q_times[_q_times.size() - 1]);
-    last_date_time->setMinimumDateTime(_q_times[0]);
-    last_date_time->setMaximumDateTime(_q_times[nr_times - 1]);
     last_date_time->setDisplayFormat(format_date_time);
     last_date_time->setWrapping(true);
 
@@ -619,47 +612,92 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
 }
 QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
 {
-    QVBoxLayout * vl_tw_vec = new QVBoxLayout();  // VerticalLayout_TabWidget
-    QGridLayout * hl2d = new QGridLayout();
-    QGridLayout * hl3d = new QGridLayout();
-    hl2d->setColumnStretch(0, 0);
-    hl2d->setColumnStretch(1, 100);
-    hl3d->setColumnStretch(0, 0);
-    hl3d->setColumnStretch(1, 100);
-
-    m_cb_vec_2d = new QComboBox();
-    m_cb_vec_3d = new QComboBox();
-    m_cb_vec_2d->setMinimumSize(100, 22);
-    m_cb_vec_3d->setMinimumSize(100, 22);
+    int status = 1;
+    int row = -1;
 
     struct _mesh_variable * vars = _ugrid_file->get_variables();
     struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
     if (m2d == nullptr) { return nullptr; }
 
-    int row = -1;
-
+    m_cb_vec_2d = new QComboBox();
+    m_cb_vec_3d = new QComboBox();
+    m_cb_vec_2d->setMinimumSize(100, 22);
     QString text = QString::fromStdString(m2d[0]->var_name);
+    status = create_parameter_selection_vector_2d_3d(text, m_cb_vec_2d, m_cb_vec_3d);
+    if (m_cb_vec_2d->count() == 0 && m_cb_vec_2d->count() == 0) { return nullptr;  }
 
-    m_cb_vec_2d->blockSignals(true);
-    m_cb_vec_3d->blockSignals(true);
+    QVBoxLayout * vl_tw_vec = new QVBoxLayout();  // VerticalLayout_TabWidget
+    QGridLayout * gl = new QGridLayout();
+    gl->setColumnStretch(0, 0);
+    gl->setColumnStretch(1, 100);
+
+    if (m_cb_vec_2d->count() > 0)
+    {
+        row += 1;
+        m_show_check_vec_2d = check_vector_2d();
+        gl->addWidget(m_show_check_vec_2d, row, 0);
+        gl->addWidget(m_cb_vec_2d, row, 1);
+    }
+    if (m_cb_vec_3d->count() > 0)
+    {
+        row += 1;
+        m_show_check_vec_3d = check_vector_3d();
+        gl->addWidget(m_show_check_vec_3d, row, 0);
+        gl->addWidget(m_cb_vec_3d, row, 1);
+
+        // spinbox and layer selection
+        QVariant j = m_cb_vec_3d->itemData(0);
+        QStringList strings= j.toStringList();
+        struct _variable * var = vars->variable[strings[3].toInt()];
+        m_layerLabelPrefix_vec = new QLabel(tr("Layer"));
+        m_layerLabelSuffix_vec = new QLabel(tr("[0,0]"));
+        m_layerLabelSuffix_vec->setText(tr("[1, %1]").arg(var->nr_layers));
+        QSpinBox * sb_layer_vec = spinbox_layer(var->nr_layers);
+
+        QHBoxLayout * sp_group_vec = new QHBoxLayout();
+        sp_group_vec->addWidget(m_layerLabelPrefix_vec);
+        sp_group_vec->addWidget(sb_layer_vec);
+        sp_group_vec->addWidget(m_layerLabelSuffix_vec);
+        sp_group_vec->addStretch();
+        row += 1;
+        gl->addLayout(sp_group_vec, row, 1);
+    }
+    
+    vl_tw_vec->addLayout(gl);
+    vl_tw_vec->addStretch();
+
+    connect(m_cb_vec_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_2d(int)));
+    connect(m_cb_vec_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_3d(int)));
+
+    return vl_tw_vec;
+}
+int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, QComboBox * cb_vec_2d, QComboBox * cb_vec_3d)
+{
     int vec_cartesian_component_2dh = 0;
     int vec_spherical_component_2dh = 0;
     int vec_cartesian_component = 0;
     int vec_spherical_component = 0;
-    int j = -1;
     QStringList cart_2dh;
     QStringList cart_layer;
     QStringList spher_2dh;
     QStringList spher_layer;
-    cart_2dh << "" << "" << "";  // JanM: Is there no smarter way to generate a list of 3 items
-    cart_layer << "" << "" << "";
-    spher_2dh << "" << "" << "";
-    spher_layer << "" << "" << "";
+    cart_2dh << "" << "" << "" << "";  // JanM: Is there no smarter way to generate a list of 4 items
+    cart_layer << "" << "" << "" << "";
+    spher_2dh << "" << "" << "" << "";
+    spher_layer << "" << "" << "" << "";
+
+    cb_vec_2d->setMinimumSize(100, 22);
+    cb_vec_3d->setMinimumSize(100, 22);
+
+    struct _mesh_variable * vars = _ugrid_file->get_variables();
+
+    cb_vec_2d->blockSignals(true);
+    cb_vec_3d->blockSignals(true);
     for (int i = 0; i < vars->nr_vars; i++)
     {
         if (vars->variable[i]->time_series)
         {
-            QMap<QString, QString> map;
+            QMap<QString, int> map;
             QString std_name = QString::fromStdString(vars->variable[i]->standard_name).trimmed();
             map[std_name] = i;
             QString mesh_var_name = QString::fromStdString(vars->variable[i]->mesh).trimmed();
@@ -681,25 +719,23 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
                     }
                     if (vec_cartesian_component_2dh == 2 || vec_spherical_component_2dh == 2)
                     {
-                        row += 1;
-                        m_show_check_vec_2d = check_vector_2d();
-                        hl2d->addWidget(m_show_check_vec_2d, row, 0);
                         QString name("Depth Averaged velocity vector");
                         if (vec_cartesian_component_2dh == 2) {
                             vec_cartesian_component_2dh = 0;
                             cart_2dh[0] = QString("Cartesian");
+                            cart_2dh[3] = QString("%1").arg(i);
                             m_cb_vec_2d->addItem(name, cart_2dh);
                         }
                         if (vec_spherical_component_2dh == 2) {
                             vec_spherical_component_2dh = 0;
                             spher_2dh[0] = QString("Spherical");
+                            spher_2dh[3] = QString("%1").arg(i);
                             m_cb_vec_2d->addItem(name, spher_2dh);
                         }
-                        hl2d->addWidget(m_cb_vec_2d, row, 1);
                     }
                 }
             }
-            if (vars->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
+            else if (vars->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
             {
                 if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                 {
@@ -715,56 +751,29 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
                 }
                 if (vec_cartesian_component == 2 || vec_spherical_component == 2)
                 {
-                    row += 1;
-                    m_show_check_vec_3d = check_vector_3d();
-                    hl3d->addWidget(m_show_check_vec_3d, row, 0);
                     QString name("Horizontal velocity vector");
-                    if (vec_cartesian_component == 2) 
-                    { 
-                        vec_cartesian_component = 0; 
+                    if (vec_cartesian_component == 2)
+                    {
+                        vec_cartesian_component = 0;
                         cart_layer[0] = QString("Cartesian");
+                        cart_layer[3] = QString("%1").arg(i);
                         m_cb_vec_3d->addItem(name, cart_layer);
                     }
-                    if (vec_spherical_component == 2) 
-                    { 
-                        vec_spherical_component = 0; 
+                    if (vec_spherical_component == 2)
+                    {
+                        vec_spherical_component = 0;
                         spher_layer[0] = QString("Spherical");
+                        spher_layer[3] = QString("%1").arg(i); 
                         m_cb_vec_3d->addItem(name, spher_layer);
                     }
-                    hl3d->addWidget(m_cb_vec_3d, row, 1);
-
-                    // spinbox and layer selection
-                    QVariant j = m_cb_3d->itemData(0);
-                    int jj = j.toInt();
-                    struct _mesh_variable * vars = _ugrid_file->get_variables();
-                    struct _variable * var = vars->variable[jj];
-                    m_layerLabelPrefix_vec = new QLabel(tr("Layer"));
-                    m_layerLabelSuffix_vec = new QLabel(tr("[0,0]"));
-                    m_layerLabelSuffix_vec->setText(tr("[1, %1]").arg(var->nr_layers));
-                    m_sb_layer_vec = spinbox_layer(var->nr_layers);
-
-                    QHBoxLayout * sp_group_vec = new QHBoxLayout();
-                    sp_group_vec->addWidget(m_layerLabelPrefix_vec);
-                    sp_group_vec->addWidget(m_sb_layer_vec);
-                    sp_group_vec->addWidget(m_layerLabelSuffix_vec);
-                    sp_group_vec->addStretch();
-
-                    row += 1;
-                    hl3d->addLayout(sp_group_vec, row, 1);
                 }
             }
         }
     }
-    m_cb_vec_2d->blockSignals(false);
-    m_cb_vec_3d->blockSignals(false);
-    vl_tw_vec->addLayout(hl2d);
-    vl_tw_vec->addLayout(hl3d);
-    vl_tw_vec->addStretch();
+    cb_vec_3d->blockSignals(false);
+    cb_vec_2d->blockSignals(false);
 
-    connect(m_cb_vec_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_2d(int)));
-    connect(m_cb_vec_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_3d(int)));
-
-    return vl_tw_vec;
+    return 0;
 }
 
 void MapTimeManagerWindow::start_reverse()

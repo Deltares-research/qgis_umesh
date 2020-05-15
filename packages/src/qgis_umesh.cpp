@@ -100,10 +100,13 @@ void qgis_umesh::CrsChanged()
                 //QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Layer[0] name: %1.").arg(layer[0]->layer()->name()));
                 // Change coordinates to new_crs, by overwriting the mapping->epsg and mapping->epsg_code
                 UGRID * ugrid_file = get_active_ugrid_file(layer[0]->layer()->id());
-                QString epsg_code = new_crs.authid();
-                QStringList parts = epsg_code.split(':');
-                long epsg = parts.at(1).toInt();
-                ugrid_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
+                if (ugrid_file != nullptr)
+                {
+                    QString epsg_code = new_crs.authid();
+                    QStringList parts = epsg_code.split(':');
+                    long epsg = parts.at(1).toInt();
+                    ugrid_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
+                }
             }
         }
         if (checked == 0)
@@ -918,7 +921,16 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         return;
     }
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
-    QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID Mesh - %1").arg(_fil_index + 1));
+    QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID - %1").arg(jsonfile.fileName()));
+    if (myGroup == nullptr)
+    {
+        QString name = QString("UGRID - %1").arg(jsonfile.fileName());
+        myGroup = treeRoot->insertGroup(0, name);
+        myGroup->setExpanded(true);  // true is the default 
+        myGroup->setItemVisibilityChecked(true);
+        //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
+        myGroup->setItemVisibilityCheckedRecursive(true);
+    }
 
     values = "data.geometry.StructureFile";
     vector<string> struct_file;
@@ -2078,7 +2090,7 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
             {
                 QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
                 line_marker->setWidth(0.25);
-                line_marker->setColor(QColor(0, 192, 255));
+                line_marker->setColor(QColor(0, 170, 255));
 
                 QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
                 symbol->changeSymbolLayer(0, line_marker);
@@ -2755,7 +2767,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
             lMyAttribField << QgsField("Link Id (0-based)", QVariant::String)
                            << QgsField("Link Id (1-based)", QVariant::String);
 
-            QString uri = QString("LineString?crs=epsg:") + QString::number(epsg_code);
+            QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
 
             vl->startEditing();
@@ -2766,25 +2778,24 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
 
             QgsMultiLineString * polylines = new QgsMultiLineString();
             QVector<QgsPointXY> point;
-            QgsPolylineXY line;
+            QgsMultiPolylineXY lines;
 
             for (int j = 0; j < link_1d_point.size(); j++)
             {
-                line.clear();
+                lines.clear();
                 point.clear();
-                //vector<string> token = UGRID::tokenize(link_1d_point[j], ' ');
-                //double x1 = (double) token[0];
-                //double y1 = token[1];
-                double x1 = 0.0; double y1 = 0.0;
+                vector<string> token = tokenize(link_1d_point[j], ' ');
+                std::string::size_type sz;     // alias of size_t
+                double x1 = std::stod(token[0], &sz);
+                double y1 = std::stod(token[1], &sz);
                 point.append(QgsPointXY(x1, y1));
-                //vector<string> token = tokenize(link_2d_point[j], ' ');
-                //x1 = token[0];
-                //y1 = token[1];
-                x1 = 20.0; y1 = 10.0;
-                point.append(QgsPointXY(x1, y1));
+                token = tokenize(link_2d_point[j], ' ');
+                double x2 = std::stod(token[0], &sz);
+                double y2 = std::stod(token[1], &sz);
+                point.append(QgsPointXY(x2, y2));
 
-                line.append(point);
-                QgsGeometry MyEdge = QgsGeometry::fromPolylineXY(line);
+                lines.append(point);
+                QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
                 QgsFeature MyFeature;
                 MyFeature.setGeometry(MyEdge);
 
@@ -2793,10 +2804,11 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
                 MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
                 MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+                MyFeature.setValid(true);
 
                 dp_vl->addFeature(MyFeature);
+                vl->commitChanges();
             }
-            vl->commitChanges();
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -2809,7 +2821,9 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
             vl->setRenderer(mypRenderer);
 
-            QgsMapLayer * map_layer = QgsProject::instance()->addMapLayer(vl, false);
+            QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
+            treeRoot->insertLayer(0, vl);
+            //add_layer_to_group(vl, treeRoot);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
     }
@@ -2919,7 +2933,43 @@ void qgis_umesh::add_layer_to_group(QgsVectorLayer * vl, QgsLayerTreeGroup * tre
     }
     root->removeLayer(map_layer);
 }
+//
+std::vector<std::string> qgis_umesh::tokenize(const std::string& s, char c) {
+    auto end = s.cend();
+    auto start = end;
 
+    std::vector<std::string> v;
+    for (auto it = s.cbegin(); it != end; ++it) {
+        if (*it != c) {
+            if (start == end)
+                start = it;
+            continue;
+        }
+        if (start != end) {
+            v.emplace_back(start, it);
+            start = end;
+        }
+    }
+    if (start != end)
+        v.emplace_back(start, end);
+    return v;
+}
+//
+std::vector<std::string> qgis_umesh::tokenize(const std::string& s, std::size_t count)
+{
+    size_t minsize = s.size() / count;
+    std::vector<std::string> tokens;
+    for (size_t i = 0, offset = 0; i < count; ++i)
+    {
+        size_t size = minsize;
+        if ((offset + size) < s.size())
+            tokens.push_back(s.substr(offset, size));
+        else
+            tokens.push_back(s.substr(offset, s.size() - offset));
+        offset += size;
+    }
+    return tokens;
+}
 
 //
 void qgis_umesh::dummy_slot()

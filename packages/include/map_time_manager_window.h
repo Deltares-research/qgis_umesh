@@ -113,6 +113,7 @@ public:
         int create_parameter_selection_2d_3d(QString, QComboBox *, QComboBox *);
         QVBoxLayout * create_scalar_selection_1d_2d_3d();
         QVBoxLayout * create_vector_selection_2d_3d();
+        int create_parameter_selection_vector_2d_3d(QString, QComboBox *, QComboBox *);
 
         QColorRampEditor * create_color_ramp();
         void draw_time_dependent_data_1d(QComboBox *, int);

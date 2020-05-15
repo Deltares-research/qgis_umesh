@@ -243,6 +243,7 @@ void MyCanvas::draw_vector_at_face()
         if (!m_vscale_determined)
         {
             struct _variable * cell_area = _ugrid_file->get_var_by_std_name(vars, m2d_string[0]->var_name, "cell_area");
+            if (cell_area == nullptr) { return; }
             m_vec_length = statistics_averaged_length_of_cell(cell_area);
 
             if (m_coordinate_type[0] == "Spherical")
@@ -350,7 +351,7 @@ void MyCanvas::draw_vector_at_face()
                 //TODO: Incase geographic mesh and cartesian projection, arrow need to be transformed to cartesian projection
 
                 QgsCoordinateReferenceSystem s_crs = QgsProject::instance()->crs();  // CRS of the screen
-                if (m_coordinate_type[0] == "Spherical" && s_crs.isGeographic())  // is screen is cartesian, then cartesian vectors are drwan
+                if (m_coordinate_type[0] == "Spherical" && s_crs.isGeographic())  // if screen is cartesian, then cartesian vectors are drwan
                 {
                     // Screen CRS must be WGS84 4326 CRS layer should be the same as the presentation CRS
                     if (s_crs != QgsCoordinateReferenceSystem("EPSG:4326"))
@@ -1185,7 +1186,7 @@ void MyCanvas::drawMultiPoint(vector<double> xs, vector<double> ys, vector<int> 
 // Draw a polygon. The polygon gets a color according the routine setFillColor
 void MyCanvas::drawPolygon(vector<double> xs, vector<double> ys)
 {
-	QPolygon polygon;
+    QPolygon polygon;
     for (int i=0; i<xs.size(); i++)
     {
         polygon << QPoint(qx(xs[i]), qy(ys[i]));
@@ -1198,13 +1199,11 @@ void MyCanvas::drawPolygon(vector<double> xs, vector<double> ys)
 // Draw a polyline. This line width and line colour has to be set before this call
 void MyCanvas::drawPolyline(vector<double> xs, vector<double> ys)
 {
-    assert( xs.size() > 0 );
     QPolygon polyline;
     for (int i = 0; i < xs.size(); i++)
     {
         polyline << QPoint( qx(xs[i]),  qy(ys[i]));
     }
-    //mCache_painter->setPen(QPen(7));
     mCache_painter->drawPolyline(polyline);
 }
 void MyCanvas::drawLineGradient(vector<double> xs, vector<double> ys, vector<int> rgb)
