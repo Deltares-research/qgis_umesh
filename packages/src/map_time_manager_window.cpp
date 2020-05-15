@@ -652,11 +652,11 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
         m_layerLabelPrefix_vec = new QLabel(tr("Layer"));
         m_layerLabelSuffix_vec = new QLabel(tr("[0,0]"));
         m_layerLabelSuffix_vec->setText(tr("[1, %1]").arg(var->nr_layers));
-        QSpinBox * sb_layer_vec = spinbox_layer(var->nr_layers);
+        m_sb_layer_vec = spinbox_layer(var->nr_layers);
 
         QHBoxLayout * sp_group_vec = new QHBoxLayout();
         sp_group_vec->addWidget(m_layerLabelPrefix_vec);
-        sp_group_vec->addWidget(sb_layer_vec);
+        sp_group_vec->addWidget(m_sb_layer_vec);
         sp_group_vec->addWidget(m_layerLabelSuffix_vec);
         sp_group_vec->addStretch();
         row += 1;
