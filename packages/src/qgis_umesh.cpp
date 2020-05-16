@@ -240,9 +240,9 @@ void qgis_umesh::initGui()
     icon_mapoutput = get_icon_file(program_files_dir, "/icons/map_output.png");
     mapoutputAction = new QAction();
     mapoutputAction->setIcon(icon_mapoutput);
-    mapoutputAction->setText("Map settings ...");
-    mapoutputAction->setToolTip(tr("Supply the settings for the map animation"));
-    mapoutputAction->setStatusTip(tr("Supply the settings for the map animation"));
+    mapoutputAction->setText("Map Output Settings ...");
+    mapoutputAction->setToolTip(tr("Supply the settings for the map output animation"));
+    mapoutputAction->setStatusTip(tr("Supply the settings for the map output animation"));
     mapoutputAction->setEnabled(true);
     connect(mapoutputAction, SIGNAL(triggered()), this, SLOT(mapPropertyWindow()));
     //connect(mapoutputAction, &QAction::triggered, MapTimeManagerWindow, &MapTimeManagerWindow::contextMenu);
@@ -586,8 +586,10 @@ void qgis_umesh::experiment()
 //
 void qgis_umesh::mapPropertyWindow()
 {
-    MapPropertyWindow * map_property = new MapPropertyWindow(mMyCanvas);
-    //mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, map_property);
+    if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
+    {
+        MapPropertyWindow * map_property = new MapPropertyWindow(mMyCanvas);
+    }
 }
 //
 //-----------------------------------------------------------------------------

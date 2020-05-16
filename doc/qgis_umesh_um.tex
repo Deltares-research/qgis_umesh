@@ -119,18 +119,20 @@ When selecting this option some settings for the presentation of the variables v
 This window will also pop up when using the right mouse button within the window \window{Map Output Animation}.
 \begin{figure}[H]
 	\centering    
-	\includegraphics[width=0.40\textwidth]{pictures/map_properties.png}
-	\caption{Menu \menuarrow Settings}
+	\includegraphics[width=0.50\textwidth]{pictures/map_properties.png}
+	\caption{Window \window{Map Output Settings}\label{fig:map_output_settings}}
 \end{figure}
-where
+The following quantities can be specified in the window presented by \autoref{fig:map_output_settings}:
 \begin{longtable}{p{35mm-12pt} p{\textwidth-35mm-12pt}} 
 	Transparency & Specify the transparency of the iso patches for the scalars. \\
+	Refresh rate & Specify the refresh rate, in seconds, of the images during animation. \\	
 	\textbf{Colorramp limits} & \\
-	Dynamic colorramp\newline (\textit{checked}) & Colorramp limits are determined by the minimum and maximum value of the scalar. 
+	\textsl{Dynamic colorramp} & \\
+	\underline{checked} & Colorramp limits are determined by the minimum and maximum value of the scalar. 
 	These values reach their extreme values after all timestep are visualised.\\
-	Dynamic colorramp\newline (\textit{unchecked}) & \\
-	Minimum value & specify the minimum value for the scalar.\\
-	Maximum value & specify the maximum value for the scalar.\\
+	\underline{unchecked} & 
+	Minimum value: \quad specify the minimum value for the scalar.\newline
+	Maximum value: \quad specify the maximum value for the scalar.\\
 	\textbf{Vector scaling} & \\
 	Vector scaling & The vector of length 1 (ex.\ \SI{1}{\metre\per\second}) is scaled with this factor. The drawing length is based on the averaged cell size.
 \end{longtable}

@@ -1,5 +1,4 @@
 #include "edit_observation_points_window.h"
-#define SLEEP_MACRO _sleep(0100)
 //
 //-----------------------------------------------------------------------------
 //

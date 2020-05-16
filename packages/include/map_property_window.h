@@ -17,6 +17,7 @@
 
 struct _bck_property {
     double opacity;
+    double refresh_rate;
     bool dynamic_legend;
     double minimum;
     double maximum;
@@ -27,20 +28,29 @@ class MapPropertyWindow
     : public QDockWidget
 {
     Q_OBJECT
-    
+
 public:
+    static int object_count;
+
     MapPropertyWindow(MyCanvas *);  // Constructor
     ~MapPropertyWindow();  // Destructor
     
     void create_window();
+    static int get_count();
+
+public slots:
+    void close();
 
 signals:
     void draw_all();
+    void close_map();
 
 private:
     QWidget * wid;
     QLabel * lbl_transparency;
     QLineEdit * le_transparency;
+    QLabel * lbl_refresh_rate;
+    QLineEdit * le_refresh_rate;
     QCheckBox * ckb;
     QLabel * lbl_min;
     QLabel * lbl_max;
@@ -58,5 +68,6 @@ private:
     void clicked_ok();
     void clicked_cancel();
     void clicked_apply();
+
 };
 #endif

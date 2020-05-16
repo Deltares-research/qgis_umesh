@@ -164,6 +164,8 @@ public:
         bool m_show_map_data_3d;
         bool m_show_map_vector_2d;
         bool m_show_map_vector_3d;
+
+        MapProperty * m_property;
 };
 
 #endif

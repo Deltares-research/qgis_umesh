@@ -2,8 +2,9 @@
 
 MapProperty::MapProperty()
 {
-    prop_opacity = 0.75;  // ondoorzichtig == niet transparant
+    prop_opacity = 0.75;  // tranparancy = 1.0 - opacity 
     prop_dynamic_min_max = true;
+    prop_refresh_rate = 0.1;
     prop_min = INFINITY;
     prop_max = -INFINITY;
     prop_vector_scaling = 1.0;  // 1.0 times the average cell length (= sqrt{cell_area})
@@ -27,6 +28,10 @@ void MapProperty::set_opacity(double opacity)
 {
     prop_opacity = opacity;
 }
+void MapProperty::set_refresh_rate(double refresh_rate)
+{
+    prop_refresh_rate = refresh_rate;
+}
 void MapProperty::set_vector_scaling(double v_fac)
 {
     prop_vector_scaling = v_fac;
@@ -46,6 +51,10 @@ double MapProperty::get_maximum()
 double MapProperty::get_opacity()
 {
     return prop_opacity;
+}
+double MapProperty::get_refresh_rate()
+{
+    return prop_refresh_rate;
 }
 double MapProperty::get_vector_scaling()
 {

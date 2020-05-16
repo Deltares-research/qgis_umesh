@@ -1,5 +1,4 @@
 #include "map_time_manager_window.h"
-#define SLEEP_MACRO _sleep(0100)
 //
 //-----------------------------------------------------------------------------
 //
@@ -26,7 +25,7 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_show_map_vector_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_vec_2d
     m_show_map_vector_3d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_vec_2d
 
-    MapProperty * m_property = MapProperty::getInstance();
+    m_property = MapProperty::getInstance();
 
     connect(m_ramph, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
 }
@@ -47,8 +46,10 @@ void MapTimeManagerWindow::ramp_changed()
 void MapTimeManagerWindow::contextMenu(const QPoint & point)
 {
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::contextMenu()");
-    MapPropertyWindow * map_property = new MapPropertyWindow(_MyCanvas);
-    //mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, map_property);
+    if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
+    {
+        MapPropertyWindow * map_property = new MapPropertyWindow(_MyCanvas);
+    }
 }
 //
 //-----------------------------------------------------------------------------
@@ -789,7 +790,8 @@ void MapTimeManagerWindow::start_reverse()
         {
             break;
         }
-        SLEEP_MACRO;
+        double msec = 1000.*m_property->get_refresh_rate();
+        _sleep(msec);
     }
     if (_current_step <= first_date_time_indx)
     {
@@ -815,7 +817,8 @@ void MapTimeManagerWindow::start_forward()
         {
             break;
         }
-        SLEEP_MACRO;
+        double msec = 1000.*m_property->get_refresh_rate();
+        _sleep(msec);
     }
     if (_current_step >= last_date_time_indx)
     {

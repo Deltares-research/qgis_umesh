@@ -14,9 +14,6 @@
 
 class MapProperty
 {
-private:
-    static MapProperty * obj;
-
 public:
     MapProperty();  // Constructor
     ~MapProperty();  // Destructor
@@ -31,20 +28,24 @@ public:
     void set_minimum(double);
     void set_maximum(double);
     void set_opacity(double);
+    void set_refresh_rate(double);
     void set_vector_scaling(double);
     bool get_dynamic_legend();
     double get_minimum();
     double get_maximum();
     double get_opacity();
+    double get_refresh_rate();
     double get_vector_scaling();
 
 private:
+    static MapProperty * obj;
+
     double prop_opacity;
+    double prop_refresh_rate;
     bool prop_dynamic_min_max;
     double prop_max;
     double prop_min;
     double prop_vector_scaling;
-    // TODO: double prop_transparancy;
     // TODO: QVector<QPair<qreal, QColor> > prop_initramp;
     // TODO: Drawing on node/edge/face; dot, line or fill 
 };
