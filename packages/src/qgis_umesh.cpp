@@ -986,7 +986,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             }
             struct _mapping * mapping;
             mapping = ugrid_file->get_grid_mapping();
-            create_1D_observation_point_vector_layer(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
+            create_observation_point_vector_layer(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
         }
     }
     else
@@ -2388,12 +2388,127 @@ void qgis_umesh::create_1D_structure_vector_layer(UGRID * ugrid_file, READ_JSON 
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
 }
-void qgis_umesh::create_1D_observation_point_vector_layer(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_observation_point_vector_layer(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (pt_structures != nullptr)
     {
         long status = -1;
-        string values = "data.ObservationPoint.id";
+        string values = "data.General.fileVersion";
+        vector<string> version;
+        status = pt_structures->get(values, version);
+        if (version[0] == "1.00")
+        {
+            // observation point defined on crs
+            create_crs_observation_point_vector_layer(ugrid_file, pt_structures, epsg_code, treeGroup);
+        }
+        else if (version[0] == "2.00")
+        {
+            // observation point defined by chainage
+            create_chainage_observation_point_vector_layer(ugrid_file, pt_structures, epsg_code, treeGroup);
+        }
+    }
+}
+void qgis_umesh::create_crs_observation_point_vector_layer(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
+{
+    long status = -1;
+    string values = "data.ObservationPoint.name";
+    vector<string> obs_name;
+    status = pt_structures->get(values, obs_name);
+    if (obs_name.size() == 0)
+    {
+        QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of observation points is zero. JSON data: ")) + QString::fromStdString(values));
+        return;
+    }
+    values = "data.ObservationPoint.x";
+    vector<double> x;
+    status = pt_structures->get(values, x);
+    if (x.size() == 0)
+    {
+        QMessageBox::warning(0, tr("Message: create_observation_point_vector_layer"), QString(tr("Number of x-coordinates is zero. JSON data: ")) + QString::fromStdString(values));
+        return;
+    }
+    values = "data.ObservationPoint.y";
+    vector<double> y;
+    status = pt_structures->get(values, y);
+    if (y.size() == 0)
+    {
+        QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of y-coordinates is zero. JSON data: ")) + QString::fromStdString(values));
+        return;
+    }
+    QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+    QString layer_name = QString("Observation points");
+    QString group_name = QString("Area");
+
+    QgsLayerTreeGroup * subTreeGroup = treeGroup->findGroup(QString(group_name));
+    if (subTreeGroup == nullptr)  // Treegroup Area does not exist create it
+    {
+        treeGroup->addGroup(group_name);
+        subTreeGroup = treeGroup->findGroup(group_name);
+        subTreeGroup->setExpanded(true);  // true is the default 
+        subTreeGroup->setItemVisibilityChecked(true);
+        //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
+        subTreeGroup->setItemVisibilityCheckedRecursive(true);
+    }
+    // Now there is a tree group with name "Area"
+
+    // create the vector layer for observation point
+    QgsVectorLayer * vl;
+    QgsVectorDataProvider * dp_vl;
+    QList <QgsField> lMyAttribField;
+
+    int nr_attrib_fields = 3;
+
+    lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
+    lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
+    lMyAttribField << QgsField("Observation point name", QVariant::String);
+
+    QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+    vl = new QgsVectorLayer(uri, layer_name, "memory");
+    vl->startEditing();
+    dp_vl = vl->dataProvider();
+    dp_vl->addAttributes(lMyAttribField);
+    vl->updatedFields();
+
+    for (int j = 0; j < obs_name.size(); j++)
+    {
+        QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(x[j], y[j]));
+        QgsFeature MyFeature;
+        MyFeature.setGeometry(MyPoints);
+
+        MyFeature.initAttributes(nr_attrib_fields);
+        int k = 0;
+        MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+        k++;
+        MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+        k++;
+        MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(obs_name[j]).trimmed()));
+
+        dp_vl->addFeature(MyFeature);
+    }
+    vl->commitChanges();
+
+    QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
+    simple_marker->setSize(4.0);
+    simple_marker->setColor(QColor(255, 0, 0));
+    simple_marker->setFillColor(QColor(255, 255, 255));
+    simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
+
+    QgsSymbol * marker = new QgsMarkerSymbol();
+    marker->changeSymbolLayer(0, simple_marker);
+
+    //set up a renderer for the layer
+    QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
+    vl->setRenderer(mypRenderer);
+
+    add_layer_to_group(vl, subTreeGroup);
+    connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+}
+void qgis_umesh::create_chainage_observation_point_vector_layer(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
+{
+    if (pt_structures != nullptr)
+    {
+        long status = -1;
+        string values = "data.ObservationPoint.id";  // if "id" is not found try "name"
         vector<string> obs_name;
         status = pt_structures->get(values, obs_name);
         if (obs_name.size() == 0)
@@ -2411,7 +2526,7 @@ void qgis_umesh::create_1D_observation_point_vector_layer(UGRID * ugrid_file, RE
         status = pt_structures->get(values, branch_name);
         if (branch_name.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromStdString(values));
+            QMessageBox::warning(0, tr("Message: create_observation_point_vector_layer"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromStdString(values));
             return;
         }
         values = "data.ObservationPoint.chainage";
@@ -2461,7 +2576,7 @@ void qgis_umesh::create_1D_observation_point_vector_layer(UGRID * ugrid_file, RE
         lMyAttribField << QgsField("Observation point rotation", QVariant::Double);
         nr_attrib_fields++;
 
-            QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+        QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
         vl->startEditing();
         dp_vl = vl->dataProvider();
@@ -2790,21 +2905,19 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
                 std::string::size_type sz;     // alias of size_t
                 double x1 = std::stod(token[0], &sz);
                 double y1 = std::stod(token[1], &sz);
-                point.append(QgsPointXY(x1, y1));
                 token = tokenize(link_2d_point[j], ' ');
                 double x2 = std::stod(token[0], &sz);
                 double y2 = std::stod(token[1], &sz);
+                point.append(QgsPointXY(x1, y1));
                 point.append(QgsPointXY(x2, y2));
-
                 lines.append(point);
+
                 QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
                 QgsFeature MyFeature;
                 MyFeature.setGeometry(MyEdge);
 
                 MyFeature.initAttributes(nr_attrib_fields);
-                int k = 0;
                 MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                k++;
                 MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
                 MyFeature.setValid(true);
 
@@ -2813,7 +2926,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
             }
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
-            line_marker->setWidth(0.75);
+            line_marker->setWidth(0.25);
             line_marker->setColor(QColor(0, 0, 255));
 
             QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
@@ -2825,7 +2938,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
 
             QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
             treeRoot->insertLayer(0, vl);
-            //add_layer_to_group(vl, treeRoot);
+            add_layer_to_group(vl, treeRoot);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
     }
