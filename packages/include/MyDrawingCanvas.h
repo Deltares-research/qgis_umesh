@@ -133,7 +133,7 @@ public:
     void setFontUnderline(bool value);
     bool isFontAvailable(const char* name);
     int getTextWidth(const char* name);
-    int getTextHeight(const char* name, int maxWidth);
+    int getTextHeight(const char* name);
 
     double getPixelWidth(double x, double y);
     double getPixelHeight(double x, double y);

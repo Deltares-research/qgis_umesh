@@ -568,15 +568,30 @@ void qgis_umesh::experiment()
         vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(layer_name.toStdString());
         vector<double *> z_value = std_data_at_face[0];
         QgsVectorDataProvider * dp_vl = vlayer->dataProvider();
-
+        
+        //dp_vl->capabilities();
+        QgsFeatureIterator feats = vlayer->getFeatures();
+        QgsFeature feat;
         vlayer->startEditing();
+        int i = -1;
+        //QMap
+        while (feats.nextFeature(feat))
+        {
+            i += 1;
+            *z_value[i] *= 5.1;
+            //dp_vl->changeAttributeValues(i, 2, *z_value[i]);
+            feat.setAttribute(2, *z_value[i]);
+        }
         for (int i = 0; i < z_value.size(); i++)
         {
-            *z_value[i] *= 1.1;
+            *z_value[i] *= 5.1;
+            //geom = QgsGeometry.fromPoint(QgsPoint(111, 222))
+
+            //vlayer->dataProvider()->changeAttributeValues(attributeChanges);
             //dp_vl->deleteFeatures(;
-            QgsFeature feat = vlayer->getFeature(i);
-            feat.setAttribute(0, *z_value[i]);
-            dp_vl->addFeature(feat);
+            //feat = vlayer->getFeatures();  // this statement is slow (20200518)
+            //feat.setAttribute(2, *z_value[i]);
+            //dp_vl->addFeature(feat);
         }
         vlayer->commitChanges();
     }
@@ -1458,6 +1473,8 @@ void qgis_umesh::activate_layers()
 void qgis_umesh::activate_observation_layers()
 {
     vector<_location_type *> obs_type;
+
+    if (_his_cf_fil_index < 0) { return; }  // No history file opened
 
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
 

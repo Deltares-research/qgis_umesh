@@ -232,11 +232,13 @@ long UGRID::read_mesh()
             {
                 if (tmp_dim_names[i].find("nterface") != string::npos)  // HACK: dimension name should have the sub-string 'interface' or 'Interface'
                 {
-                    _map_dim_name["z_or_sigma_interface"] = tmp_dim_names[i];
+                    _map_dim_name["zs_dim_interface"] = tmp_dim_names[i];
+                    _map_dim_name["zs_name_interface"] = var_name;
                 }
                 else
                 {
-                    _map_dim_name["z_or_sigma_layer"] = tmp_dim_names[i];
+                    _map_dim_name["zs_dim_layer"] = tmp_dim_names[i];
+                    _map_dim_name["zs_name_layer"] = var_name;
                 }
             }
         }
@@ -248,11 +250,13 @@ long UGRID::read_mesh()
             {
                 if (tmp_dim_names[i].find("nterface") != string::npos)
                 {
-                    _map_dim_name["z_or_sigma_interface"] = tmp_dim_names[i];
+                    _map_dim_name["zs_dim_interface"] = tmp_dim_names[i];
+                    _map_dim_name["zs_name_interface"] = var_name;
                 }
                 else if (tmp_dim_names[i].find("Layer") != string::npos)
                 {
-                   _map_dim_name["z_or_sigma_layer"] = tmp_dim_names[i];
+                   _map_dim_name["zs_dim_layer"] = tmp_dim_names[i];
+                   _map_dim_name["zs_name_layer"] = var_name;
                 }
             }
         }
@@ -626,15 +630,41 @@ long UGRID::read_variables()
             {
                 for (int i = 0; i < mesh_vars->variable[nr_mesh_var - 1]->dims.size(); i++)
                 {
-                    if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["z_or_sigma_layer"])
+                    if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["zs_dim_layer"])
                     {
-                        int nr_lay = _map_dim[_map_dim_name["z_or_sigma_layer"]];
+                        int nr_lay = _map_dim[_map_dim_name["zs_dim_layer"]];
                         mesh_vars->variable[nr_mesh_var - 1]->nr_layers = nr_lay;
+
+                        string name = _map_dim_name["zs_name_layer"];
+                        int i_var;
+                        status = nc_inq_varid(ncid, name.c_str(), &i_var);
+                        double * values_c = (double *)malloc(sizeof(double) * nr_lay);
+                        status = nc_get_var_double(this->ncid, i_var, values_c);
+                        vector<double> values;
+                        values.reserve(nr_lay);
+                        for (int j = 0; j < nr_lay; j++)
+                        {
+                            values.push_back(*(values_c + j));
+                        }
+                        mesh_vars->variable[nr_mesh_var - 1]->layer_center = values;
                     }
-                    else if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["z_or_sigma_interface"])
+                    else if (mesh_vars->variable[nr_mesh_var - 1]->dim_names[i] == _map_dim_name["zs_dim_interface"])
                     {
-                        int nr_lay = _map_dim[_map_dim_name["z_or_sigma_interface"]];
+                        int nr_lay = _map_dim[_map_dim_name["zs_dim_interface"]];
                         mesh_vars->variable[nr_mesh_var - 1]->nr_layers = nr_lay;
+
+                        string name = _map_dim_name["zs_name_interface"];
+                        int i_var;
+                        status = nc_inq_varid(ncid, name.c_str(), &i_var);
+                        double * values_c = (double *)malloc(sizeof(double) * nr_lay);
+                        status = nc_get_var_double(this->ncid, i_var, values_c);
+                        vector<double> values;
+                        values.reserve(nr_lay);
+                        for (int j = 0; j < nr_lay; j++)
+                        {
+                            values.push_back(*(values_c + j));
+                        }
+                        mesh_vars->variable[nr_mesh_var - 1]->layer_center = values;
                     }
                 }
             }
@@ -885,8 +915,8 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 bool swap_loops = false;
                 //HACK assumed is that the time is the first dimension
                 //HACK just the variables at the layers, interfaces are skipped
-                if (_map_dim_name["z_or_sigma_layer"] == mesh_vars->variable[i]->dim_names[2] ||
-                    _map_dim_name["z_or_sigma_interface"] == mesh_vars->variable[i]->dim_names[2])
+                if (_map_dim_name["zs_dim_layer"] == mesh_vars->variable[i]->dim_names[2] ||
+                    _map_dim_name["zs_dim_interface"] == mesh_vars->variable[i]->dim_names[2])
                 {
                     // loop over layers and nodes should be swapped
                     swap_loops = true;

@@ -51,6 +51,8 @@ struct _variable {
     bool time_series;
     vector<string> dim_names;
     int nr_layers;
+    vector<double> layer_center;
+    vector<double> layer_interface;
     vector<vector <double *>> z_value;
     vector<vector<vector <double *>>> z_3d;
     map<string, string> map_dim_name;

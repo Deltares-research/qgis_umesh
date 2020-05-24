@@ -420,8 +420,56 @@ void MyCanvas::draw_vector_at_face()
                     this->drawPolyline(coord_x, coord_y);
                 }
             }
-            this->finishDrawing();
 
+            // set scaled unit vector in right lower corner 
+            this->setLineWidth(3);
+            coord_x.clear();
+            coord_y.clear();
+            double alpha = 0.95;
+            double unitv_x_head = (1.0 - alpha) * getMinVisibleX() + alpha * getMaxVisibleX();
+            alpha = 0.05;
+            double unitv_y_head = (1.0 - alpha) * getMinVisibleY() + alpha * getMaxVisibleY();
+ 
+            double dx = getPixelWidth(coord_x[0], coord_y[0]);
+            double dy = getPixelHeight(coord_x[0], coord_y[0]);
+                
+
+            int tw = getTextWidth("Unit vector");
+            int th = getTextHeight("Unit vector");
+            int vw = 2 * tw;  // vector width (length)
+
+            double v_length = wx(vw) - wx(0);
+            coord_x.clear();
+            coord_y.clear();
+            coord_x.push_back(unitv_x_head - v_length);
+            coord_y.push_back(unitv_y_head);
+            coord_x.push_back(unitv_x_head);
+            coord_y.push_back(unitv_y_head);
+            coord_x.push_back(unitv_x_head - 0.2 * v_length);
+            coord_y.push_back(unitv_y_head + 0.1 * v_length);
+            coord_x.push_back(unitv_x_head - 0.2 * v_length);
+            coord_y.push_back(unitv_y_head - 0.1 * v_length);
+            coord_x.push_back(unitv_x_head);
+            coord_y.push_back(unitv_y_head);
+
+            this->setFillColor(RGB(255, 255, 255));
+            this->setLineWidth(1);
+            mCache_painter->setOpacity(0.66);
+            int vh = qy(coord_y[3]) - qy(coord_y[2]);  // vector height
+            int width = 5 + vw + 5;
+            int height = -(5 + vh + 3 + th + 5);
+            this->drawRectangle(coord_x[0] - 5. * dx, coord_y[3] - 5. * dy, width, height);
+
+            mCache_painter->setOpacity(1.0);
+            char scratch[50];
+            sprintf(scratch, "%3.3f", v_length / vscale);
+            string txt(scratch);
+            string text = txt + " x unit vector";
+            this->drawText(coord_x[0], coord_y[0] + (5 + th) * dy, 0, 0, text.c_str());
+
+            this->drawPolyline(coord_x, coord_y);
+
+            this->finishDrawing();
         }
         //else if (m_coordinate_type[0] == "Spherical")
         {
@@ -1363,7 +1411,7 @@ int MyCanvas::getTextWidth(const char* name)
 //
 //-----------------------------------------------------------------------------
 //
-int MyCanvas::getTextHeight(const char* name, int maxWidth)
+int MyCanvas::getTextHeight(const char* name)
 {
     int size = (mMapCanvas->fontMetrics()).height();
     return size;

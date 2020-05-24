@@ -113,7 +113,7 @@ class AbstractCanvas {
     virtual void setTextAlignment(Alignment value) = 0;
     virtual bool isFontAvailable(const char* name) = 0;
     virtual int getTextWidth(const char* name) = 0;
-    virtual int getTextHeight(const char* name, int maxWidth = -1) = 0;
+    virtual int getTextHeight(const char* name) = 0;
 
     virtual double getPixelWidth(double x, double y) = 0;
     virtual double getPixelHeight(double x, double y) = 0;

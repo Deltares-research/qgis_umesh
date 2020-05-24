@@ -85,6 +85,8 @@ public:
         void show_hide_map_data_3d();
         void show_hide_map_vector_2d();
         void show_hide_map_vector_3d();
+        void spinbox_value_changed(int);
+        void spinbox_vec_value_changed(int);
         void contextMenu(const QPoint &);
 
     public:
@@ -164,6 +166,7 @@ public:
         bool m_show_map_data_3d;
         bool m_show_map_vector_2d;
         bool m_show_map_vector_3d;
+        struct _mesh_variable * m_vars;
 
         MapProperty * m_property;
 };
