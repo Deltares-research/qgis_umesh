@@ -4,6 +4,7 @@
 \newcommand{\plotcfts}{PlotCFTS\xspace}
 \newcommand{\dflowfm}{D-Flow FM\xspace}
 \newcommand{\qumesh}{QGIS\_UMESH\xspace}
+\newcommand{\qgis}{QGIS\xspace}
 \newcommand{\netcdf}{netCDF\xspace}
 \newcommand{\cfstandard}{Climate and Forecast 1.7 standard\xspace}
 
@@ -86,13 +87,13 @@ After selecting \menu{Output\menuarrow Show map output} the window \window{Map O
 \begin{subfigure}[b]{0.48\textwidth}
 	\centering    
 	\includegraphics[width=\textwidth]{pictures/map_output_animation_window_scalar.png}
-	\caption{Layout scalar quantities\label{fig:map_output_a}}
+	\caption{Layout scalar quantities; sigma layer at $\sigma = -0.1$ (near the surface)\label{fig:map_output_a}}
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.48\textwidth}
 	\centering    
 	\includegraphics[width=\textwidth]{pictures/map_output_animation_window_vector.png}
-	\caption{Layout vector quantities}
+	\caption{Layout vector quantities; fixed layer at $z = -1.99402$ (near the surface).}
 \end{subfigure}    
     \caption{\window{Map Output Animation} window for scalars and vector.}
 \end{figure}
@@ -170,6 +171,22 @@ Shows the about box.
 %    \includegraphics[width=0.40\textwidth]{pictures/menu_trials.png}
 %    \caption{Menu \menuarrow Trials}
 %\end{figure}
+%------------------------------------------------------------------------------
+\section{QGIS panels}
+Some \qgis panels are shown after reading a \netcdf map-file.
+\subsection{Layer panel}
+\begin{figure}[H]
+	\centering    
+	\includegraphics[width=0.4\textwidth]{pictures/panel_layers.png}
+	\caption{The \qgis layer panel after reading a \netcdf map-file.\label{fig:panel_layer}}
+\end{figure}
+\subsection{Log messages panel}
+\begin{figure}[H]
+	\centering    
+	\includegraphics[width=0.9\textwidth]{pictures/panel_log_message.png}
+	\caption{The \qgis layer panel after reading a \netcdf map-file.\label{fig:panel_layer})}
+	\end{figure}
+
 %------------------------------------------------------------------------------
 \section{Source}
 The source code is available on GitHUB:
