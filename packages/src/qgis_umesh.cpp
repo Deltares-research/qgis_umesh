@@ -849,6 +849,8 @@ void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
         QMessageBox::warning(0, tr("Warning"), tr("Cannot open netCDF file:\n%1\nThis filename is not supported QGIS unstructured mesh program.").arg(ncfile.absoluteFilePath()));
         return;
     }
+    free(fname);
+    fname = nullptr;
     _his_cf_fil_index++;
     m_his_cf_file.push_back(new HISCF(ncfile, this->pgBar));
     HISCF * _his_cf_file = m_his_cf_file[_his_cf_fil_index];
@@ -1520,7 +1522,7 @@ void qgis_umesh::activate_observation_layers()
                 QString epsg_code = _crs.authid();
                 QStringList parts = epsg_code.split(':');
                 long epsg = parts.at(1).toInt();
-                _his_cf_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
+                long status = _his_cf_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
             }
             int pgbar_value = 500;  // start of pgbar counter
 

@@ -116,7 +116,7 @@ private:
     char * m_hiscf_file_name;
 #else
     QFileInfo m_fname;
-    QFileInfo m_hiscf_file_name;
+    QString m_hiscf_file_name;
     QProgressBar * _pgBar;
 #endif
     vector<_location_type *> loc_type;  // observation point, observation cross_section

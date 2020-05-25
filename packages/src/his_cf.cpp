@@ -66,7 +66,7 @@ long HISCF::read()
 {
     int status = -1;
 #ifdef NATIVE_C
-    status = nc_open(m_hiscf_file_name, NC_NOWRITE, &this->ncid);
+    status = nc_open(_hiscf_file_name, NC_NOWRITE, &this->ncid);
     if (status != NC_NOERR)
     {
         fprintf(stderr, "HISCF::read()\n\tFailed to open file: %s\n", m_hiscf_file_name);
@@ -74,15 +74,15 @@ long HISCF::read()
     }
     fprintf(stderr, "HISCF::read()\n\tOpened: %s\n", m_hiscf_file_name);
 #else
-    char * m_hiscf_file_name = strdup(m_fname.absoluteFilePath().toUtf8());
-    status = nc_open(m_hiscf_file_name, NC_NOWRITE, &this->ncid);
+    char * _hiscf_file_name = strdup(m_fname.absoluteFilePath().toUtf8());
+    status = nc_open(_hiscf_file_name, NC_NOWRITE, &this->ncid);
     if (status != NC_NOERR)
     {
         QMessageBox::critical(0, QString("Error"), QString("HISCF::read()\n\tFailed to open file: %1").arg(m_hiscf_file_name));
         return status;
     }
-    delete m_hiscf_file_name;
-    m_hiscf_file_name = NULL;
+    free(_hiscf_file_name);
+    _hiscf_file_name = nullptr;
 #endif
     m_mapping = new _mapping();
     set_grid_mapping_epsg(0, "EPSG:0");
@@ -172,7 +172,7 @@ char * HISCF::get_filename()
 //------------------------------------------------------------------------------
 QFileInfo HISCF::get_filename()
 {
-    return this->m_hiscf_file_name;
+    return this->m_fname;
 }
 #endif
 //------------------------------------------------------------------------------
