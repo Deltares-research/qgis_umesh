@@ -2044,6 +2044,11 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
 
             lMyAttribField << QgsField("Edge Id (0-based)", QVariant::String)
                            << QgsField("Edge Id (1-based)", QVariant::String);
+            //if (nodes->branch.size() != 0)
+            {
+                lMyAttribField << QgsField("Edge length", QVariant::Double);
+                nr_attrib_fields++;
+            }
             if (edges->name.size() != 0)
             {
                 lMyAttribField << QgsField("Edge name", QVariant::String);
@@ -2092,6 +2097,17 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
                 MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
                 MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+
+                if (edges->edge_length.size() != 0)
+                {
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1").arg(edges->edge_length[j]));
+                    if (edges->edge_length[j] < 0)
+                    {
+                        MyFeature.setAttribute(k, QString("--X--"));
+                    }
+                }
+
                 if (edges->name.size() != 0)
                 {
                     k++;
@@ -2974,7 +2990,7 @@ long qgis_umesh::compute_location_along_geometry(struct _ntw_geom * ntw_geom, st
         if (status == 0) { break; }
         if (QString::fromStdString(ntw_geom->geom[nr_ntw - 1]->name[branch]).trimmed() == QString::fromStdString(branch_name).trimmed())  // todo Check on preformance
         {
-            double branch_length = ntw_edges->edge[nr_ntw - 1]->branch_length[branch];
+            double branch_length = ntw_edges->edge[nr_ntw - 1]->edge_length[branch];
             size_t geom_nodes_count = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->count;
 
             chainage.reserve(geom_nodes_count);

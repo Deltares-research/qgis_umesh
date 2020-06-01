@@ -123,7 +123,8 @@ struct _edge {
     vector<vector<double>> x_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
     vector<vector<double>> y_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
     int ** edge_nodes;
-    vector<double> branch_length;
+    long * edge_branch;
+    vector<double> edge_length;
     vector<string> name;
     vector<string> long_name;
 };
@@ -177,16 +178,21 @@ struct _mesh1d_string {
     string node_dimension;
     string node_names;
     string node_long_names;
+    string edge_coordinates;  // 1D optional required
     string edge_names;
     string edge_long_names;
     size_t topology_dimension;
     //
-    string branch;
-    string chainage;
+    string node_branch;
+    string node_chainage;
     string x_node_name;
     string y_node_name;
     //
     string edge_dimension;
+    string edge_branch;
+    string edge_chainage;
+    string x_edge_name;  //  mid point of edge (in general)
+    string y_edge_name;  //  mid point of edge (in general)
     string node_edge_exchange;
     //
     vector<string> dim_name;;  // in case of 2DV simualtion
@@ -350,7 +356,7 @@ private:
     char * ugrid_file_name;
 #else
     QFileInfo fname;
-    QFileInfo ugrid_file_name;
+    QString ugrid_file_name;
     QProgressBar * _pgBar;
 #endif
     _global_attributes * global_attributes;

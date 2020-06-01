@@ -1354,13 +1354,13 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 free(dimids);
                 dimids = nullptr;
                 // get the branch length
-                ntw_edges->edge[nr_ntw - 1]->branch_length = vector<double>(ntw_edges->edge[nr_ntw - 1]->count);
+                ntw_edges->edge[nr_ntw - 1]->edge_length = vector<double>(ntw_edges->edge[nr_ntw - 1]->count);
 
                 var_id = -1;
                 size_t start1[] = { 0 };
                 size_t count1[] = { ntw_edges->edge[nr_ntw - 1]->count };
                 status = nc_inq_varid(this->ncid, ntw_strings[nr_ntw - 1]->edge_length.c_str(), &var_id);
-                status = nc_get_vara_double(this->ncid, var_id, start1, count1, ntw_edges->edge[nr_ntw - 1]->branch_length.data());
+                status = nc_get_vara_double(this->ncid, var_id, start1, count1, ntw_edges->edge[nr_ntw - 1]->edge_length.data());
 
                 //get edge nodes (branch definition between connection nodes)
                 topo_edge_nodes = (int *)malloc(sizeof(int) * ntw_edges->edge[nr_ntw - 1]->count * _two);
@@ -1605,12 +1605,13 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                         mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][1] = 1;
                     }
                 }
+                /* Read the data branch id and chainage of each node */
                 /* Read the data (x, y)-coordinate of each node */
-                if (mesh1d_strings[nr_mesh1d - 1]->branch != "")
+                if (mesh1d_strings[nr_mesh1d - 1]->node_branch != "")
                 {
-                    status = get_dimension_var(this->ncid, mesh1d_strings[nr_mesh1d - 1]->branch, &mesh1d->node[nr_mesh1d - 1]->count);
+                    status = get_dimension_var(this->ncid, mesh1d_strings[nr_mesh1d - 1]->node_branch, &mesh1d->node[nr_mesh1d - 1]->count);
 
-                    status = nc_inq_varid(this->ncid, mesh1d_strings[nr_mesh1d - 1]->branch.c_str(), &var_id);
+                    status = nc_inq_varid(this->ncid, mesh1d_strings[nr_mesh1d - 1]->node_branch.c_str(), &var_id);
                     mesh1d->node[nr_mesh1d - 1]->branch = (long *)malloc(sizeof(long) * mesh1d->node[nr_mesh1d - 1]->count);
                     status = nc_get_var_long(this->ncid, var_id, mesh1d->node[nr_mesh1d - 1]->branch);
 
@@ -1621,7 +1622,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     }
 
                     mesh1d->node[nr_mesh1d - 1]->chainage = (double *)malloc(sizeof(double) * mesh1d->node[nr_mesh1d - 1]->count);
-                    status = nc_inq_varid(this->ncid, mesh1d_strings[nr_mesh1d - 1]->chainage.c_str(), &var_id);
+                    status = nc_inq_varid(this->ncid, mesh1d_strings[nr_mesh1d - 1]->node_chainage.c_str(), &var_id);
                     status = nc_get_var_double(this->ncid, var_id, mesh1d->node[nr_mesh1d - 1]->chainage);
                 }
                 else
@@ -1633,6 +1634,56 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     status = nc_get_var_double(this->ncid, var_id, mesh1d->node[nr_mesh1d - 1]->x.data());
                     status = nc_inq_varid(this->ncid, mesh1d_strings[nr_mesh1d - 1]->y_node_name.c_str(), &var_id);
                     status = nc_get_var_double(this->ncid, var_id, mesh1d->node[nr_mesh1d - 1]->y.data());
+                }
+                /* Read the data of each edge */
+                if (mesh1d_strings[nr_mesh1d - 1]->edge_branch != "")
+                {
+                    // read edge_branch array from file
+                    status = get_dimension_var(this->ncid, mesh1d_strings[nr_mesh1d - 1]->edge_branch, &mesh1d->edge[nr_mesh1d - 1]->count);
+
+                    status = nc_inq_varid(this->ncid, mesh1d_strings[nr_mesh1d - 1]->edge_branch.c_str(), &var_id);
+                    mesh1d->edge[nr_mesh1d - 1]->edge_branch = (long *)malloc(sizeof(long) * mesh1d->edge[nr_mesh1d - 1]->count);
+                    status = nc_get_var_long(this->ncid, var_id, mesh1d->edge[nr_mesh1d - 1]->edge_branch);
+
+                    status = nc_get_att_int(this->ncid, var_id, "start_index", &start_index);
+                    for (int i = 0; i < mesh1d->edge[nr_mesh1d - 1]->count; i++)
+                    {
+                        mesh1d->edge[nr_mesh1d - 1]->edge_branch[i] -= start_index;
+                    }
+                    // determine the edge length between the nodes (by definition >= 0)
+                    mesh1d->edge[nr_mesh1d - 1]->edge_length = vector<double>(mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
+                    for (int j = 0; j < mesh1d->edge[nr_mesh1d - 1]->count; j++)
+                    {
+                        int j_branch = mesh1d->edge[nr_mesh1d - 1]->edge_branch[j];
+                        int p1 = mesh1d->edge[0]->edge_nodes[j][0];
+                        int p2 = mesh1d->edge[0]->edge_nodes[j][1];
+                        if (mesh1d->node[0]->branch[p1] == mesh1d->node[0]->branch[p2])
+                        {
+                            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = mesh1d->node[0]->chainage[p2] - mesh1d->node[0]->chainage[p1];
+                        }
+                        else if (mesh1d->node[0]->branch[p1] == j_branch)
+                        {
+                            // p1 on branch, p2 not on branch, so it is the last edge on a branch
+                            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = ntw_edges->edge[0]->edge_length[j_branch] - mesh1d->node[0]->chainage[p1];
+                        }
+                        else if (mesh1d->node[0]->branch[p2] == j_branch)
+                        {
+                            // p1 not on branch, p2 on branch, so it is the first edge on a branch
+                            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = mesh1d->node[0]->chainage[p2];
+                        }
+                        else
+                        {
+                            // branch length is equal long to the geometry branch length
+                            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = ntw_edges->edge[0]->edge_length[j_branch];
+                        }
+                    }
+                }
+                else
+                {
+                    // determine the edge_branch array
+                    // not done yet, edge_length set to -1
+                    mesh1d->edge[nr_mesh1d - 1]->edge_branch = (long *)malloc(sizeof(long) * mesh1d->edge[nr_mesh1d - 1]->count);
+                    mesh1d->edge[nr_mesh1d - 1]->edge_length = vector<double>(mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
                 }
 
                 /////////////////////////////////////////////////////////////////////
@@ -1720,7 +1771,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 status = nc_get_vara_int(this->ncid, var_id, start2, count2, mesh2d_edge_nodes);
 
                 // get the branch length
-                mesh2d->edge[nr_mesh2d - 1]->branch_length = vector<double>(mesh2d->edge[nr_mesh2d - 1]->count);
+                mesh2d->edge[nr_mesh2d - 1]->edge_length = vector<double>(mesh2d->edge[nr_mesh2d - 1]->count);
 
                 status = get_attribute(this->ncid, var_id, "start_index", &start_index);
                 if (status == NC_NOERR)
@@ -2091,6 +2142,11 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
     status = get_attribute(this->ncid, i_var, "edge_node_connectivity", &mesh1d_strings->edge_node_connectivity);
     status = get_attribute(this->ncid, i_var, "long_name", &mesh1d_strings->long_name);
     status = get_attribute(this->ncid, i_var, "node_coordinates", &mesh1d_strings->node_coordinates);
+    status = get_attribute(this->ncid, i_var, "edge_coordinates", &mesh1d_strings->edge_coordinates);  // optional required
+    if (status != NC_NOERR)
+    {
+        mesh1d_strings->edge_coordinates = "";
+    }
     status = get_attribute(this->ncid, i_var, "node_edge_exchange", &mesh1d_strings->node_edge_exchange);
 
     // split 'node coordinate' string
@@ -2107,14 +2163,58 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
             if (att_value == "projection_x_coordinate" || att_value == "longitude")
             {
                 mesh1d_strings->x_node_name = token[i];
-                mesh1d_strings->chainage = "";  // because (x, y)-coordinate are given, skip chainage and branch
-                mesh1d_strings->branch = "";
+                mesh1d_strings->node_chainage = "";  // because (x, y)-coordinate are given, skip chainage and branch
+                mesh1d_strings->node_branch = "";
             }
             else if (att_value == "projection_y_coordinate" || att_value == "latitude")
             {
                 mesh1d_strings->y_node_name = token[i];
-                mesh1d_strings->chainage = "";  // because (x, y)-coordinate are given, skip chainage and branch
-                mesh1d_strings->branch = "";
+                mesh1d_strings->node_chainage = "";  // because (x, y)-coordinate are given, skip chainage and branch
+                mesh1d_strings->node_branch = "";
+            }
+            else
+            {
+                status = get_attribute(this->ncid, var_id, "units", &att_value);  // does the units attribute exist?
+                if (status == NC_NOERR)
+                {
+                    mesh1d_strings->node_chainage = token[i];
+                }
+                else
+                {
+                    mesh1d_strings->node_branch = token[i];
+                }
+            }
+        }
+        else  // no standard name found, so it can be a coordinate
+        {
+            status = get_attribute(this->ncid, var_id, "units", &att_value);  // does the attribute units exists?
+            if (status == NC_NOERR)
+            {
+                mesh1d_strings->node_chainage = token[i];
+            }
+            else
+            {
+                mesh1d_strings->node_branch = token[i];
+            }
+        }
+    }
+    // split 'edge coordinate' string
+    token = tokenize(mesh1d_strings->edge_coordinates, ' ');
+    for (int i = 0; i < token.size(); i++)
+    {
+        var_id = -1;
+        status = nc_inq_varid(this->ncid, token[i].c_str(), &var_id);
+        string att_value;
+        status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
+        if (status == NC_NOERR)
+        {
+            if (att_value == "projection_x_coordinate" || att_value == "longitude")
+            {
+                mesh1d_strings->x_edge_name = token[i];
+            }
+            else if (att_value == "projection_y_coordinate" || att_value == "latitude")
+            {
+                mesh1d_strings->y_edge_name = token[i];
             }
             else
             {
@@ -2122,27 +2222,27 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
                 status = get_attribute(this->ncid, var_id, "units", &att_value_c);  // does the units attribute exist?
                 if (status == NC_NOERR)
                 {
-                    mesh1d_strings->chainage = token[i];
+                    mesh1d_strings->edge_chainage = token[i];
                 }
                 else
                 {
-                    mesh1d_strings->branch = token[i];
+                    mesh1d_strings->edge_branch = token[i];
                 }
                 free(att_value_c);
                 att_value_c = nullptr;
             }
         }
-        else  // no standard name found, so it can be a coordinate
+        else  // no standard name found
         {
             char * att_value_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
             status = get_attribute(this->ncid, var_id, "units", &att_value_c);  // does the attribute units exists?
             if (status == NC_NOERR)
             {
-                mesh1d_strings->chainage = token[i];
+                mesh1d_strings->edge_chainage = token[i];
             }
             else
             {
-                mesh1d_strings->branch = token[i];
+                mesh1d_strings->edge_branch = token[i];
             }
             free(att_value_c);
             att_value_c = nullptr;
@@ -2272,7 +2372,7 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
         double * chainage = (double *)malloc(sizeof(double *));
         for (int branch = 0; branch < ntw_geom->geom[nr_ntw - 1]->count; branch++)  // loop over the geometries
         {
-            double branch_length = ntw_edges->edge[nr_ntw - 1]->branch_length[branch];
+            double branch_length = ntw_edges->edge[nr_ntw - 1]->edge_length[branch];
             size_t geom_nodes_count = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->count;
 
             chainage = (double *)realloc(chainage, sizeof(double *) * geom_nodes_count);
@@ -2292,7 +2392,7 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
                 if (mesh1d->node[nr_ntw - 1]->branch[i] == branch)  // is this node on this edge
                 {
                     double fraction = -1.0;
-                    double chainage_node = mesh1d->node[i_mesh1d - 1]->chainage[i];;
+                    double chainage_node = mesh1d->node[i_mesh1d - 1]->chainage[i];
                     fraction = chainage_node / branch_length;
                     if (fraction < 0.0 || fraction > 1.0)
                     {
