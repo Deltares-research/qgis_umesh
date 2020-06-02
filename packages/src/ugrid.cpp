@@ -1612,8 +1612,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     status = get_dimension_var(this->ncid, mesh1d_strings[nr_mesh1d - 1]->node_branch, &mesh1d->node[nr_mesh1d - 1]->count);
 
                     status = nc_inq_varid(this->ncid, mesh1d_strings[nr_mesh1d - 1]->node_branch.c_str(), &var_id);
-                    mesh1d->node[nr_mesh1d - 1]->branch = (long *)malloc(sizeof(long) * mesh1d->node[nr_mesh1d - 1]->count);
-                    status = nc_get_var_long(this->ncid, var_id, mesh1d->node[nr_mesh1d - 1]->branch);
+                    mesh1d->node[nr_mesh1d - 1]->branch = vector<long>(mesh1d->node[nr_mesh1d - 1]->count);
+                    status = nc_get_var_long(this->ncid, var_id, mesh1d->node[nr_mesh1d - 1]->branch.data());
 
                     status = nc_get_att_int(this->ncid, var_id, "start_index", &start_index);
                     for (int i = 0; i < mesh1d->node[nr_mesh1d - 1]->count; i++)
@@ -1621,9 +1621,9 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                         mesh1d->node[nr_mesh1d - 1]->branch[i] -= start_index;
                     }
 
-                    mesh1d->node[nr_mesh1d - 1]->chainage = (double *)malloc(sizeof(double) * mesh1d->node[nr_mesh1d - 1]->count);
+                    mesh1d->node[nr_mesh1d - 1]->chainage = vector<double>(mesh1d->node[nr_mesh1d - 1]->count);
                     status = nc_inq_varid(this->ncid, mesh1d_strings[nr_mesh1d - 1]->node_chainage.c_str(), &var_id);
-                    status = nc_get_var_double(this->ncid, var_id, mesh1d->node[nr_mesh1d - 1]->chainage);
+                    status = nc_get_var_double(this->ncid, var_id, mesh1d->node[nr_mesh1d - 1]->chainage.data());
                 }
                 else
                 {
@@ -1642,8 +1642,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     status = get_dimension_var(this->ncid, mesh1d_strings[nr_mesh1d - 1]->edge_branch, &mesh1d->edge[nr_mesh1d - 1]->count);
 
                     status = nc_inq_varid(this->ncid, mesh1d_strings[nr_mesh1d - 1]->edge_branch.c_str(), &var_id);
-                    mesh1d->edge[nr_mesh1d - 1]->edge_branch = (long *)malloc(sizeof(long) * mesh1d->edge[nr_mesh1d - 1]->count);
-                    status = nc_get_var_long(this->ncid, var_id, mesh1d->edge[nr_mesh1d - 1]->edge_branch);
+                    mesh1d->edge[nr_mesh1d - 1]->edge_branch = vector<long>(mesh1d->edge[nr_mesh1d - 1]->count, -1);
+                    status = nc_get_var_long(this->ncid, var_id, mesh1d->edge[nr_mesh1d - 1]->edge_branch.data());
 
                     status = nc_get_att_int(this->ncid, var_id, "start_index", &start_index);
                     for (int i = 0; i < mesh1d->edge[nr_mesh1d - 1]->count; i++)
@@ -1682,7 +1682,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 {
                     // determine the edge_branch array
                     // not done yet, edge_length set to -1
-                    mesh1d->edge[nr_mesh1d - 1]->edge_branch = (long *)malloc(sizeof(long) * mesh1d->edge[nr_mesh1d - 1]->count);
+                    mesh1d->edge[nr_mesh1d - 1]->edge_branch = vector<long>(mesh1d->edge[nr_mesh1d - 1]->count, -1);
                     mesh1d->edge[nr_mesh1d - 1]->edge_length = vector<double>(mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
                 }
 
@@ -2346,12 +2346,12 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
 {
     // determine the (x, y) location of the mesh1d node along the geometry of the network
 
-    if (mesh1d == NULL || ntw_edges == NULL || ntw_geom == NULL)
+    if (mesh1d == nullptr || ntw_edges == nullptr || ntw_geom == nullptr)
     {
         return 0;  // there is no 1D mesh or network
     }
     size_t nr_ntw = ntw_geom->nr_ntw;
-    if (mesh1d->node[nr_ntw - 1]->branch == nullptr)
+    if (mesh1d->node[nr_ntw - 1]->branch.size() == 0)
     {
         return 0;  // Coordinates already read
     }

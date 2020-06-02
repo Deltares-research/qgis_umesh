@@ -614,7 +614,7 @@ long HISCF::read_parameters()
                 status = nc_inq_dimlen(this->ncid, dims[n], &length);
                 mem_length = mem_length * length;
             }
-            int points_per_line = mem_length/loc_type[j]->location.size();
+            size_t points_per_line = mem_length/loc_type[j]->location.size();
             double * values_c = (double *)malloc(sizeof(double)*mem_length);
             status = nc_get_var_double(this->ncid, var_id, values_c);
             int k_start = 0;

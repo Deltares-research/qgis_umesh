@@ -226,7 +226,7 @@ void MyCanvas::draw_vector_at_face()
         vector<double> coord_by(2);
         vector<double> dx(5);
         vector<double> dy(5);
-        int dimens;
+        size_t dimens;
         double vscale;
         double missing_value;
         double b_len;

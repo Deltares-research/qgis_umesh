@@ -59,8 +59,8 @@ struct _variable {
 };
 struct _feature {
     size_t count;
-    long * branch;  // 1D, on which branch the node is
-    double * chainage;  // 1D, chainage of the node
+    vector<long> branch;  // 1D, on which branch the node is
+    vector<double> chainage;  // 1D, chainage of the node
     vector<double> x;
     vector<double> y;
     vector<string> name;
@@ -123,7 +123,7 @@ struct _edge {
     vector<vector<double>> x_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
     vector<vector<double>> y_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
     int ** edge_nodes;
-    long * edge_branch;
+    vector<long> edge_branch;
     vector<double> edge_length;
     vector<string> name;
     vector<string> long_name;
@@ -239,7 +239,7 @@ struct _mesh_contact_string {
     string mesh_b;
     string mesh_contact;
     //
-    vector<string> dim_name;  // in case of 2DV + 3D-sigma simualtion
+    vector<string> dim_name;  // in case of 2DV + 3D-sigma simulation
 };
 
 class UGRID
