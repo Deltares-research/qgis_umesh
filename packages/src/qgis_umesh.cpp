@@ -2021,7 +2021,7 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
 
 void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature * nodes, struct _edge * edges, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    if (nodes != NULL && edges!= NULL)
+    if (nodes != nullptr && edges != nullptr)
     {
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
 
@@ -2073,6 +2073,7 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
             QgsMultiPolylineXY lines;
 
             int nsig = long(log10(edges->count)) + 1;
+            bool msg_given = false;
             for (int j = 0; j < edges->count; j++)
             {
                 lines.clear();
@@ -2105,6 +2106,12 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
                     if (edges->edge_length[j] < 0)
                     {
                         MyFeature.setAttribute(k, QString("--X--"));
+                        if (!msg_given)
+                        {
+                            QString msg = QString("Edge length are not supplied for layer \'%1\'.").arg(layer_name);
+                            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+                            msg_given = true;
+                        }
                     }
                 }
 
