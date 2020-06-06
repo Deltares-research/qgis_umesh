@@ -26,7 +26,7 @@ struct _time_series {
     QString * long_name;
     QString * unit;
     QString * dim_name;
-    double * times;  // vector of seconds
+    vector<double> times;  // vector of seconds
     map<string, string> map_dim_name;
 };
 
@@ -280,7 +280,7 @@ public:
 
     long get_count_times();
     QDateTime * RefDate;
-    double * get_times();
+    vector<double> get_times();
     QVector<QDateTime> get_qdt_times();  // qdt: Qt Date Time
     QVector<QDateTime> qdt_times;
 
@@ -337,7 +337,7 @@ private:
     struct _mesh2d_string ** mesh2d_strings = nullptr;
     struct _mesh_contact_string ** mesh_contact_strings = nullptr;
 
-    struct _time_series * time_series = nullptr;
+    vector<_time_series> time_series;
 
     long _nr_mesh_contacts;
     size_t _two;

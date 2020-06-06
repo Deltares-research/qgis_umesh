@@ -370,8 +370,8 @@ long UGRID::read_times()
     QStringList date_time;
     char * time_var_name;
     QDateTime * RefDate;
-    time_series = (struct _time_series *) malloc(sizeof(struct _time_series));
-    time_series->nr_times = 0;
+    struct _time_series t_series;
+    time_series.push_back(t_series);
 
 #ifndef NATIVE_C
     _pgBar->setValue(700);
@@ -399,22 +399,22 @@ long UGRID::read_times()
                     length = -1;
                     status = nc_inq_var(this->ncid, i_var, var_name_c, NULL, &ndims, &dimids, &natts);
                     status = nc_inq_dimname(this->ncid, dimids, var_name_c);
-                    time_series->dim_name = new QString(var_name_c);
+                    time_series[0].dim_name = new QString(var_name_c);
                     status = nc_inq_attlen(this->ncid, i_var, "long_name", &length);
                     if (status == NC_NOERR)
                     {
                         char * c_label = (char *)malloc(sizeof(char) * (length + 1));
                         c_label[length] = '\0';
                         status = nc_get_att(this->ncid, i_var, "long_name", c_label);
-                        time_series->long_name = new QString(c_label);
+                        time_series[0].long_name = new QString(c_label);
                         free(c_label); 
                         c_label = nullptr;
                     }
                     else
                     {
-                        time_series->long_name = new QString(var_name_c);
+                        time_series[0].long_name = new QString(var_name_c);
                     }
-                    //status = get_dimension_names(this->ncid, var_name_c, &time_series->dim_name);
+                    //status = get_dimension_names(this->ncid, var_name_c, &time_series[0].dim_name);
 
                     // retrieve the time series
                     nr_time_series += 1;
@@ -427,14 +427,14 @@ long UGRID::read_times()
                         continue;
                     }
 
-                    status = nc_inq_dimlen(this->ncid, dimids, &time_series->nr_times);
+                    status = nc_inq_dimlen(this->ncid, dimids, &time_series[0].nr_times);
                     time_var_name = strdup(var_name_c);
-                    m_map_dim[time_var_name] = time_series->nr_times;
+                    m_map_dim[time_var_name] = time_series[0].nr_times;
                     m_map_dim_name["time"] = time_var_name;
 
-                    qdt_times.reserve((int)time_series->nr_times);  // HACK typecast
+                    qdt_times.reserve((int)time_series[0].nr_times);  // HACK typecast
                     // ex. date_time = "seconds since 2017-02-25 15:26:00"   year, yr, day, d, hour, hr, h, minute, min, second, sec, s and all plural forms
-                    time_series->unit = new QString(date_time.at(0));
+                    time_series[0].unit = new QString(date_time.at(0));
 
                     QDate date = QDate::fromString(date_time.at(2), "yyyy-MM-dd");
                     QTime time = QTime::fromString(date_time.at(3), "hh:mm:ss");
@@ -445,56 +445,56 @@ long UGRID::read_times()
                     QString janm2 = time.toString();
                     QString janm3 = RefDate->toString("yyyy-MM-dd hh:mm:ss.zzz");
 #endif
-                    time_series->times = (double *) malloc(sizeof(double)*time_series->nr_times);  // TODO checkit: not freed?
-                    status = nc_get_var_double(this->ncid, i_var, time_series->times);
-                    if (time_series->nr_times >= 2)
+                    time_series[0].times.reserve(time_series[0].nr_times);  // TODO checkit: not freed?
+                    status = nc_get_var_double(this->ncid, i_var, time_series[0].times.data());
+                    if (time_series[0].nr_times >= 2)
                     {
-                        dt = time_series->times[1] - time_series->times[0];
+                        dt = time_series[0].times[1] - time_series[0].times[0];
                     }
 
-                    if (time_series->unit->contains("sec") ||
-                        time_series->unit->trimmed() == "s")  // seconds, second, sec, s
+                    if (time_series[0].unit->contains("sec") ||
+                        time_series[0].unit->trimmed() == "s")  // seconds, second, sec, s
                     {
-                        time_series->unit = new QString("sec");
+                        time_series[0].unit = new QString("sec");
                     }
-                    else if (time_series->unit->contains("min"))  // minutes, minute, min
+                    else if (time_series[0].unit->contains("min"))  // minutes, minute, min
                     {
-                        time_series->unit = new QString("min");
+                        time_series[0].unit = new QString("min");
                     }
-                    else if (time_series->unit->contains("h"))  // hours, hour, hrs, hr, h
+                    else if (time_series[0].unit->contains("h"))  // hours, hour, hrs, hr, h
                     {
-                        time_series->unit = new QString("hour");
+                        time_series[0].unit = new QString("hour");
                     }
-                    else if (time_series->unit->contains("d"))  // days, day, d
+                    else if (time_series[0].unit->contains("d"))  // days, day, d
                     {
-                        time_series->unit = new QString("day");
+                        time_series[0].unit = new QString("day");
                     }
-                    for (int j = 0; j < time_series->nr_times; j++)
+                    for (int j = 0; j < time_series[0].nr_times; j++)
                     {
-                        if (time_series->unit->contains("sec") ||
-                            time_series->unit->trimmed() == "s")  // seconds, second, sec, s
+                        if (time_series[0].unit->contains("sec") ||
+                            time_series[0].unit->trimmed() == "s")  // seconds, second, sec, s
                         {
-                            //QMessageBox::warning(NULL, "Warning", QString("RefDate: %1").arg(RefDate->addSecs(time_series->times[j]).toString()));
+                            //QMessageBox::warning(NULL, "Warning", QString("RefDate: %1").arg(RefDate->addSecs(time_series[0].times[j]).toString()));
                             if (dt < 1.0)
                             {
-                                qdt_times.append(RefDate->addMSecs(1000.*time_series->times[j]));  // milli seconds as smallest time unit
+                                qdt_times.append(RefDate->addMSecs(1000.*time_series[0].times[j]));  // milli seconds as smallest time unit
                             }
                             else
                             {
-                                qdt_times.append(RefDate->addSecs(time_series->times[j]));  // seconds as smallest time unit
+                                qdt_times.append(RefDate->addSecs(time_series[0].times[j]));  // seconds as smallest time unit
                             }
                         }
-                        else if (time_series->unit->contains("min"))  // minutes, minute, min
+                        else if (time_series[0].unit->contains("min"))  // minutes, minute, min
                         {
-                            qdt_times.append(RefDate->addSecs(time_series->times[j] * 60.0));
+                            qdt_times.append(RefDate->addSecs(time_series[0].times[j] * 60.0));
                         }
-                        else if (time_series->unit->contains("h"))  // hours, hour, hrs, hr, h
+                        else if (time_series[0].unit->contains("h"))  // hours, hour, hrs, hr, h
                         {
-                            qdt_times.append(RefDate->addSecs(time_series->times[j] * 3600.0));
+                            qdt_times.append(RefDate->addSecs(time_series[0].times[j] * 3600.0));
                         }
-                        else if (time_series->unit->contains("d"))  // days, day, d
+                        else if (time_series[0].unit->contains("d"))  // days, day, d
                         {
-                            qdt_times.append(RefDate->addSecs(time_series->times[j] * 24.0 * 3600.0));
+                            qdt_times.append(RefDate->addSecs(time_series[0].times[j] * 24.0 * 3600.0));
                         }
 
 #if defined (DEBUG)
@@ -527,13 +527,13 @@ long UGRID::read_times()
 //------------------------------------------------------------------------------
 long UGRID::get_count_times()
 {
-    size_t nr = time_series->nr_times;
+    size_t nr = time_series[0].nr_times;
     return (long) nr;
 }
 //------------------------------------------------------------------------------
-double * UGRID::get_times()
+vector<double> UGRID::get_times()
 {
-    return time_series->times;
+    return time_series[0].times;
 }
 //------------------------------------------------------------------------------
 QVector<QDateTime> UGRID::get_qdt_times()  // qdt: Qt Date Time
@@ -615,7 +615,7 @@ long UGRID::read_variables()
                 status = nc_inq_dimname(this->ncid, var_dimids[j], var_name_c);
                 
                 mesh_vars->variable[nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // HACK typecast: size_t -> long
-                if (time_series->nr_times != 0 && QString::fromStdString(m_dim_names[var_dimids[j]]) == time_series->dim_name)
+                if (time_series[0].nr_times != 0 && QString::fromStdString(m_dim_names[var_dimids[j]]) == time_series[0].dim_name)
                 {
                     mesh_vars->variable[nr_mesh_var - 1]->time_series = true;
                 }
@@ -633,7 +633,7 @@ long UGRID::read_variables()
                 for (int i = 0; i < mesh_vars->variable[nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromStdString(mesh_vars->variable[nr_mesh_var - 1]->dim_names[i]) == time_series->dim_name)
+                    if (QString::fromStdString(mesh_vars->variable[nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -691,7 +691,7 @@ long UGRID::read_variables()
                                 vector<int> dims(2, 0);
                                 for (int ii = 0; ii < 3; ii++)
                                 {
-                                    if (QString::fromStdString(mesh_vars->variable[nr_mesh_var - 1]->dim_names[ii]) == time_series->dim_name)
+                                    if (QString::fromStdString(mesh_vars->variable[nr_mesh_var - 1]->dim_names[ii]) == time_series[0].dim_name)
                                     {
                                         name[0] = "time";
                                         dims[0] = m_map_dim[name[0]];
@@ -1316,10 +1316,13 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
         status = get_attribute(this->ncid, var_id, "start_index", &start_index);
         if (status == NC_NOERR)
         {
-            for (int i = 0; i < mesh_contact->edge[_nr_mesh_contacts - 1]->count; i++)
+            if (start_index != 0)
             {
-                mesh_contact->edge[_nr_mesh_contacts - 1]->edge_nodes[i][0] -= start_index;
-                mesh_contact->edge[_nr_mesh_contacts - 1]->edge_nodes[i][1] -= start_index;
+                for (int i = 0; i < mesh_contact->edge[_nr_mesh_contacts - 1]->count; i++)
+                {
+                    mesh_contact->edge[_nr_mesh_contacts - 1]->edge_nodes[i][0] -= start_index;
+                    mesh_contact->edge[_nr_mesh_contacts - 1]->edge_nodes[i][1] -= start_index;
+                }
             }
         }
 
@@ -1443,10 +1446,13 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 status = get_attribute(this->ncid, var_id, "start_index", &start_index);
                 if (status == NC_NOERR)
                 {
-                    for (int i = 0; i < ntw_edges->edge[nr_ntw - 1]->count; i++)
+                    if (start_index != 0)
                     {
-                        ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][0] -= start_index;
-                        ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][1] -= start_index;
+                        for (int i = 0; i < ntw_edges->edge[nr_ntw - 1]->count; i++)
+                        {
+                            ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][0] -= start_index;
+                            ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][1] -= start_index;
+                        }
                     }
                 }
 
@@ -1647,10 +1653,13 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     status = get_attribute(this->ncid, var_id, "start_index", &start_index);
                     if (status == NC_NOERR)
                     {
-                        for (int i = 0; i < mesh1d->edge[nr_mesh1d - 1]->count; i++)
+                        if (start_index != 0)
                         {
-                            mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][0] -= start_index;
-                            mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][1] -= start_index;
+                            for (int i = 0; i < mesh1d->edge[nr_mesh1d - 1]->count; i++)
+                            {
+                                mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][0] -= start_index;
+                                mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][1] -= start_index;
+                            }
                         }
                     }
                 }
@@ -1681,9 +1690,12 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     status = nc_get_var_long(this->ncid, var_id, mesh1d->node[nr_mesh1d - 1]->branch.data());
 
                     status = nc_get_att_int(this->ncid, var_id, "start_index", &start_index);
-                    for (int i = 0; i < mesh1d->node[nr_mesh1d - 1]->count; i++)
+                    if (start_index != 0)
                     {
-                        mesh1d->node[nr_mesh1d - 1]->branch[i] -= start_index;
+                        for (int i = 0; i < mesh1d->node[nr_mesh1d - 1]->count; i++)
+                        {
+                            mesh1d->node[nr_mesh1d - 1]->branch[i] -= start_index;
+                        }
                     }
 
                     mesh1d->node[nr_mesh1d - 1]->chainage = vector<double>(mesh1d->node[nr_mesh1d - 1]->count);
@@ -1711,9 +1723,12 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     status = nc_get_var_long(this->ncid, var_id, mesh1d->edge[nr_mesh1d - 1]->edge_branch.data());
 
                     status = nc_get_att_int(this->ncid, var_id, "start_index", &start_index);
-                    for (int i = 0; i < mesh1d->edge[nr_mesh1d - 1]->count; i++)
+                    if (start_index != 0)
                     {
-                        mesh1d->edge[nr_mesh1d - 1]->edge_branch[i] -= start_index;
+                        for (int i = 0; i < mesh1d->edge[nr_mesh1d - 1]->count; i++)
+                        {
+                            mesh1d->edge[nr_mesh1d - 1]->edge_branch[i] -= start_index;
+                        }
                     }
                     // determine the edge length between the nodes (by definition >= 0)
                     mesh1d->edge[nr_mesh1d - 1]->edge_length = vector<double>(mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
@@ -1841,10 +1856,13 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 status = get_attribute(this->ncid, var_id, "start_index", &start_index);
                 if (status == NC_NOERR)
                 {
-                    for (int i = 0; i < mesh2d->edge[nr_mesh2d - 1]->count; i++)
+                    if (start_index != 0)
                     {
-                        mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] -= start_index;
-                        mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] -= start_index;
+                        for (int i = 0; i < mesh2d->edge[nr_mesh2d - 1]->count; i++)
+                        {
+                            mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] -= start_index;
+                            mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] -= start_index;
+                        }
                     }
                 }
                 free(dimids);
@@ -2228,14 +2246,10 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
             if (att_value == "projection_x_coordinate" || att_value == "longitude")
             {
                 mesh1d_strings->x_node_name = token[i];
-                mesh1d_strings->node_chainage = "";  // because (x, y)-coordinate are given, skip chainage and branch
-                mesh1d_strings->node_branch = "";
             }
             else if (att_value == "projection_y_coordinate" || att_value == "latitude")
             {
                 mesh1d_strings->y_node_name = token[i];
-                mesh1d_strings->node_chainage = "";  // because (x, y)-coordinate are given, skip chainage and branch
-                mesh1d_strings->node_branch = "";
             }
             else
             {
