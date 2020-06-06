@@ -35,7 +35,7 @@ int MapPropertyWindow::get_count()
 void MapPropertyWindow::create_window()
 {
     this->setWindowTitle(QString("Map Output Settings"));
-    //this->setGeometry(50, 300, 350, 0);
+    this->setGeometry(50, 300, 300, 0);
     QString str;
     wid = new QWidget();
     QVBoxLayout * vl_main = new QVBoxLayout();

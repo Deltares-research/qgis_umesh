@@ -341,10 +341,10 @@ private:
 
     long _nr_mesh_contacts;
     size_t _two;
-    size_t * _dimids;
-    vector<string> _dim_names;
-    map<string, long> _map_dim;
-    map<string, string> _map_dim_name;
+    size_t * m_dimids;
+    vector<string> m_dim_names;
+    map<string, long> m_map_dim;
+    map<string, string> m_map_dim_name;
 
     int ncid;
     int * topo_edge_nodes;
