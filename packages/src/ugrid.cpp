@@ -684,6 +684,10 @@ long UGRID::read_variables()
                             // because it is not a 3D dimesional data set no layer information, just time, space and constituent:
                             // generate new variables for each dimesnion which s not the time and space dimension
                             // in this example it nSedTot extra variables
+                            // - time
+                            // - sediment dimension
+                            // - space dimension
+
                             int jmax = m_map_dim["nSedTot"];
                             for (int j = 0; j < jmax; j++)
                             {
@@ -708,8 +712,10 @@ long UGRID::read_variables()
                                 string name_sed = "Sediment " + ss.str();
                                 if (j > 0)
                                 {
-                                    nr_mesh_var += 1;
-                                    mesh_vars->variable = (struct _variable **)realloc(mesh_vars->variable, sizeof(struct _variable *) * nr_mesh_var);
+                                    QString msg = "Multiple fractions not supported, just the first one will be displayed";
+                                    QMessageBox::warning(0, QString("Warning"), QString("%1: %2").arg(msg).arg(var_name.c_str()));
+                                    //nr_mesh_var += 1;
+                                    //mesh_vars->variable = (struct _variable **)realloc(mesh_vars->variable, sizeof(struct _variable *) * nr_mesh_var);
                                 }
                                 // reduce dimension (from 3 to 2)
                                 mesh_vars->variable[nr_mesh_var - 1]->dim_names.resize(2);
@@ -724,13 +730,15 @@ long UGRID::read_variables()
                         }
                     }
                 }
-                else
+                else if (mesh_vars->variable[nr_mesh_var - 1]->dims.size() == 4)
                 {
-                    // 3D variable does not contain the time variable, so it is time independent
+                    // 4D variable does not contain the time variable, so it is time independent
                     // - time
                     // - sediment dimension
-                    // - space dimension
-                    int a = 1;
+                    // - xy-space dimension
+                    // - z-space
+                    QString msg = "Multiple fractions are not supported for a 3D simulation.";
+                    QMessageBox::warning(0, QString("Warning"), QString("%1").arg(msg));
                 }
             }
 
@@ -2448,14 +2456,13 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
 
         double xp;
         double yp;
-        double * chainage = (double *)malloc(sizeof(double *));
+        vector<double> chainage;
         for (int branch = 0; branch < ntw_geom->geom[nr_ntw - 1]->count; branch++)  // loop over the geometries
         {
             double branch_length = ntw_edges->edge[nr_ntw - 1]->edge_length[branch];
             size_t geom_nodes_count = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->count;
 
-            chainage = (double *)realloc(chainage, sizeof(double *) * geom_nodes_count);
-            chainage[0] = 0.0;
+            chainage.resize(geom_nodes_count);
             for (int i = 1; i < geom_nodes_count; i++)
             {
                 double x1 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->x[i - 1];
@@ -2506,7 +2513,6 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
                 }
             }
         }
-        delete chainage;
         status = 0;
     }
 #ifndef NATIVE_C
