@@ -15,7 +15,7 @@
 #define QGIS_UMESH_VERSION "0.00.01"
 #define COMPANY "Deltares"
 #define ARCH "Win64"
-#define EXPERIMENT 0
+#define EXPERIMENT 1
 
 static const QString ident = QObject::tr( "@(#)" COMPANY ", " PROGRAM ", " QGIS_UMESH_VERSION ", " ARCH", " __DATE__", " __TIME__ );
 static const QString sName = QObject::tr( "" COMPANY ", " PROGRAM " Development");
@@ -1004,6 +1004,37 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             struct _mapping * mapping;
             mapping = ugrid_file->get_grid_mapping();
             create_observation_point_vector_layer(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
+        }
+    }
+    else
+    {
+        QMessageBox::warning(0, tr("Warning"), QString(tr("JSON file opened: %1\nNo keyword \"%2\" in this file.").arg(jsonfile.absoluteFilePath()).arg(QString::fromStdString(values))));
+    }
+
+    values = "data.external_forcing.ExtForceFileNew";
+    vector<string> ext_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(values, ext_file_name);
+
+    if (ext_file_name.size() == 1)
+    {
+        QString ext_file = jsonfile.absolutePath() + "/" + QString::fromStdString(ext_file_name[0]);
+        if (!QFileInfo(ext_file).exists())
+        {
+            QMessageBox::information(0, tr("External forcings file"), tr("File:\n\"%1\",\nReferenced by tag: \"%2\" does not exist. External forcings are skipped.").arg(ext_file).arg(QString::fromStdString(values)));
+        }
+        else
+        {
+            fname = ext_file.toStdString();
+            READ_JSON * pt_ext_file = new READ_JSON(fname);
+            UGRID * ugrid_file = m_ugrid_file[_fil_index];
+            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            {
+                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                return;
+            }
+            struct _mapping * mapping;
+            mapping = ugrid_file->get_grid_mapping();
+            create_1D_external_forcing_vector_layer(ugrid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
         }
     }
     else
