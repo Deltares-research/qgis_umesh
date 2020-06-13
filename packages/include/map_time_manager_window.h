@@ -117,11 +117,12 @@ public:
         QVBoxLayout * create_vector_selection_2d_3d();
         int create_parameter_selection_vector_2d_3d(QString, QComboBox *, QComboBox *);
 
-        QColorRampEditor * create_color_ramp();
+        QColorRampEditor * create_color_ramp(vector_quantity);
         void draw_time_dependent_data_1d(QComboBox *, int);
         void draw_time_dependent_data(QComboBox *, int);
         void draw_time_dependent_vector(QComboBox *, int);
         QColorRampEditor * m_ramph;
+        QColorRampEditor * m_ramph_vec_dir;
 
         void setValue(int);
         void setSliderValue(QDateTime);
@@ -169,6 +170,8 @@ public:
         struct _mesh_variable * m_vars;
 
         MapProperty * m_property;
+        vector_quantity m_vector_draw;
+        MapPropertyWindow * m_map_property;
 };
 
 #endif

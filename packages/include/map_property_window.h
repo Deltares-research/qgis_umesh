@@ -37,6 +37,7 @@ public:
     
     void create_window();
     static int get_count();
+    void set_dynamic_limits_enabled(bool);
 
 public slots:
     void close();
@@ -51,7 +52,6 @@ private:
     QLineEdit * le_transparency;
     QLabel * lbl_refresh_rate;
     QLineEdit * le_refresh_rate;
-    QCheckBox * ckb;
     QLabel * lbl_min;
     QLabel * lbl_max;
     QLabel * lbl_vs;  // vector scaling
@@ -63,6 +63,7 @@ private:
     struct _bck_property * m_bck_property;
     QVector<QPair<qreal, QColor> > m_default_ramp;
     MyCanvas * m_myCanvas;
+    QCheckBox * m_ckb;
 
     void state_changed(int);
     void clicked_ok();

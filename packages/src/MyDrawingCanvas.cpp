@@ -53,8 +53,10 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     m_layer = 0;
     _current_step = 0;
     m_ramph = new QColorRampEditor();
+    m_ramph_vec_dir = new QColorRampEditor();
     m_vscale_determined = false;
     m_vec_length = 0.0;
+    m_vector_draw = VECTOR_NONE;
 
     qgis_painter = NULL;
     mCache_painter = new QPainter();
@@ -87,10 +89,9 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     connect(this, SIGNAL(WheelEvent(QWheelEvent *)), this, SLOT(MyWheelEvent(QWheelEvent *)));
     //connect(this, &QgsMapTool::wheelEvent, this, &MyCanvas::MyWheelEvent);
 
-    //QObject::connect(ramph, SIGNAL(rampChanged()), ramph, SLOT(msg()));
+
     connect(m_ramph, SIGNAL(rampChanged()), this, SLOT(draw_all()));
-    QObject::connect(m_ramph, &QColorRampEditor::rampChanged, this, &MyCanvas::draw_all);
-    QObject::connect(m_ramph, &QColorRampEditor::rampChanged, m_ramph, &QColorRampEditor::msg);
+    connect(m_ramph_vec_dir, SIGNAL(rampChanged()), this, SLOT(draw_all()));
 
     if (DRAW_CACHES) {
         InitDrawEachCaches(); // debug utility
@@ -120,7 +121,8 @@ void MyCanvas::draw_all()
     draw_dot_at_node();
     draw_data_along_edge();
     draw_line_at_edge();
-    draw_vector_at_face();
+    draw_vector_arrow_at_face();
+    draw_vector_direction_at_face();
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_face()
@@ -153,7 +155,6 @@ void MyCanvas::draw_data_at_face()
 {
     if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "face")
     {
-        bool in_view = false;
         string var_name = _variable->var_name;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
         if (_variable->dims.size() == 2) // 2D: time, nodes
@@ -186,6 +187,7 @@ void MyCanvas::draw_data_at_face()
         {
             vertex_x.clear();
             vertex_y.clear();
+            bool in_view = false;
             for (int j = 0; j < mesh2d->face_nodes[i].size(); j++)
             {
                 int p1 = mesh2d->face_nodes[i][j];
@@ -211,8 +213,16 @@ void MyCanvas::draw_data_at_face()
     }
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::draw_vector_at_face()
+void MyCanvas::set_draw_vector(vector_quantity vector_draw)
 {
+    m_vector_draw = vector_draw;
+    draw_vector_arrow_at_face();
+    draw_vector_direction_at_face();
+}
+//-----------------------------------------------------------------------------
+void MyCanvas::draw_vector_arrow_at_face()
+{
+    if (m_vector_draw != VECTOR_ARROW) { return; }
     if (_ugrid_file == nullptr) { return; }
     struct _mesh2d_string ** m2d_string = _ugrid_file->get_mesh2d_string();
     struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
@@ -478,6 +488,86 @@ void MyCanvas::draw_vector_at_face()
     }
 }
 //-----------------------------------------------------------------------------
+void MyCanvas::draw_vector_direction_at_face()
+{
+    if (m_vector_draw != VECTOR_DIRECTION) { return; }
+    // draw the vector direction in the range [0, 360) and with cyclic colorramp
+    if (_ugrid_file == nullptr) { return; }
+    struct _mesh2d_string ** m2d_string = _ugrid_file->get_mesh2d_string();
+    struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
+    if (mesh2d != nullptr)
+    {
+        size_t dimens;
+        double missing_value;
+
+        if (m_coordinate_type.size() == 0) { return; }
+        struct _mesh_variable * vars = _ugrid_file->get_variables();
+        for (int i = 0; i < vars->nr_vars; i++)
+        {
+            if (vars->variable[i]->var_name == m_coordinate_type[1].toStdString())
+            {
+                dimens = vars->variable[i]->dims.size();
+                missing_value = vars->variable[i]->fill_value;
+            }
+        }
+        if (dimens == 2) // 2D: time, nodes
+        {
+            vector<vector <double *>> std_u_vec_at_face = _ugrid_file->get_variable_values(m_coordinate_type[1].toStdString());
+            u_value = std_u_vec_at_face[_current_step];
+            vector<vector <double *>> std_v_vec_at_face = _ugrid_file->get_variable_values(m_coordinate_type[2].toStdString());
+            v_value = std_v_vec_at_face[_current_step];
+        }
+        else if (dimens == 3) // 3D: time, layer, nodes
+        {
+            vector<vector<vector <double *>>> std_u_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
+            u_value = std_u_vec_at_face_3d[_current_step][m_layer - 1];
+            vector<vector<vector <double *>>> std_v_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
+            v_value = std_v_vec_at_face_3d[_current_step][m_layer - 1];
+        }
+        vector<double> z_value(mesh2d->face_nodes.size(), 0.0);
+        rgb_color.resize(mesh2d->face_nodes.size());
+
+        m_ramph_vec_dir->update();
+
+        this->startDrawing(0);
+        mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
+        double opacity = mCache_painter->opacity();
+        mCache_painter->setOpacity(m_property->get_opacity());
+        vector<double> vertex_x(mesh2d->face_nodes[0].size());
+        vector<double> vertex_y(mesh2d->face_nodes[0].size());
+        for (int i = 0; i < mesh2d->face_nodes.size(); i++)
+        {
+            bool in_view = false;
+            if (*u_value[i] == missing_value) { continue; }  // *u_value[i] = 0.0;
+            if (*v_value[i] == missing_value) { continue; }  // *v_value[i] = 0.0;
+            vertex_x.clear();
+            vertex_y.clear();
+            for (int j = 0; j < mesh2d->face_nodes[i].size(); j++)
+            {
+                int p1 = mesh2d->face_nodes[i][j];
+                if (p1 > -1)
+                {
+                    vertex_x.push_back(mesh2d->node[0]->x[p1]);
+                    vertex_y.push_back(mesh2d->node[0]->y[p1]);
+                    if (mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                        mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY())
+                    {
+                        z_value[i] = atan2(*v_value[i], *u_value[i]) * 360.0 / (2.0 * M_PI);
+                        in_view = true; // one point of polygon in visible area, do not skip this polygon
+                    }
+                }
+            }
+            if (in_view && z_value[i] != missing_value)
+            {
+                setFillColor(m_ramph_vec_dir->getRgbFromValue(z_value[i]));
+                this->drawPolygon(vertex_x, vertex_y);
+            }
+        }
+        mCache_painter->setOpacity(opacity);
+        this->finishDrawing();
+    }
+}
+//-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_node()
 {
     if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "node")
@@ -714,6 +804,10 @@ void MyCanvas::setColorRamp(QColorRampEditor * ramph)
 {
     m_ramph = ramph;
 }
+void MyCanvas::setColorRampVector(QColorRampEditor * ramph)
+{
+    m_ramph_vec_dir = ramph;
+}
 
 //-----------------------------------------------------------------------------
 void MyCanvas::reset_min_max()
@@ -935,7 +1029,8 @@ void MyCanvas::renderPlugin( QPainter * Painter )
     draw_dot_at_node();
     draw_data_along_edge();
     draw_line_at_edge();
-    draw_vector_at_face();
+    draw_vector_arrow_at_face();
+    draw_vector_direction_at_face();
 }
 //
 //-----------------------------------------------------------------------------

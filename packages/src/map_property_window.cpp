@@ -68,11 +68,12 @@ void MapPropertyWindow::create_window()
 
     QGroupBox * gb = new QGroupBox();
     gb->setTitle("Colorramp limits");
-    ckb = new QCheckBox();
-    ckb->setCheckable(true);
-    ckb->setChecked(m_property->get_dynamic_legend());
-    ckb->setText("Dynamic colorramp");
-    vl->addWidget(ckb);
+    m_ckb = new QCheckBox();
+    m_ckb->setCheckable(true);
+    m_ckb->setEnabled(true);
+    m_ckb->setChecked(m_property->get_dynamic_legend());
+    m_ckb->setText("Dynamic colorramp");
+    vl->addWidget(m_ckb);
 
     lbl_min = new QLabel("Minimum value:");
     lbl_max = new QLabel("Maximum value:");
@@ -128,7 +129,7 @@ void MapPropertyWindow::create_window()
     this->show();
 
     connect(this, &MapPropertyWindow::close_map, this, &MapPropertyWindow::close);
-    connect(ckb, &QCheckBox::stateChanged, this, &MapPropertyWindow::state_changed);
+    connect(m_ckb, &QCheckBox::stateChanged, this, &MapPropertyWindow::state_changed);
     connect(pb_apply, &QPushButton::clicked, this, &MapPropertyWindow::clicked_apply);
     connect(pb_ok, &QPushButton::clicked, this, &MapPropertyWindow::clicked_ok);
     connect(pb_cancel, &QPushButton::clicked, this, &MapPropertyWindow::clicked_cancel);
@@ -154,6 +155,13 @@ void MapPropertyWindow::state_changed(int state)
     //  not supported: Qt::PartiallyChecked
     return;
 }
+void MapPropertyWindow::set_dynamic_limits_enabled(bool enabled)
+{
+    if (object_count != 0)
+    {
+        m_ckb->setEnabled(enabled);
+    }
+}
 void MapPropertyWindow::clicked_apply()
 {
     //QMessageBox::information(0, "Information", "MapPropertyWindow::clicked_apply()");
@@ -162,7 +170,7 @@ void MapPropertyWindow::clicked_apply()
     m_property->set_opacity(1.0 - mod_transparency);
     m_property->set_refresh_rate(le_refresh_rate->text().toDouble());
 
-    m_property->set_dynamic_legend(ckb->isChecked());
+    m_property->set_dynamic_legend(m_ckb->isChecked());
     m_property->set_minimum(le_min->text().toDouble());
     m_property->set_maximum(le_max->text().toDouble());
     m_property->set_vector_scaling(le_vs->text().toDouble());
@@ -178,7 +186,7 @@ void MapPropertyWindow::clicked_ok()
     m_property->set_opacity(1.0 - mod_transparency);
     m_property->set_refresh_rate(le_refresh_rate->text().toDouble());
 
-    m_property->set_dynamic_legend(ckb->isChecked());
+    m_property->set_dynamic_legend(m_ckb->isChecked());
     m_property->set_minimum(le_min->text().toDouble());
     m_property->set_maximum(le_max->text().toDouble());
     m_property->set_vector_scaling(le_vs->text().toDouble());

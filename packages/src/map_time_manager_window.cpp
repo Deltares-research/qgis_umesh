@@ -28,8 +28,10 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_show_map_vector_3d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_vec_2d
 
     m_property = MapProperty::getInstance();
+    m_vector_draw = VECTOR_NONE;
 
     connect(m_ramph, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
+    connect(m_ramph_vec_dir, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
 }
 MapTimeManagerWindow::~MapTimeManagerWindow()
 {
@@ -50,7 +52,13 @@ void MapTimeManagerWindow::contextMenu(const QPoint & point)
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::contextMenu()");
     if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
     {
-        MapPropertyWindow * map_property = new MapPropertyWindow(_MyCanvas);
+        m_map_property = new MapPropertyWindow(_MyCanvas);
+    }
+    m_map_property->set_dynamic_limits_enabled(true);
+    if (m_vector_draw == VECTOR_DIRECTION)
+    {
+        // set ramp limits en/disabled
+        m_map_property->set_dynamic_limits_enabled(false);
     }
 }
 //
@@ -129,7 +137,6 @@ void MapTimeManagerWindow::create_window()
         tw->addTab(vectors, "Vector");
     }
     vl->addWidget(tw);
-
     vl->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     wid->setLayout(vl);
     this->setWidget(wid);
@@ -262,27 +269,51 @@ QHBoxLayout * MapTimeManagerWindow::create_push_buttons_layout_steps()
     
     return hl;
 }
-QColorRampEditor * MapTimeManagerWindow::create_color_ramp()
+QColorRampEditor * MapTimeManagerWindow::create_color_ramp(vector_quantity vector_draw)
 {
-    QVector<QPair<qreal, QColor> > initramp;
-    initramp.push_back(QPair<qreal, QColor>(0.00, QColor(0, 0, 128)));
-    initramp.push_back(QPair<qreal, QColor>(0.125, QColor(0, 0, 255)));
-    initramp.push_back(QPair<qreal, QColor>(0.375, QColor(0, 255, 255)));
-    initramp.push_back(QPair<qreal, QColor>(0.50, QColor(0, 255, 0)));
-    initramp.push_back(QPair<qreal, QColor>(0.625, QColor(255, 255, 0)));
-    initramp.push_back(QPair<qreal, QColor>(0.875, QColor(255, 0, 0)));
-    initramp.push_back(QPair<qreal, QColor>(1.00, QColor(128, 0, 0)));
-
     QColorRampEditor* ramph = new QColorRampEditor(NULL, Qt::Horizontal);
-    ramph->setSlideUpdate(true);
-    ramph->setMappingTextVisualize(true);
-    ramph->setMappingTextColor(Qt::black);
-    ramph->setMappingTextAccuracy(2);
-    ramph->setNormRamp(initramp);
-    ramph->setRamp(initramp);
-    ramph->setFixedHeight(40);  // bar breedte 40 - text(= 16) - indicator
+    m_vector_draw = vector_draw;
+    if (vector_draw == VECTOR_NONE)
+    {
+        QVector<QPair<qreal, QColor> > initramp;
+        initramp.push_back(QPair<qreal, QColor>(0.00, QColor(0, 0, 128)));
+        initramp.push_back(QPair<qreal, QColor>(0.125, QColor(0, 0, 255)));
+        initramp.push_back(QPair<qreal, QColor>(0.375, QColor(0, 255, 255)));
+        initramp.push_back(QPair<qreal, QColor>(0.50, QColor(0, 255, 0)));
+        initramp.push_back(QPair<qreal, QColor>(0.625, QColor(255, 255, 0)));
+        initramp.push_back(QPair<qreal, QColor>(0.875, QColor(255, 0, 0)));
+        initramp.push_back(QPair<qreal, QColor>(1.00, QColor(128, 0, 0)));
 
-    _MyCanvas->setColorRamp(ramph);
+        ramph->setSlideUpdate(true);
+        ramph->setMappingTextVisualize(true);
+        ramph->setMappingTextColor(Qt::black);
+        ramph->setMappingTextAccuracy(2);
+        ramph->setNormRamp(initramp);
+        ramph->setRamp(initramp);
+        ramph->setFixedHeight(40);  // bar breedte 40 - text(= 16) - indicator
+
+        _MyCanvas->setColorRamp(ramph);
+    }
+    else if (vector_draw == VECTOR_DIRECTION)
+    {
+        QVector<QPair<qreal, QColor> > initramp;
+        initramp.push_back(QPair<qreal, QColor>(0.00, QColor(0, 0, 255)));  // west
+        initramp.push_back(QPair<qreal, QColor>(0.25, QColor(255, 0, 0)));  // south
+        initramp.push_back(QPair<qreal, QColor>(0.50, QColor(255, 255, 255)));  // east
+        initramp.push_back(QPair<qreal, QColor>(0.75, QColor(0, 255, 0)));  // north
+        initramp.push_back(QPair<qreal, QColor>(1.00, QColor(0, 0, 255)));  // west
+
+        ramph->setSlideUpdate(true);
+        ramph->setMappingTextVisualize(true);
+        ramph->setMappingTextColor(Qt::black);
+        ramph->setMappingTextAccuracy(2);
+        ramph->setNormRamp(initramp);
+        ramph->setRamp(initramp);
+        ramph->setFixedHeight(40);  // bar breedte 40 - text(= 16) - indicator
+        ramph->setMinMax(-180.0, 180.0);
+
+        _MyCanvas->setColorRampVector(ramph);
+    }
 
     return ramph;
 }
@@ -601,9 +632,9 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
         }
     }
     vl_tw_iso->addLayout(hl);
-
-    m_ramph = create_color_ramp();
+    m_ramph = create_color_ramp(VECTOR_NONE);
     vl_tw_iso->addWidget(m_ramph);
+
     vl_tw_iso->addStretch();
 
     return vl_tw_iso;
@@ -662,6 +693,8 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
     }
     
     vl_tw_vec->addLayout(gl);
+    m_ramph_vec_dir = create_color_ramp(VECTOR_DIRECTION);
+    vl_tw_vec->addWidget(m_ramph_vec_dir);
     vl_tw_vec->addStretch();
 
     connect(m_cb_vec_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_2d(int)));
@@ -716,17 +749,20 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
                     if (vec_cartesian_component_2dh == 2 || vec_spherical_component_2dh == 2)
                     {
                         QString name("Depth Averaged velocity vector");
+                        QString name_dir("Depth Averaged velocity vector direction");
                         if (vec_cartesian_component_2dh == 2) {
                             vec_cartesian_component_2dh = 0;
                             cart_2dh[0] = QString("Cartesian");
                             cart_2dh[3] = QString("%1").arg(i);
                             m_cb_vec_2d->addItem(name, cart_2dh);
+                            m_cb_vec_2d->addItem(name_dir, cart_2dh);
                         }
                         if (vec_spherical_component_2dh == 2) {
                             vec_spherical_component_2dh = 0;
                             spher_2dh[0] = QString("Spherical");
                             spher_2dh[3] = QString("%1").arg(i);
                             m_cb_vec_2d->addItem(name, spher_2dh);
+                            m_cb_vec_2d->addItem(name_dir, spher_2dh);
                         }
                     }
                 }
@@ -748,12 +784,14 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
                 if (vec_cartesian_component == 2 || vec_spherical_component == 2)
                 {
                     QString name("Horizontal velocity vector");
+                    QString name_dir("Horizontal velocity vector direction");
                     if (vec_cartesian_component == 2)
                     {
                         vec_cartesian_component = 0;
                         cart_layer[0] = QString("Cartesian");
                         cart_layer[3] = QString("%1").arg(i);
                         m_cb_vec_3d->addItem(name, cart_layer);
+                        m_cb_vec_3d->addItem(name_dir, cart_layer);
                     }
                     if (vec_spherical_component == 2)
                     {
@@ -761,6 +799,7 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
                         spher_layer[0] = QString("Spherical");
                         spher_layer[3] = QString("%1").arg(i); 
                         m_cb_vec_3d->addItem(name, spher_layer);
+                        m_cb_vec_3d->addItem(name_dir, spher_layer);
                     }
                 }
             }
@@ -935,6 +974,12 @@ void MapTimeManagerWindow::last_date_time_changed(const QDateTime & date_time)
 void MapTimeManagerWindow::cb_clicked_1d(int item)
 {
     _MyCanvas->reset_min_max();
+    _MyCanvas->set_draw_vector(VECTOR_NONE);
+    if (m_map_property != nullptr)
+    {
+        m_map_property->set_dynamic_limits_enabled(true);
+    }
+
     if (!m_show_map_data_1d)
     {
         QStringList coord;
@@ -958,6 +1003,12 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
 void MapTimeManagerWindow::cb_clicked_1d2d(int item)
 {
     _MyCanvas->reset_min_max();
+    _MyCanvas->set_draw_vector(VECTOR_NONE);
+    if (m_map_property != nullptr)
+    {
+        m_map_property->set_dynamic_limits_enabled(true);
+    }
+
     if (!m_show_map_data_1d2d)
     {
         QStringList coord;
@@ -980,6 +1031,12 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
 void MapTimeManagerWindow::cb_clicked_2d(int item)
 {
     _MyCanvas->reset_min_max();
+    _MyCanvas->set_draw_vector(VECTOR_NONE);
+    if (m_map_property != nullptr)
+    {
+        m_map_property->set_dynamic_limits_enabled(true);
+    }
+
     if (!m_show_map_data_2d)
     {
         QStringList coord;
@@ -1001,6 +1058,12 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
 }
 void MapTimeManagerWindow::cb_clicked_3d(int item)
 {
+    _MyCanvas->set_draw_vector(VECTOR_NONE);
+    if (m_map_property != nullptr)
+    {
+        m_map_property->set_dynamic_limits_enabled(true);
+    }
+
     QString str = m_cb_3d->itemText(item);
     QVariant j = m_cb_3d->itemData(item);
     int jj = j.toInt();
@@ -1038,6 +1101,10 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
 void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
 {
     _MyCanvas->reset_min_max();
+    if (m_map_property != nullptr)
+    {
+        m_map_property->set_dynamic_limits_enabled(true);
+    }
     if (!m_show_map_vector_2d)
     {
         QStringList coord;
@@ -1101,22 +1168,31 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
     QVariant j = cb->itemData(item);
     QStringList coord = j.toStringList();
     int i = _q_times.indexOf(curr_date_time->dateTime());
+
     _MyCanvas->set_current_step(i);
     _MyCanvas->set_determine_grid_size(true);
     _MyCanvas->set_variables(m_vars);
     _MyCanvas->set_coordinate_type(coord);
 
-    if (str.contains("Depth Averaged"))
-    {
-        _MyCanvas->draw_vector_at_face();
-    }
-    else
+    if (!str.contains("Depth Averaged"))
     {
         if (m_sb_layer_vec != nullptr) {
             _MyCanvas->set_layer(m_sb_layer_vec->value());
         }
     }
-    _MyCanvas->draw_vector_at_face();
+    if (!str.contains("velocity vector direction"))
+    {
+        m_vector_draw = VECTOR_ARROW;  // draw the vector arrow
+    }
+    else
+    {
+        m_vector_draw = VECTOR_DIRECTION; // draw the vector direction
+        if (m_map_property != nullptr)
+        {
+            m_map_property->set_dynamic_limits_enabled(false);
+        }
+    }
+    _MyCanvas->set_draw_vector(m_vector_draw);
 }
 void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
 {

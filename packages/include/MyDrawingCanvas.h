@@ -50,6 +50,11 @@
 #define NR_CACHES 1
 #define IMAGE_WIDTH  3840 // 1420 // 
 #define IMAGE_HEIGHT 2140 // 1080 // 
+enum vector_quantity {
+    VECTOR_NONE,
+    VECTOR_ARROW,
+    VECTOR_DIRECTION 
+};
 
 class MyCanvas : public QgsMapTool, public QgsMapCanvasItem
 {
@@ -167,6 +172,8 @@ public:
     void set_layer(int);
     void set_current_step(int);
     void setColorRamp(QColorRampEditor *);
+    void setColorRampVector(QColorRampEditor *);
+    void set_draw_vector(vector_quantity);
 
     void draw_dot_at_edge();
     void draw_dot_at_face();
@@ -174,7 +181,8 @@ public:
     void draw_data_along_edge();
     void draw_data_at_face();
     void draw_line_at_edge();
-    void draw_vector_at_face();
+    void draw_vector_arrow_at_face();
+    void draw_vector_direction_at_face();
 
     vector<double *> z_value;
     vector<double *> u_value;
@@ -182,6 +190,7 @@ public:
     double m_z_min;
     double m_z_max;
     QColorRampEditor * m_ramph;
+    QColorRampEditor * m_ramph_vec_dir;
 
 protected:
     // From world (document) coordinates to Qt
@@ -255,7 +264,7 @@ private:
     MapProperty * m_property;
     bool m_vscale_determined;
     double m_vec_length;
-
+    vector_quantity m_vector_draw;
 };
 
 #endif  /* _INC_MyCanvas */
