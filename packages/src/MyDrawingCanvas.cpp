@@ -244,7 +244,7 @@ void MyCanvas::draw_vector_arrow_at_face()
         u_value.clear();
         v_value.clear();
 
-        if (m_coordinate_type.size() == 0) { return; }
+        if (m_coordinate_type.size() != 4) { return; }
 
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
@@ -500,7 +500,7 @@ void MyCanvas::draw_vector_direction_at_face()
         size_t dimens;
         double missing_value;
 
-        if (m_coordinate_type.size() == 0) { return; }
+        if (m_coordinate_type.size() != 4) { return; }
         struct _mesh_variable * vars = _ugrid_file->get_variables();
         for (int i = 0; i < vars->nr_vars; i++)
         {

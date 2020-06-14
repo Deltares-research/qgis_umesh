@@ -881,8 +881,8 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
 // return: 2d dimensional value(time, x)
 {
     int var_id;
-    vector<vector <double *>> values;
     int status;
+    int i_var;
 
 #ifdef NATIVE_C
     fprintf(stderr, "UGRID::get_variable_values()\n");
@@ -892,11 +892,8 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
     {
         if (var_name == mesh_vars->variable[i]->var_name)
         {
-            if (mesh_vars->variable[i]->read)  // are the z_values already read
-            {
-                values = mesh_vars->variable[i]->z_value;
-            }
-            else
+            i_var = i;
+            if (!mesh_vars->variable[i]->read)  // are the z_values already read
             {
                 status = nc_inq_varid(this->ncid, var_name.c_str(), &var_id);
                 size_t length = 1;
@@ -906,7 +903,7 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                 }
                 double * values_c = (double *)malloc(sizeof(double) * length);
                 status = nc_get_var_double(this->ncid, var_id, values_c);
-                values.reserve(length);
+                mesh_vars->variable[i]->z_value.reserve(length);
                 vector<double *> z_value;
                 int k = -1;
                 if (mesh_vars->variable[i]->dims.size() == 1)
@@ -916,7 +913,7 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                         k++;
                         z_value.push_back(values_c + k);
                     }
-                    values.push_back(z_value);
+                    mesh_vars->variable[i]->z_value.push_back(z_value);
                     z_value.clear();
                 }
                 else if (mesh_vars->variable[i]->dims.size() == 2)
@@ -928,7 +925,7 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                             k++;
                             z_value.push_back(values_c + k);
                         }
-                        values.push_back(z_value);
+                        mesh_vars->variable[i]->z_value.push_back(z_value);
                         z_value.clear();
                     }
                 }
@@ -936,27 +933,21 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                 {
                     continue;
                 }
-
-                // HACK: do not free the values_c memory
-                //free(values_c);
-                //values_c = nullptr;
-
                 mesh_vars->variable[i]->read = true;
-                mesh_vars->variable[i]->z_value = values;
                 break;  // variable value is found
             }
         }
     }
-    return values;
+    return mesh_vars->variable[i_var]->z_value;
 }
 //------------------------------------------------------------------------------
 vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var_name)
 // return: 3d dimensional value(time, layer, x)
 {
     int var_id;
-    vector<vector<vector <double *>>> values_3d;
     vector<vector <double *>> values_2d;
     int status;
+    int i_var;
 
 #ifdef NATIVE_C
     fprintf(stderr, "UGRID::get_variable_values()\n");
@@ -966,11 +957,8 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
     {
         if (var_name == mesh_vars->variable[i]->var_name)  //var_name is a three dimensio
         {
-            if (mesh_vars->variable[i]->read)  // are the z_values already read
-            {
-                values_3d = mesh_vars->variable[i]->z_3d;
-            }
-            else
+            i_var = i; 
+            if (!mesh_vars->variable[i]->read)  // are the z_values already read
             {
                 status = nc_inq_varid(this->ncid, var_name.c_str(), &var_id);
                 size_t length = 1;
@@ -980,7 +968,7 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                 }
                 double * values_c = (double *)malloc(sizeof(double) * length);
                 status = nc_get_var_double(this->ncid, var_id, values_c);
-                values_3d.reserve(length);
+                mesh_vars->variable[i]->z_3d.reserve(length);
                 
                 long time_dim = mesh_vars->variable[i]->dims[0];
                 long lyer_dim = mesh_vars->variable[i]->dims[1];
@@ -1003,7 +991,7 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
 #else
                         QMessageBox::warning(0, QString("Warning"), QString("3D data on interfaces not yet supported,\ndata: %1").arg(var_name.c_str()));
 #endif
-                        return values_3d;
+                        return mesh_vars->variable[i]->z_3d;
                     }
 
                 }
@@ -1038,18 +1026,14 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                             z_value.clear();
                         }
                     }
-                    values_3d.push_back(values_2d);
+                    mesh_vars->variable[i]->z_3d.push_back(values_2d);
                     values_2d.clear();
                 }
-                // HACK: do not free the values_c memory
-                //free(values_c);
-                //values_c = nullptr;
                 mesh_vars->variable[i]->read = true;
-                mesh_vars->variable[i]->z_3d = values_3d;
             }
         }
     }
-    return values_3d;
+    return mesh_vars->variable[i_var]->z_3d;
 }
 //==============================================================================
 // PRIVATE functions
