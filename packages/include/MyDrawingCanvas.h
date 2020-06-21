@@ -25,6 +25,7 @@
 #include <qgsgeometry.h>
 #include <qgslayertree.h>
 #include <qgslayertreegroup.h>
+#include <qgsmessagelog.h>
 
 #include "qgsmaptool.h"
 #include "qgsrubberband.h"
@@ -184,9 +185,9 @@ public:
     void draw_vector_arrow_at_face();
     void draw_vector_direction_at_face();
 
-    vector<double *> z_value;
-    vector<double *> u_value;
-    vector<double *> v_value;
+    double * z_value;
+    double * u_value;
+    double * v_value;
     double m_z_min;
     double m_z_max;
     QColorRampEditor * m_ramph;
@@ -203,8 +204,8 @@ protected:
 private:
     // functions
     void paint( QPainter * );
-    void determine_min_max(vector<double *>, double *, double *, vector<int> &, double);
-    void determine_min_max(vector<double *>, double *, double *, double);
+    void determine_min_max(double *, int, double *, double *, vector<int> &, double);
+    void determine_min_max(double *, int, double *, double *, double);
     double statistics_averaged_length_of_cell(struct _variable *);
 
     // variables
@@ -258,9 +259,6 @@ private:
     vector<double> mesh1d_x;
     vector<double> mesh1d_y;
     vector<int> rgb_color;
-    vector<vector <double *>> std_dot_at_edge;
-    vector<vector <double *>> std_data_at_node;
-    vector<vector <double *>> std_data_at_face;
     MapProperty * m_property;
     bool m_vscale_determined;
     double m_vec_length;

@@ -565,8 +565,10 @@ void qgis_umesh::experiment()
     if (layer->name().contains("cell_area"))
     {
         QMessageBox::information(0, "Information", QString("qgis_umesh::experiment()\nExperiment: %1").arg(layer_name));
-        vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(layer_name.toStdString());
-        vector<double *> z_value = std_data_at_face[0];
+        DataValuesProvider2D<double>std_data_at_face = ugrid_file->get_variable_values(layer_name.toStdString());
+        double * z_value = std_data_at_face.GetValueAtIndex(0, 0);
+        int z_value_size = std_data_at_face.m_numXY;
+
         QgsVectorDataProvider * dp_vl = vlayer->dataProvider();
         
         //dp_vl->capabilities();
@@ -578,13 +580,13 @@ void qgis_umesh::experiment()
         while (feats.nextFeature(feat))
         {
             i += 1;
-            *z_value[i] *= 5.1;
+            z_value[i] *= 5.1;
             //dp_vl->changeAttributeValues(i, 2, *z_value[i]);
-            feat.setAttribute(2, *z_value[i]);
+            feat.setAttribute(2, z_value[i]);
         }
-        for (int i = 0; i < z_value.size(); i++)
+        for (int i = 0; i < z_value_size; i++)
         {
-            *z_value[i] *= 5.1;
+            z_value[i] *= 5.1;
             //geom = QgsGeometry.fromPoint(QgsPoint(111, 222))
 
             //vlayer->dataProvider()->changeAttributeValues(attributeChanges);
@@ -746,7 +748,6 @@ void qgis_umesh::openFile()
         QFilenames->append(fd->selectedFiles());
         
         this->pgBar->show();
-        this->pgBar->setMaximum(1000);
         this->pgBar->setValue(0);
 
         for (QStringList::Iterator it = QFilenames->begin(); it != QFilenames->end(); ++it) {
@@ -754,11 +755,7 @@ void qgis_umesh::openFile()
             openFile(fname);
         }
 
-        this->pgBar->setValue(1000);
-        if (this->pgBar->value() == this->pgBar->maximum())
-        {
-            this->pgBar->hide();
-        }
+        this->pgBar->hide();
 
     }
     delete fd;
@@ -1468,18 +1465,21 @@ void qgis_umesh::activate_layers()
                             QString var_name = QString::fromStdString(var->variable[i]->var_name).trimmed();
                             if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                             {
-                                vector<vector <double *>>  std_data_at_edge = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], std_data_at_edge[0], mapping->epsg, subTreeGroup);
+                                DataValuesProvider2D<double>std_data_at_edge = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                double * z_value = std_data_at_edge.GetValueAtIndex(0, 0);
+                                create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], z_value, mapping->epsg, subTreeGroup);
                             }
                             if (var->variable[i]->location == "face" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                             {
-                                vector<vector <double *>>  std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], std_data_at_face[0], mapping->epsg, subTreeGroup);
+                                DataValuesProvider2D<double>std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                double * z_value = std_data_at_face.GetValueAtIndex(0, 0);
+                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, subTreeGroup);
                             }
                             if (var->variable[i]->location == "node" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                             {
-                                vector<vector <double *>>  std_data_at_node = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->node[0], std_data_at_node[0], mapping->epsg, subTreeGroup);
+                                DataValuesProvider2D<double>std_data_at_node = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                double * z_value = std_data_at_node.GetValueAtIndex(0, 0);
+                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->node[0], z_value, mapping->epsg, subTreeGroup);
                             }
                         }
                     }
@@ -1802,7 +1802,7 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
         }
     }
 }
-void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feature * nodes, struct _edge * edges, vector<double *> z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feature * nodes, struct _edge * edges, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr)
     {
@@ -1859,7 +1859,7 @@ void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feat
                 MyFeature.setGeometry(MyEdge);
 
                 MyFeature.initAttributes(nr_attrib_fields);
-                MyFeature.setAttribute(0, *z_value[j]);
+                MyFeature.setAttribute(0, z_value[j]);
                 MyFeature.setValid(true);
 
                 dp_vl->addFeature(MyFeature);
@@ -1875,7 +1875,7 @@ void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feat
         }
     }
 }
-void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feature * nodes, vector<double *> z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feature * nodes, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr)
     {
@@ -1918,7 +1918,7 @@ void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feat
                 MyFeature.setGeometry(MyPoints);
 
                 MyFeature.initAttributes(nr_attrib_fields);
-                MyFeature.setAttribute(0, *z_value[j]);
+                MyFeature.setAttribute(0, z_value[j]);
 
                 dp_vl->addFeature(MyFeature);
             }
@@ -1939,8 +1939,6 @@ void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feat
             QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
             int ind = tmp_layers.size()-1;
             tmp_layers[ind]->setItemVisibilityChecked(false);
-
-
         }
     }
 }

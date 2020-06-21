@@ -41,7 +41,7 @@ using namespace std;
 #else
     this->fname = filename;  // filename without path, just the name
     this->ugrid_file_name = filename.absoluteFilePath();  // filename with complete path
-    _pgBar = pgBar;
+    m_pgBar = pgBar;
 #endif
     _nr_mesh_contacts = 0;
     _two = 2;
@@ -184,7 +184,7 @@ long UGRID::read_mesh()
 #ifdef NATIVE_C
     fprintf(stderr, "UGRID::read_mesh()\n");
 #else
-    _pgBar->setValue(15);
+    m_pgBar->setValue(15);
 #endif    
 
     char * var_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
@@ -214,7 +214,7 @@ long UGRID::read_mesh()
 #ifdef NATIVE_C
         fprintf(stderr, "UGRID::read_mesh()\n\tVariable name: %d - %s\n", i_var + 1, var_name.c_str());
 #else
-        _pgBar->setValue(20 + (i_var + 1) / nvars * (500 - 20));
+        m_pgBar->setValue(20 + (i_var + 1) / nvars * (500 - 20));
         //QMessageBox::warning(0, QString("Warning"), QString("UGRID::get_grid_mapping()\nProgress: (%1, %2) %3").arg(i_var + 1).arg(nvars).arg(var_name));
 #endif
         length = 0;
@@ -272,7 +272,7 @@ long UGRID::read_mesh()
     }
 
 #ifndef NATIVE_C
-    _pgBar->setValue(600);
+    m_pgBar->setValue(600);
 #endif
     status = create_mesh1d_nodes(mesh1d, ntw_edges, ntw_geom);
 
@@ -339,7 +339,7 @@ long UGRID::read_mesh()
     //status = create_mesh_contacts(mesh_a, location_a, mesh_b, location_b);
 
 #ifndef NATIVE_C
-    _pgBar->setValue(700);
+    m_pgBar->setValue(700);
 #endif
     free(var_name_c);
     var_name_c = nullptr;
@@ -374,7 +374,7 @@ long UGRID::read_times()
     time_series.push_back(t_series);
 
 #ifndef NATIVE_C
-    _pgBar->setValue(700);
+    m_pgBar->setValue(700);
 #endif
     var_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
     var_name_c[0] = '\0';
@@ -445,7 +445,7 @@ long UGRID::read_times()
                     QString janm2 = time.toString();
                     QString janm3 = RefDate->toString("yyyy-MM-dd hh:mm:ss.zzz");
 #endif
-                    time_series[0].times.reserve(time_series[0].nr_times);  // TODO checkit: not freed?
+                    time_series[0].times.reserve(time_series[0].nr_times);
                     status = nc_get_var_double(this->ncid, i_var, time_series[0].times.data());
                     if (time_series[0].nr_times >= 2)
                     {
@@ -519,7 +519,7 @@ long UGRID::read_times()
     free(var_name_c); 
     var_name_c = nullptr;
 #ifndef NATIVE_C
-    _pgBar->setValue(800);
+    m_pgBar->setValue(800);
 #endif
 
     return (long)status;
@@ -552,7 +552,7 @@ long UGRID::read_variables()
     struct _variable * var;
     var = NULL;
 #ifndef NATIVE_C
-    _pgBar->setValue(800);
+    m_pgBar->setValue(800);
 #endif
     long nr_mesh_var = 0;
 
@@ -590,6 +590,7 @@ long UGRID::read_variables()
 
             mesh_vars->variable[nr_mesh_var - 1]->var_name = var_name;
             mesh_vars->variable[nr_mesh_var - 1]->nc_type = nc_type;
+            mesh_vars->variable[nr_mesh_var - 1]->read = false;
             status = get_attribute(this->ncid, i_var, "location", &mesh_vars->variable[nr_mesh_var - 1]->location);
             status = get_attribute(this->ncid, i_var, "mesh", &mesh_vars->variable[nr_mesh_var - 1]->mesh);
             status = get_attribute(this->ncid, i_var, "coordinates", &mesh_vars->variable[nr_mesh_var - 1]->coordinates);
@@ -767,7 +768,7 @@ long UGRID::read_variables()
     free(var_name_c);
     var_name_c = nullptr;
 #ifndef NATIVE_C
-    _pgBar->setValue(900);
+    m_pgBar->setValue(900);
 #endif
 
     return (long) status;
@@ -876,13 +877,14 @@ struct _variable * UGRID::get_var_by_std_name(struct _mesh_variable * vars, stri
 }
 
 //------------------------------------------------------------------------------
-vector<vector <double *>> UGRID::get_variable_values(const string var_name)
+DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name)
 // return: 1d dimensional value(x), ie time independent
 // return: 2d dimensional value(time, x)
 {
     int var_id;
     int status;
     int i_var;
+    DataValuesProvider2D<double *> data_pointer;
 
 #ifdef NATIVE_C
     fprintf(stderr, "UGRID::get_variable_values()\n");
@@ -895,6 +897,8 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
             i_var = i;
             if (!mesh_vars->variable[i]->read)  // are the z_values already read
             {
+                m_pgBar->show();
+                m_pgBar->setValue(0);
                 status = nc_inq_varid(this->ncid, var_name.c_str(), &var_id);
                 size_t length = 1;
                 for (int j = 0; j < mesh_vars->variable[i]->dims.size(); j++)
@@ -902,53 +906,46 @@ vector<vector <double *>> UGRID::get_variable_values(const string var_name)
                     length *= mesh_vars->variable[i]->dims[j];
                 }
                 double * values_c = (double *)malloc(sizeof(double) * length);
+                m_pgBar->setValue(400);
                 status = nc_get_var_double(this->ncid, var_id, values_c);
-                mesh_vars->variable[i]->z_value.reserve(length);
-                vector<double *> z_value;
-                int k = -1;
+                m_pgBar->setValue(800);
                 if (mesh_vars->variable[i]->dims.size() == 1)
                 {
-                    for (int n = 0; n < mesh_vars->variable[i]->dims[0]; n++)  // nodes
-                    {
-                        k++;
-                        z_value.push_back(values_c + k);
-                    }
-                    mesh_vars->variable[i]->z_value.push_back(z_value);
-                    z_value.clear();
+                    long time_dim = 1;
+                    long xy_dim = mesh_vars->variable[i]->dims[0];
+                    DataValuesProvider2D<double> DataValuesProvider2D(values_c, time_dim, xy_dim);
+                    mesh_vars->variable[i_var]->data_2d = DataValuesProvider2D;
                 }
                 else if (mesh_vars->variable[i]->dims.size() == 2)
                 {
-                    for (int m = 0; m < mesh_vars->variable[i]->dims[0]; m++)  // time steps
-                    {
-                        for (int n = 0; n < mesh_vars->variable[i]->dims[1]; n++)  // nodes
-                        {
-                            k++;
-                            z_value.push_back(values_c + k);
-                        }
-                        mesh_vars->variable[i]->z_value.push_back(z_value);
-                        z_value.clear();
-                    }
+                    long time_dim = mesh_vars->variable[i]->dims[0];  // TODO: Assumed to be the time dimension
+                    long xy_dim = mesh_vars->variable[i]->dims[1];  // TODO: Assumed to be the 2DH space dimension
+                    DataValuesProvider2D<double> DataValuesProvider2D(values_c, time_dim, xy_dim);
+                    mesh_vars->variable[i_var]->data_2d = DataValuesProvider2D;
                 }
                 else if (mesh_vars->variable[i]->dims.size() == 3)
                 {
                     continue;
                 }
                 mesh_vars->variable[i]->read = true;
-                break;  // variable value is found
+                m_pgBar->setValue(1000);
+                m_pgBar->hide();
+                return mesh_vars->variable[i_var]->data_2d; // variable value is found
             }
+            return mesh_vars->variable[i_var]->data_2d;
         }
     }
-    return mesh_vars->variable[i_var]->z_value;
 }
 //------------------------------------------------------------------------------
-vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var_name)
+DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name)
 // return: 3d dimensional value(time, layer, x)
 {
     int var_id;
-    vector<vector <double *>> values_2d;
     int status;
     int i_var;
-
+    double * read_c;
+    double * values_c;
+    DataValuesProvider3D<double> * data_pointer = nullptr;
 #ifdef NATIVE_C
     fprintf(stderr, "UGRID::get_variable_values()\n");
 #endif    
@@ -960,19 +957,21 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
             i_var = i; 
             if (!mesh_vars->variable[i]->read)  // are the z_values already read
             {
+                m_pgBar->show();
                 status = nc_inq_varid(this->ncid, var_name.c_str(), &var_id);
                 size_t length = 1;
                 for (int j = 0; j < mesh_vars->variable[i]->dims.size(); j++)
                 {
                     length *= mesh_vars->variable[i]->dims[j];
                 }
-                double * values_c = (double *)malloc(sizeof(double) * length);
-                status = nc_get_var_double(this->ncid, var_id, values_c);
-                mesh_vars->variable[i]->z_3d.reserve(length);
-                
+                read_c = (double *)malloc(sizeof(double) * length);
+                //boost::timer::cpu_timer timer;
+                status = nc_get_var_double(this->ncid, var_id, read_c);
+                //std::cout << timer.format() << '\n';
+                m_pgBar->setValue(100);
                 long time_dim = mesh_vars->variable[i]->dims[0];
-                long lyer_dim = mesh_vars->variable[i]->dims[1];
-                long node_dim = mesh_vars->variable[i]->dims[2];
+                long layer_dim = mesh_vars->variable[i]->dims[1];
+                long xy_dim = mesh_vars->variable[i]->dims[2];
                 bool swap_loops = false;
                 //HACK assumed is that the time is the first dimension
                 //HACK just the variables at the layers, interfaces are skipped
@@ -982,6 +981,36 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
                     // loop over layers and nodes should be swapped
                     swap_loops = true;
                 }
+                values_c = (double *)malloc(sizeof(double) * length);
+                int k_tot = time_dim * xy_dim * layer_dim + xy_dim * layer_dim + layer_dim;
+                if (swap_loops)
+                {
+                    for (int t = 0; t < time_dim; t++)
+                    {
+                        for (int xy = 0; xy < xy_dim; xy++)
+                        {
+                            for (int l = 0; l < layer_dim; l++)
+                            {
+                                int k_target = t * xy_dim * layer_dim  + xy * layer_dim + l;
+                                int k_source = t * xy_dim * layer_dim + l * xy_dim + xy;
+                                values_c[k_target] = read_c[k_source];
+
+                                double fraction = 100. + 900. * double(k_target) / double(k_tot);
+                                m_pgBar->setValue(int(fraction));
+                            }
+                        }
+                    }
+                    int tmp_dim = layer_dim;
+                    layer_dim = xy_dim;
+                    xy_dim = tmp_dim;
+                    free(read_c);
+                }
+                else
+                {
+                    memcpy(values_c, read_c, length*sizeof(double));
+                }
+                DataValuesProvider3D<double> DataValuesProvider3D(values_c, time_dim, layer_dim, xy_dim);
+
                 for (int j = 0; j < mesh_vars->variable[i]->dim_names.size(); j++)
                 {
                     if (m_map_dim_name["z_sigma_interface"] == mesh_vars->variable[i]->dim_names[j])
@@ -991,49 +1020,19 @@ vector<vector<vector <double *>>> UGRID::get_variable_3d_values(const string var
 #else
                         QMessageBox::warning(0, QString("Warning"), QString("3D data on interfaces not yet supported,\ndata: %1").arg(var_name.c_str()));
 #endif
-                        return mesh_vars->variable[i]->z_3d;
+                        return DataValuesProvider3D;
                     }
 
                 }
-
-                vector<double *> z_value;
-                int k = -1;
-                for (int t = 0; t < time_dim; t++)  // time steps
-                {
-                    if (!swap_loops)
-                    {
-                        for (int lay = 0; lay < lyer_dim; lay++)  // layers
-                        {
-                            for (int n = 0; n < node_dim; n++)  // nodes
-                            {
-                                k = lyer_dim * node_dim * t + node_dim * lay + n;
-                                z_value.push_back(values_c + k);
-                            }
-                            values_2d.push_back(z_value);
-                            z_value.clear();
-                        }
-                    }
-                    else
-                    {
-                        for (int n = 0; n < node_dim; n++)  // nodes
-                        {
-                            for (int lay = 0; lay < lyer_dim; lay++)  // layers
-                            {
-                                k = lyer_dim * node_dim * t + node_dim * lay + n;
-                                z_value.push_back(values_c + k);
-                            }
-                            values_2d.push_back(z_value);
-                            z_value.clear();
-                        }
-                    }
-                    mesh_vars->variable[i]->z_3d.push_back(values_2d);
-                    values_2d.clear();
-                }
+                mesh_vars->variable[i_var]->data_3d = DataValuesProvider3D;
                 mesh_vars->variable[i]->read = true;
+                m_pgBar->hide();
+                return mesh_vars->variable[i_var]->data_3d;  // if read, skip all remaining variables
             }
+            return mesh_vars->variable[i_var]->data_3d;
         }
     }
-    return mesh_vars->variable[i_var]->z_3d;
+    return *data_pointer;
 }
 //==============================================================================
 // PRIVATE functions
@@ -2429,7 +2428,7 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
 
 #ifndef NATIVE_C
     int pgbar_value = 950;
-    _pgBar->setValue(pgbar_value);
+    m_pgBar->setValue(pgbar_value);
 #endif
 
     int status = -1;
@@ -2500,7 +2499,7 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
         status = 0;
     }
 #ifndef NATIVE_C
-    _pgBar->setValue(990);
+    m_pgBar->setValue(990);
 #endif
     return status;
 }

@@ -39,6 +39,10 @@
 #include "map_property_window.h"
 #include "map_property.h"
 
+#if defined WIN64
+#define _sleep _sleep
+#endif
+
 class MapTimeManagerWindow
     : public QDockWidget
 

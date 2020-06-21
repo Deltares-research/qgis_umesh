@@ -16,10 +16,75 @@
 
 #include <QtGui/QIcon>
 
+//#include <boost/timer/timer.hpp>
 #include "data_struct.h"
 #include "netcdf.h"
 
 using namespace std;
+template<typename T>
+struct DataValuesProvider2D
+{
+public:
+    DataValuesProvider2D() {};
+    T* m_arrayPtr;
+    int m_numTimes;
+    int m_numXY;
+
+    // copy the pointer and values
+    DataValuesProvider2D(T* arrayPtr, int numTimes, int numXY) :
+        m_arrayPtr(arrayPtr),
+        m_numTimes(numTimes),
+        m_numXY(numXY)
+    {
+    }
+
+    inline T* GetValueAtIndex(int timeIndex, int xyIndex)
+    {
+        int index = GetIndex(timeIndex, xyIndex);
+
+        return &m_arrayPtr[index];
+    }
+
+    inline int GetIndex(int timeIndex, int xyIndex)
+    {
+        int index = m_numXY * timeIndex + xyIndex;
+        return index;
+    }
+};
+
+template<typename T>
+struct DataValuesProvider3D
+{
+public:
+    DataValuesProvider3D() {};
+    T* m_arrayPtr;
+    int m_numTimes;
+    int m_numLayer;
+    int m_numXY;
+
+    // copy the pointer and values
+    DataValuesProvider3D(T* arrayPtr, int numTimes, int numLayer, int numXY) :
+        m_arrayPtr(arrayPtr),
+        m_numTimes(numTimes),
+        m_numLayer(numLayer),
+        m_numXY(numXY)
+    {
+    }
+
+    inline T* GetValueAtIndex(int timeIndex, int layerIndex, int xyIndex)
+    {
+        int index = GetIndex(timeIndex, layerIndex, xyIndex);
+
+        return &m_arrayPtr[index];
+    }
+
+    inline int GetIndex(int timeIndex, int layerIndex, int xyIndex)
+    {
+        int index = m_numXY * m_numLayer * timeIndex + m_numXY * layerIndex + xyIndex;
+        return index;
+    }
+};
+
 
 struct _time_series {
     size_t nr_times;
@@ -32,6 +97,8 @@ struct _time_series {
 
 
 struct _variable {
+public:
+    _variable() {};
     double fill_value;
     vector<long> dims;
     nc_type nc_type;
@@ -54,6 +121,8 @@ struct _variable {
     vector<double> layer_center;
     vector<double> layer_interface;
     vector<vector <double *>> z_value;
+    DataValuesProvider2D<double> data_2d;
+    DataValuesProvider3D<double> data_3d;
     vector<vector<vector <double *>>> z_3d;
     map<string, string> map_dim_name;
 };
@@ -285,8 +354,8 @@ public:
     QVector<QDateTime> qdt_times;
 
     struct _mesh_variable * get_variables();
-    vector<vector <double *>> get_variable_values(const string);
-    vector<vector<vector <double *>>> get_variable_3d_values(const string);
+    DataValuesProvider2D<double> get_variable_values(const string);
+    DataValuesProvider3D<double> get_variable_3d_values(const string);
 
     struct _variable * get_var_by_std_name(struct _mesh_variable *, string, string);
 
@@ -357,7 +426,7 @@ private:
 #else
     QFileInfo fname;
     QString ugrid_file_name;
-    QProgressBar * _pgBar;
+    QProgressBar * m_pgBar;
 #endif
     _global_attributes * global_attributes;
 };
