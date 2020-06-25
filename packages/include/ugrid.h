@@ -120,7 +120,6 @@ public:
     int nr_layers;
     vector<double> layer_center;
     vector<double> layer_interface;
-    vector<vector <double *>> z_value;
     DataValuesProvider2D<double> data_2d;
     DataValuesProvider3D<double> data_3d;
     vector<vector<vector <double *>>> z_3d;
@@ -408,7 +407,8 @@ private:
 
     vector<_time_series> time_series;
 
-    long _nr_mesh_contacts;
+    long m_nr_mesh_contacts;
+    long m_nr_mesh_var;
     size_t _two;
     size_t * m_dimids;
     vector<string> m_dim_names;

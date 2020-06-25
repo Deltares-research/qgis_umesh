@@ -53,14 +53,28 @@ qgis_umesh::qgis_umesh(QgisInterface* iface):
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible}
     //connect(treeRoot, &QgsLayerTree::removedChildren, this, &qgis_umesh::onWillRemoveChildren);
     connect(treeRoot, SIGNAL(removedChildren(QgsLayerTreeNode *, int, int)), this, SLOT(onWillRemoveChildren(QgsLayerTreeNode *, int, int)));
+    connect(treeRoot, SIGNAL(layerWillBeRemoved(QString)), this, SLOT(onRemovedChildren(QString)));
     //root.willRemoveChildren.connect(onWillRemoveChildren)
     //    root.removedChildren.connect(onRemovedChildren)
 }
 void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, int indexTo)
 {
-    //QMessageBox::information(0, "qgis_umesh::onWillRemoveChildren()", QString("Node: %1.").arg(node->name()));
-    // Remove the file entry belonging to this group
-    // if available: deactivate the map_time_manager_window
+    if (node->name() == (""))
+    {
+        QString msg = QString("Clean up the memory for this group");
+        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+        QString layer;
+        QgsProject::instance()->layerWillBeRemoved(layer);  // root is invisible}
+          // Remove the file entry belonging to this group
+        // if available: deactivate the map_time_manager_window
+        int a = 1;
+    }
+}
+void qgis_umesh::onRemovedChildren(QString name)
+{
+    QString msg = QString("Clean up the memory for this group: \'%1\'").arg(name);
+    QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+    int a = 1;
 }
 
 //

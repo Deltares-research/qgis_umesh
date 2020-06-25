@@ -35,6 +35,7 @@
 #include <QgsLayerTreeView.h>
 #include <qgsmapcanvas.h>
 #include <qgsmaplayer.h>
+#include <qgsmaptool.h>
 #include <qgsmessagelog.h>
 #include <qgsvectorlayer.h>
 #include <qgisplugin.h>
@@ -137,6 +138,7 @@ class qgis_umesh
         void CrsChanged();
         void mapPropertyWindow();
         void onWillRemoveChildren(QgsLayerTreeNode *, int, int);
+        void onRemovedChildren(QString);
 
     private:
         // windows
