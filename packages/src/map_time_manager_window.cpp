@@ -7,7 +7,7 @@ MapProperty * MapProperty::obj;  // Initialize static member of class MapPropert
 
 MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ugrid_file, MyCanvas * MyCanvas) : QDockWidget()
 {
-    object_count++;
+    object_count = 1;
     mQGisIface = QGisIface;
     m_sb_layer = nullptr;
     m_sb_layer_vec = nullptr;
@@ -67,7 +67,7 @@ void MapTimeManagerWindow::contextMenu(const QPoint & point)
 void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
 {
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::~closeEvent()");
-    this->object_count--;
+    this->object_count = 0;
     QStringList coord;
     coord << "";
     _MyCanvas->set_coordinate_type(coord);

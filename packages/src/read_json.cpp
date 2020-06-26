@@ -73,8 +73,8 @@ READ_JSON::READ_JSON(string file_json)
     catch (const ptree_error &e)
     {
         //cout << e.what() << endl;
-        QString msg = QString::fromStdString(e.what()).trimmed();
-        QMessageBox::warning(0, "READ_JSON::READ_JSON", QString("%1").arg(msg));
+        //QString msg = QString::fromStdString(e.what()).trimmed();
+        //QMessageBox::warning(0, "READ_JSON::READ_JSON", QString("%1").arg(msg));
     }
 }
 READ_JSON::~READ_JSON()
@@ -90,4 +90,8 @@ long READ_JSON::get(string data, vector<double> & strJsonResults)
 {
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
+}
+string READ_JSON::get_filename()
+{
+    return this->m_filename;
 }

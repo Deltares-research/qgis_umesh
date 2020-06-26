@@ -2724,7 +2724,9 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         status = prop_tree->get(values, lateral_name);
         if (lateral_name.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of lateral discharges is zero. JSON data: ")) + QString::fromStdString(values));
+            QString fname = QString::fromStdString(prop_tree->get_filename());
+            QString msg = QString("Number of lateral discharges is zero on file: %1.\nJSON data string: %2").arg(fname).arg(QString::fromStdString(values));
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), msg);
         }
         else
         {
@@ -2842,7 +2844,9 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         status = prop_tree->get(values, bnd_name);
         if (bnd_name.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of boundary node is zero. JSON data: ")) + QString::fromStdString(values));
+            QString fname = QString::fromStdString(prop_tree->get_filename());
+            QString msg = QString("Number of boundary nodes is zero on file: %1.\nJSON data string: %2").arg(fname).arg(QString::fromStdString(values));
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), msg);
         }
         else
         {

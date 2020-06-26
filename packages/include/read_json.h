@@ -16,6 +16,7 @@ public:
     ~READ_JSON();
     long get(string, vector<string> &);
     long get(string, vector<double> &);
+    string get_filename();
     void prop_get_json(boost::property_tree::ptree &, const string, vector<string> &);
     void prop_get_json(boost::property_tree::ptree &, const string, vector<double> &);
     template<class T> void gett(string, vector<T>);

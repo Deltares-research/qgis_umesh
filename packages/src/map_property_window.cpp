@@ -5,7 +5,7 @@ int MapPropertyWindow::object_count = 0;
 MapPropertyWindow::MapPropertyWindow(MyCanvas * myCanvas) : QDockWidget()
 {
     //QMessageBox::information(0, "Information", "MapPropertyWindow::MapPropertyWindow()");
-    object_count++;
+    object_count = 1;
     m_property = MapProperty::getInstance();
     // make backup, needed when the cancel button is pressed
     m_bck_property = (struct _bck_property *) malloc(sizeof(struct _bck_property));
@@ -21,11 +21,12 @@ MapPropertyWindow::MapPropertyWindow(MyCanvas * myCanvas) : QDockWidget()
 }
 MapPropertyWindow::~MapPropertyWindow()
 {
+    //QMessageBox::information(0, "Information", "MapPropertyWindow::~MapPropertyWindow()");
 }
 void MapPropertyWindow::close()
 {
-    //QMessageBox::information(0, "Information", "MapPropertyWindow::~closeEvent()");
-    this->object_count--;
+    //QMessageBox::information(0, "Information", "MapPropertyWindow::~close()");
+    this->object_count = 0;
     wid->close();
 }
 int MapPropertyWindow::get_count()
