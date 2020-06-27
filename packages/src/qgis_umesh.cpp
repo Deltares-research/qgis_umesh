@@ -1716,9 +1716,7 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
             QgsVectorDataProvider * dp_vl;
             QList <QgsField> lMyAttribField;
 
-            int nr_attrib_fields = 2;
-            lMyAttribField << QgsField("Node Id (0-based)", QVariant::String)
-                           << QgsField("Node Id (1-based)", QVariant::String);
+            int nr_attrib_fields = 0;
             if (nodes->name.size() != 0)
             {
                 lMyAttribField << QgsField("Node name", QVariant::String);
@@ -1726,9 +1724,13 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
             }
             if (nodes->long_name.size() != 0)
             {
-                lMyAttribField  << QgsField("Node long name", QVariant::String);
+                lMyAttribField << QgsField("Node long name", QVariant::String);
                 nr_attrib_fields++;
             }
+            lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -1748,10 +1750,7 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
                 MyFeature.setGeometry(MyPoints);
 
                 MyFeature.initAttributes(nr_attrib_fields);
-                int k = 0;
-                MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                k++;
-                MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+                int k = -1;
                 if (nodes->name.size() != 0)
                 {
                     k++;
@@ -1763,6 +1762,10 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(nodes->long_name[j]).trimmed()));
                     //MyFeature.setAttribute(k, QString::fromStdString(nodes->long_name[j]).trimmed());
                 }
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
 
                 dp_vl->addFeature(MyFeature);
             }
@@ -1977,20 +1980,21 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
             QgsVectorDataProvider * dp_vl;
             QList <QgsField> lMyAttribField;
 
-            int nr_attrib_fields = 2;
-
-            lMyAttribField << QgsField("Geometry Id (0-based)", QVariant::String)
-                           << QgsField("Geometry Id (1-based)", QVariant::String);
-                if (ntw_geom->geom[0]->name.size() != 0)
-                {
-                    lMyAttribField << QgsField("Geometry edge name", QVariant::String);
-                    nr_attrib_fields++;
-                }
-                if (ntw_geom->geom[0]->long_name.size() != 0)
-                {
-                    lMyAttribField << QgsField("Geometry edge long name", QVariant::String);
-                    nr_attrib_fields++;
-                }
+            int nr_attrib_fields = 0;
+            if (ntw_geom->geom[0]->name.size() != 0)
+            {
+                lMyAttribField << QgsField("Geometry edge name", QVariant::String);
+                nr_attrib_fields++;
+            }
+            if (ntw_geom->geom[0]->long_name.size() != 0)
+            {
+                lMyAttribField << QgsField("Geometry edge long name", QVariant::String);
+                nr_attrib_fields++;
+            }
+            lMyAttribField << QgsField("Geometry Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Geometry Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -2024,10 +2028,7 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
                     MyFeature.setGeometry(MyEdge);
 
                     MyFeature.initAttributes(nr_attrib_fields);
-                    int k = 0;
-                    MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                    k++;
-                    MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+                    int k = -1;
                     if (ntw_geom->geom[i]->name.size() != 0)
                     {
                         k++;
@@ -2038,6 +2039,10 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
                         k++;
                         MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(ntw_geom->geom[i]->long_name[j]).trimmed()));
                     }
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                     vl->commitChanges();
@@ -2083,10 +2088,7 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
             QgsVectorDataProvider * dp_vl;
             QList <QgsField> lMyAttribField;
 
-            int nr_attrib_fields = 2;
-
-            lMyAttribField << QgsField("Edge Id (0-based)", QVariant::String)
-                           << QgsField("Edge Id (1-based)", QVariant::String);
+            int nr_attrib_fields = 0;
             //if (nodes->branch.size() != 0)
             {
                 lMyAttribField << QgsField("Edge length", QVariant::Double);
@@ -2102,6 +2104,10 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
                 lMyAttribField << QgsField("Edge long name", QVariant::String);
                 nr_attrib_fields++;
             }
+            lMyAttribField << QgsField("Edge Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Edge Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -2137,11 +2143,7 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
                 MyFeature.setGeometry(MyEdge);
 
                 MyFeature.initAttributes(nr_attrib_fields);
-                int k = 0;
-                MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                k++;
-                MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
-
+                int k = -1;
                 if (edges->edge_length.size() != 0)
                 {
                     k++;
@@ -2168,6 +2170,10 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(edges->long_name[j]).trimmed()));
                 }
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
                 MyFeature.setValid(true);
 
                 dp_vl->addFeature(MyFeature);
@@ -2214,15 +2220,16 @@ void qgis_umesh::create_observation_point_vector_layer(QString layer_name, _loca
             QgsVectorDataProvider * dp_vl;
             QList <QgsField> lMyAttribField;
 
-            int nr_attrib_fields = 2;
-            lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String)
-                           << QgsField("Observation point Id (1-based)", QVariant::String);
-
+            int nr_attrib_fields = 0;
             if (obs_points->location_long_name != nullptr)
             {
                 lMyAttribField << QgsField(obs_points->location_long_name, QVariant::String);
                 nr_attrib_fields++;
             }
+            lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -2242,15 +2249,16 @@ void qgis_umesh::create_observation_point_vector_layer(QString layer_name, _loca
                 MyFeature.setGeometry(MyPoints);
 
                 MyFeature.initAttributes(nr_attrib_fields);
-                int k = 0;
-                MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                k++;
-                MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+                int k = -1;
                 if (obs_points->location[j].name != nullptr)
                 {
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString(obs_points->location[j].name).trimmed()));
                 }
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
 
                 dp_vl->addFeature(MyFeature);
             }
@@ -2301,16 +2309,16 @@ void qgis_umesh::create_observation_polyline_vector_layer(QString layer_name, _l
             QgsVectorDataProvider * dp_vl;
             QList <QgsField> lMyAttribField;
 
-            int nr_attrib_fields = 2;
-
-            lMyAttribField << QgsField("Cross section Id (0-based)", QVariant::String)
-                           << QgsField("Cross section Id (1-based)", QVariant::String);
-                    
+            int nr_attrib_fields = 0;
             if (obs_points->location_long_name != nullptr)
             {
                 lMyAttribField << QgsField(obs_points->location_long_name, QVariant::String);
                 nr_attrib_fields++;
             }
+            lMyAttribField << QgsField("Cross section Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Cross section Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -2347,15 +2355,16 @@ void qgis_umesh::create_observation_polyline_vector_layer(QString layer_name, _l
                     MyFeature.setGeometry(MyEdge);
 
                     MyFeature.initAttributes(nr_attrib_fields);
-                    int k = 0;
-                    MyFeature.setAttribute(0, QString("%1_b0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
-                    k++;
-                    MyFeature.setAttribute(1, QString("%1_b1").arg(i + 1));
+                    int k = -1;
                     if (obs_points->location[i].name != nullptr)
                     {
                         k++;
                         MyFeature.setAttribute(k, QString("%1").arg(QString(obs_points->location[i].name).trimmed()));
                     }
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b1").arg(i + 1));
 
                     dp_vl->addFeature(MyFeature);
                     vl->commitChanges();
@@ -2415,11 +2424,12 @@ void qgis_umesh::create_1D_structure_vector_layer(UGRID * ugrid_file, READ_JSON 
         QgsVectorDataProvider * dp_vl;
         QList <QgsField> lMyAttribField;
 
-        int nr_attrib_fields = 2;
-
-        lMyAttribField << QgsField("Structure Id (0-based)", QVariant::String)
-                       << QgsField("Structure Id (1-based)", QVariant::String);
+        int nr_attrib_fields = 0;
         lMyAttribField << QgsField("Structure name", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Structure Id (0-based)", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Structure Id (1-based)", QVariant::String);
         nr_attrib_fields++;
 
         QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -2445,12 +2455,13 @@ void qgis_umesh::create_1D_structure_vector_layer(UGRID * ugrid_file, READ_JSON 
             MyFeature.setGeometry(MyPoints);
 
             MyFeature.initAttributes(nr_attrib_fields);
-            int k = 0;
-            MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-            k++;
-            MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+            int k = -1;
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
 
             dp_vl->addFeature(MyFeature);
         }
@@ -2543,9 +2554,9 @@ void qgis_umesh::create_crs_observation_point_vector_layer(UGRID * ugrid_file, R
 
     int nr_attrib_fields = 3;
 
+    lMyAttribField << QgsField("Observation point name", QVariant::String);
     lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
     lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
-    lMyAttribField << QgsField("Observation point name", QVariant::String);
 
     QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
     vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -2561,12 +2572,13 @@ void qgis_umesh::create_crs_observation_point_vector_layer(UGRID * ugrid_file, R
         MyFeature.setGeometry(MyPoints);
 
         MyFeature.initAttributes(nr_attrib_fields);
-        int k = 0;
-        MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-        k++;
-        MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+        int k = -1;
         k++;
         MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(obs_name[j]).trimmed()));
+        k++;
+        MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+        k++;
+        MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
 
         dp_vl->addFeature(MyFeature);
     }
@@ -2652,13 +2664,14 @@ void qgis_umesh::create_chainage_observation_point_vector_layer(UGRID * ugrid_fi
         QgsVectorDataProvider * dp_vl;
         QList <QgsField> lMyAttribField;
 
-        int nr_attrib_fields = 2;
-
-        lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String)
-                       << QgsField("Observation point Id (1-based)", QVariant::String);
+        int nr_attrib_fields = 0;
         lMyAttribField << QgsField("Observation point name", QVariant::String);
         nr_attrib_fields++;
         lMyAttribField << QgsField("Observation point rotation", QVariant::Double);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
         nr_attrib_fields++;
 
         QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -2683,14 +2696,15 @@ void qgis_umesh::create_chainage_observation_point_vector_layer(UGRID * ugrid_fi
             MyFeature.setGeometry(MyPoints);
 
             MyFeature.initAttributes(nr_attrib_fields);
-            int k = 0;
-            MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-            k++;
-            MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+            int k = -1;
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(obs_name[j]).trimmed()));
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(double(j)/double(obs_name.size())*360.));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
 
             dp_vl->addFeature(MyFeature);
         }
@@ -2776,13 +2790,14 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             QgsVectorDataProvider * dp_vl;
             QList <QgsField> lMyAttribField;
 
-            int nr_attrib_fields = 2;
-
-            lMyAttribField << QgsField("Lateral point Id (0-based)", QVariant::String)
-                << QgsField("Lateral point Id (1-based)", QVariant::String);
+            int nr_attrib_fields = 0;
             lMyAttribField << QgsField("Lateral point name", QVariant::String);
             nr_attrib_fields++;
             lMyAttribField << QgsField("Lateral point rotation", QVariant::Double);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Lateral point Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Lateral point Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -2807,14 +2822,15 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
                 MyFeature.setGeometry(MyPoints);
 
                 MyFeature.initAttributes(nr_attrib_fields);
-                int k = 0;
-                MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                k++;
-                MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+                int k = -1;
                 k++;
                 MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(lateral_name[j]).trimmed()));
                 k++;
                 MyFeature.setAttribute(k, QString("%1").arg(rotation));
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
 
                 dp_vl->addFeature(MyFeature);
             }
@@ -2871,12 +2887,14 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             QgsVectorDataProvider * dp_vl;
             QList <QgsField> lMyAttribField;
 
-            int nr_attrib_fields = 2;
-
-            lMyAttribField << QgsField("Boundary point Id (0-based)", QVariant::String)
-                           << QgsField("Boundary point Id (1-based)", QVariant::String);
+            int nr_attrib_fields = 0;
             lMyAttribField << QgsField("Boundary name", QVariant::String);
             nr_attrib_fields++;
+            lMyAttribField << QgsField("Boundary point Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Boundary point Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
+
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
             vl->startEditing();
@@ -2900,12 +2918,13 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
                 MyFeature.setGeometry(MyPoints);
 
                 MyFeature.initAttributes(nr_attrib_fields);
-                int k = 0;
-                MyFeature.setAttribute(0, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                k++;
-                MyFeature.setAttribute(1, QString("%1_b1").arg(j + 1));
+                int k = -1;
                 k++;
                 MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(bnd_name[j]).trimmed()));
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                k++;
+                MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
 
                 dp_vl->addFeature(MyFeature);
             }
@@ -2970,8 +2989,8 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
 
             int nr_attrib_fields = 2;
 
-            lMyAttribField << QgsField("Link Id (0-based)", QVariant::String)
-                           << QgsField("Link Id (1-based)", QVariant::String);
+            lMyAttribField << QgsField("Link Id (0-based)", QVariant::String);
+            lMyAttribField << QgsField("Link Id (1-based)", QVariant::String);
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
