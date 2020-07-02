@@ -61,8 +61,8 @@ void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, in
 {
     if (node->name() == (""))
     {
-        QString msg = QString("Clean up the memory for this group");
-        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+        //QString msg = QString("Clean up the memory for this group");
+        //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         QString layer;
         QgsProject::instance()->layerWillBeRemoved(layer);  // root is invisible}
           // Remove the file entry belonging to this group
@@ -947,7 +947,9 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     }
     else
     {
-        QMessageBox::warning(0, tr("Warning"), tr("JSON file opened: %1\nNo keyword \"%2\" in this file.").arg(jsonfile.absoluteFilePath()).arg(QString::fromStdString(values)));
+        QString fname = QString::fromStdString(pt_mdu->get_filename());
+        QString msg = QString(tr("No UGIRD mesh file given.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(values)));
+        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
         return;
     }
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
@@ -990,7 +992,9 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     }
     else
     {
-        QMessageBox::warning(0, tr("Warning"), QString(tr("JSON file opened: %1\nNo keyword \"%2\" in this file.").arg(jsonfile.absoluteFilePath()).arg(QString::fromStdString(values))));
+        QString fname = QString::fromStdString(pt_mdu->get_filename());
+        QString msg = QString(tr("Structures locations not given.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(values)));
+        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
     }
 
     values = "data.output.ObsFile";
@@ -1021,7 +1025,9 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     }
     else
     {
-        QMessageBox::warning(0, tr("Warning"), QString(tr("JSON file opened: %1\nNo keyword \"%2\" in this file.").arg(jsonfile.absoluteFilePath()).arg(QString::fromStdString(values))));
+        QString fname = QString::fromStdString(pt_mdu->get_filename());
+        QString msg = QString(tr("Observation points not given.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(values)));
+        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
     }
 
     values = "data.external_forcing.ExtForceFile";
@@ -1053,7 +1059,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     }
     else
     {
-        QString msg = QString(tr("File: %1 (old format)\nNo external forcings found in this file, looking for \"%2\".").arg(jsonfile.absoluteFilePath()).arg(QString::fromStdString(values)));
+        QString fname = QString::fromStdString(pt_mdu->get_filename());
+        QString msg = QString(tr("External forcings (old format) not given.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(values)));
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
     }
 
@@ -1087,7 +1094,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     else
     {
         QString fname = QString::fromStdString(pt_mdu->get_filename());
-        QString msg = QString(tr("External forcings are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(values)));
+        QString msg = QString(tr("External forcings not given.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(values)));
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
     }
 }
@@ -2778,7 +2785,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         if (fname.size() == 0)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString("Number of source and sinks is zero on file: %1.\nJSON data string: %2").arg(fname).arg(QString::fromStdString(values));
+            QString msg = QString(tr("Sources and sinks are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(values)));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -2798,27 +2805,6 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
                 subTreeGroup->setItemVisibilityCheckedRecursive(true);
             }
             // Now there is a tree group with name "Area"
-
-            QFileInfo ug_file = ugrid_file->get_filename();
-            for (int i = 0; i < 0; i++)
-            {
-                QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
-                READ_JSON * sorsin_file = new READ_JSON(filename.toStdString());
-            }
-            int i = 0;
-            QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
-            READ_JSON * sorsin_file = new READ_JSON(filename.toStdString());
-
-            vector<string> line_name;
-            vector<vector<vector<double>>> poly_lines;
-            status = sorsin_file->get("data.Path.name", line_name);
-            status = sorsin_file->get("data.Path.multiLine", poly_lines);
-
-            if (poly_lines.size() == 0)
-            {
-                QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(values));
-                return;
-            }
 
             // create the vector 
             QgsVectorLayer * vl;
@@ -2841,31 +2827,59 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
+            QFileInfo ug_file = ugrid_file->get_filename();
             QgsMultiLineString * polylines = new QgsMultiLineString();
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
-            for (int j = 0; j < poly_lines[i][0].size(); j++)  // number of x-coordinates
+
+            vector<string> line_name;
+            vector<vector<vector<double>>> poly_lines;
+
+            for (int i = 0; i < fname.size(); i++)
             {
-                double x1 = poly_lines[i][0][j];
-                double y1 = poly_lines[i][1][j];
-                point.append(QgsPointXY(x1, y1));
+                lines.clear();
+                point.clear();
+                poly_lines.clear();
+                line_name.clear();
+                QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
+                READ_JSON * sorsin_file = new READ_JSON(filename.toStdString());
+
+                status = sorsin_file->get("data.Path.name", line_name);
+                status = sorsin_file->get("data.Path.multiLine", poly_lines);
+
+                if (poly_lines.size() == 0)
+                {
+                    QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(values));
+                    return;
+                }
+
+                for (int ii = 0; ii < poly_lines.size(); ii++)
+                {
+                    for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
+                    {
+                        double x1 = poly_lines[ii][0][j];
+                        double y1 = poly_lines[ii][1][j];
+                        point.append(QgsPointXY(x1, y1));
+                    }
+                    lines.append(point);
+
+                    QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
+                    QgsFeature MyFeature;
+                    MyFeature.setGeometry(MyEdge);
+                    MyFeature.initAttributes(nr_attrib_fields);
+
+                    int k = -1;
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b1").arg(i + 1));
+
+                    dp_vl->addFeature(MyFeature);
+                    vl->commitChanges();
+                }
             }
-            lines.append(point);
-            QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
-            QgsFeature MyFeature;
-            MyFeature.setGeometry(MyEdge);
-
-            MyFeature.initAttributes(nr_attrib_fields);
-            int k = -1;
-            k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[i]).trimmed()));
-            k++;
-            MyFeature.setAttribute(k, QString("%1_b0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
-            k++;
-            MyFeature.setAttribute(k, QString("%1_b1").arg(i + 1));
-
-            dp_vl->addFeature(MyFeature);
-            vl->commitChanges();
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
