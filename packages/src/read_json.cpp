@@ -59,6 +59,44 @@ struct Getter
             QMessageBox::warning(0, "READ_JSON::prop_get_json", QString("%1").arg(msg));
         }
     }
+    template<typename T, class Ptree>
+    static void prop_get_json(Ptree &pt, const string & data, vector< vector<vector<T>>> & results)
+    {
+        try
+        {
+            vector<double> vec;
+            vector<vector<double>> coord;
+
+            size_t i = data.find_last_of(".");
+            string chapter = data.substr(0, i);
+            string key = data.substr(i + 1);
+            for (auto & v1 : pt.get_child(chapter))
+            {
+                for (auto& p1 : v1.second)
+                {
+                    if (p1.first == key)
+                    {
+                        for (auto& p2 : p1.second)
+                        {
+                            for (auto& p : p2.second)
+                            {
+                                string str = p.second.data();
+                                vec.push_back(stod(str));
+                            }
+                            coord.push_back(vec);
+                            vec.clear();
+                        }
+                        if (!p1.second.empty())results.push_back(coord);
+                        coord.clear();
+                    }
+                }
+            }
+        }
+        catch (const boost::property_tree::ptree_error& e)
+        {
+            std::cout << e.what() << endl;
+        }
+    }
 };
 
 READ_JSON::READ_JSON(string file_json)
@@ -77,16 +115,18 @@ READ_JSON::READ_JSON(string file_json)
         //QMessageBox::warning(0, "READ_JSON::READ_JSON", QString("%1").arg(msg));
     }
 }
-READ_JSON::~READ_JSON()
-{
-    delete & m_ptrtree;
-}
+
 long READ_JSON::get(string data, vector<string> & strJsonResults)
 {
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }
 long READ_JSON::get(string data, vector<double> & strJsonResults)
+{
+    Getter::prop_get_json(m_ptrtree, data, strJsonResults);
+    return 0;
+}
+long READ_JSON::get(string data, vector < vector< vector<double>>> & strJsonResults)
 {
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;

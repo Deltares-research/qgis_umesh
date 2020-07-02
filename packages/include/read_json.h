@@ -13,12 +13,13 @@ class READ_JSON
 {
 public:
     READ_JSON(string);
-    ~READ_JSON();
     long get(string, vector<string> &);
     long get(string, vector<double> &);
+    long get(string, vector<vector<vector<double>>> &);
     string get_filename();
     void prop_get_json(boost::property_tree::ptree &, const string, vector<string> &);
     void prop_get_json(boost::property_tree::ptree &, const string, vector<double> &);
+    void prop_get_json(boost::property_tree::ptree &, const string, vector<vector<vector<double>>> &);
     template<class T> void gett(string, vector<T>);
 
 private:
