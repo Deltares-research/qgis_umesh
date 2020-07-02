@@ -55,8 +55,8 @@ struct Getter
         catch (const ptree_error &e)
         {
             //cout << e.what() << endl;
-            QString msg = QString::fromStdString(e.what()).trimmed();
-            QMessageBox::warning(0, "READ_JSON::prop_get_json", QString("%1").arg(msg));
+            //QString msg = QString::fromStdString(e.what()).trimmed();
+            //QMessageBox::warning(0, "READ_JSON::prop_get_json", QString("%1").arg(msg));
         }
     }
     template<typename T, class Ptree>
@@ -94,7 +94,7 @@ struct Getter
         }
         catch (const boost::property_tree::ptree_error& e)
         {
-            std::cout << e.what() << endl;
+            //std::cout << e.what() << endl;
         }
     }
 };
