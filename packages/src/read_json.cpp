@@ -78,15 +78,18 @@ struct Getter
                     {
                         for (auto& p2 : p1.second)
                         {
-                            for (auto& p : p2.second)
+                            if (p2.first == "x" || p2.first == "y")
                             {
-                                string str = p.second.data();
-                                vec.push_back(stod(str));
+                                for (auto& p : p2.second)
+                                {
+                                    string str = p.second.data();
+                                    vec.push_back(stod(str));
+                                }
+                                coord.push_back(vec);
+                                vec.clear();
                             }
-                            coord.push_back(vec);
-                            vec.clear();
                         }
-                        if (!p1.second.empty())results.push_back(coord);
+                        results.push_back(coord);
                         coord.clear();
                     }
                 }
@@ -104,9 +107,7 @@ READ_JSON::READ_JSON(string file_json)
     m_filename = file_json;
     try
     {
-        boost::property_tree::ptree pt;
-        boost::property_tree::read_json(file_json, pt);
-        m_ptrtree = pt;
+        boost::property_tree::read_json(file_json, m_ptrtree);
     }
     catch (const ptree_error &e)
     {
@@ -118,16 +119,19 @@ READ_JSON::READ_JSON(string file_json)
 
 long READ_JSON::get(string data, vector<string> & strJsonResults)
 {
+    strJsonResults.clear();
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }
 long READ_JSON::get(string data, vector<double> & strJsonResults)
 {
+    strJsonResults.clear();
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }
 long READ_JSON::get(string data, vector < vector< vector<double>>> & strJsonResults)
 {
+    strJsonResults.clear();
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }

@@ -108,7 +108,7 @@ class qgis_umesh
         long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, string, double, double *, double *, double *);
         long find_location_boundary(struct _ntw_nodes *, string, double *, double *);
 
-
+        QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
         void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
         void show_map_output(UGRID *);
         void edit_1d_obs_points();
