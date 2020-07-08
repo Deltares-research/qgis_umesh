@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="generated\moc_add_current_view_window.cpp" />
     <ClCompile Include="generated\moc_edit_observation_points_window.cpp" />
     <ClCompile Include="generated\moc_map_property.cpp" />
     <ClCompile Include="generated\moc_map_property_window.cpp" />
@@ -20,6 +21,7 @@
     <ClCompile Include="generated\moc_my_date_time_edit.cpp" />
     <ClCompile Include="generated\moc_QColorRampEditor.cpp" />
     <ClCompile Include="generated\moc_qgis_umesh.cpp" />
+    <ClCompile Include="src\add_current_view_window.cpp" />
     <ClCompile Include="src\edit_observation_points_window.cpp" />
     <ClCompile Include="src\his_cf.cpp" />
     <ClCompile Include="src\map_property.cpp" />
@@ -90,6 +92,14 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
     </CustomBuild>
     <CustomBuild Include="include\map_property_window.h">
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+    </CustomBuild>
+    <CustomBuild Include="include\add_current_view_window.h">
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>

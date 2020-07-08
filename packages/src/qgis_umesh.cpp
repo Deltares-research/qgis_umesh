@@ -1440,22 +1440,12 @@ void qgis_umesh::activate_layers()
         {
             QString fname = m_ugrid_file[_fil_index]->get_filename().fileName();
             QString name = QString("UGRID - %1").arg(fname);
-            treeGroup = treeRoot->insertGroup(_fil_index, name);
+            treeGroup = treeRoot->insertGroup(_fil_index, name);  // set this group on top if _fil_index == 0
             treeGroup->setExpanded(true);  // true is the default 
             treeGroup->setItemVisibilityChecked(true);
-            //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
             treeGroup->setItemVisibilityCheckedRecursive(true);
         }
-        //treeGroup->setItemVisibilityCheckedParentRecursive(true);
-        //connect(lstCoordinateSystems, &QTreeWidget::currentItemChanged, this, &qgis_umesh::msg);  // changing coordinate system of a layer
-        // signal when changing CRS: QgsProject::instance()->crsChanged();
-        //connect(mCanvas, &QgsMapCanvas::destinationCrsChanged, this, &qgis_umesh::msg);  // changing coordinate system of a layer
-        //for (int i = 0; i < mQGisIface->mapCanvas()->layerCount(); i++)
-        //{
-        //    QgsMapLayer * mapLayer = mQGisIface->mapCanvas()->layer(i);
-        //}
-        //QgsProject::instance()->crs
-        // The treeGroup exists
+
         if (_fil_index != -1)
         {
             UGRID * ugrid_file = m_ugrid_file[_fil_index];

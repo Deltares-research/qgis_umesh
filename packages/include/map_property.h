@@ -28,20 +28,20 @@ public:
     void set_minimum(double);
     void set_maximum(double);
     void set_opacity(double);
-    void set_refresh_rate(double);
+    void set_refresh_time(double);
     void set_vector_scaling(double);
     bool get_dynamic_legend();
     double get_minimum();
     double get_maximum();
     double get_opacity();
-    double get_refresh_rate();
+    double get_refresh_time();
     double get_vector_scaling();
 
 private:
     static MapProperty * obj;
 
     double prop_opacity;
-    double prop_refresh_rate;
+    double prop_refresh_time;
     bool prop_dynamic_min_max;
     double prop_max;
     double prop_min;

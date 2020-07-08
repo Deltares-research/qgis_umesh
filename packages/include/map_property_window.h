@@ -17,7 +17,7 @@
 
 struct _bck_property {
     double opacity;
-    double refresh_rate;
+    double refresh_time;
     bool dynamic_legend;
     double minimum;
     double maximum;
@@ -41,6 +41,9 @@ public:
 
 public slots:
     void close();
+    void clicked_ok();
+    void clicked_cancel();
+    void clicked_apply();
 
 signals:
     void draw_all();
@@ -50,8 +53,8 @@ private:
     QWidget * wid;
     QLabel * lbl_transparency;
     QLineEdit * le_transparency;
-    QLabel * lbl_refresh_rate;
-    QLineEdit * le_refresh_rate;
+    QLabel * lbl_refresh_time;
+    QLineEdit * le_refresh_time;
     QLabel * lbl_min;
     QLabel * lbl_max;
     QLabel * lbl_vs;  // vector scaling
@@ -66,9 +69,6 @@ private:
     QCheckBox * m_ckb;
 
     void state_changed(int);
-    void clicked_ok();
-    void clicked_cancel();
-    void clicked_apply();
 
 };
 #endif

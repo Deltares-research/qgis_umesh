@@ -128,7 +128,7 @@ void MyCanvas::draw_all()
 void MyCanvas::draw_dot_at_face()
 {
     return;
-    if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "face")
+    if (_variable != nullptr && _ugrid_file != nullptr && _variable->location ==    "face")
     {
         string var_name = _variable->var_name;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();

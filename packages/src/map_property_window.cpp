@@ -11,7 +11,7 @@ MapPropertyWindow::MapPropertyWindow(MyCanvas * myCanvas) : QDockWidget()
     m_bck_property = (struct _bck_property *) malloc(sizeof(struct _bck_property));
     m_bck_property->dynamic_legend = m_property->get_dynamic_legend();
     m_bck_property->opacity = m_property->get_opacity();
-    m_bck_property->refresh_rate = m_property->get_refresh_rate();
+    m_bck_property->refresh_time = m_property->get_refresh_time();
     m_bck_property->minimum = m_property->get_minimum();
     m_bck_property->maximum = m_property->get_maximum();
     m_bck_property->vector_scaling = m_property->get_vector_scaling();
@@ -56,14 +56,14 @@ void MapPropertyWindow::create_window()
     gl_op_rt->addWidget(lbl_transparency, 0, 0);
     gl_op_rt->addWidget(le_transparency, 0, 1);
 
-    lbl_refresh_rate = new QLabel("Refresh rate: ");
-    le_refresh_rate = new QLineEdit();
-    le_refresh_rate->setToolTip("Minimum refresh rate of images");
-    str = QString("%1").arg(m_property->get_refresh_rate());
-    le_refresh_rate->setText(str);
+    lbl_refresh_time = new QLabel("Refresh time: ");
+    le_refresh_time = new QLineEdit();
+    le_refresh_time->setToolTip("Minimum refresh time of images");
+    str = QString("%1").arg(m_property->get_refresh_time());
+    le_refresh_time->setText(str);
 
-    gl_op_rt->addWidget(lbl_refresh_rate, 1, 0);
-    gl_op_rt->addWidget(le_refresh_rate, 1, 1);
+    gl_op_rt->addWidget(lbl_refresh_time, 1, 0);
+    gl_op_rt->addWidget(le_refresh_time, 1, 1);
 
     vl_main->addLayout(gl_op_rt);
 
@@ -113,6 +113,7 @@ void MapPropertyWindow::create_window()
 
     vl_main->addWidget(gb);  // scalar
     vl_main->addWidget(gb_vs);  // vector scaling
+
     vl_main->addLayout(hl);  // push buttons
     wid->setLayout(vl_main);
 
@@ -169,7 +170,7 @@ void MapPropertyWindow::clicked_apply()
     double transparency = le_transparency->text().toDouble();
     double mod_transparency = std::max(0.0, std::min(transparency, 1.0));
     m_property->set_opacity(1.0 - mod_transparency);
-    m_property->set_refresh_rate(le_refresh_rate->text().toDouble());
+    m_property->set_refresh_time(le_refresh_time->text().toDouble());
 
     m_property->set_dynamic_legend(m_ckb->isChecked());
     m_property->set_minimum(le_min->text().toDouble());
@@ -185,7 +186,7 @@ void MapPropertyWindow::clicked_ok()
     double transparency = le_transparency->text().toDouble();
     double mod_transparency = std::max(0.0, std::min(transparency, 1.0));
     m_property->set_opacity(1.0 - mod_transparency);
-    m_property->set_refresh_rate(le_refresh_rate->text().toDouble());
+    m_property->set_refresh_time(le_refresh_time->text().toDouble());
 
     m_property->set_dynamic_legend(m_ckb->isChecked());
     m_property->set_minimum(le_min->text().toDouble());
@@ -201,7 +202,7 @@ void MapPropertyWindow::clicked_cancel()
 {
      m_property->set_dynamic_legend(m_bck_property->dynamic_legend);
      m_property->set_opacity(m_bck_property->opacity);
-     m_property->set_refresh_rate(m_bck_property->refresh_rate);
+     m_property->set_refresh_time(m_bck_property->refresh_time);
      m_property->set_minimum(m_bck_property->minimum);
      m_property->set_maximum(m_bck_property->maximum);
      m_property->set_vector_scaling(m_bck_property->vector_scaling);

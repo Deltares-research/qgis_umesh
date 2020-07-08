@@ -8,7 +8,7 @@ MapProperty * MapProperty::obj;  // Initialize static member of class MapPropert
 MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ugrid_file, MyCanvas * MyCanvas) : QDockWidget()
 {
     object_count = 1;
-    mQGisIface = QGisIface;
+    m_QGisIface = QGisIface;
     m_sb_layer = nullptr;
     m_sb_layer_vec = nullptr;
     _ugrid_file = ugrid_file;
@@ -75,6 +75,8 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
     _MyCanvas->set_variable(nullptr);
     _MyCanvas->empty_caches();
     // TODO Reset timers, ie _current timestep etc
+    m_cur_view->close();
+    m_map_property->close();
 }
 int MapTimeManagerWindow::get_count()
 {
@@ -115,7 +117,6 @@ void MapTimeManagerWindow::create_window()
     QIcon icon_iso_patch;
     QIcon icon_vectors;
 
-
     QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
     program_files = program_files + QString("/deltares/qgis_umesh");
     QDir program_files_dir = QDir(program_files);
@@ -138,6 +139,14 @@ void MapTimeManagerWindow::create_window()
     }
     vl->addWidget(tw);
     vl->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+
+    m_pb_cur_view = new QPushButton(QString("Add current view to QGIS panel"));
+    m_pb_cur_view->setEnabled(false);
+    m_pb_cur_view->setStatusTip(QString("Add current view as vector layer to the QGIS \'Layers\' panel"));
+    connect(m_pb_cur_view, &QPushButton::clicked, this, &MapTimeManagerWindow::clicked_current_view);
+
+    vl->addWidget(m_pb_cur_view);
+
     wid->setLayout(vl);
     this->setWidget(wid);
     return;
@@ -824,7 +833,7 @@ void MapTimeManagerWindow::start_reverse()
         {
             break;
         }
-        double msec = 1000.*m_property->get_refresh_rate();
+        double msec = 1000.*m_property->get_refresh_time();
         _sleep(msec);
     }
     if (_current_step <= first_date_time_indx)
@@ -851,7 +860,7 @@ void MapTimeManagerWindow::start_forward()
         {
             break;
         }
-        double msec = 1000.*m_property->get_refresh_rate();
+        double msec = 1000.*m_property->get_refresh_time();
         _sleep(msec);
     }
     if (_current_step >= last_date_time_indx)
@@ -1302,6 +1311,11 @@ void MapTimeManagerWindow::show_hide_map_data_1d2d()
 void MapTimeManagerWindow::show_hide_map_data_2d()
 {
     m_show_map_data_2d = !m_show_map_data_2d;
+    m_pb_cur_view->setEnabled(false);
+    if (m_show_map_data_2d)
+    {
+        m_pb_cur_view->setEnabled(true);
+    }
     cb_clicked_2d(m_cb_2d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_3d()
@@ -1340,6 +1354,45 @@ void MapTimeManagerWindow::spinbox_vec_value_changed(int i_lay)
     m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
     return;
 }
+void MapTimeManagerWindow::clicked_current_view()
+{
+    //QMessageBox::information(0, "Information", "MapPropertyWindow::current_view()");
+    if (AddCurrentViewWindow::get_count() == 0)  // create a window if it is not already there.
+    {
+        if (m_show_map_data_2d)
+        {
+            struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
+            struct _mapping * mapping = _ugrid_file->get_grid_mapping();
+
+            QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
+            int time_indx = _q_times.indexOf(curr_date_time->dateTime());
+            QString text = m_cb_2d->currentText();
+            QString quantity = date_time + "; " + text;
+
+            QVariant j = m_cb_2d->currentData();
+            int jj = j.toInt();
+            struct _variable * var = m_vars->variable[jj];
+
+            DataValuesProvider2D<double> var_time = var->data_2d;
+            double * z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
+            if (var->location == "edge")
+            {
+                //m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->edge[0]->x, mesh2d->edge[0]->y, mapping->epsg);
+            }
+            else if (var->location == "face")
+            {
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->face[0]->x, mesh2d->face[0]->y, mapping->epsg);
+            }
+            else if (var->location == "node")
+            {
+                //m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->node[0]->x, mesh2d->node[0]->y, mapping->epsg);
+            }
+        }
+    }
+
+    return;
+}
+
 //
 //-----------------------------------------------------------------------------
 //

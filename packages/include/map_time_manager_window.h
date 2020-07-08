@@ -38,6 +38,7 @@
 #include "QColorRampEditor.h"
 #include "map_property_window.h"
 #include "map_property.h"
+#include "add_current_view_window.h"
 
 #if defined WIN64
 #define _sleep _sleep
@@ -92,12 +93,13 @@ public:
         void spinbox_value_changed(int);
         void spinbox_vec_value_changed(int);
         void contextMenu(const QPoint &);
+        void clicked_current_view();
 
     public:
         QDockWidget * map_panel;
 
     private:
-        QgisInterface * mQGisIface; // Pointer to the QGIS interface object
+        QgisInterface * m_QGisIface; // Pointer to the QGIS interface object
         UGRID * _ugrid_file;
         MyCanvas * _MyCanvas;
         void create_window();
@@ -135,6 +137,7 @@ public:
         QPushButton * pb_reverse;
         QPushButton * pb_start;
         QPushButton * pb_pauze;
+        QPushButton * m_pb_cur_view;
 
         MyQDateTimeEdit * first_date_time;
         MyQDateTimeEdit * curr_date_time;
@@ -176,6 +179,7 @@ public:
         MapProperty * m_property;
         vector_quantity m_vector_draw;
         MapPropertyWindow * m_map_property;
+        AddCurrentViewWindow * m_cur_view;
 };
 
 #endif
