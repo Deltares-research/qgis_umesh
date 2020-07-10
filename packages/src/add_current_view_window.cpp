@@ -39,6 +39,7 @@ void AddCurrentViewWindow::create_window()
 {
     wid = new QWidget();
     wid->setWindowTitle(QString("Add current view to vector layer"));
+    wid->setMinimumWidth(700);
 
     QVBoxLayout * vl_main = new QVBoxLayout();
     QHBoxLayout * hl = new QHBoxLayout();
@@ -56,7 +57,7 @@ void AddCurrentViewWindow::create_window()
 
     QHeaderView * headerView = table->horizontalHeader();
     headerView->setStretchLastSection(true);
-    headerView->setStyleSheet("QHeaderView::section { background-color: rgb(240, 243, 254) }");
+    //headerView->setStyleSheet("QHeaderView::section { background-color: rgb(240, 243, 254) }");
     QFont font;
     font.setBold(true);
     headerView->setFont(font);
@@ -64,9 +65,11 @@ void AddCurrentViewWindow::create_window()
     table->setSelectionMode(QAbstractItemView::NoSelection);
     table->setShowGrid(true);
     table->verticalHeader()->hide();
-    QSize table_size = QSize(table->horizontalHeader()->length() + table->verticalHeader()->width(),
-        table->verticalHeader()->length() + table->horizontalHeader()->height());
-    table->setFixedSize(table_size);
+    int tab_width = table->horizontalHeader()->length() + table->verticalHeader()->width();
+    int tab_height = table->verticalHeader()->length() + table->horizontalHeader()->height();
+    table->setFixedHeight(tab_height);
+    table->setColumnWidth(0, 175);
+    table->setColumnWidth(1, 375);
     connect(table, SIGNAL(clicked(QModelIndex)), this, SLOT(clicked(QModelIndex)));
 
     //table->setStyleSheet("QTableView { background-color: rgb(255, 255, 0); }");
@@ -140,9 +143,14 @@ void AddCurrentViewWindow::create_vector_layer()
         QgsVectorDataProvider * dp_vl;
         QList <QgsField> lMyAttribField;
 
-        int nr_attrib_fields = 1;
+        int nr_attrib_fields = 0;
         lMyAttribField << QgsField("Value", QVariant::Double);
-       
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Point Id (0-based)", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Point Id (1-based)", QVariant::String);
+        nr_attrib_fields++;
+
         QString uri = QString("Point?crs=epsg:") + QString::number(m_epsg);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
         vl->startEditing();
@@ -160,7 +168,13 @@ void AddCurrentViewWindow::create_vector_layer()
             MyFeature.setGeometry(MyPoints);
 
             MyFeature.initAttributes(nr_attrib_fields);
-            MyFeature.setAttribute(0, m_z_value[j]);
+            int k = -1;
+            k++;
+            MyFeature.setAttribute(k, m_z_value[j]);
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
 
             dp_vl->addFeature(MyFeature);
         }

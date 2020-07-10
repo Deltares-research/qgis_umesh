@@ -1372,12 +1372,32 @@ void MapTimeManagerWindow::clicked_current_view()
             QVariant j = m_cb_2d->currentData();
             int jj = j.toInt();
             struct _variable * var = m_vars->variable[jj];
+            struct _edge * edges = mesh2d->edge[0];
 
             DataValuesProvider2D<double> var_time = var->data_2d;
             double * z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
             if (var->location == "edge")
             {
-                //m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->edge[0]->x, mesh2d->edge[0]->y, mapping->epsg);
+                double x1, x2;
+                double y1, y2;
+                vector<double> edge_x;
+                edge_x.reserve(edges->count);
+                vector<double> edge_y;
+                edge_y.reserve(edges->count);
+                for (int j = 0; j < edges->count; j++)
+                {
+                    int p1 = edges->edge_nodes[j][0];
+                    int p2 = edges->edge_nodes[j][1];
+                    x1 = mesh2d->node[0]->x[p1];
+                    y1 = mesh2d->node[0]->y[p1];
+                    x2 = mesh2d->node[0]->x[p2];
+                    y2 = mesh2d->node[0]->y[p2];
+
+                    edge_x.push_back(0.5*(x1 + x2));
+                    edge_y.push_back(0.5*(y1 + y2));
+                }
+
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, edge_x, edge_y, mapping->epsg);
             }
             else if (var->location == "face")
             {
@@ -1385,7 +1405,7 @@ void MapTimeManagerWindow::clicked_current_view()
             }
             else if (var->location == "node")
             {
-                //m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->node[0]->x, mesh2d->node[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->node[0]->x, mesh2d->node[0]->y, mapping->epsg);
             }
         }
     }
