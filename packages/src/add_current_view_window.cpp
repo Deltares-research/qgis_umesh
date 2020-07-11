@@ -144,7 +144,8 @@ void AddCurrentViewWindow::create_vector_layer()
         QList <QgsField> lMyAttribField;
 
         int nr_attrib_fields = 0;
-        lMyAttribField << QgsField("Value", QVariant::Double);
+        QString field_name = m_quantity;
+        lMyAttribField << QgsField(field_name, QVariant::Double);
         nr_attrib_fields++;
         lMyAttribField << QgsField("Point Id (0-based)", QVariant::String);
         nr_attrib_fields++;

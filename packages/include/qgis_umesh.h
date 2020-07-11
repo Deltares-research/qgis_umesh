@@ -99,14 +99,20 @@ class qgis_umesh
         void create_observation_polyline_vector_layer(QString, _location_type *, long, QgsLayerTreeGroup *);
 
         // Reading input files (ie JSON format)
-        void create_1D_structure_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
-        void create_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
-        void create_crs_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
-        void create_chainage_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
         void create_1D_external_forcing_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_1D_structure_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_chainage_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_crs_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_fixed_weir_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_thin_dams_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_observation_cross_section_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_structure_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+
         void create_1D2D_link_vector_layer(READ_JSON *, long);
         long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, string, double, double *, double *, double *);
         long find_location_boundary(struct _ntw_nodes *, string, double *, double *);
+
 
         QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
         void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);

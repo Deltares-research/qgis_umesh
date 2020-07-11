@@ -9,6 +9,7 @@ using c++11 regular expression functionality.
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <type_traits>
 #include <regex>
 #include <vector>
@@ -31,8 +32,9 @@ struct Getter
             auto child = pt.get_child(chapter);
             for (auto& p : child)
             {
+                
                 //cout << p.first.data() << ": " << p.second.data() << endl;
-                if (p.first.data() == key)
+                if (boost::iequals(p.first.data(), key))
                 {
                     T val = p.second.get_value<T>();
                     results.push_back(val);
@@ -44,7 +46,7 @@ struct Getter
                 for (auto& p : pv.second)
                 {
                     //cout << p.first.data() << ": " << p.second.data() << endl;
-                    if (p.first.data() == key)
+                    if (boost::iequals(p.first.data(), key))
                     {
                         T val = p.second.get_value<T>();
                         results.push_back(val);
@@ -74,11 +76,11 @@ struct Getter
             {
                 for (auto& p1 : v1.second)
                 {
-                    if (p1.first == key)
+                    if (boost::iequals(p1.first, key))
                     {
                         for (auto& p2 : p1.second)
                         {
-                            if (p2.first == "x" || p2.first == "y")
+                            if (boost::iequals(p2.first, "x") || boost::iequals(p2.first, "y"))
                             {
                                 for (auto& p : p2.second)
                                 {
