@@ -2498,7 +2498,7 @@ void qgis_umesh::create_1D_structure_vector_layer(UGRID * ugrid_file, READ_JSON 
 
         QgsLayerTreeGroup * subTreeGroup;
         subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-        QString layer_name = QString("Structures");
+        QString layer_name = QString("Structures (1D)");
 
         // create the vector layer for structures
         QgsVectorLayer * vl;
@@ -2887,9 +2887,18 @@ void qgis_umesh::create_structure_vector_layer(UGRID * ugrid_file, READ_JSON * p
     status = prop_tree->get(json_key, fname);
     if (fname.size() == 0)
     {
-        QString fname = QString::fromStdString(prop_tree->get_filename());
-        QString msg = QString(tr("Structure polylines are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
-        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+        string json_key = "data.structure.branchid";  // structures are defined on a branch
+        status = prop_tree->get(json_key, fname);
+        if (fname.size() == 0)
+        {
+            QString fname = QString::fromStdString(prop_tree->get_filename());
+            QString msg = QString(tr("Structure polylines are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+        }
+        else
+        {
+            create_1D_structure_vector_layer(ugrid_file, prop_tree, epsg_code, treeGroup);
+        }
     }
     else
     {
