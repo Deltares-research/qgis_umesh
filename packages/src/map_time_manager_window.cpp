@@ -11,6 +11,7 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_QGisIface = QGisIface;
     m_sb_layer = nullptr;
     m_sb_layer_vec = nullptr;
+    m_ramph_vec_dir = nullptr;
     _ugrid_file = ugrid_file;
     _MyCanvas = MyCanvas;
     _MyCanvas->setUgridFile(_ugrid_file);
@@ -31,11 +32,14 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_vector_draw = VECTOR_NONE;
 
     connect(m_ramph, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
-    connect(m_ramph_vec_dir, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
+    if (m_ramph_vec_dir != nullptr)
+    {
+        connect(m_ramph_vec_dir, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
+    }
 }
 MapTimeManagerWindow::~MapTimeManagerWindow()
 {
-    // Not reached because the windows is cleaned by function: MapTimeManagerWindow::closeEvent
+    // Not reached because the window is cleaned by function: MapTimeManagerWindow::closeEvent
 }
 void MapTimeManagerWindow::MyMouseReleaseEvent(QMouseEvent* e)
 {
@@ -1378,26 +1382,7 @@ void MapTimeManagerWindow::clicked_current_view()
             double * z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
             if (var->location == "edge")
             {
-                double x1, x2;
-                double y1, y2;
-                vector<double> edge_x;
-                edge_x.reserve(edges->count);
-                vector<double> edge_y;
-                edge_y.reserve(edges->count);
-                for (int j = 0; j < edges->count; j++)
-                {
-                    int p1 = edges->edge_nodes[j][0];
-                    int p2 = edges->edge_nodes[j][1];
-                    x1 = mesh2d->node[0]->x[p1];
-                    y1 = mesh2d->node[0]->y[p1];
-                    x2 = mesh2d->node[0]->x[p2];
-                    y2 = mesh2d->node[0]->y[p2];
-
-                    edge_x.push_back(0.5*(x1 + x2));
-                    edge_y.push_back(0.5*(y1 + y2));
-                }
-
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, edge_x, edge_y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->edge[0]->x, mesh2d->edge[0]->y, mapping->epsg);
             }
             else if (var->location == "face")
             {
@@ -1409,10 +1394,8 @@ void MapTimeManagerWindow::clicked_current_view()
             }
         }
     }
-
     return;
 }
-
 //
 //-----------------------------------------------------------------------------
 //

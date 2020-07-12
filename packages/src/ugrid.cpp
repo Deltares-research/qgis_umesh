@@ -892,7 +892,7 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name)
     int var_id;
     int status;
     int i_var;
-    DataValuesProvider2D<double *> data_pointer;
+    DataValuesProvider2D<double> data_pointer;
 
 #ifdef NATIVE_C
     fprintf(stderr, "UGRID::get_variable_values()\n");
@@ -943,6 +943,7 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name)
             return mesh_vars->variable[i_var]->data_2d;
         }
     }
+    return data_pointer;
 }
 //------------------------------------------------------------------------------
 DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name)
@@ -953,7 +954,7 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
     int i_var;
     double * read_c;
     double * values_c;
-    DataValuesProvider3D<double> * data_pointer = nullptr;
+    DataValuesProvider3D<double> data_pointer;
 #ifdef NATIVE_C
     fprintf(stderr, "UGRID::get_variable_values()\n");
 #endif    
@@ -1040,7 +1041,7 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
             return mesh_vars->variable[i_var]->data_3d;
         }
     }
-    return *data_pointer;
+    return data_pointer;
 }
 //==============================================================================
 // PRIVATE functions
@@ -1901,17 +1902,16 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     if (att_value == "projection_x_coordinate" || att_value == "longitude")
                     {
                         status = nc_get_var_double(this->ncid, var_id, mesh2d->edge[nr_mesh2d - 1]->x.data());
-                        status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
+                        status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_edge_name.c_str(), &var_id);
                         status = nc_get_var_double(this->ncid, var_id, mesh2d->edge[nr_mesh2d - 1]->y.data());
                     }
                     else
                     {
                         status = nc_get_var_double(this->ncid, var_id, mesh2d->edge[nr_mesh2d - 1]->y.data());
-                        status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
+                        status = nc_inq_varid(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_edge_name.c_str(), &var_id);
                         status = nc_get_var_double(this->ncid, var_id, mesh2d->edge[nr_mesh2d - 1]->x.data());
                     }
 
-                    string janm;
                     status = get_attribute_by_var_name(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_edge_name, "bounds", &mesh2d_strings[nr_mesh2d - 1]->x_bound_edge_name);
                     status = get_attribute_by_var_name(this->ncid, mesh2d_strings[nr_mesh2d - 1]->y_edge_name, "bounds", &mesh2d_strings[nr_mesh2d - 1]->y_bound_edge_name);
                     int a = 1;
@@ -1919,8 +1919,27 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
             }
             else
             {
-                // Compute the edge coordinates from the node coordinates, halfway on distance between nodes. But is it needed?
+                // Compute the edge coordinates from the node coordinates, halfway on distance between nodes. 
                 // Boundary of the edge is determined by the node coordinates (edge_nodes)
+                status = get_dimension_var(this->ncid, mesh2d_strings[nr_mesh2d - 1]->x_edge_name, &mesh2d->edge[nr_mesh2d - 1]->count);
+                if (mesh2d->edge[nr_mesh2d - 1]->count != 0)  // not required attribute
+                {
+                    int p1, p2;
+                    double x1, x2;
+                    double y1, y2;
+                    for (int j = 0; j < mesh2d->edge[0]->count; j++)
+                    {
+                        p1 = mesh2d->edge[0]->edge_nodes[j][0];
+                        p2 = mesh2d->edge[0]->edge_nodes[j][1];
+                        x1 = mesh2d->node[0]->x[p1];
+                        y1 = mesh2d->node[0]->y[p1];
+                        x2 = mesh2d->node[0]->x[p2];
+                        y2 = mesh2d->node[0]->y[p2];
+
+                        mesh2d->edge[nr_mesh2d - 1]->x.push_back(0.5*(x1 + x2));
+                        mesh2d->edge[nr_mesh2d - 1]->y.push_back(0.5*(y1 + y2));
+                    }
+                }
             }
 
             /* Read the data (x, y)-coordinate of each face */

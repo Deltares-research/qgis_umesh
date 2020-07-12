@@ -183,6 +183,7 @@ void MyCanvas::draw_data_at_face()
         mCache_painter->setOpacity(m_property->get_opacity());
         vector<double> vertex_x(mesh2d->face_nodes[0].size());
         vector<double> vertex_y(mesh2d->face_nodes[0].size());
+        this->setPointSize(13);
         for (int i = 0; i < mesh2d->face_nodes.size(); i++)
         {
             vertex_x.clear();
@@ -281,7 +282,7 @@ void MyCanvas::draw_vector_arrow_at_face()
         this->setLineColor(1);
         this->setFillColor(1);
         this->setPointSize(7);
-        this->setLineWidth(3);
+        this->setLineWidth(1);
 
         if (m_coordinate_type[0] == "Cartesian" || m_coordinate_type[0] == "Spherical")
         {
@@ -432,7 +433,7 @@ void MyCanvas::draw_vector_arrow_at_face()
             }
 
             // set scaled unit vector in right lower corner 
-            this->setLineWidth(3);
+            this->setLineWidth(1);
             coord_x.clear();
             coord_y.clear();
             double alpha = 0.95;
@@ -574,7 +575,11 @@ void MyCanvas::draw_dot_at_node()
         string var_name = _variable->var_name;
         struct _mesh1d * mesh1d = _ugrid_file->get_mesh1d();
 
-        DataValuesProvider2D<double>std_data_at_node = _ugrid_file->get_variable_values(var_name);
+        DataValuesProvider2D<double> std_data_at_node = _ugrid_file->get_variable_values(var_name);
+        if (std_data_at_node.m_numXY == 0)
+        {
+            return;
+        }
         z_value = std_data_at_node.GetValueAtIndex(_current_step, 0);
 
         double missing_value = _variable->fill_value;
@@ -738,8 +743,8 @@ void MyCanvas::draw_line_at_edge()
             // 10 klasses: 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11
             //double alpha = (*z_value[j] - m_z_min) / (m_z_max - m_z_min);
             //double width = (1. - alpha) * 1. + alpha * 11.;
-            this->setLineWidth(5);
-            
+            this->setPointSize(13);
+            this->setLineWidth(7);
             this->drawPolyline(edge_x, edge_y);
         }
         mCache_painter->setOpacity(opacity);

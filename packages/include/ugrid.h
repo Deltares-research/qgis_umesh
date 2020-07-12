@@ -26,9 +26,9 @@ struct DataValuesProvider2D
 {
 public:
     DataValuesProvider2D() {};
-    T* m_arrayPtr;
-    int m_numTimes;
-    int m_numXY;
+    T* m_arrayPtr = nullptr;
+    int m_numTimes = 0;
+    int m_numXY = 0;
 
     // copy the pointer and values
     DataValuesProvider2D(T* arrayPtr, int numTimes, int numXY) :
