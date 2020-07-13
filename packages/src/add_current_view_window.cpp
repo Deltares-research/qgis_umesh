@@ -75,14 +75,12 @@ void AddCurrentViewWindow::create_window()
     //table->setStyleSheet("QTableView { background-color: rgb(255, 255, 0); }");
 
     QStandardItem * itm1 = new QStandardItem();
-    itm1->setEditable(false);
     itm1->setEditable(true);
     itm1->setText(m_label);
     table_model->setItem(0, 0, itm1);
 
     QStandardItem * itm2 = new QStandardItem();
     itm2->setEditable(false);
-    itm2->setEditable(true);
     itm2->setText(m_quantity);
     table_model->setItem(0, 1, itm2);
 

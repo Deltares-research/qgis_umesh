@@ -12,6 +12,8 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_sb_layer = nullptr;
     m_sb_layer_vec = nullptr;
     m_ramph_vec_dir = nullptr;
+    m_map_property = nullptr;
+    m_cur_view = nullptr;
     _ugrid_file = ugrid_file;
     _MyCanvas = MyCanvas;
     _MyCanvas->setUgridFile(_ugrid_file);
@@ -20,7 +22,7 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     create_window(); //QMessageBox::information(0, "Information", "DockWindow::DockWindow()");
     _MyCanvas->empty_caches();
     _current_step = 0;
-    
+
     m_show_map_data_1d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d
     m_show_map_data_1d2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d2d
     m_show_map_data_2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_2d
@@ -79,8 +81,16 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
     _MyCanvas->set_variable(nullptr);
     _MyCanvas->empty_caches();
     // TODO Reset timers, ie _current timestep etc
-    m_cur_view->close();
-    m_map_property->close();
+    if (m_cur_view != nullptr)
+    {
+        m_cur_view->close();
+        m_cur_view = nullptr;
+    }
+    if (m_map_property != nullptr)
+    {
+        m_map_property->close();
+        m_map_property = nullptr;
+    }
 }
 int MapTimeManagerWindow::get_count()
 {
