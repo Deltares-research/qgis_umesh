@@ -3216,7 +3216,113 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             add_layer_to_group(vl, subTreeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
-//------------------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------------
+        status = -1;
+        fname;
+        json_key = "data.lateral.locationfile";
+        status = prop_tree->get(json_key, fname);
+        if (fname.size() == 0)
+        {
+            QString fname = QString::fromStdString(prop_tree->get_filename());
+            QString msg = QString(tr("Lateral areas are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+        }
+        else
+        {
+            QgsLayerTreeGroup * subTreeGroup;
+            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            QString layer_name = QString("Lateral area");
+
+            // create the vector 
+            QgsVectorLayer * vl;
+            QgsVectorDataProvider * dp_vl;
+            QList <QgsField> lMyAttribField;
+
+            int nr_attrib_fields = 0;
+            lMyAttribField << QgsField("Lateral area name", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Lateral area Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Lateral area Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
+
+            QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
+            vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->startEditing();
+            dp_vl = vl->dataProvider();
+            dp_vl->addAttributes(lMyAttribField);
+            //dp_vl->createSpatialIndex();
+            vl->updatedFields();
+
+            QFileInfo ug_file = ugrid_file->get_filename();
+            QgsMultiLineString * polylines = new QgsMultiLineString();
+            QVector<QgsPointXY> point;
+            QgsMultiPolylineXY lines;
+
+            vector<string> line_name;
+            vector<vector<vector<double>>> poly_lines;
+
+            for (int i = 0; i < fname.size(); i++)
+            {
+                lines.clear();
+                point.clear();
+                poly_lines.clear();
+                line_name.clear();
+                QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
+                READ_JSON * json_file = new READ_JSON(filename.toStdString());
+
+                status = json_file->get("data.path.name", line_name);
+                status = json_file->get("data.path.multiline", poly_lines);
+
+                if (poly_lines.size() == 0)
+                {
+                    QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+                    return;
+                }
+
+                for (int ii = 0; ii < poly_lines.size(); ii++)
+                {
+                    for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
+                    {
+                        double x1 = poly_lines[ii][0][j];
+                        double y1 = poly_lines[ii][1][j];
+                        point.append(QgsPointXY(x1, y1));
+                    }
+                    lines.append(point);
+
+                    QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
+                    QgsFeature MyFeature;
+                    MyFeature.setGeometry(MyEdge);
+                    MyFeature.initAttributes(nr_attrib_fields);
+
+                    int k = -1;
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[0]).trimmed()));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b1").arg(i + 1));
+
+                    dp_vl->addFeature(MyFeature);
+                    vl->commitChanges();
+                }
+            }
+
+            QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
+            line_marker->setWidth(0.75);
+            line_marker->setColor(QColor(0, 200, 255));
+
+            QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            symbol->changeSymbolLayer(0, line_marker);
+
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
+            vl->setRenderer(mypRenderer);
+
+            add_layer_to_group(vl, subTreeGroup);
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+        }
+ //------------------------------------------------------------------------------
         status = -1;
         json_key = "data.lateral.id";
         vector<string> lateral_name;
