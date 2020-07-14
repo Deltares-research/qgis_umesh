@@ -2473,6 +2473,7 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
             size_t geom_nodes_count = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->count;
 
             chainage.resize(geom_nodes_count);
+            chainage[0] = 0.0;
             for (int i = 1; i < geom_nodes_count; i++)
             {
                 double x1 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->x[i - 1];

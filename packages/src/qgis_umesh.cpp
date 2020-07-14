@@ -3112,7 +3112,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         }
         //-------------------------------------------------------------------------------------------
         status = -1;
-        fname;
+        fname.clear();
         json_key = "data.boundary.locationfile";
         status = prop_tree->get(json_key, fname);
         if (fname.size() == 0)
@@ -3204,7 +3204,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
-            line_marker->setColor(QColor(0, 255, 0));
+            line_marker->setColor(QColor(0, 204, 0));
 
             QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
             symbol->changeSymbolLayer(0, line_marker);
@@ -3218,7 +3218,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         }
         //-------------------------------------------------------------------------------------------
         status = -1;
-        fname;
+        fname.clear();
         json_key = "data.lateral.locationfile";
         status = prop_tree->get(json_key, fname);
         if (fname.size() == 0)
@@ -3276,7 +3276,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
 
                 if (poly_lines.size() == 0)
                 {
-                    QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+                    QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key)) + QString(" from file: ") + QString::fromStdString(fname[i]);
                     return;
                 }
 
@@ -3501,8 +3501,8 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
             //QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("d:/checkouts/git/qgis_plugins/qgis_umesh/svg/tmp_bridge_tui.svg"));
             simple_marker->setSize(4.0);
-            simple_marker->setColor(QColor(0, 255, 0));
-            simple_marker->setFillColor(QColor(0, 255, 0));
+            simple_marker->setColor(QColor(0, 204, 0));
+            simple_marker->setFillColor(QColor(0, 204, 0));
             simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Diamond);
 
             QgsSymbol * marker = new QgsMarkerSymbol();
