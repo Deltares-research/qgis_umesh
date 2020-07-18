@@ -792,6 +792,30 @@ void qgis_umesh::openFile(QFileInfo ncfile)
     //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1.").arg(ncfile.absoluteFilePath()));
     ugrid_file->read();
     m_ugrid_file[_fil_index] = ugrid_file;
+    // check on UGRID file; that is an item in teh conventions attribute
+    bool conventions_found = false;
+    struct _global_attributes * globals = ugrid_file->get_global_attributes();
+    for (int i = 0; i < globals->count; i++)
+    {
+        if (globals->attribute[i]->name == "Conventions")
+        {
+            conventions_found = true;
+            if (globals->attribute[i]->cvalue.find("UGRID-1.") == string::npos)
+            {
+                QString fname = ugrid_file->get_filename().fileName();
+                QString msg = QString("File \"%1\" is not UGRID-1.* compliant.\nThe file has Conventions attribute: \"%2\".").arg(fname).arg(globals->attribute[i]->cvalue.c_str());
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+                return;
+            }
+        }
+    }
+    if (!conventions_found)
+    {
+        QString fname = ugrid_file->get_filename().fileName();
+        QString msg = QString(tr("No \"Conventions\" attribute found in file: \"%1\"").arg(fname));
+        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+        return;
+    }
     activate_layers();
 }
 //

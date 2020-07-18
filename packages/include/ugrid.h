@@ -428,7 +428,7 @@ private:
     QString ugrid_file_name;
     QProgressBar * m_pgBar;
 #endif
-    _global_attributes * global_attributes;
+    struct _global_attributes * global_attributes;
 };
 
 #endif  // UGRID_H
