@@ -972,7 +972,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     else
     {
         QString fname = QString::fromStdString(pt_mdu->get_filename());
-        QString msg = QString(tr("No UGIRD mesh file given.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+        QString msg = QString(tr("No UGIRD mesh file given.\nTag \"%2\" does not exist in file \"%1\".").arg(QString::fromStdString(json_key)).arg(fname));
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
         return;
     }
@@ -980,7 +980,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID - %1").arg(jsonfile.fileName()));
     if (myGroup == nullptr)
     {
-        QString name = QString("UGRID - %1").arg(jsonfile.fileName());
+        QString name = QString("JSON - %1").arg(jsonfile.fileName());
         myGroup = treeRoot->insertGroup(0, name);
         myGroup->setExpanded(true);  // true is the default 
         myGroup->setItemVisibilityChecked(true);
@@ -996,7 +996,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         QString obser_file = jsonfile.absolutePath() + "/" + QString::fromStdString(obs_file[0]);
         if (!QFileInfo(obser_file).exists())
         {
-            QString msg = QString(tr("Observation points are skipped.\nFile: \"%1\", referenced by tag: \"%2\" does not exist.").arg(obser_file).arg(QString::fromStdString(json_key)));
+            QString fname = QString::fromStdString(pt_mdu->get_filename());
+            QString msg = QString(tr("Observation points are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -1024,7 +1025,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         QString extold_file = jsonfile.absolutePath() + "/" + QString::fromStdString(extold_file_name[0]);
         if (!QFileInfo(extold_file).exists())
         {
-            QString msg = QString(tr("External forcing file (old format) is skipped.\nFile: \"%1\", referenced by tag: \"%2\" does not exist.").arg(extold_file).arg(QString::fromStdString(json_key)));
+            QString fname = QString::fromStdString(pt_mdu->get_filename());
+            QString msg = QString(tr("External forcing file (old format) is skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -1052,7 +1054,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         QString ext_file = jsonfile.absolutePath() + "/" + QString::fromStdString(ext_file_name[0]);
         if (!QFileInfo(ext_file).exists())
         {
-            QString msg = QString(tr("External forcings are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(ext_file).arg(QString::fromStdString(json_key)));
+            QString fname = QString::fromStdString(pt_mdu->get_filename());
+            QString msg = QString(tr("External forcings are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -1079,7 +1082,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         QString struct_file = jsonfile.absolutePath() + "/" + QString::fromStdString(structure_file_name[0]);
         if (!QFileInfo(struct_file).exists())
         {
-            QString msg = QString(tr("Structures are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(struct_file).arg(QString::fromStdString(json_key)));
+            QString fname = QString::fromStdString(pt_mdu->get_filename());
+            QString msg = QString(tr("Structures are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -1106,7 +1110,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         QString obs_cross_file = jsonfile.absolutePath() + "/" + QString::fromStdString(cross_section_file_name[0]);
         if (!QFileInfo(obs_cross_file).exists())
         {
-            QString msg = QString(tr("Observation cross-sections are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(obs_cross_file).arg(QString::fromStdString(json_key)));
+            QString fname = QString::fromStdString(pt_mdu->get_filename());
+            QString msg = QString(tr("Observation cross-sections are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -1133,7 +1138,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         QString thin_dam_file = jsonfile.absolutePath() + "/" + QString::fromStdString(thin_dam_file_name[0]);
         if (!QFileInfo(thin_dam_file).exists())
         {
-            QString msg = QString(tr("Thin dams are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(thin_dam_file).arg(QString::fromStdString(json_key)));
+            QString fname = QString::fromStdString(pt_mdu->get_filename());
+            QString msg = QString(tr("Thin dams are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -1160,7 +1166,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         QString fix_weir_file = jsonfile.absolutePath() + "/" + QString::fromStdString(thin_dam_file_name[0]);
         if (!QFileInfo(fix_weir_file).exists())
         {
-            QString msg = QString(tr("Thin dams are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fix_weir_file).arg(QString::fromStdString(json_key)));
+            QString fname = QString::fromStdString(pt_mdu->get_filename());
+            QString msg = QString(tr("Thin dams are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -1176,6 +1183,34 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             struct _mapping * mapping;
             mapping = ugrid_file->get_grid_mapping();
             create_fixed_weir_vector_layer(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+        }
+    }
+    //------------------------------------------------------------------------------
+    json_key = "data.geometry.crosslocfile";
+    vector<string> cross_section_location_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, cross_section_location_file_name);
+    if (cross_section_location_file_name.size() == 1 && cross_section_location_file_name[0] != "null")
+    {
+        QString full_file_name = jsonfile.absolutePath() + "/" + QString::fromStdString(cross_section_location_file_name[0]);
+        if (!QFileInfo(full_file_name).exists())
+        {
+            QString fname = QString::fromStdString(pt_mdu->get_filename());
+            QString msg = QString(tr("Cross-section locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+        }
+        else
+        {
+            fname = full_file_name.toStdString();
+            READ_JSON * pt_file = new READ_JSON(fname);
+            UGRID * ugrid_file = m_ugrid_file[_fil_index];
+            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            {
+                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                return;
+            }
+            struct _mapping * mapping;
+            mapping = ugrid_file->get_grid_mapping();
+            create_vector_layer_1D_cross_section(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
         }
     }
 }
@@ -2916,7 +2951,7 @@ void qgis_umesh::create_structure_vector_layer(UGRID * ugrid_file, READ_JSON * p
         if (fname.size() == 0)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Structure polylines are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+            QString msg = QString(tr("Structure polylines are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3035,7 +3070,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         if (fname.size() == 0)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Sources and sinks are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+            QString msg = QString(tr("Sources and sinks are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3142,7 +3177,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         if (fname.size() == 0)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Boundary polylines are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+            QString msg = QString(tr("Boundary polylines are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3248,7 +3283,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         if (fname.size() == 0)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Lateral areas are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+            QString msg = QString(tr("Lateral areas are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3354,7 +3389,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         if (lateral_name.size() == 0)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Lateral discharges are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+            QString msg = QString(tr("Lateral discharges are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3365,7 +3400,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             if (branch_name.size() == 0)
             {
                 QString fname = QString::fromStdString(prop_tree->get_filename());
-                QString msg = QString(tr("Lateral discharges are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+                QString msg = QString(tr("Lateral discharges are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
                 return;
             }
@@ -3443,8 +3478,8 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
 
             QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
             simple_marker->setSize(4.0);
-            simple_marker->setColor(QColor(0, 255, 0));
-            simple_marker->setFillColor(QColor(0, 255, 0));
+            //simple_marker->setColor(QColor(0, 255, 0));
+            //simple_marker->setFillColor(QColor(0, 255, 0));
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Lateral point rotation")));
 
             QgsSymbol * marker = new QgsMarkerSymbol();
@@ -3465,7 +3500,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         if (bnd_name.size() == 0)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Boundary nodes are skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+            QString msg = QString(tr("Boundary nodes are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3737,6 +3772,124 @@ void qgis_umesh::create_fixed_weir_vector_layer(UGRID * ugrid_file, READ_JSON * 
     }
 }
 //------------------------------------------------------------------------------
+void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+{
+    long status = -1;
+
+    string json_key = "data.crosssection.id";
+    vector<string> crosssection_name;
+    status = prop_tree->get(json_key, crosssection_name);
+    if (crosssection_name.size() == 0)
+    {
+        QString fname = QString::fromStdString(prop_tree->get_filename());
+        QString msg = QString(tr("Cross-section locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+    }
+    else
+    {
+        json_key = "data.crosssection.branchid";
+        vector<string> branch_name;
+        status = prop_tree->get(json_key, branch_name);
+        if (branch_name.size() == 0)
+        {
+            QString fname = QString::fromStdString(prop_tree->get_filename());
+            QString msg = QString(tr("Cross-section are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            return;
+        }
+        json_key = "data.crosssection.chainage";
+        vector<double> chainage;
+        status = prop_tree->get(json_key, chainage);
+        if (chainage.size() == 0)
+        {
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            return;
+        }
+        if (crosssection_name.size() != branch_name.size() || branch_name.size() != chainage.size() || crosssection_name.size() != chainage.size())
+        {
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
+                + "\nCross-section names: " + (int)crosssection_name.size()
+                + "\nBranches: " + (int)branch_name.size()
+                + "\nChainage: " + (int)chainage.size());
+            return;
+        }
+
+        QgsLayerTreeGroup * subTreeGroup;
+        subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+        QString layer_name = QString("Cross-section location");
+
+        // create the vector 
+        QgsVectorLayer * vl;
+        QgsVectorDataProvider * dp_vl;
+        QList <QgsField> lMyAttribField;
+
+        int nr_attrib_fields = 0;
+        lMyAttribField << QgsField("Cross-section name", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Cross-section Id (0-based)", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Cross-section Id (1-based)", QVariant::String);
+        nr_attrib_fields++;
+
+        QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+        vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->startEditing();
+        dp_vl = vl->dataProvider();
+        dp_vl->addAttributes(lMyAttribField);
+        //dp_vl->createSpatialIndex();
+        vl->updatedFields();
+
+        struct _ntw_geom * ntw_geom = ugrid_file->get_network_geometry();
+        struct _ntw_edges * ntw_edges = ugrid_file->get_network_edges();
+
+        double xp;
+        double yp;
+        double rotation;
+        for (int j = 0; j < crosssection_name.size(); j++)
+        {
+            long status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
+            QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
+            QgsFeature MyFeature;
+            MyFeature.setGeometry(MyPoints);
+
+            MyFeature.initAttributes(nr_attrib_fields);
+            int k = -1;
+            k++;
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(crosssection_name[j]).trimmed()));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
+
+            dp_vl->addFeature(MyFeature);
+        }
+        vl->commitChanges();
+
+        QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/cross_section_location_1d.svg"));
+        simple_marker->setSize(5.0);
+        simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Cross-section location")));
+
+        QgsSymbol * marker = new QgsMarkerSymbol();
+        marker->changeSymbolLayer(0, simple_marker);
+
+        //set up a renderer for the layer
+        QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
+        vl->setRenderer(mypRenderer);
+
+        add_layer_to_group(vl, subTreeGroup);
+        QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+        for (int i = 0; i < tmp_layers.size(); i++)
+        {
+            if (tmp_layers[i]->name() == layer_name)
+            {
+                tmp_layers[i]->setItemVisibilityChecked(false);
+            }
+        }
+
+        connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+    }
+}
+//------------------------------------------------------------------------------
 void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_code)
 {
     if (prop_tree != nullptr)
@@ -3748,7 +3901,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
         if (link_1d_point.size() == 0)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Links between 1D and 2D mesh is skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+            QString msg = QString(tr("Links between 1D and 2D mesh is skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3759,7 +3912,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
             if (link_2d_point.size() == 0)
             {
                 QString fname = QString::fromStdString(prop_tree->get_filename());
-                QString msg = QString(tr("Links between 1D and 2D mesh is skipped.\nFile:\"%1\", referenced by tag: \"%2\" does not exist.").arg(fname).arg(QString::fromStdString(json_key)));
+                QString msg = QString(tr("Links between 1D and 2D mesh is skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
                 return;
             }
@@ -3933,6 +4086,7 @@ void qgis_umesh::add_layer_to_group(QgsVectorLayer * vl, QgsLayerTreeGroup * tre
 
     QgsMapLayer * map_layer = QgsProject::instance()->addMapLayer(vl, false);
     treeGroup->addLayer(map_layer);
+
     QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
     for (int i = 0; i < tmp_layers.size(); i++)
     {
