@@ -511,6 +511,7 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d(QString text)
             }
         }
     }
+    cb->model()->sort(0);  // sort alphabetical order, should be set after combobox is filled
     cb->blockSignals(false);
 
     connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked_1d(int)));
@@ -537,6 +538,7 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
             }
         }
     }
+    cb->model()->sort(0);  // sort alphabetical order, should be set after combobox is filled
     cb->blockSignals(false);
 
     connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked_1d2d(int)));
@@ -550,6 +552,10 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
 
     cb_2d->blockSignals(true);
     cb_3d->blockSignals(true);
+
+    cb_2d->setInsertPolicy(QComboBox::InsertAlphabetically);
+    cb_3d->setInsertPolicy(QComboBox::InsertAlphabetically);
+
     for (int i = 0; i < m_vars->nr_vars; i++)
     {
         if (m_vars->variable[i]->time_series)
@@ -574,8 +580,11 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
             }
         }
     }
-    cb_3d->blockSignals(false);
+    cb_2d->model()->sort(0);  // sort alphabetical order, should be set after combobox is filled
+    cb_3d->model()->sort(0);  // sort alphabetical order, should be set after combobox is filled
+
     cb_2d->blockSignals(false);
+    cb_3d->blockSignals(false);
 
     connect(cb_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_2d(int)));
     connect(cb_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_3d(int)));
@@ -751,6 +760,10 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
         {
             QMap<QString, int> map;
             QString std_name = QString::fromStdString(m_vars->variable[i]->standard_name).trimmed();
+            if (std_name.isEmpty())
+            {
+                std_name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();  // HACK for sediment, they do not have standard names
+            }
             map[std_name] = i;
             QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
             if (m_vars->variable[i]->dims.size() == 2)  // HACK: assumed time, xy-space
@@ -828,8 +841,11 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
             }
         }
     }
-    cb_vec_3d->blockSignals(false);
+    cb_vec_2d->model()->sort(0);  // sort alphabetical order, should be set after combobox is filled
+    cb_vec_3d->model()->sort(0);  // sort alphabetical order, should be set after combobox is filled
+
     cb_vec_2d->blockSignals(false);
+    cb_vec_3d->blockSignals(false);
 
     return 0;
 }
