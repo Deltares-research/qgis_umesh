@@ -1616,7 +1616,7 @@ void qgis_umesh::activate_layers()
                     treeGroup->addGroup(name);
                     QgsLayerTreeGroup * subTreeGroup = treeGroup->findGroup(name);
 
-                    subTreeGroup->setExpanded(true);  // true is the default 
+                    subTreeGroup->setExpanded(false);  // true is the default 
                     subTreeGroup->setItemVisibilityChecked(true);
                     //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
                     subTreeGroup->setItemVisibilityCheckedRecursive(true);
