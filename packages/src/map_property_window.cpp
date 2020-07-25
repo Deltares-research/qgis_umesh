@@ -23,6 +23,11 @@ MapPropertyWindow::~MapPropertyWindow()
 {
     //QMessageBox::information(0, "Information", "MapPropertyWindow::~MapPropertyWindow()");
 }
+void MapPropertyWindow::closeEvent(QCloseEvent * event)
+{
+    //QMessageBox::information(0, "Information", "MapPropertyWindow::closeEvent()");
+    this->object_count = 0;
+}
 void MapPropertyWindow::close()
 {
     //QMessageBox::information(0, "Information", "MapPropertyWindow::~close()");

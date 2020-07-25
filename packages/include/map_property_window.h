@@ -2,6 +2,7 @@
 #define _INC_MAP_PROPERTY_WINDOW
 #include <QApplication>
 #include <QCheckBox>
+#include <QCloseEvent>
 #include <QDateTimeEdit>
 #include <QDockWidget>
 #include <QGroupBox>
@@ -41,6 +42,7 @@ public:
 
 public slots:
     void close();
+    void closeEvent(QCloseEvent *);
     void clicked_ok();
     void clicked_cancel();
     void clicked_apply();
