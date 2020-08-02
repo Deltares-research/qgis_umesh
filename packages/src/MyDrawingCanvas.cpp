@@ -50,7 +50,8 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     drawing = true;
     _ugrid_file = nullptr;
     _variable = nullptr;
-    m_layer = 0;
+    m_bed_layer = 0;
+    m_hydro_layer = 0;
     _current_step = 0;
     m_ramph = new QColorRampEditor();
     m_ramph_vec_dir = new QColorRampEditor();
@@ -165,7 +166,21 @@ void MyCanvas::draw_data_at_face()
         else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
         {
             DataValuesProvider3D<double> std_data_at_face_3d = _ugrid_file->get_variable_3d_values(var_name);
-            z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, m_layer - 1, 0);
+            if (_variable->sediment_array != -1)
+            {
+                z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, _variable->sediment_array, 0);
+            }
+            else
+            {
+                if (m_hydro_layer > 0)
+                {
+                    z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+                }
+                if (m_bed_layer > 0)
+                {
+                    z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, m_bed_layer - 1, 0);
+                }
+            }
         }
         else
         {
@@ -306,11 +321,14 @@ void MyCanvas::draw_vector_arrow_at_face()
             }
             else if (dimens == 3) // 3D: time, layer, nodes
             {
-                DataValuesProvider3D<double> std_u_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
-                nr_faces = std_u_vec_at_face_3d.m_numXY;
-                u_value = std_u_vec_at_face_3d.GetValueAtIndex(_current_step, m_layer - 1, 0);
-                DataValuesProvider3D<double> std_v_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
-                v_value = std_v_vec_at_face_3d.GetValueAtIndex(_current_step, m_layer - 1, 0);
+                if (m_hydro_layer > 0)
+                {
+                    DataValuesProvider3D<double> std_u_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
+                    nr_faces = std_u_vec_at_face_3d.m_numXY;
+                    u_value = std_u_vec_at_face_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+                    DataValuesProvider3D<double> std_v_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
+                    v_value = std_v_vec_at_face_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+                }
             }
             else
             {
@@ -519,10 +537,13 @@ void MyCanvas::draw_vector_direction_at_face()
         }
         else if (dimens == 3) // 3D: time, layer, nodes
         {
-            DataValuesProvider3D<double> std_u_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
-            u_value = std_u_vec_at_face_3d.GetValueAtIndex(_current_step, m_layer - 1, 0);
-            DataValuesProvider3D<double> std_v_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
-            v_value = std_v_vec_at_face_3d.GetValueAtIndex(_current_step, m_layer - 1, 0);
+            if (m_hydro_layer > 0)
+            {
+                DataValuesProvider3D<double> std_u_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
+                u_value = std_u_vec_at_face_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+                DataValuesProvider3D<double> std_v_vec_at_face_3d = _ugrid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
+                v_value = std_v_vec_at_face_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+            }
         }
         vector<double> z_value(mesh2d->face_nodes.size(), 0.0); // will contain the direction
         rgb_color.resize(mesh2d->face_nodes.size());
@@ -616,7 +637,14 @@ void MyCanvas::draw_dot_at_edge()
         else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
         {
             DataValuesProvider3D<double> std_dot_at_edge_3d = _ugrid_file->get_variable_3d_values(var_name);
-            z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_layer - 1, 0);
+            if (m_bed_layer > 0)
+            {
+                z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_bed_layer - 1, 0);
+            }
+            if (m_hydro_layer > 0)
+            {
+                z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+            }
         }
         else
         {
@@ -669,7 +697,21 @@ void MyCanvas::draw_line_at_edge()
         else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
         {
             DataValuesProvider3D<double> std_dot_at_edge_3d = _ugrid_file->get_variable_3d_values(var_name);
-            z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_layer - 1, 0);
+            if (_variable->sediment_array != -1)
+            {
+                z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, _variable->sediment_array, 0);
+            }
+            else
+            {
+                if (m_bed_layer > 0)
+                {
+                    z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_bed_layer - 1, 0);
+                }
+                if (m_hydro_layer > 0)
+                {
+                    z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+                }
+            }
             length = std_dot_at_edge_3d.m_numXY;
         }
         else
@@ -852,11 +894,15 @@ void MyCanvas::set_variables(struct _mesh_variable * variables)
     m_variables = variables;
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::set_layer(int i_layer)
+void MyCanvas::set_bed_layer(int i_layer)
 {
-    this->m_layer = i_layer;
+    this->m_bed_layer = i_layer;
 }
-
+//-----------------------------------------------------------------------------
+void MyCanvas::set_hydro_layer(int i_layer)
+{
+    this->m_hydro_layer = i_layer;
+}
 //-----------------------------------------------------------------------------
 void MyCanvas::setUgridFile(UGRID * ugrid_file)
 {

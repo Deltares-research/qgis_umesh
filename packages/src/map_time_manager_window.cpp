@@ -9,8 +9,10 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
 {
     object_count = 1;
     m_QGisIface = QGisIface;
-    m_sb_layer = nullptr;
-    m_sb_layer_vec = nullptr;
+    m_sb_bed_layer = nullptr;
+    m_sb_bed_layer_vec = nullptr;
+    m_sb_hydro_layer = nullptr;
+    m_sb_hydro_layer_vec = nullptr;
     m_ramph_vec_dir = nullptr;
     m_map_property = nullptr;
     m_cur_view = nullptr;
@@ -575,7 +577,14 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
             {
                 if (mesh_var_name == text)
                 {
-                    cb_3d->addItem(name, map[name]);
+                    if (m_vars->variable[i]->sediment_array != -1)
+                    {
+                        cb_2d->addItem(name, map[name]);
+                    }
+                    else
+                    {
+                        cb_3d->addItem(name, map[name]);
+                    }
                 }
             }
         }
@@ -647,20 +656,40 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             QVariant j = m_cb_3d->itemData(0);
             int jj = j.toInt();
             struct _variable * var = m_vars->variable[jj];
-            m_layerLabelPrefix = new QLabel(tr("Layer"));
-            m_layerLabelSuffix = new QLabel(tr("[0,0]"));
-            m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_layers - 1]));
-            m_sb_layer = spinbox_layer(var->nr_layers);
-            connect(m_sb_layer, SIGNAL(valueChanged(int)), this, SLOT(spinbox_value_changed(int)));
+            if (var->nr_hydro_layers != -1)
+            {
+                m_layerLabelPrefix = new QLabel(tr("Layer"));
+                m_layerLabelSuffix = new QLabel(tr("[0,0]"));
+                m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_hydro_layers - 1]));
+                m_sb_hydro_layer = spinbox_layer(var->nr_hydro_layers);
+                connect(m_sb_hydro_layer, SIGNAL(valueChanged(int)), this, SLOT(spinbox_value_changed(int)));
 
-            QHBoxLayout * sp_group_3d = new QHBoxLayout();
-            sp_group_3d->addWidget(m_layerLabelPrefix);
-            sp_group_3d->addWidget(m_sb_layer);
-            sp_group_3d->addWidget(m_layerLabelSuffix);
-            sp_group_3d->addStretch();
+                QHBoxLayout * sp_group_3d = new QHBoxLayout();
+                sp_group_3d->addWidget(m_layerLabelPrefix);
+                sp_group_3d->addWidget(m_sb_hydro_layer);
+                sp_group_3d->addWidget(m_layerLabelSuffix);
+                sp_group_3d->addStretch();
 
-            row += 1;
-            hl->addLayout(sp_group_3d, row, 1);
+                row += 1;
+                hl->addLayout(sp_group_3d, row, 1);
+            }
+            if (var->nr_bed_layers != -1)
+            {
+                m_layerLabelPrefix = new QLabel(tr("Layer"));
+                m_layerLabelSuffix = new QLabel();
+                m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[var->nr_bed_layers - 1]));
+                m_sb_bed_layer = spinbox_layer(var->nr_bed_layers);
+                connect(m_sb_bed_layer, SIGNAL(valueChanged(int)), this, SLOT(spinbox_value_changed(int)));
+
+                QHBoxLayout * sp_group_3d_bed = new QHBoxLayout();
+                sp_group_3d_bed->addWidget(m_layerLabelPrefix);
+                sp_group_3d_bed->addWidget(m_sb_bed_layer);
+                sp_group_3d_bed->addWidget(m_layerLabelSuffix);
+                sp_group_3d_bed->addStretch();
+
+                row += 1;
+                hl->addLayout(sp_group_3d_bed, row, 1);
+            }
         }
     }
     vl_tw_iso->addLayout(hl);
@@ -711,13 +740,13 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
         struct _variable * var = m_vars->variable[strings[3].toInt()];
         m_layerLabelPrefix_vec = new QLabel(tr("Layer"));
         m_layerLabelSuffix_vec = new QLabel(tr("[0,0]"));
-        m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_layers - 1]));
-        m_sb_layer_vec = spinbox_layer(var->nr_layers);
-        connect(m_sb_layer_vec, SIGNAL(valueChanged(int)), this, SLOT(spinbox_vec_value_changed(int)));
+        m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_hydro_layers - 1]));
+        m_sb_hydro_layer_vec = spinbox_layer(var->nr_hydro_layers);
+        connect(m_sb_hydro_layer_vec, SIGNAL(valueChanged(int)), this, SLOT(spinbox_vec_value_changed(int)));
 
         QHBoxLayout * sp_group_vec = new QHBoxLayout();
         sp_group_vec->addWidget(m_layerLabelPrefix_vec);
-        sp_group_vec->addWidget(m_sb_layer_vec);
+        sp_group_vec->addWidget(m_sb_hydro_layer_vec);
         sp_group_vec->addWidget(m_layerLabelSuffix_vec);
         sp_group_vec->addStretch();
         row += 1;
@@ -1109,14 +1138,28 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
 
     struct _variable * var = m_vars->variable[jj];
 
-    m_sb_layer->setRange(1, var->nr_layers);
-    if (m_sb_layer->value() == 0)
+    if (var->nr_hydro_layers > 0)
     {
-        m_sb_layer->setValue(var->nr_layers);
+        m_sb_hydro_layer->setRange(1, var->nr_hydro_layers);
+        if (m_sb_hydro_layer->value() == 0)
+        {
+            m_sb_hydro_layer->setValue(var->nr_hydro_layers);
+        }
+        int i_lay = m_sb_hydro_layer->value();
+        m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
     }
-    int i_lay = m_sb_layer->value();
-    m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
 
+    if (var->nr_bed_layers > 0)
+    {
+        m_sb_bed_layer->setRange(1, var->nr_bed_layers);
+        if (m_sb_bed_layer->value() == 0)
+        {
+            m_sb_bed_layer->setValue(var->nr_bed_layers);
+        }
+        int i_lay = m_sb_bed_layer->value();
+        m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[i_lay - 1]));
+    }
+    
     _MyCanvas->reset_min_max();
     if (!m_show_map_data_3d)
     {
@@ -1172,12 +1215,12 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
 
     struct _variable * var = m_vars->variable[jj];
 
-    m_sb_layer_vec->setRange(1, var->nr_layers);
-    if (m_sb_layer_vec->value() == 0)
+    m_sb_hydro_layer_vec->setRange(1, var->nr_hydro_layers);
+    if (m_sb_hydro_layer_vec->value() == 0)
     {
-        m_sb_layer_vec->setValue(var->nr_layers);
+        m_sb_hydro_layer_vec->setValue(var->nr_hydro_layers);
     }
-    int i_lay = m_sb_layer_vec->value();
+    int i_lay = m_sb_hydro_layer_vec->value();
     m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
 
     _MyCanvas->reset_min_max();
@@ -1215,8 +1258,8 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
 
     if (!str.contains("Depth Averaged"))
     {
-        if (m_sb_layer_vec != nullptr) {
-            _MyCanvas->set_layer(m_sb_layer_vec->value());
+        if (m_sb_hydro_layer_vec != nullptr) {
+            _MyCanvas->set_hydro_layer(m_sb_hydro_layer_vec->value());
         }
     }
     if (!str.contains("velocity vector direction"))
@@ -1257,8 +1300,11 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
     {
         //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
         _MyCanvas->set_variable(var);
-        if (m_sb_layer != nullptr) {
-            _MyCanvas->set_layer(m_sb_layer->value());
+        if (m_sb_hydro_layer != nullptr) {
+            _MyCanvas->set_hydro_layer(m_sb_hydro_layer->value());
+        }
+        if (m_sb_bed_layer != nullptr) {
+            _MyCanvas->set_bed_layer(m_sb_bed_layer->value());
         }
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->draw_all();
@@ -1370,7 +1416,14 @@ void MapTimeManagerWindow::spinbox_value_changed(int i_lay)
     int jj = j.toInt();
 
     struct _variable * var = m_vars->variable[jj];
-    m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+    if (var->nr_hydro_layers > 0)
+    {
+        m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+    }
+    if (var->nr_bed_layers > 0)
+    {
+        m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[i_lay - 1]));
+    }
     return;
 }
 void MapTimeManagerWindow::spinbox_vec_value_changed(int i_lay)

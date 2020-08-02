@@ -167,7 +167,10 @@ public:
         QLabel * m_layerLabelSuffix;
         QLabel * m_layerLabelSuffix_vec;
         QSpinBox * m_sb_layer;
-        QSpinBox * m_sb_layer_vec;
+        QSpinBox * m_sb_hydro_layer_vec;
+        QSpinBox * m_sb_hydro_layer;
+        QSpinBox * m_sb_bed_layer_vec;
+        QSpinBox * m_sb_bed_layer;
         bool m_show_map_data_1d;
         bool m_show_map_data_1d2d;
         bool m_show_map_data_2d;

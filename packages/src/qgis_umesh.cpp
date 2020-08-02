@@ -1636,9 +1636,21 @@ void qgis_umesh::activate_layers()
                             }
                             if (var->variable[i]->location == "face" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                             {
-                                DataValuesProvider2D<double>std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name);
-                                double * z_value = std_data_at_face.GetValueAtIndex(0, 0);
-                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, subTreeGroup);
+                                if (var->variable[i]->sediment_index == -1)
+                                {
+                                    DataValuesProvider2D<double>std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name, var->variable[i]->sediment_index);
+                                    double * z_value = std_data_at_face.GetValueAtIndex(0, 0);
+                                    create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, subTreeGroup);
+                                }
+                                else
+                                {
+                                    QgsLayerTreeGroup * Group = get_subgroup(subTreeGroup, QString("Sediment"));
+
+                                    DataValuesProvider2D<double>std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name, var->variable[i]->sediment_index);
+                                    double * z_value = std_data_at_face.GetValueAtIndex(var->variable[i]->sediment_index, 0);
+                                    create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, Group);
+                                    Group->setExpanded(false);
+                                }
                             }
                             if (var->variable[i]->location == "node" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                             {

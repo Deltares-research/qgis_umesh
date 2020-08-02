@@ -16,6 +16,8 @@
 
 #include <QtGui/QIcon>
 
+#include <qgsmessagelog.h>
+
 //#include <boost/timer/timer.hpp>
 #include "data_struct.h"
 #include "netcdf.h"
@@ -117,7 +119,10 @@ public:
     bool read;
     bool time_series;
     vector<string> dim_names;
-    int nr_layers;
+    int nr_hydro_layers = -1;
+    int nr_bed_layers = -1;
+    int sediment_index = -1;
+    int sediment_array = -1;
     vector<double> layer_center;
     vector<double> layer_interface;
     DataValuesProvider2D<double> data_2d;
@@ -354,6 +359,8 @@ public:
 
     struct _mesh_variable * get_variables();
     DataValuesProvider2D<double> get_variable_values(const string);
+    DataValuesProvider2D<double> get_variable_values(const string, int);
+
     DataValuesProvider3D<double> get_variable_3d_values(const string);
 
     struct _variable * get_var_by_std_name(struct _mesh_variable *, string, string);
@@ -380,7 +387,8 @@ private:
     int get_dimension(int, char *, size_t *);
     int get_dimension(int, string, size_t *);
     int get_dimension_var(int, string, size_t *);
-    vector<string>  get_dimension_names(int, string);
+    vector<string> get_string_var(int, string);
+    vector<string> get_dimension_names(int, string);
     int get_coordinate(char *, char *, int, double *, double *);
 
     int read_variables_with_cf_role(int, string, string, int, int *);

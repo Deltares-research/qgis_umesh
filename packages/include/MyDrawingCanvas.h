@@ -170,7 +170,8 @@ public:
     void set_coordinate_type(QStringList);
     void set_determine_grid_size(bool);
 
-    void set_layer(int);
+    void set_bed_layer(int);
+    void set_hydro_layer(int);
     void set_current_step(int);
     void setColorRamp(QColorRampEditor *);
     void setColorRampVector(QColorRampEditor *);
@@ -253,7 +254,8 @@ private:
     struct _variable * _variable;
     struct _mesh_variable * m_variables;
     QStringList m_coordinate_type;
-    int m_layer;
+    int m_bed_layer;
+    int m_hydro_layer;
     int _current_step;
     vector<long> dims;
     vector<double> mesh1d_x;
