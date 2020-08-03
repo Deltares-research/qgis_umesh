@@ -139,8 +139,6 @@ void MyCanvas::draw_dot_at_face()
         double missing_value = _variable->fill_value;
         rgb_color.resize(mesh2d->face[0]->x.size());
         determine_min_max(z_value, mesh2d->face[0]->x.size(), &m_z_min, &m_z_max, rgb_color, missing_value);
-        m_ramph->setMinMax(m_z_min, m_z_max);
-        m_ramph->update();
 
         this->startDrawing(0);
         double opacity = mCache_painter->opacity();
@@ -189,8 +187,6 @@ void MyCanvas::draw_data_at_face()
         double missing_value = _variable->fill_value;
         rgb_color.resize(mesh2d->face_nodes.size());
         determine_min_max(z_value, mesh2d->face_nodes.size(), &m_z_min, &m_z_max, missing_value);
-        m_ramph->setMinMax(m_z_min, m_z_max);
-        m_ramph->update();
 
         this->startDrawing(0);
         mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
@@ -606,8 +602,6 @@ void MyCanvas::draw_dot_at_node()
         double missing_value = _variable->fill_value;
         rgb_color.resize(mesh1d->node[0]->x.size());
         determine_min_max(z_value, mesh1d->node[0]->x.size(), &m_z_min, &m_z_max, rgb_color, missing_value);
-        m_ramph->setMinMax(m_z_min, m_z_max);
-        m_ramph->update();
 
         this->startDrawing(0);
         double opacity = mCache_painter->opacity();
@@ -654,8 +648,6 @@ void MyCanvas::draw_dot_at_edge()
         double missing_value = _variable->fill_value;
         rgb_color.resize(edges->count);
         determine_min_max(z_value, edges->count, &m_z_min, &m_z_max, rgb_color, missing_value);
-        m_ramph->setMinMax(m_z_min, m_z_max);
-        m_ramph->update();
 
         for (int j = 0; j < edges->count; j++)
         {
@@ -724,8 +716,6 @@ void MyCanvas::draw_line_at_edge()
         }
         double missing_value = _variable->fill_value;
         determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
-        m_ramph->setMinMax(m_z_min, m_z_max);
-        m_ramph->update();
 
         struct _edge * edges = nullptr;
         struct _mesh1d * mesh1d = nullptr;
@@ -819,8 +809,7 @@ void MyCanvas::draw_data_along_edge()
 
         double missing_value = _variable->fill_value;
         determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
-        m_ramph->setMinMax(m_z_min, m_z_max);
-        m_ramph->update();
+
         if (true)  // boolean to draw gradient along line?
         {
             for (int j = 0; j < edges->count; j++)
@@ -850,7 +839,6 @@ void MyCanvas::draw_data_along_edge()
         mCache_painter->setOpacity(opacity);
         this->finishDrawing();
     }
-
 }
 void MyCanvas::setColorRamp(QColorRampEditor * ramph)
 {
@@ -926,12 +914,16 @@ void MyCanvas::determine_min_max(double * z, int length, double * z_min, double 
                 rgb_color[i] = qRgba(255, 0, 0, 255);
             }
         }
+        m_property->set_minimum(*z_min);
+        m_property->set_maximum(*z_max);
     }
     else
     {
         *z_min = m_property->get_minimum();
         *z_max = m_property->get_maximum();
     }
+    m_ramph->setMinMax(*z_min, *z_max);
+    m_ramph->update();
 }
 void MyCanvas::determine_min_max(double * z, int length, double * z_min, double * z_max, double missing_value)
 {
@@ -955,6 +947,8 @@ void MyCanvas::determine_min_max(double * z, int length, double * z_min, double 
         *z_min = m_property->get_minimum();
         *z_max = m_property->get_maximum();
     }
+    m_ramph->setMinMax(*z_min, *z_max);
+    m_ramph->update();
 }
 
 double MyCanvas::statistics_averaged_length_of_cell(struct _variable * var)
