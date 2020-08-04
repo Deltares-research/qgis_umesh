@@ -181,7 +181,7 @@ public:
 
         MapProperty * m_property;
         vector_quantity m_vector_draw;
-        MapPropertyWindow * m_map_property;
+        MapPropertyWindow * m_map_property_window;
         AddCurrentViewWindow * m_cur_view;
 };
 

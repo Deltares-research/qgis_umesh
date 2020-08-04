@@ -14,7 +14,7 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_sb_hydro_layer = nullptr;
     m_sb_hydro_layer_vec = nullptr;
     m_ramph_vec_dir = nullptr;
-    m_map_property = nullptr;
+    m_map_property_window = nullptr;
     m_cur_view = nullptr;
     _ugrid_file = ugrid_file;
     _MyCanvas = MyCanvas;
@@ -60,13 +60,13 @@ void MapTimeManagerWindow::contextMenu(const QPoint & point)
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::contextMenu()");
     if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
     {
-        m_map_property = new MapPropertyWindow(_MyCanvas);
+        m_map_property_window = new MapPropertyWindow(_MyCanvas);
     }
-    m_map_property->set_dynamic_limits_enabled(true);
+    m_map_property_window->set_dynamic_limits_enabled(true);
     if (m_vector_draw == VECTOR_DIRECTION)
     {
         // set ramp limits en/disabled
-        m_map_property->set_dynamic_limits_enabled(false);
+        m_map_property_window->set_dynamic_limits_enabled(false);
     }
 }
 //
@@ -88,10 +88,10 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
         m_cur_view->close();
         m_cur_view = nullptr;
     }
-    if (m_map_property != nullptr)
+    if (m_map_property_window != nullptr)
     {
-        m_map_property->close();
-        m_map_property = nullptr;
+        m_map_property_window->close();
+        m_map_property_window = nullptr;
     }
 }
 int MapTimeManagerWindow::get_count()
@@ -1043,9 +1043,9 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
 {
     _MyCanvas->reset_min_max();
     _MyCanvas->set_draw_vector(VECTOR_NONE);
-    if (m_map_property != nullptr)
+    if (m_map_property_window != nullptr)
     {
-        m_map_property->set_dynamic_limits_enabled(true);
+        m_map_property_window->set_dynamic_limits_enabled(true);
     }
 
     if (!m_show_map_data_1d)
@@ -1072,9 +1072,9 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
 {
     _MyCanvas->reset_min_max();
     _MyCanvas->set_draw_vector(VECTOR_NONE);
-    if (m_map_property != nullptr)
+    if (m_map_property_window != nullptr)
     {
-        m_map_property->set_dynamic_limits_enabled(true);
+        m_map_property_window->set_dynamic_limits_enabled(true);
     }
 
     if (!m_show_map_data_1d2d)
@@ -1100,9 +1100,9 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
 {
     _MyCanvas->reset_min_max();
     _MyCanvas->set_draw_vector(VECTOR_NONE);
-    if (m_map_property != nullptr)
+    if (m_map_property_window != nullptr)
     {
-        m_map_property->set_dynamic_limits_enabled(true);
+        m_map_property_window->set_dynamic_limits_enabled(true);
     }
 
     if (!m_show_map_data_2d)
@@ -1127,9 +1127,9 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
 void MapTimeManagerWindow::cb_clicked_3d(int item)
 {
     _MyCanvas->set_draw_vector(VECTOR_NONE);
-    if (m_map_property != nullptr)
+    if (m_map_property_window != nullptr)
     {
-        m_map_property->set_dynamic_limits_enabled(true);
+        m_map_property_window->set_dynamic_limits_enabled(true);
     }
 
     QString str = m_cb_3d->itemText(item);
@@ -1183,9 +1183,9 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
 void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
 {
     _MyCanvas->reset_min_max();
-    if (m_map_property != nullptr)
+    if (m_map_property_window != nullptr)
     {
-        m_map_property->set_dynamic_limits_enabled(true);
+        m_map_property_window->set_dynamic_limits_enabled(true);
     }
     if (!m_show_map_vector_2d)
     {
@@ -1269,9 +1269,9 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
     else
     {
         m_vector_draw = VECTOR_DIRECTION; // draw the vector direction
-        if (m_map_property != nullptr)
+        if (m_map_property_window != nullptr)
         {
-            m_map_property->set_dynamic_limits_enabled(false);
+            m_map_property_window->set_dynamic_limits_enabled(false);
         }
     }
     _MyCanvas->set_draw_vector(m_vector_draw);
