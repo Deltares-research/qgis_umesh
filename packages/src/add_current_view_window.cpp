@@ -38,7 +38,7 @@ int AddCurrentViewWindow::get_count()
 void AddCurrentViewWindow::create_window()
 {
     wid = new QWidget();
-    wid->setWindowTitle(QString("Add current view to vector layer"));
+    wid->setWindowTitle(QString("Add current view to QGIS layer panel"));
     wid->setMinimumWidth(700);
 
     QVBoxLayout * vl_main = new QVBoxLayout();

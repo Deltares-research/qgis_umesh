@@ -16,7 +16,7 @@
 \memoFrom{Jan Mooiman}
 \memoTelephone{---}
 \memoEmail{jan.mooiman@deltares nl}
-\memoSubject{Manual to plot result files of \dflowfm in QGIS 3.12 (map- and history-files)}
+\memoSubject{Manual to plot result files of \dflowfm in QGIS 3.14 (map- and history-files)}
 \memoCopy{}
 
 \deltarestitle
@@ -40,6 +40,7 @@
 \endfoot 
 \bottomline 
 \endlastfoot 
+0.10.00  &  - Export to QGIS layer enabled for scalar quantities.  \\
 0.00.00  &  - No information available.  \\
 \end{longtable} 
 %--- end light blue table ---
@@ -88,6 +89,7 @@ After selecting \menu{Output\menuarrow Show map output} the window \window{Map O
 	\centering    
 	\includegraphics[width=\textwidth]{pictures/map_output_animation_window_scalar.png}
 	\caption{Layout scalar quantities; sigma layer at $\sigma = -0.1$ (near the surface)\label{fig:map_output_a}}
+	% file used for this picture: ugrid_1d2d3d_map.nc
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.48\textwidth}
@@ -96,8 +98,21 @@ After selecting \menu{Output\menuarrow Show map output} the window \window{Map O
 	\caption{Layout vector quantities; fixed layer at $z = -1.99402$ (near the surface).}
 \end{subfigure}    
     \caption{\window{Map Output Animation} window for scalars and vector.}
+	% file used for this picture: agulhas_map.nc
 \end{figure}
+%------------------------------------------------------------------------------
+\subparagraph*{Add current view to QGIS layer panel}
+\Note This button is only enabled for scalar quantities.
 
+After pressing the button \button{Add current view to QGIS panel} a window \window{Add current view to QGIS layer panel} will appear.
+In this window you can specify the layer name which will be presented in the QGIS layer panel, see \autoref{fig:currentviewlayerpanel}
+\begin{figure}[H]
+	\centering    
+	\includegraphics[width=0.90\textwidth]{pictures/current_view_add.png}
+	\caption{Window \window{Add current view to QGIS layer panel}\label{fig:currentviewlayerpanel}}
+\end{figure}
+After pressing the button \button{Add} the layer will be added to the layer panel.
+Pressing the \button{Quit} button will close the window.
 %------------------------------------------------------------------------------
 \subsubsection{PlotCFTS}
 After selecting \menu{Output\menuarrow \plotcfts} the program \plotcfts will start, see as example \autoref{fig:plotcfts_main}.
