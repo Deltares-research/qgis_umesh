@@ -9,7 +9,7 @@ enum LOCATION
     NODE = 0,
     EDGE,
     FACE,
-    NR_LOCATIONs
+    NR_LOCATIONS
 };
 enum OBSERVATION_TYPE
 {

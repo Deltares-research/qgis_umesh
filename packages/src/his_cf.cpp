@@ -239,7 +239,7 @@ long HISCF::read_locations()
                 if (!model_wide_found)
                 {
                     loc_type.push_back(new _location_type);
-                    nr_par_loc = (int)loc_type.size();  // HACK typecast
+                    nr_par_loc = (int)loc_type.size();  // Todo: HACK typecast
                     if (model_wide_exist)
                     {
                         struct _location_type * tmp = loc_type[i_par_loc];

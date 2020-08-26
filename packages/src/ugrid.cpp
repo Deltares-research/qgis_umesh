@@ -239,7 +239,7 @@ long UGRID::read_mesh()
             tmp_dim_names = get_dimension_names(this->ncid, var_name);
             for (int i = 0; i < tmp_dim_names.size(); i++)
             {
-                if (tmp_dim_names[i].find("nterface") != string::npos)  // HACK: dimension name should have the sub-string 'interface' or 'Interface'
+                if (tmp_dim_names[i].find("nterface") != string::npos)  // Todo: HACK: dimension name should have the sub-string 'interface' or 'Interface'
                 {
                     m_map_dim_name["zs_dim_interface"] = tmp_dim_names[i];
                     m_map_dim_name["zs_name_interface"] = var_name;
@@ -452,7 +452,7 @@ long UGRID::read_times()
                     m_map_dim[time_var_name] = time_series[0].nr_times;
                     m_map_dim_name["time"] = time_var_name;
 
-                    qdt_times.reserve((int)time_series[0].nr_times);  // HACK typecast
+                    qdt_times.reserve((int)time_series[0].nr_times);  // Todo: HACK typecast
                     // ex. date_time = "seconds since 2017-02-25 15:26:00"   year, yr, day, d, hour, hr, h, minute, min, second, sec, s and all plural forms
                     time_series[0].unit = new QString(date_time.at(0));
 
@@ -635,7 +635,7 @@ long UGRID::read_variables()
             {
                 status = nc_inq_dimname(this->ncid, var_dimids[j], var_name_c);
                 
-                mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // HACK typecast: size_t -> long
+                mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // Todo: HACK typecast: size_t -> long
                 if (time_series[0].nr_times != 0 && QString::fromStdString(m_dim_names[var_dimids[j]]) == time_series[0].dim_name)
                 {
                     mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
@@ -697,10 +697,8 @@ long UGRID::read_variables()
                                 mesh_vars->variable[m_nr_mesh_var - 1]->topology_dimension = mesh_vars->variable[m_nr_mesh_var - 1 - j]->topology_dimension;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = mesh_vars->variable[m_nr_mesh_var - 1 - j]->nc_type;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
-                                mesh_vars->variable[m_nr_mesh_var - 1]->sediment_array = i;
-                                string janm = "nSedTot - " + var_name + " - " + sed_name[j];
+                                string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
                                 mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
-
                             }
                         }
                     }
@@ -760,13 +758,13 @@ long UGRID::read_variables()
                         } 
                         else if (mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
                         {
-                            int nr_lay = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
-                            mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_lay;
+                            int nr_layers = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
+                            mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
 
                             string name = m_map_dim_name["zs_name_bed_layer"];
                             vector<double> values;
-                            values.reserve(nr_lay);
-                            for (int j = 0; j < nr_lay; j++)
+                            values.reserve(nr_layers);
+                            for (int j = 0; j < nr_layers; j++)
                             {
                                 values.push_back(j+1);
                             }
@@ -806,26 +804,21 @@ long UGRID::read_variables()
                                 mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = mesh_vars->variable[m_nr_mesh_var - 1 - j]->nc_type;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->dims = mesh_vars->variable[m_nr_mesh_var - 1 - j]->dims;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->dim_names = mesh_vars->variable[m_nr_mesh_var - 1 - j]->dim_names;
-                                mesh_vars->variable[m_nr_mesh_var - 1]->sediment_array = i;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
-                                string janm = "nSedTot - " + var_name + " - " + sed_name[j];
+                                string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
                                 mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
 
                                 if (mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
                                 {
-                                    int nr_lay = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
-                                    mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_lay;
+                                    int nr_layers = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
+                                    mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
 
                                     string name = m_map_dim_name["zs_name_bed_layer"];
-                                    int i_var;
-                                    status = nc_inq_varid(ncid, name.c_str(), &i_var);
-                                    double * values_c = (double *)malloc(sizeof(double) * nr_lay);
-                                    status = nc_get_var_double(this->ncid, i_var, values_c);
                                     vector<double> values;
-                                    values.reserve(nr_lay);
-                                    for (int j = 0; j < nr_lay; j++)
+                                    values.reserve(nr_layers);
+                                    for (int j = 0; j < nr_layers; j++)
                                     {
-                                        values.push_back(*(values_c + j));
+                                        values.push_back(j + 1);
                                     }
                                     mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                                 }
@@ -868,26 +861,21 @@ long UGRID::read_variables()
                                 mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = mesh_vars->variable[m_nr_mesh_var - 1 - j]->nc_type;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->dims = mesh_vars->variable[m_nr_mesh_var - 1 - j]->dims;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->dim_names = mesh_vars->variable[m_nr_mesh_var - 1 - j]->dim_names;
-                                mesh_vars->variable[m_nr_mesh_var - 1]->sediment_array = i;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
-                                string janm = "nSedSus - " + var_name + " - " + sed_name[j];
+                                string janm = var_name + "- " + sed_name[j] + " - " + "nSedSus";
                                 mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
 
                                 if (mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
                                 {
-                                    int nr_lay = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
-                                    mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_lay;
+                                    int nr_layers = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
+                                    mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
 
                                     string name = m_map_dim_name["zs_name_bed_layer"];
-                                    int i_var;
-                                    status = nc_inq_varid(ncid, name.c_str(), &i_var);
-                                    double * values_c = (double *)malloc(sizeof(double) * nr_lay);
-                                    status = nc_get_var_double(this->ncid, i_var, values_c);
                                     vector<double> values;
-                                    values.reserve(nr_lay);
-                                    for (int j = 0; j < nr_lay; j++)
+                                    values.reserve(nr_layers);
+                                    for (int j = 0; j < nr_layers; j++)
                                     {
-                                        values.push_back(*(values_c + j));
+                                        values.push_back(j + 1);
                                     }
                                     mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                                 }
@@ -898,13 +886,14 @@ long UGRID::read_variables()
             }
             else if (mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 4)
             {
-                // 4D variable does not contain the time variable, so it is time independent
+                // 4D variable:
                 // - time
                 // - sediment dimension
                 // - xy-space dimension
                 // - z-space (nbedlayers)
-                //QString msg = "Multiple fractions are not supported for a 3D simulation.";
-                //QMessageBox::warning(0, QString("Warning"), QString("%1").arg(msg));
+                QString name = QString::fromStdString(mesh_vars->variable[m_nr_mesh_var - 1]->var_name);
+                QString msg = QString("Variable \'%1\' does have 4 dimensions, still under construction.").arg(name) ;
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
                 bool contains_time_dimension = false;
                 for (int i = 0; i < mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
@@ -958,29 +947,24 @@ long UGRID::read_variables()
                                 mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = mesh_vars->variable[m_nr_mesh_var - 1 - j]->nc_type;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->dims = mesh_vars->variable[m_nr_mesh_var - 1 - j]->dims;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->dim_names = mesh_vars->variable[m_nr_mesh_var - 1 - j]->dim_names;
-                                mesh_vars->variable[m_nr_mesh_var - 1]->sediment_array = i;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
                                 mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
-                                string janm = "nSedTot - " + var_name + " - " + sed_name[j];
+                                string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
                                 mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
 
-                                if (mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
+                                for (int ii = 0; ii < mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); ii++)
                                 {
-                                    int nr_lay = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
-                                    mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_lay;
-
-                                    string name = m_map_dim_name["zs_name_bed_layer"];
-                                    int i_var;
-                                    status = nc_inq_varid(ncid, name.c_str(), &i_var);
-                                    double * values_c = (double *)malloc(sizeof(double) * nr_lay);
-                                    status = nc_get_var_double(this->ncid, i_var, values_c);
-                                    vector<double> values;
-                                    values.reserve(nr_lay);
-                                    for (int j = 0; j < nr_lay; j++)
+                                    if (mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[ii] == m_map_dim_name["zs_dim_bed_layer"])
                                     {
-                                        values.push_back(*(values_c + j));
+                                        string name = m_map_dim_name["zs_name_bed_layer"];
+                                        vector<double> values;
+                                        values.reserve(nr_layers);
+                                        for (int j = 0; j < nr_layers; j++)
+                                        {
+                                            values.push_back(j + 1);
+                                        }
+                                        mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                                     }
-                                    mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                                 }
                             }
                         }
@@ -1204,6 +1188,10 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
                 {
                     continue;
                 }
+                else if (mesh_vars->variable[i]->dims.size() == 4)
+                {
+                    continue;
+                }
                 mesh_vars->variable[i]->read = true;
                 m_pgBar->setValue(1000);
                 m_pgBar->hide();
@@ -1251,8 +1239,8 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
                 long layer_dim = mesh_vars->variable[i]->dims[1];
                 long xy_dim = mesh_vars->variable[i]->dims[2];
                 bool swap_loops = false;
-                //HACK assumed is that the time is the first dimension
-                //HACK just the variables at the layers, interfaces are skipped
+                // Todo: HACK assumed is that the time is the first dimension
+                // Todo: HACK just the variables at the layers, interfaces are skipped
                 if (m_map_dim_name["zs_dim_layer"] == mesh_vars->variable[i]->dim_names[2] ||
                     m_map_dim_name["zs_dim_interface"] == mesh_vars->variable[i]->dim_names[2] ||
                     m_map_dim_name["zs_dim_bed_layer"] == mesh_vars->variable[i]->dim_names[2])
@@ -1261,7 +1249,6 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
                     swap_loops = true;
                 }
                 values_c = (double *)malloc(sizeof(double) * length);
-                int k_tot = time_dim * xy_dim * layer_dim + xy_dim * layer_dim + layer_dim;
                 if (swap_loops)
                 {
                     for (int t = 0; t < time_dim; t++)
@@ -1274,7 +1261,7 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
                                 int k_source = t * xy_dim * layer_dim + l * xy_dim + xy;
                                 values_c[k_target] = read_c[k_source];
 
-                                double fraction = 100. + 900. * double(k_target) / double(k_tot);
+                                double fraction = 100. + 900. * double(k_target) / double(length);
                                 m_pgBar->setValue(int(fraction));
                             }
                         }
@@ -1309,6 +1296,131 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
                 return mesh_vars->variable[i_var]->data_3d;  // if read, skip all remaining variables
             }
             return mesh_vars->variable[i_var]->data_3d;
+        }
+    }
+    return data_pointer;
+}
+//------------------------------------------------------------------------------
+DataValuesProvider4D<double> UGRID::get_variable_4d_values(const string var_name)
+// return: 4d dimensional value(time, bed/hydro-layer, sediment, xy_space)
+{
+    int var_id;
+    int status;
+    double * read_c;
+    double * values_c;
+    DataValuesProvider4D<double> data_pointer;
+#ifdef NATIVE_C
+    fprintf(stderr, "UGRID::get_variable_values()\n");
+#endif    
+
+    for (int i = 0; i < mesh_vars->nr_vars; i++)
+    {
+        if (var_name == mesh_vars->variable[i]->var_name)  //var_name is a three dimensio
+        {
+            if (!mesh_vars->variable[i]->read)  // are the z_values already read
+            {
+                m_pgBar->show();
+                status = nc_inq_varid(this->ncid, var_name.c_str(), &var_id);
+                size_t length = 1;
+                for (int j = 0; j < mesh_vars->variable[i]->dims.size(); j++)
+                {
+                    length *= mesh_vars->variable[i]->dims[j];
+                }
+                read_c = (double *)malloc(sizeof(double) * length);
+                //boost::timer::cpu_timer timer;
+                status = nc_get_var_double(this->ncid, var_id, read_c);
+                //std::cout << timer.format() << '\n';
+                m_pgBar->setValue(100);
+                struct _mesh2d * m2d = this->get_mesh2d();
+
+                vector<long> dims(4);  // required order of dimensions: time, nbedlayers, nsedtot, nFaces
+                bool correct_order = true;
+                vector<long> dim_to;
+                dim_to.resize(mesh_vars->variable[i]->dims.size());
+                for (int j = 0; j < mesh_vars->variable[i]->dims.size(); j++)
+                {
+                    mesh_vars->variable[i]->dim_names[j];
+                    if (mesh_vars->variable[i]->dim_names[j] == m_map_dim_name["time"])
+                    {
+                        dims[0] = m_map_dim[m_map_dim_name["time"]];
+                        dim_to[j] = 0;
+                        if (j != 0)
+                        {
+                            correct_order = false;
+                        }
+                    }
+                    else if (mesh_vars->variable[i]->dim_names[j] == m_map_dim_name["zs_dim_bed_layer"])
+                    {
+                        dims[1] = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
+                        dim_to[j] = 1;
+                        if (j != 1)
+                        {
+                            correct_order = false;
+                        }
+                    }
+                    else if (mesh_vars->variable[i]->dim_names[j] == "nSedTot")  // Todo: HACK, use m_map_dim_name["nSedTot"])
+                    {
+                        dims[2] = m_map_dim["nSedTot"];
+                        dim_to[j] = 2;
+                        if (j != 2) 
+                        {
+                            correct_order = false;
+                        }
+                    }
+                    else
+                    {
+                        if (mesh_vars->variable[i]->location == "edge")
+                        {
+                            dims[3] = m2d->edge[0]->x.size();
+                        }
+                        if (mesh_vars->variable[i]->location == "face")
+                        {
+                            dims[3] = m2d->face[0]->x.size();
+                        }
+                        if (mesh_vars->variable[i]->location == "node")
+                        {
+                            dims[3] = m2d->node[0]->x.size();
+                        }
+                        dim_to[j] = 3;
+                        if (j != 3)
+                        {
+                            correct_order = false;
+                        }
+                    }
+                }
+
+                // set the array dimensions in the order: time, bed/hydro_layer, sediment, xy_dim
+                if (correct_order)
+                {
+                    // if already in this order, then copy the memory with memcpy.
+                    values_c = (double *)malloc(sizeof(double) * length);
+                    memcpy(values_c, read_c, length * sizeof(double));  // Todo: HACK, assumed to be the right order
+                }
+                else
+                {
+                    values_c = permute_array(read_c, dim_to, dims);
+                }
+                DataValuesProvider4D<double> DataValuesProvider4D(values_c, dims[0], dims[1], dims[2], dims[3]);  //  time_dim, layer_dim, sed_dim, xy_dim);
+
+                for (int j = 0; j < mesh_vars->variable[i]->dim_names.size(); j++)
+                {
+                    if (m_map_dim_name["z_sigma_interface"] == mesh_vars->variable[i]->dim_names[j])
+                    {
+#ifdef NATIVE_C
+                        fprintf(stderr, "\t3D data on interfaces not yet supported.\n");
+#else
+                        QMessageBox::warning(0, QString("Warning"), QString("3D data on interfaces not yet supported,\ndata: %1").arg(var_name.c_str()));
+#endif
+                        return DataValuesProvider4D;
+                    }
+
+                }
+                mesh_vars->variable[i]->data_4d = DataValuesProvider4D;
+                mesh_vars->variable[i]->read = true;
+                m_pgBar->hide();
+                return mesh_vars->variable[i]->data_4d;  // if read, skip all remaining variables
+            }
+            return mesh_vars->variable[i]->data_4d;
         }
     }
     return data_pointer;
@@ -2839,7 +2951,7 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
                 double x2 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->x[i];
                 double y2 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->y[i];
 
-                chainage[i] = chainage[i - 1] + sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));  // todo HACK: this is just the euclidian distance
+                chainage[i] = chainage[i - 1] + sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));  // Todo: HACK: this is just the euclidian distance
             }
 
             for (int i = 0; i <  mesh1d->node[i_mesh1d - 1]->count; i++)  // loop over computational nodes
@@ -2969,3 +3081,48 @@ std::vector<std::string> UGRID::tokenize(const std::string& s, std::size_t count
     }
     return tokens;
 }
+
+double *  UGRID::permute_array(double * in_arr, vector<long> order, vector<long> dim)
+{
+    //
+    // in_array: array which need to be permuted
+    // order: order of the dimensions in the supplied array in_array
+    // dim: dimensions in required order
+    // return value: permuted array in required order
+    //
+    if (dim.size() != 4) {
+        return nullptr;
+    }
+    long k_source;
+    long k_target;
+    long length = 1;
+    vector<long> cnt(4);
+    for (long i = 0; i < dim.size(); ++i)
+    {
+        length *= dim[i];
+    }
+    double * out_arr = (double *)malloc(sizeof(double) * length);
+    for (long i = 0; i < dim[0]; i++) {
+        cnt[0] = i;
+        for (long j = 0; j < dim[1]; j++) {
+            cnt[1] = j;
+            for (long k = 0; k < dim[2]; k++) {
+                cnt[2] = k;
+                for (long l = 0; l < dim[3]; l++) {
+                    cnt[3] = l;
+                    k_source = get_index_in_c_array(cnt[order[0]], cnt[order[1]], cnt[order[2]], cnt[order[3]], dim[order[0]], dim[order[1]], dim[order[2]], dim[order[3]]);
+                    k_target = get_index_in_c_array(i, j, k, l, dim[0], dim[1], dim[2], dim[3]);
+                    out_arr[k_target] = in_arr[k_source];
+                }
+            }
+        }
+    }
+    free(in_arr);
+    return out_arr;
+}
+long UGRID::get_index_in_c_array(long t, long l, long s, long xy, long time_dim, long layer_dim, long sed_dim, long xy_dim)
+{
+    return t * layer_dim * sed_dim * xy_dim + l * sed_dim * xy_dim + s * xy_dim + xy;
+}
+
+

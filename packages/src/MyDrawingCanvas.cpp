@@ -128,8 +128,8 @@ void MyCanvas::draw_all()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_face()
 {
-    return;
-    if (_variable != nullptr && _ugrid_file != nullptr && _variable->location ==    "face")
+    return;  // Todo:
+    if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "face")
     {
         string var_name = _variable->var_name;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
@@ -156,17 +156,17 @@ void MyCanvas::draw_data_at_face()
     {
         string var_name = _variable->var_name;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
-        if (_variable->dims.size() == 2) // 2D: time, nodes
+        if (_variable->dims.size() == 2) // 2D: time, xy_space
         {
             DataValuesProvider2D<double> std_data_at_face = _ugrid_file->get_variable_values(var_name);
             z_value = std_data_at_face.GetValueAtIndex(_current_step, 0);
         }
-        else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
+        else if (_variable->dims.size() == 3) // 3D: time, layer, xy_space
         {
             DataValuesProvider3D<double> std_data_at_face_3d = _ugrid_file->get_variable_3d_values(var_name);
-            if (_variable->sediment_array != -1)
+            if (_variable->sediment_index != -1)
             {
-                z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, _variable->sediment_array, 0);
+                z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, _variable->sediment_index, 0);
             }
             else
             {
@@ -180,9 +180,17 @@ void MyCanvas::draw_data_at_face()
                 }
             }
         }
+        else if (_variable->dims.size() == 4) // 4D: time, layer, sediment, xy_space
+        {
+            DataValuesProvider4D<double> std_data_at_face_4d = _ugrid_file->get_variable_4d_values(var_name);
+            if (_variable->sediment_index != -1)
+            {
+                z_value = std_data_at_face_4d.GetValueAtIndex(_current_step, m_bed_layer-1, _variable->sediment_index, 0);
+            }
+        }
         else
         {
-            QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
+            QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 4).").arg(var_name.c_str()));
         }
         double missing_value = _variable->fill_value;
         rgb_color.resize(mesh2d->face_nodes.size());
@@ -689,9 +697,9 @@ void MyCanvas::draw_line_at_edge()
         else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
         {
             DataValuesProvider3D<double> std_dot_at_edge_3d = _ugrid_file->get_variable_3d_values(var_name);
-            if (_variable->sediment_array != -1)
+            if (_variable->sediment_index != -1)
             {
-                z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, _variable->sediment_array, 0);
+                z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, _variable->sediment_index, 0);
             }
             else
             {

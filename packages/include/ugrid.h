@@ -43,7 +43,6 @@ public:
     inline T* GetValueAtIndex(int timeIndex, int xyIndex)
     {
         int index = GetIndex(timeIndex, xyIndex);
-
         return &m_arrayPtr[index];
     }
 
@@ -76,13 +75,46 @@ public:
     inline T* GetValueAtIndex(int timeIndex, int layerIndex, int xyIndex)
     {
         int index = GetIndex(timeIndex, layerIndex, xyIndex);
-
         return &m_arrayPtr[index];
     }
 
     inline int GetIndex(int timeIndex, int layerIndex, int xyIndex)
     {
         int index = m_numXY * m_numLayer * timeIndex + m_numXY * layerIndex + xyIndex;
+        return index;
+    }
+};
+
+template<typename T>
+struct DataValuesProvider4D
+{
+public:
+    DataValuesProvider4D() {};
+    T* m_arrayPtr;
+    int m_numTimes;
+    int m_numLayer;
+    int m_numSed;
+    int m_numXY;
+
+    // copy the pointer and values
+    DataValuesProvider4D(T* arrayPtr, int numTimes, int numLayer, int numSed, int numXY) :
+        m_arrayPtr(arrayPtr),
+        m_numTimes(numTimes),
+        m_numLayer(numLayer),
+        m_numSed(numSed),
+        m_numXY(numXY)
+    {
+    }
+
+    inline T* GetValueAtIndex(int timeIndex, int layerIndex, int sedIndex, int xyIndex)
+    {
+        int index = GetIndex(timeIndex, layerIndex, sedIndex, xyIndex);
+        return &m_arrayPtr[index];
+    }
+
+    inline int GetIndex(int timeIndex, int layerIndex, int sedIndex, int xyIndex)
+    {
+        int index = m_numXY * m_numLayer * m_numSed * timeIndex + m_numXY * m_numSed * layerIndex + m_numXY * sedIndex + xyIndex;
         return index;
     }
 };
@@ -127,6 +159,7 @@ public:
     vector<double> layer_interface;
     DataValuesProvider2D<double> data_2d;
     DataValuesProvider3D<double> data_3d;
+    DataValuesProvider4D<double> data_4d;
     vector<vector<vector <double *>>> z_3d;
     map<string, string> map_dim_name;
 };
@@ -362,6 +395,7 @@ public:
     DataValuesProvider2D<double> get_variable_values(const string, int);
 
     DataValuesProvider3D<double> get_variable_3d_values(const string);
+    DataValuesProvider4D<double> get_variable_4d_values(const string);
 
     struct _variable * get_var_by_std_name(struct _mesh_variable *, string, string);
 
@@ -395,6 +429,9 @@ private:
     int read_grid_mapping(int, string, string);
     int create_mesh1d_nodes(struct _mesh1d *, struct _ntw_edges *, struct _ntw_geom *);
     int create_mesh_contacts(struct _ntw_nodes *, struct _ntw_edges *, struct _ntw_geom *);
+
+    double * permute_array(double *, vector<long>, vector<long>);
+    long get_index_in_c_array(long, long, long, long, long, long, long, long);
 
     struct _ntw_nodes * ntw_nodes = nullptr;
     struct _ntw_edges * ntw_edges = nullptr;

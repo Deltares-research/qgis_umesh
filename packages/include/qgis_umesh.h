@@ -47,6 +47,7 @@
 #include <qgslinesymbollayer.h>
 #include <qgsmarkersymbollayer.h>
 #include <qgsabstract3drenderer.h>
+#include <QgsGraduatedSymbolRenderer.h>
 #include <QgsSingleSymbolRenderer.h>
 //#include <QgsLineSymbolLayer>
 #include <QgsMarkerSymbolLayer.h>
@@ -149,7 +150,7 @@ class qgis_umesh
 
     private:
         // windows
-        MapTimeManagerWindow * mtm_widget = NULL;
+        MapTimeManagerWindow * mtm_widget = nullptr;
 
         // functions
         void unload_vector_layers();

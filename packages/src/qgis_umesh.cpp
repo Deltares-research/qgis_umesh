@@ -65,9 +65,13 @@ void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, in
         //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         QString layer;
         QgsProject::instance()->layerWillBeRemoved(layer);  // root is invisible}
-          // Remove the file entry belonging to this group
-        // if available: deactivate the map_time_manager_window
-        int a = 1;
+        // Remove the file entry belonging to this group
+        if (MapTimeManagerWindow::get_count() != 0)
+        {
+            // close the map time manager window
+            mtm_widget->close();
+            mtm_widget->deleteLater();
+        }
     }
 }
 void qgis_umesh::onRemovedChildren(QString name)
@@ -2105,13 +2109,28 @@ void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feat
             vl->commitChanges();
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-            simple_marker->setStrokeStyle(Qt::NoPen) ;
+            simple_marker->setStrokeStyle(Qt::NoPen);
 
             QgsSymbol * marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
             marker->changeSymbolLayer(0, simple_marker);
             //set up a renderer for the layer
-            QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
-            vl->setRenderer(mypRenderer);
+            if (true) 
+            {
+                // previous 
+                QgsSingleSymbolRenderer * myRend = new QgsSingleSymbolRenderer(marker);
+                vl->setRenderer(myRend);
+            }
+            else
+            {
+                QgsColorRampShader * shader = new QgsColorRampShader();
+                QgsGraduatedSymbolRenderer * myRend = new QgsGraduatedSymbolRenderer("Value");
+                myRend->updateSymbols(marker);
+                QgsColorBrewerColorRamp * ramp = new QgsColorBrewerColorRamp("Spectral", 5, true);
+                QStringList list = ramp->listSchemeNames();
+                QgsStringMap tmp = ramp->properties();
+                myRend->setSourceColorRamp(ramp);
+                vl->setRenderer(myRend);
+            }
 
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -4011,7 +4030,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
 long qgis_umesh::compute_location_along_geometry(struct _ntw_geom * ntw_geom, struct _ntw_edges * ntw_edges, string branch_name, double chainage_node, double * xp, double * yp, double * rotation)
 {
     long status = -1;
-    int nr_ntw = 1;  // TODO HACK just one network supported
+    int nr_ntw = 1;  // Todo: HACK just one network supported
     *rotation = 0.0;
     vector<double> chainage;
     for (int branch = 0; branch < ntw_geom->geom[nr_ntw - 1]->count; branch++)  // loop over the geometries
@@ -4031,7 +4050,7 @@ long qgis_umesh::compute_location_along_geometry(struct _ntw_geom * ntw_geom, st
                 double x2 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->x[i];
                 double y2 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->y[i];
 
-                chainage[i] = chainage[i - 1] + sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));  // todo HACK: this is just the euclidian distance
+                chainage[i] = chainage[i - 1] + sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));  // Todo: HACK: this is just the euclidian distance
             }
             double fraction = -1.0;
             fraction = chainage_node / branch_length;

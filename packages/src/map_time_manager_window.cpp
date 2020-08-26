@@ -566,18 +566,18 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
             QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
             map[name] = i;
             QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
-            if (m_vars->variable[i]->dims.size() == 2)  // HACK: assumed time, xy-space
+            if (m_vars->variable[i]->dims.size() == 2)  // Todo: HACK: assumed time, xy-space
             {
                 if (mesh_var_name == text)
                 {
                     cb_2d->addItem(name, map[name]);
                 }
             }
-            else if (m_vars->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
+            else if (m_vars->variable[i]->dims.size() == 3)  // Todo: HACK: assumed time, xy-space, layer
             {
                 if (mesh_var_name == text)
                 {
-                    if (m_vars->variable[i]->sediment_array != -1)
+                    if (m_vars->variable[i]->sediment_index != -1)
                     {
                         cb_2d->addItem(name, map[name]);
                     }
@@ -585,6 +585,13 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
                     {
                         cb_3d->addItem(name, map[name]);
                     }
+                }
+            }
+            else if (m_vars->variable[i]->dims.size() == 4)  // Todo: HACK Dimensions are: time, xy_space, hydro/bed-layer, sediment
+            {
+                if (mesh_var_name == text)
+                {
+                    cb_3d->addItem(name, map[name]);
                 }
             }
         }
@@ -677,8 +684,9 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             {
                 m_layerLabelPrefix = new QLabel(tr("Layer"));
                 m_layerLabelSuffix = new QLabel();
-                m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[var->nr_bed_layers - 1]));
+                m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[0]));
                 m_sb_bed_layer = spinbox_layer(var->nr_bed_layers);
+                m_sb_bed_layer->setValue(1);
                 connect(m_sb_bed_layer, SIGNAL(valueChanged(int)), this, SLOT(spinbox_value_changed(int)));
 
                 QHBoxLayout * sp_group_3d_bed = new QHBoxLayout();
@@ -791,11 +799,11 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
             QString std_name = QString::fromStdString(m_vars->variable[i]->standard_name).trimmed();
             if (std_name.isEmpty())
             {
-                std_name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();  // HACK for sediment, they do not have standard names
+                std_name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();  // Todo: HACK for sediment, they do not have standard names
             }
             map[std_name] = i;
             QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
-            if (m_vars->variable[i]->dims.size() == 2)  // HACK: assumed time, xy-space
+            if (m_vars->variable[i]->dims.size() == 2)  // Todo: HACK: assumed time, xy-space
             {
                 if (mesh_var_name == text)
                 {
@@ -832,7 +840,7 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
                     }
                 }
             }
-            else if (m_vars->variable[i]->dims.size() == 3)  //HACK: assumed time, xy-space, layer
+            else if (m_vars->variable[i]->dims.size() == 3)  // Todo: HACK: assumed time, xy-space, layer
             {
                 if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                 {
