@@ -392,6 +392,10 @@ long UGRID::read_times()
     QDateTime * RefDate;
     struct _time_series t_series;
     time_series.push_back(t_series);
+    time_series[0].nr_times = 0;
+    time_series[0].dim_name = nullptr;
+    time_series[0].long_name = nullptr;
+    time_series[0].unit = nullptr;
 
 #ifndef NATIVE_C
     m_pgBar->setValue(700);
