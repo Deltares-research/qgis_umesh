@@ -3312,11 +3312,16 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
         status = prop_tree->get(json_key, fname);
         if (fname.size() == 0)
         {
-            QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Boundary polylines are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            string json_key_old = "data.boundary.filename";
+            status = prop_tree->get(json_key_old, fname);
+            if (fname.size() == 0)
+            {
+                QString fname = QString::fromStdString(prop_tree->get_filename());
+                QString msg = QString(tr("Boundary polylines are skipped.\nTag \"%1\" or \"%2\" does not exist in file \"%3\".").arg(QString::fromStdString(json_key)).arg(QString::fromStdString(json_key_old)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
         }
-        else
+        if (fname.size() != 0)
         {
             QgsLayerTreeGroup * subTreeGroup;
             subTreeGroup = get_subgroup(treeGroup, QString("Area"));
