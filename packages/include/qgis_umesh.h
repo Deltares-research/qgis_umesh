@@ -132,6 +132,8 @@ class qgis_umesh
         void open_file_mdu(QFileInfo);
         void open_file_link1d2d_json();
         void open_file_link1d2d_json(QFileInfo);
+        void open_file_obs_point_json();
+        void open_file_obs_point_json(QFileInfo);
         void set_enabled();
         void about();
         void activate_layers();
@@ -169,6 +171,7 @@ class qgis_umesh
         QAction * open_action_his_cf;
         QAction * open_action_mdu;
         QAction * open_action_link1d2d_json;
+        QAction * open_action_obs_point_json;
         QAction * edit_action_1d_obs_points;
         QAction * trial_experiment;
         QAction * inspectAction;

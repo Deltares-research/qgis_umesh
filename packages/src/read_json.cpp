@@ -32,21 +32,28 @@ struct Getter
             auto child = pt.get_child(chapter);
             for (auto& p : child)
             {
-                
-                //cout << p.first.data() << ": " << p.second.data() << endl;
                 if (boost::iequals(p.first.data(), key))
                 {
-                    T val = p.second.get_value<T>();
-                    results.push_back(val);
+                    if (!p.second.data().empty())
+                    {
+                        T val = p.second.get_value<T>();
+                        results.push_back(val);
+                    }
                 }
             }
             for (auto& pv : child)
             {
-                //cout << endl;
                 for (auto& p : pv.second)
                 {
-                    //cout << p.first.data() << ": " << p.second.data() << endl;
-                    if (boost::iequals(p.first.data(), key))
+                    //string a = p.first.data();
+                    //string b = p.second.data();
+                    //string c = pv.first.data();
+                    if (p.first.data() != ""  && boost::iequals(p.first.data(), key))
+                    {
+                        T val = p.second.get_value<T>();
+                        results.push_back(val);
+                    }
+                    else if (pv.first.data() != "" && boost::iequals(pv.first.data(), key))
                     {
                         T val = p.second.get_value<T>();
                         results.push_back(val);

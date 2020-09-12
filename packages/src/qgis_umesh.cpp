@@ -226,6 +226,13 @@ void qgis_umesh::initGui()
     open_action_link1d2d_json->setEnabled(true);
     connect(open_action_link1d2d_json, SIGNAL(triggered()), this, SLOT(open_file_link1d2d_json()));
 
+    icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
+    open_action_obs_point_json = new QAction(icon_open, tr("&Open Observation point (json) ..."));
+    open_action_obs_point_json->setToolTip(tr("Open Obs point, json file"));
+    open_action_obs_point_json->setStatusTip(tr("Open observation point file, json format"));
+    open_action_obs_point_json->setEnabled(true);
+    connect(open_action_obs_point_json, SIGNAL(triggered()), this, SLOT(open_file_obs_point_json()));
+
     icon_edit_1d_obs_points = get_icon_file(program_files_dir, "/icons/edit_observation_points.png");
     edit_action_1d_obs_points = new QAction(icon_edit_1d_obs_points, tr("&1D: Observation points ..."));
     edit_action_1d_obs_points->setToolTip(tr("Add/Remove observation points"));
@@ -310,6 +317,7 @@ void qgis_umesh::initGui()
     janm1 = janm->addMenu("Trials");
     janm1->addAction(open_action_mdu);
     janm1->addAction(open_action_link1d2d_json);
+    janm1->addAction(open_action_obs_point_json);
     janm1->addAction(edit_action_1d_obs_points);
     janm1->addAction(trial_experiment);
 #endif
@@ -995,28 +1003,31 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     json_key = "data.output.obsfile";
     vector<string> obs_file;
     status = pt_mdu->get(json_key, obs_file);
-    if (obs_file.size() == 1 && obs_file[0] != "null")
+    if (obs_file.size() != 0 && obs_file[0] != "null")
     {
-        QString obser_file = jsonfile.absolutePath() + "/" + QString::fromStdString(obs_file[0]);
-        if (!QFileInfo(obser_file).exists())
+        for (int i = 0; i < obs_file.size(); ++i)
         {
-            QString fname = QString::fromStdString(pt_mdu->get_filename());
-            QString msg = QString(tr("Observation points are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-        }
-        else
-        {
-            fname = obser_file.toStdString();
-            READ_JSON * pt_obs = new READ_JSON(fname);
-            UGRID * ugrid_file = m_ugrid_file[_fil_index];
-            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            QString obser_file = jsonfile.absolutePath() + "/" + QString::fromStdString(obs_file[i]);
+            if (!QFileInfo(obser_file).exists())
             {
-                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-                return;
+                QString fname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Observation points are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             }
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
-            create_observation_point_vector_layer(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
+            else
+            {
+                fname = obser_file.toStdString();
+                READ_JSON * pt_obs = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_observation_point_vector_layer(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
         }
     }
 //------------------------------------------------------------------------------
@@ -1024,28 +1035,31 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     vector<string> extold_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, extold_file_name);
 
-    if (extold_file_name.size() == 1 && extold_file_name[0] != "null" )
+    if (extold_file_name.size() != 0 && extold_file_name[0] != "null" )
     {
-        QString extold_file = jsonfile.absolutePath() + "/" + QString::fromStdString(extold_file_name[0]);
-        if (!QFileInfo(extold_file).exists())
+        for (int i = 0; i < extold_file_name.size(); ++i)
         {
-            QString fname = QString::fromStdString(pt_mdu->get_filename());
-            QString msg = QString(tr("External forcing file (old format) is skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-        }
-        else
-        {
-            fname = extold_file.toStdString();
-            READ_JSON * pt_extold_file = new READ_JSON(fname);
-            UGRID * ugrid_file = m_ugrid_file[_fil_index];
-            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            QString extold_file = jsonfile.absolutePath() + "/" + QString::fromStdString(extold_file_name[i]);
+            if (!QFileInfo(extold_file).exists())
             {
-                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-                return;
+                QString fname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("External forcing file (old format) is skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             }
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
-            create_1D_external_forcing_vector_layer(ugrid_file, pt_extold_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            else
+            {
+                fname = extold_file.toStdString();
+                READ_JSON * pt_extold_file = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_1D_external_forcing_vector_layer(ugrid_file, pt_extold_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
         }
     }
 //------------------------------------------------------------------------------
@@ -1053,168 +1067,186 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     vector<string> ext_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, ext_file_name);
 
-    if (ext_file_name.size() == 1 && ext_file_name[0] != "null")
+    if (ext_file_name.size() != 0 && ext_file_name[0] != "null")
     {
-        QString ext_file = jsonfile.absolutePath() + "/" + QString::fromStdString(ext_file_name[0]);
-        if (!QFileInfo(ext_file).exists())
+        for (int i = 0; i < ext_file_name.size(); ++i)
         {
-            QString fname = QString::fromStdString(pt_mdu->get_filename());
-            QString msg = QString(tr("External forcings are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-        }
-        else
-        {
-            fname = ext_file.toStdString();
-            READ_JSON * pt_ext_file = new READ_JSON(fname);
-            UGRID * ugrid_file = m_ugrid_file[_fil_index];
-            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            QString ext_file = jsonfile.absolutePath() + "/" + QString::fromStdString(ext_file_name[i]);
+            if (!QFileInfo(ext_file).exists())
             {
-                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-                return;
+                QString fname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("External forcings are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             }
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
-            create_1D_external_forcing_vector_layer(ugrid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            else
+            {
+                fname = ext_file.toStdString();
+                READ_JSON * pt_ext_file = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_1D_external_forcing_vector_layer(ugrid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
         }
     }
 //------------------------------------------------------------------------------
     json_key = "data.geometry.structurefile";
     vector<string> structure_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, structure_file_name);
-    if (structure_file_name.size() == 1 && structure_file_name[0] != "null")
+    if (structure_file_name.size() != 0 && structure_file_name[0] != "null")
     {
-        QString struct_file = jsonfile.absolutePath() + "/" + QString::fromStdString(structure_file_name[0]);
-        if (!QFileInfo(struct_file).exists())
+        for (int i = 0; i < structure_file_name.size(); ++i)
         {
-            QString fname = QString::fromStdString(pt_mdu->get_filename());
-            QString msg = QString(tr("Structures are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-        }
-        else
-        {
-            fname = struct_file.toStdString();
-            READ_JSON * pt_struct_file = new READ_JSON(fname);
-            UGRID * ugrid_file = m_ugrid_file[_fil_index];
-            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            QString struct_file = jsonfile.absolutePath() + "/" + QString::fromStdString(structure_file_name[i]);
+            if (!QFileInfo(struct_file).exists())
             {
-                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-                return;
+                QString fname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Structures are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             }
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
-            create_structure_vector_layer(ugrid_file, pt_struct_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            else
+            {
+                fname = struct_file.toStdString();
+                READ_JSON * pt_struct_file = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_structure_vector_layer(ugrid_file, pt_struct_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
         }
     }
 //------------------------------------------------------------------------------
     json_key = "data.output.crsfile";
     vector<string> cross_section_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, cross_section_file_name);
-    if (cross_section_file_name.size() == 1 && cross_section_file_name[0] != "null")
+    if (cross_section_file_name.size() != 0 && cross_section_file_name[0] != "null")
     {
-        QString obs_cross_file = jsonfile.absolutePath() + "/" + QString::fromStdString(cross_section_file_name[0]);
-        if (!QFileInfo(obs_cross_file).exists())
+        for (int i = 0; i < cross_section_file_name.size(); ++i)
         {
-            QString fname = QString::fromStdString(pt_mdu->get_filename());
-            QString msg = QString(tr("Observation cross-sections are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-        }
-        else
-        {
-            fname = obs_cross_file.toStdString();
-            READ_JSON * pt_obs_cross_file = new READ_JSON(fname);
-            UGRID * ugrid_file = m_ugrid_file[_fil_index];
-            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            QString obs_cross_file = jsonfile.absolutePath() + "/" + QString::fromStdString(cross_section_file_name[i]);
+            if (!QFileInfo(obs_cross_file).exists())
             {
-                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-                return;
+                QString fname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Observation cross-sections are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             }
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
-            create_observation_cross_section_vector_layer(ugrid_file, pt_obs_cross_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            else
+            {
+                fname = obs_cross_file.toStdString();
+                READ_JSON * pt_obs_cross_file = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_observation_cross_section_vector_layer(ugrid_file, pt_obs_cross_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
         }
     }
 //------------------------------------------------------------------------------
     json_key = "data.geometry.thindamfile";
     vector<string> thin_dam_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, thin_dam_file_name);
-    if (thin_dam_file_name.size() == 1 && thin_dam_file_name[0] != "null")
+    if (thin_dam_file_name.size() != 0 && thin_dam_file_name[0] != "null")
     {
-        QString thin_dam_file = jsonfile.absolutePath() + "/" + QString::fromStdString(thin_dam_file_name[0]);
-        if (!QFileInfo(thin_dam_file).exists())
+        for (int i = 0; i < thin_dam_file_name.size(); ++i)
         {
-            QString fname = QString::fromStdString(pt_mdu->get_filename());
-            QString msg = QString(tr("Thin dams are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-        }
-        else
-        {
-            fname = thin_dam_file.toStdString();
-            READ_JSON * pt_thin_dam_file = new READ_JSON(fname);
-            UGRID * ugrid_file = m_ugrid_file[_fil_index];
-            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            QString thin_dam_file = jsonfile.absolutePath() + "/" + QString::fromStdString(thin_dam_file_name[i]);
+            if (!QFileInfo(thin_dam_file).exists())
             {
-                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-                return;
+                QString fname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Thin dams are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             }
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
-            create_thin_dams_vector_layer(ugrid_file, pt_thin_dam_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            else
+            {
+                fname = thin_dam_file.toStdString();
+                READ_JSON * pt_thin_dam_file = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_thin_dams_vector_layer(ugrid_file, pt_thin_dam_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
         }
     }
 //------------------------------------------------------------------------------
     json_key = "data.geometry.fixedweirfile";
     vector<string> fixed_weir_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, fixed_weir_file_name);
-    if (fixed_weir_file_name.size() == 1 && fixed_weir_file_name[0] != "null")
+    if (fixed_weir_file_name.size() != 0 && fixed_weir_file_name[0] != "null")
     {
-        QString fix_weir_file = jsonfile.absolutePath() + "/" + QString::fromStdString(thin_dam_file_name[0]);
-        if (!QFileInfo(fix_weir_file).exists())
+        for (int i = 0; i < fixed_weir_file_name.size(); ++i)
         {
-            QString fname = QString::fromStdString(pt_mdu->get_filename());
-            QString msg = QString(tr("Thin dams are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-        }
-        else
-        {
-            fname = fix_weir_file.toStdString();
-            READ_JSON * pt_file = new READ_JSON(fname);
-            UGRID * ugrid_file = m_ugrid_file[_fil_index];
-            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            QString fix_weir_file = jsonfile.absolutePath() + "/" + QString::fromStdString(fixed_weir_file_name[i]);
+            if (!QFileInfo(fix_weir_file).exists())
             {
-                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-                return;
+                QString fname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Thin dams are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             }
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
-            create_fixed_weir_vector_layer(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            else
+            {
+                fname = fix_weir_file.toStdString();
+                READ_JSON * pt_file = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_fixed_weir_vector_layer(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
         }
     }
     //------------------------------------------------------------------------------
     json_key = "data.geometry.crosslocfile";
     vector<string> cross_section_location_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, cross_section_location_file_name);
-    if (cross_section_location_file_name.size() == 1 && cross_section_location_file_name[0] != "null")
+    if (cross_section_location_file_name.size() != 0 && cross_section_location_file_name[0] != "null")
     {
-        QString full_file_name = jsonfile.absolutePath() + "/" + QString::fromStdString(cross_section_location_file_name[0]);
-        if (!QFileInfo(full_file_name).exists())
+        for (int i = 0; i < cross_section_location_file_name.size(); ++i)
         {
-            QString fname = QString::fromStdString(pt_mdu->get_filename());
-            QString msg = QString(tr("Cross-section locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-        }
-        else
-        {
-            fname = full_file_name.toStdString();
-            READ_JSON * pt_file = new READ_JSON(fname);
-            UGRID * ugrid_file = m_ugrid_file[_fil_index];
-            if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+            QString full_file_name = jsonfile.absolutePath() + "/" + QString::fromStdString(cross_section_location_file_name[i]);
+            if (!QFileInfo(full_file_name).exists())
             {
-                QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
-                return;
+                QString fname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Cross-section locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             }
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
-            create_vector_layer_1D_cross_section(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            else
+            {
+                fname = full_file_name.toStdString();
+                READ_JSON * pt_file = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_vector_layer_1D_cross_section(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
         }
     }
 }
@@ -1285,6 +1317,79 @@ void qgis_umesh::open_file_link1d2d_json(QFileInfo jsonfile)
 
     long epsg = 0;
     create_1D2D_link_vector_layer(pt_link1d2d, epsg);  // i.e. a JSON file
+}
+//
+//-----------------------------------------------------------------------------
+//
+void qgis_umesh::open_file_obs_point_json()
+{
+    QString fname;
+    QString * str = new QString();
+    QFileDialog * fd = new QFileDialog();
+    QStringList * list = new QStringList();
+
+    str->clear();
+    str->append("Observation point json");
+    str->append(" (*_xyn.json)");
+    list->append(*str);
+    str->clear();
+    str->append("All files");
+    str->append(" (*.*)");
+    list->append(*str);
+
+    fd->setWindowTitle("Open Observation point json file");
+    fd->setNameFilters(*list);
+    fd->selectNameFilter(list->at(0));
+    fd->setFileMode(QFileDialog::ExistingFiles);  // Enable multiple file selection at once
+
+    QDir path("d:/mooiman/home/models/delft3d/GIS/grids/test_qgis");
+    if (path.exists())
+    {
+        fd->setDirectory(path);
+    }
+
+    bool canceled = fd->exec() != QDialog::Accepted;
+    if (!canceled)
+    {
+        QStringList * QFilenames = new QStringList();
+        QFilenames->append(fd->selectedFiles());
+
+        this->pgBar->show();
+        this->pgBar->setMaximum(1000);
+        this->pgBar->setValue(0);
+
+        for (QStringList::Iterator it = QFilenames->begin(); it != QFilenames->end(); ++it) {
+            fname = *it;
+            open_file_obs_point_json(fname);
+        }
+
+        this->pgBar->setValue(1000);
+        if (this->pgBar->value() == this->pgBar->maximum())
+        {
+            this->pgBar->hide();
+        }
+
+    }
+    delete fd;
+    delete str;
+}
+void qgis_umesh::open_file_obs_point_json(QFileInfo jsonfile)
+{
+    string fname = jsonfile.absoluteFilePath().toStdString();
+    READ_JSON * pt_file = new READ_JSON(fname);
+    if (pt_file == nullptr)
+    {
+        QMessageBox::warning(0, tr("Warning"), tr("Cannot open JSON file:\n%1.").arg(jsonfile.absoluteFilePath()));
+        return;
+    }
+
+    long epsg = 0;
+    QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();
+    QgsLayerTreeGroup * treeGroup;
+    treeGroup = get_subgroup(treeRoot, QString("Location point"));
+
+    UGRID * ugrid_file = nullptr;
+    create_observation_point_vector_layer(ugrid_file, pt_file, epsg, treeGroup);  // i.e. a JSON file
 }
 //
 //-----------------------------------------------------------------------------
@@ -2665,7 +2770,7 @@ void qgis_umesh::create_observation_point_vector_layer(UGRID * ugrid_file, READ_
         status = pt_structures->get(json_key, version);
         if (version[0] == "1.00")
         {
-            // observation point defined by crs
+            // observation point defined by coordinate reference systeem (crs)
             create_crs_observation_point_vector_layer(ugrid_file, pt_structures, epsg_code, treeGroup);
         }
         else if (version[0] == "2.00")
@@ -2675,7 +2780,7 @@ void qgis_umesh::create_observation_point_vector_layer(UGRID * ugrid_file, READ_
         }
     }
 }
-// observation point defined by crs
+// observation point defined by coordinate reference systeem (crs)
 void qgis_umesh::create_crs_observation_point_vector_layer(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     long status = -1;
@@ -3508,7 +3613,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             vl->commitChanges();
 
             QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
-            simple_marker->setSize(4.0);
+            simple_marker->setSize(3.2);
             //simple_marker->setColor(QColor(0, 255, 0));
             //simple_marker->setFillColor(QColor(0, 255, 0));
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Lateral point rotation")));
