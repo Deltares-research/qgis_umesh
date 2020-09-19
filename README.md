@@ -1,7 +1,9 @@
 # QGIS UMESH
 QGIS plugin to plot 1D, 1D2D and 2D time series map results as animation. The map results should be stored on a netCDF file according the UGRID standard for 1D meshes, 1D2D contact meshes and/or 2D meshes. All types could be in one netCDF file. 
 
+![alt tag](doc/pictures/oosterschelde_velocity_arrow.png)
 
+## To build
 To build the plugin qgis_umesh you have to install QGIS (OSGeo4W network installer (64 bit), https://qgis.org/en/site/forusers/download.html ), QT 5.12 LTS, BOOST 1.72.0 and netCDF4.
 The windows solution will place the qgis_umesh.dll on the qgis plugin directory (ex. c:\OSGeo4W64\apps\qgis\plugins\qgis_umesh.dll)
 
@@ -50,12 +52,12 @@ Probably not needed
     qt5-qml: Qt5 QML
     qt5-tools: Qt5Designe & linguist (Development)
             
-## Note
+## Note (QGIS 3.14.16)
 When compiling the source code I had to adjusted the file
 c:\OSGeo4W64\apps\qgis\include\qgsabstractgeometry.h
 An extra define of M_PI is added.
 
-Line 501
+Line 520
 #define M_PI 3.14159265358979323846264338327950288
 
 end document
