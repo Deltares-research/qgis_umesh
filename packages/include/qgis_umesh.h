@@ -92,6 +92,7 @@ class qgis_umesh
         //  qgis_umesh functions
         char* stripSpaces(char *);
         void create_data_on_edges_vector_layer(_variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_edge_type(_variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
         void create_data_on_nodes_vector_layer(_variable * var, struct _feature *, double *, long, QgsLayerTreeGroup *);
         void create_nodes_vector_layer(QString, struct _feature *, long, QgsLayerTreeGroup *);
         void create_edges_vector_layer(QString, struct _feature *, struct _edge *, long, QgsLayerTreeGroup *);
@@ -109,7 +110,8 @@ class qgis_umesh
         void create_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
         void create_observation_cross_section_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
         void create_structure_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_cross_section(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_cross_section(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *); 
+        void create_vector_layer_sample_point(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
 
         void create_1D2D_link_vector_layer(READ_JSON *, long);
         long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, string, double, double *, double *, double *);

@@ -249,6 +249,7 @@ struct _ntw_string {
     string edge_geometry;
     string edge_length;
     string edge_node_connectivity;
+    string edge_type;  // not yet used
     string long_name;
     string node_coordinates;
     size_t toplogy_dimension;
@@ -279,6 +280,7 @@ struct _mesh1d_string {
     string cf_role;
     string coordinate_space;
     string edge_node_connectivity;
+    string edge_type;  // open or closed 1D-edge
     string long_name;
     string node_coordinates;
     string node_dimension;
@@ -322,6 +324,7 @@ struct _mesh2d_string {
     string edge_length;
     string edge_face_connectivity;
     string edge_node_connectivity;
+    string edge_type;  // internal_closed, internal, boundary, boundary_closed
     string face_dimension;
     string face_edge_connectivity;
     string face_face_connectivity;

@@ -1124,6 +1124,7 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
     int var_id;
     int status;
     int i_var;
+    nc_type var_type;
     DataValuesProvider2D<double> data_pointer;
 
 #ifdef NATIVE_C
@@ -1140,14 +1141,29 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
                 m_pgBar->show();
                 m_pgBar->setValue(0);
                 status = nc_inq_varid(this->ncid, var_name.c_str(), &var_id);
+                status = nc_inq_vartype(this->ncid, var_id, &var_type);
                 size_t length = 1;
                 for (int j = 0; j < mesh_vars->variable[i]->dims.size(); j++)
                 {
                     length *= mesh_vars->variable[i]->dims[j];
                 }
-                double * values_c = (double *)malloc(sizeof(double) * length);
                 m_pgBar->setValue(400);
-                status = nc_get_var_double(this->ncid, var_id, values_c);
+                double * values_c = (double *)malloc(sizeof(double) * length);
+                if (var_type == NC_DOUBLE)
+                {
+                    status = nc_get_var_double(this->ncid, var_id, values_c);
+                }
+                else if (var_type == NC_INT)
+                {
+                    // Todo: HACK, convert integer to double
+                    int * values_i = (int *)malloc(sizeof(int) * length);
+                    status = nc_get_var_int(this->ncid, var_id, values_i);
+                    for (int i = 0; i < length; ++i)
+                    {
+                        values_c[i] = (double)values_i[i];
+                    }
+                    free(values_i);
+                }
                 m_pgBar->setValue(800);
                 if (mesh_vars->variable[i]->dims.size() == 1)
                 {
@@ -2630,6 +2646,7 @@ int UGRID::read_network_attributes(struct _ntw_string * ntw_strings, int i_var, 
     status = get_attribute(this->ncid, i_var, "long_name", &ntw_strings->long_name);
     status = get_attribute(this->ncid, i_var, "node_coordinates", &ntw_strings->node_coordinates);
     //status = get_attribute(this->ncid, i_var, "node_edge_exchange", &ntw_string->node_edge_exchange);
+    // no edge_type defined for network
 
     //get nodes (x_geom_name y_geom_name) of the network (ie connection nodes)
     // split the node_coordinates string into two separate strings (x_geom_name and y_geom_name)
@@ -2723,6 +2740,11 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
         mesh1d_strings->edge_coordinates = "";
     }
     status = get_attribute(this->ncid, i_var, "node_edge_exchange", &mesh1d_strings->node_edge_exchange);
+    status = get_attribute(this->ncid, i_var, "edge_type", &mesh1d_strings->edge_type);
+    if (status != NC_NOERR)
+    {
+        mesh1d_strings->edge_type = var_name + "_edge_type";
+    }
 
     // split 'node coordinate' string
     vector<string> token = tokenize(mesh1d_strings->node_coordinates, ' ');
@@ -2874,6 +2896,11 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
     status = get_attribute(this->ncid, i_var, "max_face_nodes_dimension", &mesh2d_strings->max_face_nodes_dimension);
     status = get_attribute(this->ncid, i_var, "edge_face_connectivity", &mesh2d_strings->edge_face_connectivity);
     status = get_attribute(this->ncid, i_var, "face_coordinates", &mesh2d_strings->face_coordinates);
+    status = get_attribute(this->ncid, i_var, "edge_type", &mesh2d_strings->edge_type);
+    if (status != NC_NOERR)
+    {
+        mesh2d_strings->edge_type = var_name + "_edge_type";
+    }
 
     status = get_attribute(this->ncid, i_var, "layer_dimension", &mesh2d_strings->layer_dimension);
     if (status == NC_NOERR) { status = get_attribute(this->ncid, i_var, "interface_dimension", &mesh2d_strings->layer_interface_dimension); }

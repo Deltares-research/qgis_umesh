@@ -1125,7 +1125,38 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             }
         }
     }
-//------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    json_key = "data.geometry.proflocfile";
+    vector<string> prof_loc_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, prof_loc_file_name);
+    if (prof_loc_file_name.size() != 0 && prof_loc_file_name[0] != "null")
+    {
+        for (int i = 0; i < prof_loc_file_name.size(); ++i)
+        {
+            QString abs_fname = jsonfile.absolutePath() + "/" + QString::fromStdString(prof_loc_file_name[i]);
+            if (!QFileInfo(abs_fname).exists())
+            {
+                QString fname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Structures are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = abs_fname.toStdString();
+                READ_JSON * pt_profloc = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_vector_layer_sample_point(ugrid_file, pt_profloc, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    //------------------------------------------------------------------------------
     json_key = "data.output.crsfile";
     vector<string> cross_section_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, cross_section_file_name);
@@ -1743,6 +1774,16 @@ void qgis_umesh::activate_layers()
                                 double * z_value = std_data_at_edge.GetValueAtIndex(0, 0);
                                 create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], z_value, mapping->epsg, subTreeGroup);
                             }
+                            if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_INT)
+                            {
+                                QString name = QString("Edge type");
+                                subTreeGroup->addGroup(name);
+                                QgsLayerTreeGroup * sGroup = treeGroup->findGroup(name);
+
+                                DataValuesProvider2D<double>std_data_at_edge = ugrid_file->get_variable_values(var->variable[i]->var_name);
+                                double * z_value = std_data_at_edge.GetValueAtIndex(0, 0);
+                                create_vector_layer_edge_type(var->variable[i], mesh2d->node[0], mesh2d->edge[0], z_value, mapping->epsg, sGroup);
+                            }
                             if (var->variable[i]->location == "face" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                             {
                                 if (var->variable[i]->sediment_index == -1)
@@ -2093,7 +2134,7 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
 }
 void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feature * nodes, struct _edge * edges, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    if (nodes != nullptr)
+    if (nodes != nullptr && edges != nullptr)
     {
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
         QList <QgsField> lMyAttribField;
@@ -2116,15 +2157,13 @@ void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feat
             int nr_attrib_fields = 1;
             lMyAttribField << QgsField("Value", QVariant::Double);
 
-            QString uri = QString("MultiPoint?crs=epsg:") + QString::number(epsg_code);
+            QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
-            //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            QgsMultiLineString * polylines = new QgsMultiLineString();
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
 
@@ -2154,13 +2193,127 @@ void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feat
                 dp_vl->addFeature(MyFeature);
                 vl->commitChanges();
             }
+
+            QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
+            line_marker->setWidth(0.5);
+            line_marker->setColor(QColor(200, 2000, 200));
+
+            QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            symbol->changeSymbolLayer(0, line_marker);
+
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
+            vl->setRenderer(mypRenderer);
+
             add_layer_to_group(vl, treeGroup);
-            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  
 
             QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
             int ind = tmp_layers.size() - 1;
             tmp_layers[ind]->setItemVisibilityChecked(false);
+        }
+    }
+}
+void qgis_umesh::create_vector_layer_edge_type(_variable * var, struct _feature * nodes, struct _edge * edges, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
+{
+    if (nodes != nullptr && edges != nullptr)
+    {
+        QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+        QList <QgsField> lMyAttribField;
+        bool layer_found = false;
+        if (!layer_found)
+        {
+            for (int i = 0; i < 4; ++i)  // Todo: HACK fixed number of edge type (so hard coded)
+            {
+                QString layer_name;
+                if (i == 0) { layer_name = "internal closed"; }
+                if (i == 1) { layer_name = "internal open"; }
+                if (i == 2) { layer_name = "boundary open"; }
+                if (i == 3) { layer_name = "boundary closed"; }
 
+                QgsVectorLayer * vl;
+                QgsVectorDataProvider * dp_vl;
+                QList <QgsField> lMyAttribField;
+
+                int nr_attrib_fields = 1;
+                lMyAttribField << QgsField("Value", QVariant::Double);
+
+                QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
+                vl = new QgsVectorLayer(uri, layer_name, "memory");
+                vl->startEditing();
+                dp_vl = vl->dataProvider();
+                dp_vl->addAttributes(lMyAttribField);
+                vl->updatedFields();
+
+                QVector<QgsPointXY> point;
+                QgsMultiPolylineXY lines;
+
+                for (int j = 0; j < edges->count; j++)
+                {
+                    if (i == int(z_value[j]))
+                    {
+                        lines.clear();
+                        point.clear();
+                        int p1 = edges->edge_nodes[j][0];
+                        int p2 = edges->edge_nodes[j][1];
+                        double x1 = nodes->x[p1];
+                        double y1 = nodes->y[p1];
+                        double x2 = nodes->x[p2];
+                        double y2 = nodes->y[p2];
+                        point.append(QgsPointXY(x1, y1));
+                        point.append(QgsPointXY(x2, y2));
+                        //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5).").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
+                        lines.append(point);
+
+                        QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
+                        QgsFeature MyFeature;
+                        MyFeature.setGeometry(MyEdge);
+
+                        MyFeature.initAttributes(nr_attrib_fields);
+                        MyFeature.setAttribute(0, z_value[j]);
+                        MyFeature.setValid(true);
+
+                        dp_vl->addFeature(MyFeature);
+                        vl->commitChanges();
+                    }
+                }
+
+                QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
+                if (i == 0) { 
+                    line_marker->setWidth(0.5);
+                    line_marker->setColor(QColor(1, 1, 1)); 
+                }
+                if (i == 1) { 
+                    line_marker->setWidth(0.25);
+                    line_marker->setColor(QColor(0, 170, 255));
+                }
+                if (i == 2) { 
+                    line_marker->setWidth(0.5);
+                    line_marker->setColor(QColor(0, 0, 255)); 
+                }
+                if (i == 3) { 
+                    line_marker->setWidth(0.5);
+                    line_marker->setColor(QColor(50, 50, 50));
+                }
+
+                QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+                symbol->changeSymbolLayer(0, line_marker);
+
+                //set up a renderer for the layer
+                QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
+                vl->setRenderer(mypRenderer);
+
+                add_layer_to_group(vl, treeGroup);
+                connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));
+
+                QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+                int ind = tmp_layers.size() - 1;
+                tmp_layers[ind]->setItemVisibilityChecked(true);
+                if (i == 1)
+                {
+                    tmp_layers[ind]->setItemVisibilityChecked(false);  // internal points
+                }
+            }
         }
     }
 }
@@ -2291,7 +2444,6 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            QgsMultiLineString * polylines = new QgsMultiLineString();
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
 
@@ -2353,7 +2505,6 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
         }
     }
 }
-
 void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature * nodes, struct _edge * edges, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr && edges != nullptr)
@@ -2977,6 +3128,82 @@ void qgis_umesh::create_chainage_observation_point_vector_layer(UGRID * ugrid_fi
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
+}
+// sample point (x, y,z) defined by coordinate reference systeem (crs)
+void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, READ_JSON * pt_samples, long epsg_code, QgsLayerTreeGroup * treeGroup)
+{
+    long status = -1;
+    string json_key = "data.samplepoint.z";
+    vector<double> z_value;
+    status = pt_samples->get(json_key, z_value);
+    if (z_value.size() == 0)
+    {
+        QMessageBox::warning(0, tr("Message: create_vector_layer_sample_point"), QString(tr("Number of sample points is zero. JSON data: ")) + QString::fromStdString(json_key));
+        return;
+    }
+    json_key = "data.samplepoint.x";
+    vector<double> x;
+    vector<double> y;
+    status = pt_samples->get(json_key, x);
+    json_key = "data.samplepoint.y";
+    status = pt_samples->get(json_key, y);
+
+    QgsLayerTreeGroup * subTreeGroup;
+    subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+    QString layer_name = QString("Sample points");
+
+    // create the vector layer for observation point
+    QgsVectorLayer * vl;
+    QgsVectorDataProvider * dp_vl;
+    QList <QgsField> lMyAttribField;
+
+    int nr_attrib_fields = 3;
+
+    lMyAttribField << QgsField("Sample point value", QVariant::Double);
+    lMyAttribField << QgsField("Sample point Id (0-based)", QVariant::String);
+    lMyAttribField << QgsField("Sample point Id (1-based)", QVariant::String);
+
+    QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+    vl = new QgsVectorLayer(uri, layer_name, "memory");
+    vl->startEditing();
+    dp_vl = vl->dataProvider();
+    dp_vl->addAttributes(lMyAttribField);
+    vl->updatedFields();
+
+    for (int j = 0; j < z_value.size(); j++)
+    {
+        QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(x[j], y[j]));
+        QgsFeature MyFeature;
+        MyFeature.setGeometry(MyPoints);
+
+        MyFeature.initAttributes(nr_attrib_fields);
+        int k = -1;
+        k++;
+        MyFeature.setAttribute(k, z_value[j]);
+        k++;
+        MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+        k++;
+        MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
+
+        dp_vl->addFeature(MyFeature);
+    }
+    vl->commitChanges();
+
+    QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
+    simple_marker->setSize(2.4);
+    simple_marker->setColor(QColor(255, 0, 0));
+    simple_marker->setFillColor(QColor(255, 255, 255));
+    simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Circle);
+
+    QgsSymbol * marker = new QgsMarkerSymbol();
+    marker->changeSymbolLayer(0, simple_marker);
+
+    //set up a renderer for the layer
+    QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
+    vl->setRenderer(mypRenderer);
+
+    add_layer_to_group(vl, subTreeGroup);
+    connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
 }
 // Observation cross-section (D-Flow FM) filename given in mdu-file
 void qgis_umesh::create_observation_cross_section_vector_layer(UGRID * ugrid_file, READ_JSON *prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
