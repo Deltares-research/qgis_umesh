@@ -3473,6 +3473,16 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
 
             for (int i = 0; i < fname.size(); i++)
             {
+                bool processed = false;
+                for (int j = 0; j < i; ++j)  // check if the fname[i] is already processed
+                {
+                    if (fname[i] == fname[j])
+                    {
+                        processed = true;
+                    }
+                }
+                if (processed) { continue; }  // fname is already processed -> next fname
+
                 lines.clear();
                 point.clear();
                 poly_lines.clear();
@@ -3585,6 +3595,16 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
 
             for (int i = 0; i < fname.size(); i++)
             {
+                bool processed = false;
+                for (int j = 0; j < i; ++j)  // check if the fname[i] is already processed
+                {
+                    if (fname[i] == fname[j])
+                    {
+                        processed = true;
+                    }
+                }
+                if (processed) { continue; }  // fname is already processed -> next fname
+
                 lines.clear();
                 point.clear();
                 poly_lines.clear();
@@ -3691,6 +3711,16 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
 
             for (int i = 0; i < fname.size(); i++)
             {
+                bool processed = false;
+                for (int j = 0; j < i; ++j)  // check if the fname[i] is already processed
+                {
+                    if (fname[i] == fname[j])
+                    {
+                        processed = true;
+                    }
+                }
+                if (processed) { continue; }  // fname is already processed -> next fname
+
                 lines.clear();
                 point.clear();
                 poly_lines.clear();
@@ -3941,6 +3971,14 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
 
             add_layer_to_group(vl, subTreeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+        }
+        json_key = "data.coefficient.filename";
+        status = prop_tree->get(json_key, fname);
+        if (fname.size() >= 1)
+        {
+            QString fname = QString::fromStdString(prop_tree->get_filename());
+            QString msg = QString(tr("Coefficients are skipped.\nTag \"%1\" in not supported for file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
     }
 }
