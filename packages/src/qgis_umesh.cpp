@@ -19,7 +19,7 @@
 
 static const QString ident = QObject::tr( "@(#)" COMPANY ", " PROGRAM ", " QGIS_UMESH_VERSION ", " ARCH", " __DATE__", " __TIME__ );
 static const QString sName = QObject::tr( "" COMPANY ", " PROGRAM " Development");
-static const QString sDescription = QObject::tr("Plugin to read 1D and 2D unstructured meshes (" __DATE__", " __TIME__")");
+static const QString sDescription = QObject::tr("Plugin to read 1D and 2D unstructured meshes, UGRID-format (" __DATE__", " __TIME__")");
 static const QString sCategory = QObject::tr("Plugins");
 static const QString sPluginVersion = QObject::tr(QGIS_UMESH_VERSION);
 static const QgisPlugin::PluginType sPluginType = QgisPlugin::UI;
