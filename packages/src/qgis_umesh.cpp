@@ -4616,14 +4616,9 @@ QGISEXTERN QString version()
 
 QGISEXTERN QString icon() // derde vanuit QGIS
 {
-    char * icon_file;
-
-    QDir executable_dir = QDir::currentPath();  // get current working directory  (_getcwd(current_dir, _MAX_PATH);)
-    QString q_icon_file = executable_dir.dirName() + QString("/icons/file_open.png");
-
-    icon_file = q_icon_file.toUtf8().data();
-    sPluginIcon = new QString(icon_file);
-    return *sPluginIcon;
+    QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
+    QString q_icon_file = program_files + QString("/deltares/qgis_umesh/icons/qgis_umesh.png");
+    return q_icon_file;
 }
 // Delete ourself
 QGISEXTERN void unload(QgisPlugin* the_qgis_umesh_pointer)
