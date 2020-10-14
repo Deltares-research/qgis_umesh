@@ -13,6 +13,7 @@ enum LOCATION
 };
 enum OBSERVATION_TYPE
 {
+    OBS_NONE,  // needed for observation point
     OBS_POINT,  // needed for observation point
     OBS_POLYLINE,  // needed for cross-sectins
     OBS_POLYGON  // needed for monitoring areas

@@ -43,7 +43,7 @@ struct _location {
 };
 
 struct _location_type {
-    enum OBSERVATION_TYPE type;
+    enum OBSERVATION_TYPE type = OBS_NONE;
     char * location_var_name;  // to check the coordinate attribute
     char * location_long_name;  // to present in combobox i.e. observation point or cross-section
     char * location_dim_name;

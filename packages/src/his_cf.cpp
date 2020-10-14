@@ -402,7 +402,7 @@ long HISCF::read_parameters()
         status = get_attribute(this->ncid, i_var, "coordinates", &coord);
         if (status == NC_NOERR)
         {
-            status = get_attribute(this->ncid, i_var, "geometry", &geometry); 
+            status = get_attribute(this->ncid, i_var, "geometry", &geometry);
             // if status != NC_NOERR then it is an old format
             if (status == NC_NOERR)
             {
@@ -522,7 +522,7 @@ long HISCF::read_parameters()
                     // only variables with the attribute "coordinates" are treated
                     bool found = false;
                     loc_type[j]->node_count.clear();
-                    if (token.size() == 1 && string(loc_type[j]->location_var_name) == "cross_section_name")  // assume it is the cross_section
+                    if (token.size() == 1 && loc_type[j]->type == OBS_NONE && loc_type[j]->location_var_name == token[0])  // assume it is the cross_section
                     {
                         loc_type[j]->type = OBS_POLYLINE;
                         token.resize(3);
@@ -533,15 +533,6 @@ long HISCF::read_parameters()
                         {
                             loc_type[j]->node_count.push_back(3);  // 3 == cross_section_pts
                         }
-                    }
-                    else
-                    {
-                        loc_type[j]->type = OBS_POINT;
-                        for (int i = 0; i < loc_type[j]->location.size(); i++)
-                        {
-                            loc_type[j]->node_count.push_back(1);
-                        }
-
                     }
                     for (int i_token = 0; i_token < token.size(); i_token++)  // var_x, var_y, var_name
                     {
