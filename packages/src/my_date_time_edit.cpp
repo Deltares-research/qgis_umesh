@@ -5,6 +5,8 @@ MyQDateTimeEdit::MyQDateTimeEdit(QVector<QDateTime> q_times)
     _qdt = q_times;
     _nsteps = 0;
     _ansatz = false;
+    _ansatz_d = 0;
+    _ansatz_u = 0;
 }
 void MyQDateTimeEdit::stepBy(int step)
 {
@@ -40,7 +42,7 @@ void MyQDateTimeEdit::stepBy(int step)
         break;
     default:    
         break;
-        emit set_step(_nsteps);
+        //emit set_step(_nsteps);
     }
 }
 void MyQDateTimeEdit::setAnsatz(int step_d, int step_u)

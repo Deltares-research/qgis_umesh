@@ -51,7 +51,7 @@ HISCF::~HISCF()
     free(m_fname);
     free(m_hiscf_file_name);
 #endif    
-    (void)nc_close(this->ncid);
+    (void)nc_close(this->m_ncid);
 
     // free the memory
     for (long i = 0; i < global_attributes->count; i++)
@@ -74,15 +74,15 @@ long HISCF::read()
     }
     fprintf(stderr, "HISCF::read()\n\tOpened: %s\n", m_hiscf_file_name);
 #else
-    char * m_hiscf_file_name = strdup(m_fname.absoluteFilePath().toUtf8());
-    status = nc_open(m_hiscf_file_name, NC_NOWRITE, &this->ncid);
+    char * hiscf_file_name_c = strdup(m_fname.absoluteFilePath().toUtf8());
+    status = nc_open(hiscf_file_name_c, NC_NOWRITE, &this->m_ncid);
     if (status != NC_NOERR)
     {
         QMessageBox::critical(0, QString("Error"), QString("HISCF::read()\n\tFailed to open file: %1").arg(m_hiscf_file_name));
         return status;
     }
-    delete m_hiscf_file_name;
-    m_hiscf_file_name = nullptr;
+    free(hiscf_file_name_c);
+    hiscf_file_name_c = nullptr;
 #endif
     m_mapping = new _mapping();
     set_grid_mapping_epsg(0, "EPSG:0");
@@ -107,7 +107,7 @@ long HISCF::read_global_attributes()
     char * att_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
     att_name_c[0] = '\0';
 
-    status = nc_inq(this->ncid, &ndims, &nvars, &natts, &nunlimited);
+    status = nc_inq(this->m_ncid, &ndims, &nvars, &natts, &nunlimited);
 
     this->global_attributes = (struct _global_attributes *)malloc(sizeof(struct _global_attributes));
     this->global_attributes->count = natts;
@@ -119,8 +119,8 @@ long HISCF::read_global_attributes()
 
     for (long i = 0; i < natts; i++)
     {
-        status = nc_inq_attname(this->ncid, NC_GLOBAL, i, att_name_c);
-        status = nc_inq_att(this->ncid, NC_GLOBAL, att_name_c, &att_type, &att_length);
+        status = nc_inq_attname(this->m_ncid, NC_GLOBAL, i, att_name_c);
+        status = nc_inq_att(this->m_ncid, NC_GLOBAL, att_name_c, &att_type, &att_length);
         this->global_attributes->attribute[i]->name = string(att_name_c);
         this->global_attributes->attribute[i]->type = att_type;
         this->global_attributes->attribute[i]->length = att_length;
@@ -128,7 +128,7 @@ long HISCF::read_global_attributes()
         {
             char * att_value_c = (char *)malloc(sizeof(char) * (att_length + 1));
             att_value_c[0] = '\0';
-            status = nc_get_att_text(this->ncid, NC_GLOBAL, att_name_c, att_value_c);
+            status = nc_get_att_text(this->m_ncid, NC_GLOBAL, att_name_c, att_value_c);
             att_value_c[att_length] = '\0';
             this->global_attributes->attribute[i]->cvalue = string(strdup(att_value_c));
             free(att_value_c);
@@ -187,8 +187,8 @@ long HISCF::read_locations()
     char * var_name_c;
     size_t length;
     size_t mem_length;
-    long i_par_loc;
-    long nr_locations;
+    long i_par_loc = -1;
+    long nr_locations = -1;
     long * sn_dims; // station names dimensions
     bool model_wide_found = false;
     bool model_wide_exist = false;
@@ -202,24 +202,24 @@ long HISCF::read_locations()
     var_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
     var_name_c[0] = '\0';
 
-    status = nc_inq(this->ncid, &ndims, &nvars, &natts, &nunlimited);
+    status = nc_inq(this->m_ncid, &ndims, &nvars, &natts, &nunlimited);
     // cf_role = timeseries_id
-    for (long i = 0; i < nvars; i++)
+    for (long i_var = 0; i_var < nvars; i_var++)
     {
-        length = -1;
-        status = nc_inq_attlen(this->ncid, i, "cf_role", &length);
+        length = (size_t) -1;
+        status = nc_inq_attlen(this->m_ncid, i_var, "cf_role", &length);
         if (status == NC_NOERR)
         {
             cf_role = (char *)malloc(sizeof(char) * (length + 1));
             cf_role[0] = '\0';
-            status = nc_get_att(this->ncid, i, "cf_role", cf_role);
+            status = nc_get_att(this->m_ncid, i_var, "cf_role", cf_role);
             cf_role[length] = '\0';
 
             if (!strcmp(cf_role, "timeseries_id"))
             {
                 nc_type nc_type;
-                location_name_varid = i;
-                status = nc_inq_var(this->ncid, location_name_varid, var_name_c, &nc_type, &ndims, NULL, &natts);
+                location_name_varid = i_var;
+                status = nc_inq_var(this->m_ncid, location_name_varid, var_name_c, &nc_type, &ndims, NULL, &natts);
                 for (int i = 0; i < nr_par_loc; i++)
                 {
                     if (!strcmp(loc_type[i]->location_var_name, var_name_c))
@@ -252,13 +252,13 @@ long HISCF::read_locations()
                     }
                 }
                 loc_type[i_par_loc]->location_var_name = strdup(var_name_c);
-                length = -1;
-                status = nc_inq_attlen(this->ncid, location_name_varid, "long_name", &length);
+                length = (size_t) -1;
+                status = nc_inq_attlen(this->m_ncid, location_name_varid, "long_name", &length);
                 if (status == NC_NOERR)
                 {
                     char * long_name = (char *)malloc(sizeof(char) * (length + 1));
                     long_name[0] = '\0';
-                    status = nc_get_att(this->ncid, location_name_varid, "long_name", long_name);
+                    status = nc_get_att(this->m_ncid, location_name_varid, "long_name", long_name);
                     long_name[length] = '\0';
                     loc_type[i_par_loc]->location_long_name = strdup(long_name);
                     free(long_name);
@@ -268,15 +268,15 @@ long HISCF::read_locations()
                     loc_type[i_par_loc]->location_long_name = strdup(var_name_c);
                 }
 
-                sn_dims = (long *)malloc(sizeof(long *)*ndims);
-                status = nc_inq_vardimid(this->ncid, location_name_varid, (int*)sn_dims);
+                sn_dims = (long *)malloc(sizeof(long)*ndims);
+                status = nc_inq_vardimid(this->m_ncid, location_name_varid, (int*)sn_dims);
 
                 mem_length = 1;
-                name_len = -1;
+                name_len = (size_t) -1;
                 for (long j = 0; j < ndims; j++)
                 {
-                    length = -1;
-                    status = nc_inq_dim(this->ncid, sn_dims[j], dim_name_c, &length);
+                    length = (size_t) -1;
+                    status = nc_inq_dim(this->m_ncid, sn_dims[j], dim_name_c, &length);
 
                     if (strstr(dim_name_c, "len") || name_len == -1 && j == 1)  // second dimension is the string length if not already set
                     {
@@ -294,7 +294,7 @@ long HISCF::read_locations()
                 if (nc_type == NC_STRING)
                 {
                     char ** location_strings = (char **)malloc(sizeof(char *) * (mem_length)+1);
-                    status = nc_get_var_string(this->ncid, location_name_varid, location_strings);
+                    status = nc_get_var_string(this->m_ncid, location_name_varid, location_strings);
                     QString janm = QString("JanM");
                     for (int k = 0; k < nr_locations; k++)
                     {
@@ -315,9 +315,9 @@ long HISCF::read_locations()
                 }
                 else if (nc_type == NC_CHAR)
                 {
-                    char * location_chars = (char *)malloc(sizeof(char *) * (mem_length)+1);
+                    char * location_chars = (char *)malloc(sizeof(char) * (mem_length)+1);
                     location_chars[0] = '\0';
-                    status = nc_get_var_text(this->ncid, location_name_varid, location_chars);
+                    status = nc_get_var_text(this->m_ncid, location_name_varid, location_chars);
                     char * janm = (char *)malloc(sizeof(char)*(name_len + 1));
                     janm[name_len] = '\0';
                     for (int k = 0; k < nr_locations; k++)
@@ -342,10 +342,10 @@ long HISCF::read_locations()
         }
         else
         {
-            status = get_attribute(this->ncid, i, "grid_mapping_name", &grid_mapping_name);
+            status = get_attribute(this->m_ncid, i_var, "grid_mapping_name", &grid_mapping_name);
             if (status == NC_NOERR)
             {
-                status = read_grid_mapping(i, var_name_c, grid_mapping_name);
+                status = read_grid_mapping(i_var, var_name_c, grid_mapping_name);
             }
         }
     }
@@ -361,7 +361,6 @@ long HISCF::read_parameters()
     int status;
     size_t length;
     char * var_name_c;
-    char * coord_c = NULL;
     string coord;
     string geometry;
     string att_value;
@@ -369,9 +368,7 @@ long HISCF::read_parameters()
 
     size_t * par_dim;
     long i_par_loc = -1;
-    long i_param = -1;
     int i_geom_id = -1;
-    int i_node_cnt = -1;
     int i_geom_node = -1;
     size_t geom_node_count;
     int * geom_count;
@@ -386,23 +383,23 @@ long HISCF::read_parameters()
     var_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
     var_name_c[0] = '\0';
 
-    status = nc_inq(this->ncid, &ndims, &nvars, &natts, &nunlimited);
+    status = nc_inq(this->m_ncid, &ndims, &nvars, &natts, &nunlimited);
     for (long i_var = 0; i_var < nvars; i_var++)
     {
         long * par_dim_ids;  // parameter dimensions
 
-        length = -1;
+        length = (size_t) -1;
         i_par_loc = -1;
-        status = nc_inq_var(this->ncid, i_var, var_name_c, NULL, &ndims, NULL, &natts);
+        status = nc_inq_var(this->m_ncid, i_var, var_name_c, NULL, &ndims, NULL, &natts);
 
-        par_dim = (size_t *)malloc(sizeof(long *)*ndims);
-        par_dim_ids = (long *)malloc(sizeof(long *)*ndims);
-        status = nc_inq_vardimid(this->ncid, i_var, (int*)par_dim_ids);
+        par_dim = (size_t *)malloc(sizeof(long)*ndims);
+        par_dim_ids = (long *)malloc(sizeof(long)*ndims);
+        status = nc_inq_vardimid(this->m_ncid, i_var, (int*)par_dim_ids);
 
-        status = get_attribute(this->ncid, i_var, "coordinates", &coord);
+        status = get_attribute(this->m_ncid, i_var, "coordinates", &coord);
         if (status == NC_NOERR)
         {
-            status = get_attribute(this->ncid, i_var, "geometry", &geometry);
+            status = get_attribute(this->m_ncid, i_var, "geometry", &geometry);
             // if status != NC_NOERR then it is an old format
             if (status == NC_NOERR)
             {
@@ -421,31 +418,30 @@ long HISCF::read_parameters()
                     if (!found) { continue; }
                     if (timeseries_geom_found[j]) { continue; }
                     // only variables with the attribute "coordinates" and "geometry" are treated
-                    status = nc_inq_varid(this->ncid, geometry.c_str(), &i_geom_id);
-                    status = get_attribute(this->ncid, i_geom_id, "geometry_type", &att_value);
+                    status = nc_inq_varid(this->m_ncid, geometry.c_str(), &i_geom_id);
+                    status = get_attribute(this->m_ncid, i_geom_id, "geometry_type", &att_value);
                     if (att_value == "point")
                     {
                         timeseries_geom_found[j] = true;
                         loc_type[j]->type = OBS_POINT;
                         // point location, observation points
-                        status = get_attribute(this->ncid, i_geom_id, "node_count", &att_value);
-                        status = get_dimension_var(this->ncid, att_value, &geom_node_count);
+                        status = get_attribute(this->m_ncid, i_geom_id, "node_count", &att_value);
+                        status = get_dimension_var(this->m_ncid, att_value, &geom_node_count);
                         geom_count = (int *)malloc(sizeof(int) * geom_node_count);
-                        status = nc_inq_varid(this->ncid, att_value.c_str(), &i_geom_node);
-                        status = nc_get_var_int(this->ncid, i_geom_node, geom_count);
+                        status = nc_inq_varid(this->m_ncid, att_value.c_str(), &i_geom_node);
+                        status = nc_get_var_int(this->m_ncid, i_geom_node, geom_count);
                         for (int i = 0; i < geom_node_count; i++)
                         {
                             loc_type[j]->node_count.push_back(geom_count[i]);
                         }
                         //
-                        status = get_attribute(this->ncid, i_geom_id, "node_coordinates", &coord_geom);
+                        status = get_attribute(this->m_ncid, i_geom_id, "node_coordinates", &coord_geom);
                         vector<string> token_geom = tokenize(coord_geom, ' ');
                         for (int i = 0; i < token_geom.size(); i++)  // var_x, var_y
                         {
                             int var_id = -1;
-                            status = nc_inq_varid(this->ncid, token_geom[i].c_str(), &var_id);
-                            string att_value;
-                            status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
+                            status = nc_inq_varid(this->m_ncid, token_geom[i].c_str(), &var_id);
+                            status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
                             if (att_value == "projection_x_coordinate" || att_value == "longitude")
                             {
                                 loc_type[j]->x_location_name = token_geom[i];
@@ -462,24 +458,23 @@ long HISCF::read_parameters()
                         timeseries_geom_found[j] = true;
                         loc_type[j]->type = OBS_POLYLINE;
                         // line location, cross sections
-                        status = get_attribute(this->ncid, i_geom_id, "node_count", &att_value);
-                        status = get_dimension_var(this->ncid, att_value, &geom_node_count);
+                        status = get_attribute(this->m_ncid, i_geom_id, "node_count", &att_value);
+                        status = get_dimension_var(this->m_ncid, att_value, &geom_node_count);
                         geom_count = (int *)malloc(sizeof(int) * geom_node_count);
-                        status = nc_inq_varid(this->ncid, att_value.c_str(), &i_geom_node);
-                        status = nc_get_var_int(this->ncid, i_geom_node, geom_count);
+                        status = nc_inq_varid(this->m_ncid, att_value.c_str(), &i_geom_node);
+                        status = nc_get_var_int(this->m_ncid, i_geom_node, geom_count);
                         for (int i = 0; i < geom_node_count; i++)
                         {
                             loc_type[j]->node_count.push_back(geom_count[i]);
                         }
                         //
-                        status = get_attribute(this->ncid, i_geom_id, "node_coordinates", &coord_geom);
-                        vector<string> token = tokenize(coord_geom, ' ');
+                        status = get_attribute(this->m_ncid, i_geom_id, "node_coordinates", &coord_geom);
+                        token = tokenize(coord_geom, ' ');
                         for (int i = 0; i < token.size(); i++)  // var_x, var_y
                         {
                             int var_id = -1;
-                            status = nc_inq_varid(this->ncid, token[i].c_str(), &var_id);
-                            string att_value;
-                            status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
+                            status = nc_inq_varid(this->m_ncid, token[i].c_str(), &var_id);
+                            status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
                             if (att_value == "projection_x_coordinate" || att_value == "longitude")
                             {
                                 loc_type[j]->x_location_name = token[i];
@@ -545,9 +540,8 @@ long HISCF::read_parameters()
                             for (int i = 0; i < token.size(); i++)  // var_x, var_y, var_name
                             {
                                 int var_id = -1;
-                                status = nc_inq_varid(this->ncid, token[i].c_str(), &var_id);
-                                string att_value;
-                                status = get_attribute(this->ncid, var_id, "standard_name", &att_value);
+                                status = nc_inq_varid(this->m_ncid, token[i].c_str(), &var_id);
+                                status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
                                 if (status == NC_NOERR)
                                 {
                                     // just ceck the first one, other locations should hev the x,y-coordinate name
@@ -574,19 +568,18 @@ long HISCF::read_parameters()
     int var_id;
     for (int j = 0; j < loc_type.size(); j++)
     {
-        int ndims;
-        status = nc_inq_varid(this->ncid, loc_type[j]->x_location_name.c_str(), &var_id);
-        if (status == NC_NOERR) { status = nc_inq_varndims(this->ncid, var_id, &ndims); }
+        status = nc_inq_varid(this->m_ncid, loc_type[j]->x_location_name.c_str(), &var_id);
+        if (status == NC_NOERR) { status = nc_inq_varndims(this->m_ncid, var_id, &ndims); }
         if (status == NC_NOERR && loc_type[j]->type == OBS_POINT)
         {
             double * values_c = (double *)malloc(sizeof(double)*loc_type[j]->location.size());
-            status = nc_get_var_double(this->ncid, var_id, values_c);
+            status = nc_get_var_double(this->m_ncid, var_id, values_c);
             for (int n = 0; n < loc_type[j]->location.size(); n++)
             {
                 loc_type[j]->location[n].x.push_back(*(values_c + n));
             }
-            status = nc_inq_varid(this->ncid, loc_type[j]->y_location_name.c_str(), &var_id);
-            status = nc_get_var_double(this->ncid, var_id, values_c);
+            status = nc_inq_varid(this->m_ncid, loc_type[j]->y_location_name.c_str(), &var_id);
+            status = nc_get_var_double(this->m_ncid, var_id, values_c);
             for (int n = 0; n < loc_type[j]->location.size(); n++)
             {
                 loc_type[j]->location[n].y.push_back(*(values_c + n));
@@ -596,18 +589,17 @@ long HISCF::read_parameters()
         }
         else if (status == NC_NOERR && loc_type[j]->type == OBS_POLYLINE)
         {
-            long * dims = (long *)malloc(sizeof(long *)*ndims);
-            status = nc_inq_vardimid(this->ncid, var_id, (int*)dims);
+            long * dims = (long *)malloc(sizeof(long)*ndims);
+            status = nc_inq_vardimid(this->m_ncid, var_id, (int*)dims);
             size_t mem_length = 1;
             for (long n = 0; n < ndims; n++)
             {
-                length = -1;
-                status = nc_inq_dimlen(this->ncid, dims[n], &length);
+                length = (size_t) -1;
+                status = nc_inq_dimlen(this->m_ncid, dims[n], &length);
                 mem_length = mem_length * length;
             }
-            size_t points_per_line = mem_length/loc_type[j]->location.size();
             double * values_c = (double *)malloc(sizeof(double)*mem_length);
-            status = nc_get_var_double(this->ncid, var_id, values_c);
+            status = nc_get_var_double(this->m_ncid, var_id, values_c);
             int k_start = 0;
             for (int i = 0; i < loc_type[j]->location.size(); i++)
             {
@@ -617,8 +609,8 @@ long HISCF::read_parameters()
                 }
                 k_start += loc_type[j]->node_count[i];
             }
-            status = nc_inq_varid(this->ncid, loc_type[j]->y_location_name.c_str(), &var_id);
-            status = nc_get_var_double(this->ncid, var_id, values_c);
+            status = nc_inq_varid(this->m_ncid, loc_type[j]->y_location_name.c_str(), &var_id);
+            status = nc_get_var_double(this->m_ncid, var_id, values_c);
             k_start = 0;
             for (int i = 0; i < loc_type[j]->location.size(); i++)
             {
@@ -669,7 +661,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, char ** att_value
     size_t length = 0;
     int status = -1;
 
-    status = nc_inq_attlen(this->ncid, i_var, att_name, &length);
+    status = nc_inq_attlen(ncid, i_var, att_name, &length);
     *att_value = (char *)malloc(sizeof(char) * (length + 1));
     *att_value[0] = '\0';
     if (status != NC_NOERR)
@@ -678,7 +670,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, char ** att_value
     }
     else
     {
-        status = nc_get_att(this->ncid, i_var, att_name, *att_value);
+        status = nc_get_att(ncid, i_var, att_name, *att_value);
         att_value[0][length] = '\0';
     }
     return status;
@@ -689,7 +681,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, string * att_valu
     size_t length = 0;
     int status = -1;
 
-    status = nc_inq_attlen(this->ncid, i_var, att_name, &length);
+    status = nc_inq_attlen(ncid, i_var, att_name, &length);
     if (status != NC_NOERR)
     {
         *att_value = "";
@@ -698,7 +690,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, string * att_valu
     {
         char * tmp_value = (char *)malloc(sizeof(char) * (length + 1));
         tmp_value[0] = '\0';
-        status = nc_get_att(this->ncid, i_var, att_name, tmp_value);
+        status = nc_get_att(ncid, i_var, att_name, tmp_value);
         tmp_value[length] = '\0';
         *att_value = string(tmp_value, length);
         free(tmp_value);
@@ -711,7 +703,7 @@ int HISCF::get_attribute(int ncid, int i_var, string att_name, string * att_valu
     size_t length = 0;
     int status = -1;
 
-    status = nc_inq_attlen(this->ncid, i_var, att_name.c_str(), &length);
+    status = nc_inq_attlen(ncid, i_var, att_name.c_str(), &length);
     if (status != NC_NOERR)
     {
         *att_value = "";
@@ -720,7 +712,7 @@ int HISCF::get_attribute(int ncid, int i_var, string att_name, string * att_valu
     {
         char * tmp_value = (char *)malloc(sizeof(char) * (length + 1));
         tmp_value[0] = '\0';
-        status = nc_get_att(this->ncid, i_var, att_name.c_str(), tmp_value);
+        status = nc_get_att(ncid, i_var, att_name.c_str(), tmp_value);
         tmp_value[length] = '\0';
         *att_value = string(tmp_value, length);
         free(tmp_value);
@@ -732,7 +724,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, double * att_valu
 {
     int status = -1;
 
-    status = nc_get_att_double(this->ncid, i_var, att_name, att_value);
+    status = nc_get_att_double(ncid, i_var, att_name, att_value);
 
     return status;
 }
@@ -741,7 +733,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, int * att_value)
 {
     int status = -1;
 
-    status = nc_get_att_int(this->ncid, i_var, att_name, att_value);
+    status = nc_get_att_int(ncid, i_var, att_name, att_value);
 
     return status;
 }
@@ -750,7 +742,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, long * att_value)
 {
     int status = -1;
 
-    status = nc_get_att_long(this->ncid, i_var, att_name, att_value);
+    status = nc_get_att_long(ncid, i_var, att_name, att_value);
 
     return status;
 }
@@ -763,8 +755,8 @@ int HISCF::get_dimension(int ncid, char * dim_name, size_t * dim_length)
     *dim_length = 0;
     if (dim_name != NULL && strlen(dim_name) != 0)
     {
-        status = nc_inq_dimid(this->ncid, dim_name, &dimid);
-        status = nc_inq_dimlen(this->ncid, dimid, dim_length);
+        status = nc_inq_dimid(ncid, dim_name, &dimid);
+        status = nc_inq_dimlen(ncid, dimid, dim_length);
     }
     return status;
 }
@@ -777,8 +769,8 @@ int HISCF::get_dimension(int ncid, string dim_name, size_t * dim_length)
     *dim_length = 0;
     if (dim_name.size() != 0)
     {
-        status = nc_inq_dimid(this->ncid, dim_name.c_str(), &dimid);
-        status = nc_inq_dimlen(this->ncid, dimid, dim_length);
+        status = nc_inq_dimid(ncid, dim_name.c_str(), &dimid);
+        status = nc_inq_dimlen(ncid, dimid, dim_length);
     }
     return status;
 }
@@ -793,12 +785,12 @@ int HISCF::get_dimension_var(int ncid, string var_name, size_t * dim_length)
     if (var_name.size() != 0)
     {
         int janm;
-        status = nc_inq_varid(this->ncid, var_name.c_str(), &dimid);
-        status = nc_inq_vardimid(this->ncid, dimid, &janm);
+        status = nc_inq_varid(ncid, var_name.c_str(), &dimid);
+        status = nc_inq_vardimid(ncid, dimid, &janm);
         char * name = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
         name[0] = '\0';
-        status = nc_inq_dimname(this->ncid, janm, name);
-        status = get_dimension(this->ncid, name, dim_length);
+        status = nc_inq_dimname(ncid, janm, name);
+        status = get_dimension(ncid, name, dim_length);
         free(name);
     }
     return status;
@@ -812,11 +804,11 @@ vector<string>  HISCF::get_dimension_names(int ncid, string var_name)
     if (var_name.size() != 0)
     {
         int janm;
-        status = nc_inq_varid(this->ncid, var_name.c_str(), &dimid);
-        status = nc_inq_vardimid(this->ncid, dimid, &janm);
+        status = nc_inq_varid(ncid, var_name.c_str(), &dimid);
+        status = nc_inq_vardimid(ncid, dimid, &janm);
         char * name = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
         name[0] = '\0';
-        status = nc_inq_dimname(this->ncid, janm, name);
+        status = nc_inq_dimname(ncid, janm, name);
         dim_names.push_back(name);
         free(name);
     }
@@ -857,17 +849,17 @@ int HISCF::read_grid_mapping(int i_var, string var_name, string grid_mapping_nam
     int status = -1;
     m_mapping->epsg = -1;
 
-    status = get_attribute(this->ncid, i_var, "name", &m_mapping->name);
-    status = get_attribute(this->ncid, i_var, "epsg", &m_mapping->epsg);
+    status = get_attribute(this->m_ncid, i_var, "name", &m_mapping->name);
+    status = get_attribute(this->m_ncid, i_var, "epsg", &m_mapping->epsg);
     m_mapping->grid_mapping_name = grid_mapping_name; //  == status = get_attribute(this->ncid, i_var, "grid_mapping_name", &map->grid_mapping_name);
-    status = get_attribute(this->ncid, i_var, "longitude_of_prime_meridian", &m_mapping->longitude_of_prime_meridian);
-    status = get_attribute(this->ncid, i_var, "semi_major_axis", &m_mapping->semi_major_axis);
-    status = get_attribute(this->ncid, i_var, "semi_minor_axis", &m_mapping->semi_minor_axis);
-    status = get_attribute(this->ncid, i_var, "inverse_flattening", &m_mapping->inverse_flattening);
-    status = get_attribute(this->ncid, i_var, "epsg_code", &m_mapping->epsg_code);
-    status = get_attribute(this->ncid, i_var, "value", &m_mapping->value);
-    status = get_attribute(this->ncid, i_var, "projection_name", &m_mapping->projection_name);
-    status = get_attribute(this->ncid, i_var, "wkt", &m_mapping->wkt);
+    status = get_attribute(this->m_ncid, i_var, "longitude_of_prime_meridian", &m_mapping->longitude_of_prime_meridian);
+    status = get_attribute(this->m_ncid, i_var, "semi_major_axis", &m_mapping->semi_major_axis);
+    status = get_attribute(this->m_ncid, i_var, "semi_minor_axis", &m_mapping->semi_minor_axis);
+    status = get_attribute(this->m_ncid, i_var, "inverse_flattening", &m_mapping->inverse_flattening);
+    status = get_attribute(this->m_ncid, i_var, "epsg_code", &m_mapping->epsg_code);
+    status = get_attribute(this->m_ncid, i_var, "value", &m_mapping->value);
+    status = get_attribute(this->m_ncid, i_var, "projection_name", &m_mapping->projection_name);
+    status = get_attribute(this->m_ncid, i_var, "wkt", &m_mapping->wkt);
 
     if (m_mapping->epsg == -1 && m_mapping->epsg_code.size() != 0)
     {

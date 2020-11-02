@@ -136,7 +136,7 @@ QVector<QPair<qreal, QColor> > QColorRampEditor::getRamp()
 QVector<QRgb> QColorRampEditor::getColorTable()
 {
     // get ramp and normalize
-    QVector<QPair<qreal, QColor> > ramp = getRamp();
+    ramp = getRamp();
     for (int i=0; i<ramp.size(); i++) ramp[i].first = (ramp[i].first - mi_)/(ma_-mi_);
 
     QVector<QRgb> ctable;
@@ -381,7 +381,6 @@ void QColorRampEditor::mousePressEvent(QMouseEvent* e)
                 sliders_.push_back(sl);
                 sl->move(e->pos().x(),0);
                 updateValue(sl);
-                int i = norm_ramp.size();
                 QPair<qreal, QColor> a;
                 a.first = 1.0*(e->pos().x() - bspace_) / crec.width();
                 a.second = Qt::white;

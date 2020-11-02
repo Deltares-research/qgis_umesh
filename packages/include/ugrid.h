@@ -388,7 +388,7 @@ public:
     std::vector<std::string> tokenize(const std::string & , std::size_t );
 
     long get_count_times();
-    QDateTime * RefDate;
+    QDateTime * m_RefDate;
     vector<double> get_times();
     QVector<QDateTime> get_qdt_times();  // qdt: Qt Date Time
     QVector<QDateTime> qdt_times;
@@ -436,22 +436,22 @@ private:
     double * permute_array(double *, vector<long>, vector<long>);
     long get_index_in_c_array(long, long, long, long, long, long, long, long);
 
-    struct _ntw_nodes * ntw_nodes = nullptr;
-    struct _ntw_edges * ntw_edges = nullptr;
-    struct _ntw_geom * ntw_geom = nullptr;
-    struct _mesh_contact * mesh_contact= nullptr;
-    struct _ntw_nodes * mesh1d_nodes = nullptr;
-    struct _ntw_edges * mesh1d_edges = nullptr;
-    struct _mesh1d * mesh1d = nullptr;
-    struct _mesh2d * mesh2d = nullptr;
-    struct _mapping * mapping = nullptr;
-    struct _mesh_variable * mesh_vars = nullptr;
-    struct _feature * nodes = nullptr;
-    struct _ntw_string ** ntw_strings = nullptr;
-    struct _geom_string ** geom_strings = nullptr;
-    struct _mesh1d_string ** mesh1d_strings = nullptr;
-    struct _mesh2d_string ** mesh2d_strings = nullptr;
-    struct _mesh_contact_string ** mesh_contact_strings = nullptr;
+    struct _ntw_nodes * m_ntw_nodes = nullptr;
+    struct _ntw_edges * m_ntw_edges = nullptr;
+    struct _ntw_geom * m_ntw_geom = nullptr;
+    struct _mesh_contact * m_mesh_contact= nullptr;
+    struct _ntw_nodes * m_mesh1d_nodes = nullptr;
+    struct _ntw_edges * m_mesh1d_edges = nullptr;
+    struct _mesh1d * m_mesh1d = nullptr;
+    struct _mesh2d * m_mesh2d = nullptr;
+    struct _mapping * m_mapping = nullptr;
+    struct _mesh_variable * m_mesh_vars = nullptr;
+    struct _feature * m_nodes = nullptr;
+    struct _ntw_string ** m_ntw_strings = nullptr;
+    struct _geom_string ** m_geom_strings = nullptr;
+    struct _mesh1d_string ** m_mesh1d_strings = nullptr;
+    struct _mesh2d_string ** m_mesh2d_strings = nullptr;
+    struct _mesh_contact_string ** m_mesh_contact_strings = nullptr;
 
     vector<_time_series> time_series;
 
@@ -463,7 +463,7 @@ private:
     map<string, long> m_map_dim;
     map<string, string> m_map_dim_name;
 
-    int ncid;
+    int m_ncid;
     int * topo_edge_nodes;
     int * mesh1d_edge_nodes;
     int * mesh2d_edge_nodes;

@@ -1314,7 +1314,7 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
         if (m_sb_bed_layer != nullptr) {
             _MyCanvas->set_bed_layer(m_sb_bed_layer->value());
         }
-        int i = _q_times.indexOf(curr_date_time->dateTime());
+        //int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->draw_all();
     }
     else if (location == "node")
@@ -1353,7 +1353,7 @@ void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
     {
         //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
         _MyCanvas->set_variable(var);
-        int i = _q_times.indexOf(curr_date_time->dateTime());
+        //int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->draw_all();
     }
     else if (location == "node")
@@ -1463,7 +1463,7 @@ void MapTimeManagerWindow::clicked_current_view()
             QVariant j = m_cb_2d->currentData();
             int jj = j.toInt();
             struct _variable * var = m_vars->variable[jj];
-            struct _edge * edges = mesh2d->edge[0];
+            //struct _edge * edges = mesh2d->edge[0];
 
             DataValuesProvider2D<double> var_time = var->data_2d;
             double * z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space

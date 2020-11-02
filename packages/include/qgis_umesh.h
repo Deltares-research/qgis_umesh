@@ -206,7 +206,7 @@ class qgis_umesh
 
         char * msgtxt = (char *)malloc(MSG_LENGTH * sizeof(char *));
         char * pluginsHome = (char *)malloc(PATH_LENGTH * sizeof(char *));
-        char * actionIcon = (char *)malloc(PATH_LENGTH * sizeof(char *));
+        char * actionIcon_c = (char *)malloc(PATH_LENGTH * sizeof(char *));
 
         int _fil_index;
         vector<UGRID *> m_ugrid_file;

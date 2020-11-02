@@ -65,7 +65,7 @@ void AddCurrentViewWindow::create_window()
     table->setSelectionMode(QAbstractItemView::NoSelection);
     table->setShowGrid(true);
     table->verticalHeader()->hide();
-    int tab_width = table->horizontalHeader()->length() + table->verticalHeader()->width();
+    //int tab_width = table->horizontalHeader()->length() + table->verticalHeader()->width();
     int tab_height = table->verticalHeader()->length() + table->horizontalHeader()->height();
     table->setFixedHeight(tab_height);
     table->setColumnWidth(0, 175);
@@ -134,7 +134,6 @@ void AddCurrentViewWindow::create_vector_layer()
         }
     }
 
-    QList <QgsField> lMyAttribField;
     if (!layer_found)
     {
         QgsVectorLayer * vl;
@@ -191,7 +190,7 @@ void AddCurrentViewWindow::create_vector_layer()
         add_layer_to_group(vl, treeGroup);
         //connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
 
-        QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+        tmp_layers = treeGroup->findLayers();
         int ind = tmp_layers.size() - 1;
         tmp_layers[ind]->setItemVisibilityChecked(false);
     }

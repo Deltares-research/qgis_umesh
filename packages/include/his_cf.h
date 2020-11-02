@@ -108,8 +108,7 @@ private:
     size_t * m_dimids;
     vector<string> m_dim_names;
     int m_message_count;
-
-    int ncid;
+    int m_ncid;
 
 #ifdef NATIVE_C
     char * m_fname;

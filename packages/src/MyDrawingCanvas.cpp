@@ -137,14 +137,14 @@ void MyCanvas::draw_dot_at_face()
         z_value = std_data_at_face.GetValueAtIndex(_current_step, 0);
 
         double missing_value = _variable->fill_value;
-        rgb_color.resize(mesh2d->face[0]->x.size());
-        determine_min_max(z_value, mesh2d->face[0]->x.size(), &m_z_min, &m_z_max, rgb_color, missing_value);
+        m_rgb_color.resize(mesh2d->face[0]->x.size());
+        determine_min_max(z_value, mesh2d->face[0]->x.size(), &m_z_min, &m_z_max, m_rgb_color, missing_value);
 
         this->startDrawing(0);
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         this->setPointSize(13);
-        this->drawMultiDot(mesh2d->face[0]->x, mesh2d->face[0]->y, rgb_color);
+        this->drawMultiDot(mesh2d->face[0]->x, mesh2d->face[0]->y, m_rgb_color);
         mCache_painter->setOpacity(opacity);
         this->finishDrawing();
     }
@@ -193,7 +193,7 @@ void MyCanvas::draw_data_at_face()
             QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 4).").arg(var_name.c_str()));
         }
         double missing_value = _variable->fill_value;
-        rgb_color.resize(mesh2d->face_nodes.size());
+        m_rgb_color.resize(mesh2d->face_nodes.size());
         determine_min_max(z_value, mesh2d->face_nodes.size(), &m_z_min, &m_z_max, missing_value);
 
         this->startDrawing(0);
@@ -256,9 +256,9 @@ void MyCanvas::draw_vector_arrow_at_face()
         vector<double> coord_by(2);
         vector<double> dx(5);
         vector<double> dy(5);
-        size_t dimens;
+        size_t dimens = -1;
         double vscale;
-        double missing_value;
+        double missing_value = -INFINITY;
         double b_len;
 
         if (m_coordinate_type.size() != 4) { return; }
@@ -281,8 +281,8 @@ void MyCanvas::draw_vector_arrow_at_face()
             }
             m_vscale_determined = true;
         }
-        double fac = m_property->get_vector_scaling();
-        vscale = fac * m_vec_length;
+        double prop_fac = m_property->get_vector_scaling();
+        vscale = prop_fac * m_vec_length;
 
         double vlen;
         double beta;
@@ -463,8 +463,8 @@ void MyCanvas::draw_vector_arrow_at_face()
             alpha = 0.05;
             double unitv_y_head = (1.0 - alpha) * getMinVisibleY() + alpha * getMaxVisibleY();
  
-            double dx = getPixelWidth(coord_x[0], coord_y[0]);
-            double dy = getPixelHeight(coord_x[0], coord_y[0]);
+            pix_dx = getPixelWidth(coord_x[0], coord_y[0]);
+            pix_dy = getPixelHeight(coord_x[0], coord_y[0]);
                 
             int tw = getTextWidth("Unit vector");
             int th = getTextHeight("Unit vector");
@@ -490,14 +490,14 @@ void MyCanvas::draw_vector_arrow_at_face()
             int vh = qy(coord_y[3]) - qy(coord_y[2]);  // vector height
             int width = 5 + vw + 5;
             int height = -(5 + vh + 3 + th + 5);
-            this->drawRectangle(coord_x[0] - 5. * dx, coord_y[3] - 5. * dy, width, height);
+            this->drawRectangle(coord_x[0] - 5. * pix_dx, coord_y[3] - 5. * pix_dy, width, height);
 
             mCache_painter->setOpacity(1.0);
             char scratch[50];
             sprintf(scratch, "%3.3f", v_length / vscale);
             string txt(scratch);
             string text = txt + " x unit vector";
-            this->drawText(coord_x[0], coord_y[0] + (5 + th) * dy, 0, 0, text.c_str());
+            this->drawText(coord_x[0], coord_y[0] + (5 + th) * pix_dy, 0, 0, text.c_str());
 
             this->drawPolyline(coord_x, coord_y);
 
@@ -519,8 +519,8 @@ void MyCanvas::draw_vector_direction_at_face()
     struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
     if (mesh2d != nullptr)
     {
-        size_t dimens;
-        double missing_value;
+        size_t dimens = 0;
+        double missing_value = -INFINITY;
 
         if (m_coordinate_type.size() != 4) { return; }
         struct _mesh_variable * vars = _ugrid_file->get_variables();
@@ -549,8 +549,8 @@ void MyCanvas::draw_vector_direction_at_face()
                 v_value = std_v_vec_at_face_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
             }
         }
-        vector<double> z_value(mesh2d->face_nodes.size(), 0.0); // will contain the direction
-        rgb_color.resize(mesh2d->face_nodes.size());
+        vector<double> vec_z(mesh2d->face_nodes.size(), 0.0); // will contain the direction
+        m_rgb_color.resize(mesh2d->face_nodes.size());
 
         m_ramph_vec_dir->update();
 
@@ -577,14 +577,14 @@ void MyCanvas::draw_vector_direction_at_face()
                     if (mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
                         mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY())
                     {
-                        z_value[i] = atan2(v_value[i], u_value[i]) * 360.0 / (2.0 * M_PI);
+                        vec_z[i] = atan2(v_value[i], u_value[i]) * 360.0 / (2.0 * M_PI);
                         in_view = true; // one point of polygon in visible area, do not skip this polygon
                     }
                 }
             }
-            if (in_view && z_value[i] != missing_value)
+            if (in_view && vec_z[i] != missing_value)
             {
-                setFillColor(m_ramph_vec_dir->getRgbFromValue(z_value[i]));
+                setFillColor(m_ramph_vec_dir->getRgbFromValue(vec_z[i]));
                 this->drawPolygon(vertex_x, vertex_y);
             }
         }
@@ -608,14 +608,14 @@ void MyCanvas::draw_dot_at_node()
         z_value = std_data_at_node.GetValueAtIndex(_current_step, 0);
 
         double missing_value = _variable->fill_value;
-        rgb_color.resize(mesh1d->node[0]->x.size());
-        determine_min_max(z_value, mesh1d->node[0]->x.size(), &m_z_min, &m_z_max, rgb_color, missing_value);
+        m_rgb_color.resize(mesh1d->node[0]->x.size());
+        determine_min_max(z_value, mesh1d->node[0]->x.size(), &m_z_min, &m_z_max, m_rgb_color, missing_value);
 
         this->startDrawing(0);
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         this->setPointSize(13);
-        this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, rgb_color);
+        this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
         mCache_painter->setOpacity(opacity);
         this->finishDrawing();
     }
@@ -654,8 +654,8 @@ void MyCanvas::draw_dot_at_edge()
         }
 
         double missing_value = _variable->fill_value;
-        rgb_color.resize(edges->count);
-        determine_min_max(z_value, edges->count, &m_z_min, &m_z_max, rgb_color, missing_value);
+        m_rgb_color.resize(edges->count);
+        determine_min_max(z_value, edges->count, &m_z_min, &m_z_max, m_rgb_color, missing_value);
 
         for (int j = 0; j < edges->count; j++)
         {
@@ -674,7 +674,7 @@ void MyCanvas::draw_dot_at_edge()
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         this->setPointSize(13);
-        this->drawMultiDot(edge_x, edge_y, rgb_color);
+        this->drawMultiDot(edge_x, edge_y, m_rgb_color);
         mCache_painter->setOpacity(opacity);
         this->finishDrawing();
     }
@@ -750,7 +750,7 @@ void MyCanvas::draw_line_at_edge()
             edges = mesh1d2d->edge[0];
         }
 
-        rgb_color.resize(edges->count);
+        m_rgb_color.resize(edges->count);
         this->startDrawing(0);
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
@@ -837,12 +837,12 @@ void MyCanvas::draw_data_along_edge()
         }
         if (false)  // boolean to draw multidot?
         {
-            rgb_color.resize(length);
+            m_rgb_color.resize(length);
             for (int i = 0; i < length; i++)
             {
-                rgb_color[i] = m_ramph->getRgbFromValue(z_value[i]);
+                m_rgb_color[i] = m_ramph->getRgbFromValue(z_value[i]);
             }
-            this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, rgb_color);
+            this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
         }
         mCache_painter->setOpacity(opacity);
         this->finishDrawing();
@@ -1073,8 +1073,8 @@ void MyCanvas::renderPlugin( QPainter * Painter )
     min_X = extent.xMinimum();
     min_Y = extent.yMinimum();
 
-    dx = window_width/frame_width;
-    dy = window_height/frame_height;
+    pix_dx = window_width/frame_width;
+    pix_dy = window_height/frame_height;
 
     this->qgis_painter->setViewport(qx(min_X), qy(min_Y), qx(window_width), qy(window_height));    
 
@@ -1575,14 +1575,14 @@ int MyCanvas::getTextHeight(const char* name)
 //
 double MyCanvas::getPixelWidth(double x, double y)
 {
-   return dx; // height of one pixel in world co-ordinates
+   return pix_dx; // height of one pixel in world co-ordinates
 }
 //
 //-----------------------------------------------------------------------------
 //
 double MyCanvas::getPixelHeight(double x, double y)
 {
-   return dy; // height of one pixel in world co-ordinates
+   return pix_dy; // height of one pixel in world co-ordinates
 }
 //
 //-----------------------------------------------------------------------------

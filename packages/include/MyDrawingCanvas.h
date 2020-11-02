@@ -199,8 +199,8 @@ protected:
     int qx( double wx ) { return (int)( (     ((wx) - min_X)/window_width ) * (double)frame_width ); }
     int qy( double wy ) { return (int)( (1.0 -((wy) - min_Y)/window_height) * (double)frame_height); }
     // From Qt coordinates to world (document) coordinates
-    double wx ( int qx ) { return ( min_X + ((qx)-1)*dx ); }
-    double wy ( int qy ) { return ( min_Y + (frame_height - ((qy)+1))*dy ); }
+    double wx ( int qx ) { return ( min_X + ((qx)-1)*pix_dx ); }
+    double wy ( int qy ) { return ( min_Y + (frame_height - ((qy)+1))*pix_dy ); }
 
 private:
     // functions
@@ -228,8 +228,8 @@ private:
 
     // The coordinate system transformation. Y is flipped.
     double scale; //
-    double dx;    // distance of one pixel in world coordinates
-    double dy;    // distance of one pixel in world coordinates
+    double pix_dx;    // distance of one pixel in world coordinates
+    double pix_dy;    // distance of one pixel in world coordinates
     int frame_width; // in pixels
     int frame_height; // in pixels
     double window_width;    // in world coordinates
@@ -260,7 +260,7 @@ private:
     vector<long> dims;
     vector<double> mesh1d_x;
     vector<double> mesh1d_y;
-    vector<int> rgb_color;
+    vector<int> m_rgb_color;
     MapProperty * m_property;
     bool m_vscale_determined;
     double m_vec_length;
