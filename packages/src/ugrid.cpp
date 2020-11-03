@@ -622,9 +622,13 @@ long UGRID::read_variables()
             status = get_attribute(this->m_ncid, i_var, "cell_methods", &m_mesh_vars->variable[m_nr_mesh_var - 1]->cell_methods);
             status = get_attribute(this->m_ncid, i_var, "standard_name", &m_mesh_vars->variable[m_nr_mesh_var - 1]->standard_name);
             status = get_attribute(this->m_ncid, i_var, "long_name", &m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name);
-            if (status != NC_NOERR || m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name.size() == 0)
+            if (status != NC_NOERR || m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name.size() <=1 )
             {
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = m_mesh_vars->variable[m_nr_mesh_var - 1]->standard_name;
+                if ( m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name.size() <= 1)
+                {
+                    m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name;
+                }
             }
             status = get_attribute(this->m_ncid, i_var, "units", &m_mesh_vars->variable[m_nr_mesh_var - 1]->units);
             status = get_attribute(this->m_ncid, i_var, "grid_mapping", &m_mesh_vars->variable[m_nr_mesh_var - 1]->grid_mapping);

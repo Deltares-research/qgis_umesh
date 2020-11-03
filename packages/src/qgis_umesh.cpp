@@ -2133,14 +2133,6 @@ void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feat
     {
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
         QString layer_name = QString::fromStdString(var->long_name).trimmed();
-        if (layer_name.size() <= 1)  // empty or just the \0
-        {
-            layer_name = QString::fromStdString(var->standard_name).trimmed();
-            if (layer_name.size() <= 1) // empty or just the \0
-            {
-                layer_name = QString::fromStdString(var->var_name).trimmed();
-            }
-        }
 
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
@@ -2325,14 +2317,6 @@ void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feat
     {
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
         QString layer_name = QString::fromStdString(var->long_name).trimmed();
-        if (layer_name.size() <= 1)  // empty or just the \0
-        {
-            layer_name = QString::fromStdString(var->standard_name).trimmed();
-            if (layer_name.size() <= 1) // empty or just the \0
-            {
-                layer_name = QString::fromStdString(var->var_name).trimmed();
-            }
-        }
 
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
