@@ -1750,7 +1750,7 @@ void qgis_umesh::activate_layers()
                 if (time_independent_data)
                 {
                     QString name = QString("Time independent data");
-                    treeGroup->addGroup(name);
+                    treeGroup->insertGroup(0, name);  // insert at top of group
                     QgsLayerTreeGroup * subTreeGroup = treeGroup->findGroup(name);
 
                     subTreeGroup->setExpanded(false);  // true is the default 
