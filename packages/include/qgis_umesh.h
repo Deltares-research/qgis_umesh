@@ -110,7 +110,8 @@ class qgis_umesh
         void create_observation_point_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
         void create_observation_cross_section_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
         void create_structure_vector_layer(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_cross_section(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *); 
+        void create_vector_layer_drypoints(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_cross_section(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
         void create_vector_layer_sample_point(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);
 
         void create_1D2D_link_vector_layer(READ_JSON *, long);

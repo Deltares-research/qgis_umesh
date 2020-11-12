@@ -1005,6 +1005,12 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         myGroup->setItemVisibilityCheckedRecursive(true);
     }
 //------------------------------------------------------------------------------
+    int i_json_key = 0;
+    int n_json_key = 10;
+    this->pgBar->setMaximum(1000);
+    this->pgBar->setValue(i_json_key*1000/n_json_key);
+    this->pgBar->show();
+
     json_key = "data.output.obsfile";
     vector<string> obs_file;
     status = pt_mdu->get(json_key, obs_file);
@@ -1036,6 +1042,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         }
     }
 //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.external_forcing.extforcefile";
     vector<string> extold_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, extold_file_name);
@@ -1068,6 +1076,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         }
     }
 //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.external_forcing.extforcefilenew";
     vector<string> ext_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, ext_file_name);
@@ -1099,7 +1109,9 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             }
         }
     }
-//------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.structurefile";
     vector<string> structure_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, structure_file_name);
@@ -1131,6 +1143,41 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         }
     }
     //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.geometry.drypointsfile";
+    vector<string> drypoints_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, drypoints_file_name);
+    if (drypoints_file_name.size() != 0 && drypoints_file_name[0] != "null")
+    {
+        for (int i = 0; i < drypoints_file_name.size(); ++i)
+        {
+            QString drypoints_file = jsonfile.absolutePath() + "/" + QString::fromStdString(drypoints_file_name[i]);
+            if (!QFileInfo(drypoints_file).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Structures are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = drypoints_file.toStdString();
+                READ_JSON * pt_file = new READ_JSON(fname);
+                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping * mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_vector_layer_drypoints(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.proflocfile";
     vector<string> prof_loc_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, prof_loc_file_name);
@@ -1162,6 +1209,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         }
     }
     //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.output.crsfile";
     vector<string> cross_section_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, cross_section_file_name);
@@ -1193,6 +1242,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         }
     }
 //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.thindamfile";
     vector<string> thin_dam_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, thin_dam_file_name);
@@ -1224,6 +1275,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         }
     }
 //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.fixedweirfile";
     vector<string> fixed_weir_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, fixed_weir_file_name);
@@ -1255,6 +1308,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
         }
     }
     //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.crosslocfile";
     vector<string> cross_section_location_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, cross_section_location_file_name);
@@ -1285,6 +1340,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             }
         }
     }
+    this->pgBar->setValue(1000);
+    this->pgBar->hide();
 }
 //
 //-----------------------------------------------------------------------------
@@ -3415,6 +3472,105 @@ void qgis_umesh::create_structure_vector_layer(UGRID * ugrid_file, READ_JSON * p
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
+}
+//------------------------------------------------------------------------------
+// DryPointsFile (Dryareas) (D-Flow FM) filename given in mdu-file
+void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+{
+    int status = -1;
+    vector<string> tmp_line_name;
+    string json_key = "data.path.name";
+    status = prop_tree->get(json_key, tmp_line_name);
+    if (tmp_line_name.size() != 0)
+    {
+        QgsLayerTreeGroup * subTreeGroup;
+        subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+        QString layer_name = "Dry points";
+        // create the vector 
+        QgsVectorLayer * vl;
+        QgsVectorDataProvider * dp_vl;
+        QList <QgsField> lMyAttribField;
+
+        vector<string> line_name;
+        vector<vector<vector<double>>> poly_lines;
+        status = prop_tree->get("data.path.name", line_name);
+        status = prop_tree->get("data.path.multiline", poly_lines);
+
+        int nr_attrib_fields = 0;
+        QString attrib_label = layer_name + " name";
+        lMyAttribField << QgsField(attrib_label, QVariant::String);
+        nr_attrib_fields++;
+
+        attrib_label = layer_name + " Id (0-based)";
+        lMyAttribField << QgsField(attrib_label, QVariant::String);
+        nr_attrib_fields++;
+
+        attrib_label = layer_name + " Id (1-based)";
+        lMyAttribField << QgsField(attrib_label, QVariant::String);
+        nr_attrib_fields++;
+
+        QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
+        vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->startEditing();
+        dp_vl = vl->dataProvider();
+        dp_vl->addAttributes(lMyAttribField);
+        vl->updatedFields();
+
+        QFileInfo ug_file = ugrid_file->get_filename();
+        QgsMultiLineString * polylines = new QgsMultiLineString();
+        QVector<QgsPointXY> point;
+        QgsMultiPolylineXY lines;
+
+        if (poly_lines.size() == 0)
+        {
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+            return;
+        }
+
+        for (int ii = 0; ii < poly_lines.size(); ii++)
+        {
+            point.clear();
+            lines.clear();
+            for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
+            {
+                double x1 = poly_lines[ii][0][j];
+                double y1 = poly_lines[ii][1][j];
+                point.append(QgsPointXY(x1, y1));
+            }
+            lines.append(point);
+
+            QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
+            QgsFeature MyFeature;
+            MyFeature.setGeometry(MyEdge);
+            MyFeature.initAttributes(nr_attrib_fields);
+
+            int k = -1;
+            k++;
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b0").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b1").arg(ii + 1));
+
+            dp_vl->addFeature(MyFeature);
+            vl->commitChanges();
+        }
+
+        QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
+        line_marker->setWidth(0.75);
+        line_marker->setColor(QColor(1, 1, 1));  // black
+
+        QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+        symbol->changeSymbolLayer(0, line_marker);
+
+        //set up a renderer for the layer
+        QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
+        vl->setRenderer(mypRenderer);
+
+        add_layer_to_group(vl, subTreeGroup);
+        connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+    }
+
 }
 //------------------------------------------------------------------------------
 void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
