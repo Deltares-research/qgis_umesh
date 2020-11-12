@@ -743,14 +743,22 @@ void qgis_umesh::openFile()
     str->append(" (*_map.nc *_net.nc)");
     list->append(*str);
     str->clear();
+
     str->append("UGRID");
     str->append(" (*_map.nc)");
     list->append(*str);
     str->clear();
+
     str->append("UGRID");
     str->append(" (*_net.nc)");
     list->append(*str);
     str->clear();
+
+//    str->append("UGRID");
+//    str->append(" (*_clm.nc)");
+//    list->append(*str);
+//    str->clear();
+
     str->append("All files");
     str->append(" (*.*)");
     list->append(*str);
@@ -3275,7 +3283,7 @@ void qgis_umesh::create_observation_cross_section_vector_layer(UGRID * ugrid_fil
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
-        line_marker->setColor(QColor(255, 0, 0));
+        line_marker->setColor(QColor(255, 0, 255));
 
         QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
         symbol->changeSymbolLayer(0, line_marker);
