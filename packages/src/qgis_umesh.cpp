@@ -3321,6 +3321,65 @@ void qgis_umesh::create_observation_cross_section_vector_layer(UGRID * ugrid_fil
             }
             lines.append(point);
 
+            point.clear();
+            int nr_points = poly_lines[ii][0].size();
+            vector<double> chainage(nr_points);
+            chainage[0] = 0.0;
+            for (int j = 1; j < nr_points; j++)
+            {
+                double x1 = poly_lines[ii][0][j - 1];
+                double y1 = poly_lines[ii][1][j - 1];
+                double x2 = poly_lines[ii][0][j];
+                double y2 = poly_lines[ii][1][j];
+
+                chainage[j] = chainage[j - 1] + sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));  // Todo: HACK: this is just the euclidian distance
+            }
+            double chainage_point = 0.5 * chainage[nr_points - 1];
+            double xp;
+            double yp;
+            for (int j = 1; j < nr_points; j++)
+            {
+                if (chainage_point <= chainage[j])
+                {
+                    double alpha = (chainage_point - chainage[j - 1]) / (chainage[j] - chainage[j - 1]);  // alpha is a weight coefficient
+                    double x1 = poly_lines[ii][0][j - 1];
+                    double y1 = poly_lines[ii][1][j - 1];
+                    double x2 = poly_lines[ii][0][j];
+                    double y2 = poly_lines[ii][1][j];
+
+                    xp = x1 + alpha * (x2 - x1);
+                    yp = y1 + alpha * (y2 - y1);
+                    point.append(QgsPointXY(xp, yp));
+
+                    // perpendicular on last found line part of the polyline
+                    double dx = x2 - x1;
+                    double dy = y2 - y1;
+
+                    QgsRectangle qrect = mQGisIface->mapCanvas()->extent();
+                    double dx_world = qrect.xMaximum() - qrect.xMinimum();
+                    int pix_width = mQGisIface->mapCanvas()->width();
+                    double pixels = dx_world / double(pix_width);  // width of one pixels in world coordinates
+                    double gamma = 0.5 * pixels;
+                    double vlen = sqrt(dx * dx + dy * dy);  // The "length" of the vector
+                    x2 = xp + gamma * dy / vlen;
+                    y2 = yp - gamma * dx / vlen;
+                    point.append(QgsPointXY(x2, y2));
+                    dx = x2 - xp;
+                    dy = y2 - yp;
+                    vlen = sqrt(dx * dx + dy * dy);  // The "length" of the vector
+                    double beta = atan2(-dy, -dx);
+                    double dxt = 0.25;
+                    double dyt = -0.1;
+                    point.append(QgsPointXY(x2 + vlen * (cos(beta) * dxt - sin(beta) * dyt), y2 + vlen * (sin(beta) * dxt + cos(beta) * dyt)));
+                    dxt = 0.25;
+                    dyt = 0.1;
+                    point.append(QgsPointXY(x2 + vlen * (cos(beta) * dxt - sin(beta) * dyt), y2 + vlen * (sin(beta) * dxt + cos(beta) * dyt)));
+                    point.append(QgsPointXY(x2, y2));
+                    break;
+                }
+            }
+            lines.append(point);
+
             QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
             QgsFeature MyFeature;
             MyFeature.setGeometry(MyEdge);
@@ -3437,6 +3496,65 @@ void qgis_umesh::create_structure_vector_layer(UGRID * ugrid_file, READ_JSON * p
                     double x1 = poly_lines[ii][0][j];
                     double y1 = poly_lines[ii][1][j];
                     point.append(QgsPointXY(x1, y1));
+                }
+                lines.append(point);
+
+                point.clear();
+                int nr_points = poly_lines[ii][0].size();
+                vector<double> chainage(nr_points);
+                chainage[0] = 0.0;
+                for (int j = 1; j < nr_points; j++)
+                {
+                    double x1 = poly_lines[ii][0][j - 1];
+                    double y1 = poly_lines[ii][1][j - 1];
+                    double x2 = poly_lines[ii][0][j];
+                    double y2 = poly_lines[ii][1][j];
+
+                    chainage[j] = chainage[j - 1] + sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));  // Todo: HACK: this is just the euclidian distance
+                }
+                double chainage_point = 0.5 * chainage[nr_points - 1];
+                double xp;
+                double yp;
+                for (int j = 1; j < nr_points; j++)
+                {
+                    if (chainage_point <= chainage[j])
+                    {
+                        double alpha = (chainage_point - chainage[j - 1]) / (chainage[j] - chainage[j - 1]);  // alpha is a weight coefficient
+                        double x1 = poly_lines[ii][0][j - 1];
+                        double y1 = poly_lines[ii][1][j - 1];
+                        double x2 = poly_lines[ii][0][j];
+                        double y2 = poly_lines[ii][1][j];
+
+                        xp = x1 + alpha * (x2 - x1);
+                        yp = y1 + alpha * (y2 - y1);
+                        point.append(QgsPointXY(xp, yp));
+
+                        // perpendicular on last found line part of the polyline
+                        double dx = x2 - x1;
+                        double dy = y2 - y1;
+
+                        QgsRectangle qrect = mQGisIface->mapCanvas()->extent();
+                        double dx_world = qrect.xMaximum() - qrect.xMinimum();
+                        int pix_width = mQGisIface->mapCanvas()->width();
+                        double pixels = dx_world / double(pix_width);  // width of one pixels in world coordinates
+                        double gamma = 0.5 * pixels;
+                        double vlen = sqrt(dx * dx + dy * dy);  // The "length" of the vector
+                        x2 = xp + gamma * dy/vlen;
+                        y2 = yp - gamma * dx/vlen;
+                        point.append(QgsPointXY(x2, y2));
+                        dx = x2 - xp;
+                        dy = y2 - yp;
+                        vlen = sqrt(dx * dx + dy * dy);  // The "length" of the vector
+                        double beta = atan2(-dy, -dx);
+                        double dxt = 0.25;
+                        double dyt = -0.1;
+                        point.append(QgsPointXY(x2 + vlen * (cos(beta) * dxt - sin(beta) * dyt), y2 + vlen * (sin(beta) * dxt + cos(beta) * dyt)));
+                        dxt = 0.25;
+                        dyt = 0.1;
+                        point.append(QgsPointXY(x2 + vlen * (cos(beta) * dxt - sin(beta) * dyt), y2 + vlen * (sin(beta) * dxt + cos(beta) * dyt)));
+                        point.append(QgsPointXY(x2, y2));
+                        break;
+                    }
                 }
                 lines.append(point);
 
@@ -4318,7 +4436,7 @@ void qgis_umesh::create_fixed_weir_vector_layer(UGRID * ugrid_file, READ_JSON * 
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
-        line_marker->setColor(QColor(1, 255, 1));  
+        line_marker->setColor(QColor(128, 0, 128));  
 
         QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
         symbol->changeSymbolLayer(0, line_marker);
