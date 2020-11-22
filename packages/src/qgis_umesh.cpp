@@ -1037,7 +1037,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                 }
                 struct _mapping * mapping;
                 mapping = ugrid_file->get_grid_mapping();
-                create_observation_point_vector_layer(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
+                create_vector_layer_observation_point(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
     }
@@ -1071,7 +1071,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                 }
                 struct _mapping * mapping;
                 mapping = ugrid_file->get_grid_mapping();
-                create_1D_external_forcing_vector_layer(ugrid_file, pt_extold_file, mapping->epsg, myGroup);  // i.e. a JSON file
+                create_vector_layer_1D_external_forcing(ugrid_file, pt_extold_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
     }
@@ -1105,7 +1105,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                 }
                 struct _mapping * mapping;
                 mapping = ugrid_file->get_grid_mapping();
-                create_1D_external_forcing_vector_layer(ugrid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
+                create_vector_layer_1D_external_forcing(ugrid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
     }
@@ -1138,7 +1138,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                 }
                 struct _mapping * mapping;
                 mapping = ugrid_file->get_grid_mapping();
-                create_structure_vector_layer(ugrid_file, pt_struct_file, mapping->epsg, myGroup);  // i.e. a JSON file
+                create_vector_layer_structure(ugrid_file, pt_struct_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
     }
@@ -1237,7 +1237,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                 }
                 struct _mapping * mapping;
                 mapping = ugrid_file->get_grid_mapping();
-                create_observation_cross_section_vector_layer(ugrid_file, pt_obs_cross_file, mapping->epsg, myGroup);  // i.e. a JSON file
+                create_vector_layer_observation_cross_section(ugrid_file, pt_obs_cross_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
     }
@@ -1270,7 +1270,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                 }
                 struct _mapping * mapping;
                 mapping = ugrid_file->get_grid_mapping();
-                create_thin_dams_vector_layer(ugrid_file, pt_thin_dam_file, mapping->epsg, myGroup);  // i.e. a JSON file
+                create_vector_layer_thin_dams(ugrid_file, pt_thin_dam_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
     }
@@ -1303,7 +1303,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                 }
                 struct _mapping * mapping;
                 mapping = ugrid_file->get_grid_mapping();
-                create_fixed_weir_vector_layer(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+                create_vector_layer_fixed_weir(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
     }
@@ -1482,7 +1482,7 @@ void qgis_umesh::open_file_obs_point_json(QFileInfo jsonfile)
     treeGroup = get_subgroup(treeRoot, QString("Location point"));
 
     UGRID * ugrid_file = nullptr;
-    create_observation_point_vector_layer(ugrid_file, pt_file, epsg, treeGroup);  // i.e. a JSON file
+    create_vector_layer_observation_point(ugrid_file, pt_file, epsg, treeGroup);  // i.e. a JSON file
 }
 //
 //-----------------------------------------------------------------------------
@@ -1724,11 +1724,11 @@ void qgis_umesh::activate_layers()
             //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes."));
             if (mesh1d != nullptr)
             {
-                create_nodes_vector_layer(QString("Mesh1D nodes"), mesh1d->node[0], mapping->epsg, treeGroup);
+                create_vector_layer_nodes(QString("Mesh1D nodes"), mesh1d->node[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D edges."));
-                create_edges_vector_layer(QString("Mesh1D edges"), mesh1d->node[0], mesh1d->edge[0], mapping->epsg, treeGroup);
+                create_vector_layer_edges(QString("Mesh1D edges"), mesh1d->node[0], mesh1d->edge[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
             }
@@ -1742,17 +1742,17 @@ void qgis_umesh::activate_layers()
             {
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Connection nodes."));
                 QString layer_name = QString("Mesh1D Connection nodes");
-                create_nodes_vector_layer(layer_name, ntw_nodes->node[0], mapping->epsg, treeGroup);
+                create_vector_layer_nodes(layer_name, ntw_nodes->node[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
  
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D geometry."));
-                create_geometry_vector_layer(QString("Mesh1D geometry"), ntw_geom, mapping->epsg, treeGroup);
+                create_vector_layer_geometry(QString("Mesh1D geometry"), ntw_geom, mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
 
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Topology edges."));
-                create_edges_vector_layer(QString("Mesh1D Topology edges"), ntw_nodes->node[0], ntw_edges->edge[0], mapping->epsg, treeGroup);
+                create_vector_layer_edges(QString("Mesh1D Topology edges"), ntw_nodes->node[0], ntw_edges->edge[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
             }
@@ -1763,7 +1763,7 @@ void qgis_umesh::activate_layers()
 
             if (mesh_contact != nullptr)
             {
-                create_edges_vector_layer(QString("Mesh contact edges"), mesh_contact->node[0], mesh_contact->edge[0], mapping->epsg, treeGroup);
+                create_vector_layer_edges(QString("Mesh contact edges"), mesh_contact->node[0], mesh_contact->edge[0], mapping->epsg, treeGroup);
             }
 
             // Mesh 2D edges and Mesh 2D nodes
@@ -1774,20 +1774,20 @@ void qgis_umesh::activate_layers()
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes."));
                 if (mesh2d->face[0]->count > 0)
                 {
-                    create_nodes_vector_layer(QString("Mesh2D faces"), mesh2d->face[0], mapping->epsg, treeGroup);
+                    create_vector_layer_nodes(QString("Mesh2D faces"), mesh2d->face[0], mapping->epsg, treeGroup);
                     pgbar_value += 10;
                     this->pgBar->setValue(pgbar_value);
                 }
 
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes."));
-                create_nodes_vector_layer(QString("Mesh2D nodes"), mesh2d->node[0], mapping->epsg, treeGroup);
+                create_vector_layer_nodes(QString("Mesh2D nodes"), mesh2d->node[0], mapping->epsg, treeGroup);
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
 
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D edges."));
                 if (mesh2d->edge[0]->count > 0)
                 {
-                    create_edges_vector_layer(QString("Mesh2D edges"), mesh2d->node[0], mesh2d->edge[0], mapping->epsg, treeGroup);
+                    create_vector_layer_edges(QString("Mesh2D edges"), mesh2d->node[0], mesh2d->edge[0], mapping->epsg, treeGroup);
                     pgbar_value += 10;
                     this->pgBar->setValue(pgbar_value);
                 }
@@ -1834,7 +1834,7 @@ void qgis_umesh::activate_layers()
                             {
                                 DataValuesProvider2D<double>std_data_at_edge = ugrid_file->get_variable_values(var->variable[i]->var_name);
                                 double * z_value = std_data_at_edge.GetValueAtIndex(0, 0);
-                                create_data_on_edges_vector_layer(var->variable[i], mesh2d->node[0], mesh2d->edge[0], z_value, mapping->epsg, subTreeGroup);
+                                create_vector_layer_data_on_edges(var->variable[i], mesh2d->node[0], mesh2d->edge[0], z_value, mapping->epsg, subTreeGroup);
                             }
                             if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_INT)
                             {
@@ -1852,7 +1852,7 @@ void qgis_umesh::activate_layers()
                                 {
                                     DataValuesProvider2D<double>std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name, var->variable[i]->sediment_index);
                                     double * z_value = std_data_at_face.GetValueAtIndex(0, 0);
-                                    create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, subTreeGroup);
+                                    create_vector_layer_data_on_nodes(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, subTreeGroup);
                                 }
                                 else
                                 {
@@ -1860,7 +1860,7 @@ void qgis_umesh::activate_layers()
 
                                     DataValuesProvider2D<double>std_data_at_face = ugrid_file->get_variable_values(var->variable[i]->var_name, var->variable[i]->sediment_index);
                                     double * z_value = std_data_at_face.GetValueAtIndex(var->variable[i]->sediment_index, 0);
-                                    create_data_on_nodes_vector_layer(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, Group);
+                                    create_vector_layer_data_on_nodes(var->variable[i], mesh2d->face[0], z_value, mapping->epsg, Group);
                                     Group->setExpanded(false);
                                 }
                             }
@@ -1868,7 +1868,7 @@ void qgis_umesh::activate_layers()
                             {
                                 DataValuesProvider2D<double>std_data_at_node = ugrid_file->get_variable_values(var->variable[i]->var_name);
                                 double * z_value = std_data_at_node.GetValueAtIndex(0, 0);
-                                create_data_on_nodes_vector_layer(var->variable[i], mesh2d->node[0], z_value, mapping->epsg, subTreeGroup);
+                                create_vector_layer_data_on_nodes(var->variable[i], mesh2d->node[0], z_value, mapping->epsg, subTreeGroup);
                             }
                         }
                     }
@@ -1956,11 +1956,11 @@ void qgis_umesh::activate_observation_layers()
                 {
                     if (obs_type[i]->type == OBS_POINT)
                     {
-                        create_observation_point_vector_layer(QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
+                        create_vector_layer_observation_point(QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
                     }
                     else if (obs_type[i]->type == OBS_POLYLINE)
                     {
-                        create_observation_polyline_vector_layer(QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
+                        create_vector_layer_observation_polyline(QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
                     }
                     else
                     {
@@ -2068,7 +2068,7 @@ void qgis_umesh::unload_vector_layers()
     }
 }
 
-void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature * nodes, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_nodes(QString layer_name, struct _feature * nodes, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != NULL)
     {
@@ -2076,7 +2076,7 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
         {
-            //QMessageBox::warning(0, tr("Message: create_nodes_vector_layer"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
+            //QMessageBox::warning(0, tr("Message: create_vector_layer_nodes"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
             if (layer_name == tmp_layers[i]->name())
             {
                 layer_found = true;
@@ -2144,7 +2144,7 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
             }
             vl->commitChanges();
             //QgsCoordinateReferenceSystem crs = vl->crs();
-            //QMessageBox::information(0, tr("Message: create_geometry_vector_layer"), QString("CRS layer: %1.").arg(crs.authid()));
+            //QMessageBox::information(0, tr("Message: create_vector_layer_geometry"), QString("CRS layer: %1.").arg(crs.authid()));
 
             // todo: Probeersel symbology adjustements
 
@@ -2192,7 +2192,7 @@ void qgis_umesh::create_nodes_vector_layer(QString layer_name, struct _feature *
         }
     }
 }
-void qgis_umesh::create_data_on_edges_vector_layer(_variable * var, struct _feature * nodes, struct _edge * edges, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_data_on_edges(_variable * var, struct _feature * nodes, struct _edge * edges, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr && edges != nullptr)
     {
@@ -2376,7 +2376,7 @@ void qgis_umesh::create_vector_layer_edge_type(_variable * var, struct _feature 
         }
     }
 }
-void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feature * nodes, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_data_on_nodes(_variable * var, struct _feature * nodes, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr)
     {
@@ -2386,7 +2386,7 @@ void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feat
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
         {
-            //QMessageBox::warning(0, tr("Message: create_nodes_vector_layer"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
+            //QMessageBox::warning(0, tr("Message: create_vector_layer_nodes"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
             if (layer_name == tmp_layers[i]->name())
             {
                 layer_found = true;
@@ -2458,7 +2458,7 @@ void qgis_umesh::create_data_on_nodes_vector_layer(_variable * var, struct _feat
         }
     }
 }
-void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_geom * ntw_geom, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_geometry(QString layer_name, struct _ntw_geom * ntw_geom, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (ntw_geom != NULL)
     {
@@ -2467,7 +2467,7 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
         {
-            //QMessageBox::warning(0, tr("Message: create_geometry_vector_layer"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
+            //QMessageBox::warning(0, tr("Message: create_vector_layer_geometry"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
             if (layer_name == tmp_layers[i]->name())
             {
                 layer_found = true;
@@ -2564,7 +2564,7 @@ void qgis_umesh::create_geometry_vector_layer(QString layer_name, struct _ntw_ge
         }
     }
 }
-void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature * nodes, struct _edge * edges, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_edges(QString layer_name, struct _feature * nodes, struct _edge * edges, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr && edges != nullptr)
     {
@@ -2573,7 +2573,7 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
         {
-            //QMessageBox::warning(0, tr("Message: create_edges_vector_layer"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
+            //QMessageBox::warning(0, tr("Message: create_vector_layer_edges"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
             if (layer_name == tmp_layers[i]->name())
             {
                 layer_found = true;
@@ -2694,7 +2694,7 @@ void qgis_umesh::create_edges_vector_layer(QString layer_name, struct _feature *
         }
     }
 }
-void qgis_umesh::create_observation_point_vector_layer(QString layer_name, _location_type * obs_points, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_observation_point(QString layer_name, _location_type * obs_points, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (obs_points != NULL && obs_points->type == OBS_POINT  || obs_points->type == OBS_POLYLINE)
     {
@@ -2702,7 +2702,7 @@ void qgis_umesh::create_observation_point_vector_layer(QString layer_name, _loca
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
         {
-            //QMessageBox::warning(0, tr("Message: create_nodes_vector_layer"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
+            //QMessageBox::warning(0, tr("Message: create_vector_layer_nodes"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
             if (layer_name == tmp_layers[i]->name())
             {
                 layer_found = true;
@@ -2784,12 +2784,12 @@ void qgis_umesh::create_observation_point_vector_layer(QString layer_name, _loca
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
                                                                           //QgsCoordinateReferenceSystem crs = vl->crs();
-                                                                          //QMessageBox::information(0, tr("Message: create_geometry_vector_layer"), QString("CRS layer: %1").arg(crs.authid()));
+                                                                          //QMessageBox::information(0, tr("Message: create_vector_layer_geometry"), QString("CRS layer: %1").arg(crs.authid()));
                                                                           // todo: Probeersel symbology adjustements
         }
     }
 }
-void qgis_umesh::create_observation_polyline_vector_layer(QString layer_name, _location_type * obs_points, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_observation_polyline(QString layer_name, _location_type * obs_points, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (obs_points != NULL && obs_points->type == OBS_POLYLINE)
     {
@@ -2797,7 +2797,7 @@ void qgis_umesh::create_observation_polyline_vector_layer(QString layer_name, _l
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
         {
-            //QMessageBox::warning(0, tr("Message: create_nodes_vector_layer"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
+            //QMessageBox::warning(0, tr("Message: create_vector_layer_nodes"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
             if (layer_name == tmp_layers[i]->name())
             {
                 layer_found = true;
@@ -2896,7 +2896,7 @@ void qgis_umesh::create_observation_polyline_vector_layer(QString layer_name, _l
     }
 }
 // Create vector layer for the structures defined by the chainage on a branch, so it is a point
-void qgis_umesh::create_1D_structure_vector_layer(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (pt_structures != nullptr)
     {
@@ -2981,7 +2981,7 @@ void qgis_umesh::create_1D_structure_vector_layer(UGRID * ugrid_file, READ_JSON 
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
 }
-void qgis_umesh::create_observation_point_vector_layer(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_observation_point(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (pt_structures != nullptr)
     {
@@ -2992,17 +2992,17 @@ void qgis_umesh::create_observation_point_vector_layer(UGRID * ugrid_file, READ_
         if (version[0] == "1.00")
         {
             // observation point defined by coordinate reference systeem (crs)
-            create_crs_observation_point_vector_layer(ugrid_file, pt_structures, epsg_code, treeGroup);
+            create_vector_layer_crs_observation_point(ugrid_file, pt_structures, epsg_code, treeGroup);
         }
         else if (version[0] == "2.00")
         {
             // observation point defined by chainage
-            create_chainage_observation_point_vector_layer(ugrid_file, pt_structures, epsg_code, treeGroup);
+            create_vector_layer_chainage_observation_point(ugrid_file, pt_structures, epsg_code, treeGroup);
         }
     }
 }
 // observation point defined by coordinate reference systeem (crs)
-void qgis_umesh::create_crs_observation_point_vector_layer(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     long status = -1;
     string json_key = "data.observationpoint.name";
@@ -3018,7 +3018,7 @@ void qgis_umesh::create_crs_observation_point_vector_layer(UGRID * ugrid_file, R
     status = pt_structures->get(json_key, x);
     if (x.size() == 0)
     {
-        QMessageBox::warning(0, tr("Message: create_observation_point_vector_layer"), QString(tr("Number of x-coordinates is zero. JSON data: ")) + QString::fromStdString(json_key));
+        QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of x-coordinates is zero. JSON data: ")) + QString::fromStdString(json_key));
         return;
     }
     json_key = "data.observationpoint.y";
@@ -3087,7 +3087,7 @@ void qgis_umesh::create_crs_observation_point_vector_layer(UGRID * ugrid_file, R
     connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
 }
 // observation point defined by chainage
-void qgis_umesh::create_chainage_observation_point_vector_layer(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (pt_structures != nullptr)
     {
@@ -3110,7 +3110,7 @@ void qgis_umesh::create_chainage_observation_point_vector_layer(UGRID * ugrid_fi
         status = pt_structures->get(json_key, branch_name);
         if (branch_name.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_observation_point_vector_layer"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromStdString(json_key));
             return;
         }
         json_key = "data.observationpoint.chainage";
@@ -3276,7 +3276,7 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, READ_JSON 
     connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
 }
 // Observation cross-section (D-Flow FM) filename given in mdu-file
-void qgis_umesh::create_observation_cross_section_vector_layer(UGRID * ugrid_file, READ_JSON *prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_file, READ_JSON *prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     vector<string> tmp_line_name;
@@ -3320,7 +3320,7 @@ void qgis_umesh::create_observation_cross_section_vector_layer(UGRID * ugrid_fil
 
         if (poly_lines.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_observation_cross_section_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString("data.path.name"));
+            QMessageBox::warning(0, tr("Message: create_vector_layer_observation_cross_section"), QString(tr("JSON data: ")) + QString::fromStdString("data.path.name"));
             return;
         }
 
@@ -3430,7 +3430,7 @@ void qgis_umesh::create_observation_cross_section_vector_layer(UGRID * ugrid_fil
 }
 //------------------------------------------------------------------------------
 // Structures (D-Flow FM) filename given in mdu-file
-void qgis_umesh::create_structure_vector_layer(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     vector<string> fname;
@@ -3448,7 +3448,7 @@ void qgis_umesh::create_structure_vector_layer(UGRID * ugrid_file, READ_JSON * p
         }
         else
         {
-            create_1D_structure_vector_layer(ugrid_file, prop_tree, epsg_code, treeGroup);
+            create_vector_layer_1D_structure(ugrid_file, prop_tree, epsg_code, treeGroup);
         }
     }
     else
@@ -3500,7 +3500,7 @@ void qgis_umesh::create_structure_vector_layer(UGRID * ugrid_file, READ_JSON * p
 
             if (poly_lines.size() == 0)
             {
-                QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+                QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
                 return;
             }
 
@@ -3656,7 +3656,7 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, READ_JSON * p
 
         if (poly_lines.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
             return;
         }
 
@@ -3706,7 +3706,7 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, READ_JSON * p
 
 }
 //------------------------------------------------------------------------------
-void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (prop_tree != nullptr)
     {
@@ -3782,7 +3782,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
 
                 if (poly_lines.size() == 0)
                 {
-                    QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+                    QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
                     return;
                 }
 
@@ -4270,7 +4270,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
     }
 }
 //------------------------------------------------------------------------------
-void qgis_umesh::create_thin_dams_vector_layer(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     vector<string> tmp_line_name;
@@ -4368,7 +4368,7 @@ void qgis_umesh::create_thin_dams_vector_layer(UGRID * ugrid_file, READ_JSON * p
     }
 }
 //------------------------------------------------------------------------------
-void qgis_umesh::create_fixed_weir_vector_layer(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     vector<string> tmp_line_name;
