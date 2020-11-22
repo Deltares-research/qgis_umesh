@@ -2759,14 +2759,23 @@ void qgis_umesh::create_observation_point_vector_layer(QString layer_name, _loca
             }
             vl->commitChanges();
 
-            QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-            simple_marker->setSize(4.0);
-            simple_marker->setColor(QColor(1, 1, 1));  // 0,0,0 could have a special meaning
-            simple_marker->setFillColor(QColor(255, 255, 255));
-            simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
-
-            QgsSymbol * marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
-            marker->changeSymbolLayer(0, simple_marker);
+            QgsSymbol * marker = new QgsMarkerSymbol();
+            if (string(obs_points->location_dim_name).find("lateral") != std::string::npos)
+            {
+                QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
+                simple_marker->setSize(2.7);
+                simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Lateral point rotation")));
+                marker->changeSymbolLayer(0, simple_marker);
+            }
+            else
+            {
+                QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
+                simple_marker->setSize(4.0);
+                simple_marker->setColor(QColor(1, 1, 1));  // 0,0,0 could have a special meaning
+                simple_marker->setFillColor(QColor(255, 255, 255));
+                simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
+                marker->changeSymbolLayer(0, simple_marker);
+            }
 
             //set up a renderer for the layer
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
@@ -2776,7 +2785,6 @@ void qgis_umesh::create_observation_point_vector_layer(QString layer_name, _loca
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
                                                                           //QgsCoordinateReferenceSystem crs = vl->crs();
                                                                           //QMessageBox::information(0, tr("Message: create_geometry_vector_layer"), QString("CRS layer: %1").arg(crs.authid()));
-
                                                                           // todo: Probeersel symbology adjustements
         }
     }
@@ -2866,7 +2874,14 @@ void qgis_umesh::create_observation_polyline_vector_layer(QString layer_name, _l
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
-            line_marker->setColor(QColor(0, 0, 255));
+            if (string(obs_points->location_dim_name).find("structures") != std::string::npos)
+            {
+                line_marker->setColor(QColor(255, 0, 0));
+            }
+            else
+            {
+                line_marker->setColor(QColor(255, 0, 255));
+            }
 
             QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
             symbol->changeSymbolLayer(0, line_marker);
@@ -4147,7 +4162,7 @@ void qgis_umesh::create_1D_external_forcing_vector_layer(UGRID * ugrid_file, REA
             vl->commitChanges();
 
             QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
-            simple_marker->setSize(3.2);
+            simple_marker->setSize(2.7);
             //simple_marker->setColor(QColor(0, 255, 0));
             //simple_marker->setFillColor(QColor(0, 255, 0));
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Lateral point rotation")));
