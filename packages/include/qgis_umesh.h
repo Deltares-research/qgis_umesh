@@ -91,14 +91,14 @@ class qgis_umesh
 
         //  qgis_umesh functions
         char* stripSpaces(char *);
-        void create_vector_layer_data_on_edges(_variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_edge_type(_variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_data_on_nodes(_variable * var, struct _feature *, double *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_nodes(QString, struct _feature *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_edges(QString, struct _feature *, struct _edge *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_geometry(QString, struct _ntw_geom *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_point(QString, _location_type *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_polyline(QString, _location_type *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_data_on_edges(QString, _variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_edge_type(QString, _variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_data_on_nodes(QString, _variable * var, struct _feature *, double *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_nodes(QString, QString, struct _feature *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_edges(QString, QString, struct _feature *, struct _edge *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_geometry(QString, QString, struct _ntw_geom *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_point(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_polyline(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
 
         // Reading input files (ie JSON format)
         void create_vector_layer_1D_external_forcing(UGRID *, READ_JSON *, long, QgsLayerTreeGroup *);

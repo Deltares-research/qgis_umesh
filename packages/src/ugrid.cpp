@@ -2714,7 +2714,8 @@ int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_va
     }
     else
     {
-        QMessageBox::critical(0, "Critical message", QString("UGRID::read_geometry_attributes\nFile does not contain the geometry coordinates attribute\n"));
+        QString msg = QString("UGRID::read_geometry_attributes\nFile does not contain the geometry coordinates attribute");
+        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
         status = 1;
     }
 
