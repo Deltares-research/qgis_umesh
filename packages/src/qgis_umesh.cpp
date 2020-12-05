@@ -3809,7 +3809,8 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
 
                 if (poly_lines.size() == 0)
                 {
-                    QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+                    QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), 
+                        QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
                     return;
                 }
 
@@ -3839,8 +3840,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
                     dp_vl->addFeature(MyFeature);
                     vl->commitChanges();
                 }
-                vl->setTitle(layer_name + ": " + QString::fromStdString(fname[i]));
             }
+            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -3855,7 +3857,6 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
 
             add_layer_to_group(vl, subTreeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
-
         }
         //-------------------------------------------------------------------------------------------
         status = -1;
@@ -3932,7 +3933,8 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
 
                 if (poly_lines.size() == 0)
                 {
-                    QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+                    QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), 
+                        QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
                     return;
                 }
 
@@ -3962,8 +3964,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
                     dp_vl->addFeature(MyFeature);
                     vl->commitChanges();
                 }
-                vl->setTitle(layer_name + ": " + QString::fromStdString(fname[i]));
             }
+            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -4049,7 +4052,8 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
 
                 if (poly_lines.size() == 0)
                 {
-                    QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key)) + QString(" from file: ") + QString::fromStdString(fname[i]);
+                    QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), 
+                        QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
                     return;
                 }
 
@@ -4079,8 +4083,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
                     dp_vl->addFeature(MyFeature);
                     vl->commitChanges();
                 }
-                vl->setTitle(layer_name + ": " + QString::fromStdString(fname[i]));
             }
+            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
