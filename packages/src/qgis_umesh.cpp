@@ -3886,7 +3886,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
 
                 QgsSimpleMarkerSymbolLayer* simple_marker = new QgsSimpleMarkerSymbolLayer();
                 simple_marker->setStrokeStyle(Qt::NoPen);
-                simple_marker->setColor(QColor(255, 127, 80));  // orange
+                simple_marker->setColor(QColor(255, 165, 0));  //  orange
 
                 QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
                 marker->changeSymbolLayer(0, simple_marker);
@@ -3901,7 +3901,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
                 vl_lines->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
                 QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
                 line_marker->setWidth(0.75);
-                line_marker->setColor(QColor(255, 127, 80));  // orange
+                line_marker->setColor(QColor(255, 165, 0));  //  orange
 
                 QgsSymbol* symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
                 symbol->changeSymbolLayer(0, line_marker);
