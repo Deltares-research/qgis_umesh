@@ -2342,42 +2342,46 @@ void qgis_umesh::create_vector_layer_edge_type(QString fname, _variable * var, s
                         vl->commitChanges();
                     }
                 }
-                vl->setTitle(layer_name + ": " + fname);
 
-                QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
-                if (i == 0) { 
-                    line_marker->setWidth(0.5);
-                    line_marker->setColor(QColor(1, 1, 1)); 
-                }
-                if (i == 1) { 
-                    line_marker->setWidth(0.25);
-                    line_marker->setColor(QColor(0, 170, 255));
-                }
-                if (i == 2) { 
-                    line_marker->setWidth(0.5);
-                    line_marker->setColor(QColor(0, 0, 255)); 
-                }
-                if (i == 3) { 
-                    line_marker->setWidth(0.5);
-                    line_marker->setColor(QColor(50, 50, 50));
-                }
-
-                QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
-                symbol->changeSymbolLayer(0, line_marker);
-
-                //set up a renderer for the layer
-                QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
-                vl->setRenderer(mypRenderer);
-
-                add_layer_to_group(vl, treeGroup);
-                connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));
-
-                tmp_layers = treeGroup->findLayers();
-                int ind = tmp_layers.size() - 1;
-                tmp_layers[ind]->setItemVisibilityChecked(true);
-                if (i == 1)
+                if (vl->featureCount() != 0)
                 {
-                    tmp_layers[ind]->setItemVisibilityChecked(false);  // internal points
+                    vl->setTitle(layer_name + ": " + fname);
+
+                    QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
+                    if (i == 0) {
+                        line_marker->setWidth(0.5);
+                        line_marker->setColor(QColor(1, 1, 1));
+                    }
+                    if (i == 1) {
+                        line_marker->setWidth(0.25);
+                        line_marker->setColor(QColor(0, 170, 255));
+                    }
+                    if (i == 2) {
+                        line_marker->setWidth(0.5);
+                        line_marker->setColor(QColor(0, 0, 255));
+                    }
+                    if (i == 3) {
+                        line_marker->setWidth(0.5);
+                        line_marker->setColor(QColor(50, 50, 50));
+                    }
+
+                    QgsSymbol* symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+                    symbol->changeSymbolLayer(0, line_marker);
+
+                    //set up a renderer for the layer
+                    QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(symbol);
+                    vl->setRenderer(mypRenderer);
+
+                    add_layer_to_group(vl, treeGroup);
+                    connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));
+
+                    tmp_layers = treeGroup->findLayers();
+                    int ind = tmp_layers.size() - 1;
+                    tmp_layers[ind]->setItemVisibilityChecked(true);
+                    if (i == 1)
+                    {
+                        tmp_layers[ind]->setItemVisibilityChecked(false);  // internal points
+                    }
                 }
             }
         }
@@ -3757,8 +3761,10 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
             QString layer_name = QString("Sources and Sinks");
 
             // create the vector 
-            QgsVectorLayer * vl;
-            QgsVectorDataProvider * dp_vl;
+            QgsVectorLayer* vl_lines;
+            QgsVectorLayer* vl_points;
+            QgsVectorDataProvider* dp_vl_lines;
+            QgsVectorDataProvider* dp_vl_points;
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
@@ -3769,13 +3775,21 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
             lMyAttribField << QgsField("Source Sink Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
+            //lines
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
-            vl = new QgsVectorLayer(uri, layer_name, "memory");
-            vl->startEditing();
-            dp_vl = vl->dataProvider();
-            dp_vl->addAttributes(lMyAttribField);
-            //dp_vl->createSpatialIndex();
-            vl->updatedFields();
+            vl_lines = new QgsVectorLayer(uri, layer_name, "memory");
+            vl_lines->startEditing();
+            dp_vl_lines = vl_lines->dataProvider();
+            dp_vl_lines->addAttributes(lMyAttribField);
+            vl_lines->updatedFields();
+
+            //points
+            uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+            vl_points = new QgsVectorLayer(uri, layer_name, "memory");
+            vl_points->startEditing();
+            dp_vl_points = vl_points->dataProvider();
+            dp_vl_points->addAttributes(lMyAttribField);
+            vl_points->updatedFields();
 
             QFileInfo ug_file = ugrid_file->get_filename();
             QgsMultiLineString * polylines = new QgsMultiLineString();
@@ -3784,6 +3798,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
 
             vector<string> line_name;
             vector<vector<vector<double>>> poly_lines;
+            vector<vector<vector<double>>> poly_points;
 
             for (int i = 0; i < fname.size(); i++)
             {
@@ -3800,6 +3815,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
                 lines.clear();
                 point.clear();
                 poly_lines.clear();
+                poly_points.clear();
                 line_name.clear();
                 QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
                 READ_JSON * json_file = new READ_JSON(filename.toStdString());
@@ -3809,54 +3825,93 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
 
                 if (poly_lines.size() == 0)
                 {
-                    QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), 
-                        QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
-                    return;
-                }
-
-                for (int ii = 0; ii < poly_lines.size(); ii++)
-                {
-                    for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
+                    status = json_file->get("data.path.multipoint", poly_points);
+                    if (poly_points.size() == 0)
                     {
-                        double x1 = poly_lines[ii][0][j];
-                        double y1 = poly_lines[ii][1][j];
-                        point.append(QgsPointXY(x1, y1));
+                        QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"),
+                            QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
+                        return;
                     }
-                    lines.append(point);
 
-                    QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
+                    QgsGeometry MyEdge = QgsGeometry::fromPointXY(QgsPointXY(poly_points[0][0][0], poly_points[0][1][0]));
                     QgsFeature MyFeature;
                     MyFeature.setGeometry(MyEdge);
                     MyFeature.initAttributes(nr_attrib_fields);
 
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[0]).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1_b0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
                     MyFeature.setAttribute(k, QString("%1_b1").arg(i + 1));
 
-                    dp_vl->addFeature(MyFeature);
-                    vl->commitChanges();
+                    dp_vl_points->addFeature(MyFeature);
+                    vl_points->commitChanges();
+                }
+                else
+                {
+                    for (int ii = 0; ii < poly_lines.size(); ii++)
+                    {
+                        for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
+                        {
+                            double x1 = poly_lines[ii][0][j];
+                            double y1 = poly_lines[ii][1][j];
+                            point.append(QgsPointXY(x1, y1));
+                        }
+                        lines.append(point);
+
+                        QgsGeometry MyEdge = QgsGeometry::fromMultiPolylineXY(lines);
+                        QgsFeature MyFeature;
+                        MyFeature.setGeometry(MyEdge);
+                        MyFeature.initAttributes(nr_attrib_fields);
+
+                        int k = -1;
+                        k++;
+                        MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+                        k++;
+                        MyFeature.setAttribute(k, QString("%1_b0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                        k++;
+                        MyFeature.setAttribute(k, QString("%1_b1").arg(i + 1));
+
+                        dp_vl_lines->addFeature(MyFeature);
+                        vl_lines->commitChanges();
+                    }
                 }
             }
             vector<string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            if (vl_points->featureCount() != 0)
+            {
+                vl_points->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
-            QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
-            line_marker->setWidth(0.75);
-            line_marker->setColor(QColor(0, 255, 0));
+                QgsSimpleMarkerSymbolLayer* simple_marker = new QgsSimpleMarkerSymbolLayer();
+                simple_marker->setStrokeStyle(Qt::NoPen);
+                simple_marker->setColor(QColor(255, 127, 80));  // orange
 
-            QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
-            symbol->changeSymbolLayer(0, line_marker);
+                QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+                marker->changeSymbolLayer(0, simple_marker);
+                QgsSingleSymbolRenderer* myPointRenderer = new QgsSingleSymbolRenderer(marker);
+                vl_points->setRenderer(myPointRenderer);
 
-            //set up a renderer for the layer
-            QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
-            vl->setRenderer(mypRenderer);
+                add_layer_to_group(vl_points, subTreeGroup);
+                connect(vl_points, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+            }
+            if (vl_lines->featureCount() != 0)
+            {
+                vl_lines->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+                QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
+                line_marker->setWidth(0.75);
+                line_marker->setColor(QColor(255, 127, 80));  // orange
 
-            add_layer_to_group(vl, subTreeGroup);
-            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+                QgsSymbol* symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+                symbol->changeSymbolLayer(0, line_marker);
+                QgsSingleSymbolRenderer* myLineRenderer = new QgsSingleSymbolRenderer(symbol);
+                vl_lines->setRenderer(myLineRenderer);
+ 
+                add_layer_to_group(vl_lines, subTreeGroup);
+                connect(vl_lines, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+            }
+
         }
         //-------------------------------------------------------------------------------------------
         status = -1;
