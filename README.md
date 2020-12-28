@@ -57,7 +57,11 @@ When compiling the source code I had to adjusted the file
 c:\OSGeo4W64\apps\qgis\include\qgsabstractgeometry.h
 An extra define of M_PI is added.
 
-Line +/- 520
+Line 543
+#define M_PI 3.14159265358979323846264338327950288
+
+and also file qgsvector.h:
+Line 172
 #define M_PI 3.14159265358979323846264338327950288
 
 ## Note (QGIS 3.16.00)
