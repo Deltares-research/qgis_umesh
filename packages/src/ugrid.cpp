@@ -639,6 +639,23 @@ long UGRID::read_variables()
             }
             status = get_attribute(this->m_ncid, i_var, "comment", &m_mesh_vars->variable[m_nr_mesh_var - 1]->comment);
 
+            // variable with flag_values and flag_meanings
+            string flag_meanings;
+            status = get_attribute(this->m_ncid, i_var, "flag_meanings", &flag_meanings);
+            if (status == NC_NOERR)
+            {
+                size_t length;
+                status = nc_inq_attlen(this->m_ncid, i_var, "flag_values", &length);
+                int* flag_values_c = (int*)malloc(sizeof(int) * length);
+                status = get_attribute(this->m_ncid, i_var, "flag_values", flag_values_c);
+                for (int j = 0; j < length; ++j)
+                {
+                    m_mesh_vars->variable[m_nr_mesh_var - 1]->flag_values.push_back(flag_values_c[j]);
+                }
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->flag_meanings = tokenize(flag_meanings, ' ');
+                int a = 1;
+            }
+
             m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = false;
             for (int j = 0; j < ndims; j++)
             {

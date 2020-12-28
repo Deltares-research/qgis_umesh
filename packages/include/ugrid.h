@@ -147,6 +147,8 @@ public:
     string units;
     string grid_mapping;
     string comment;
+    vector<int> flag_values;
+    vector<string> flag_meanings;
     //
     bool read;
     bool time_series;

@@ -2288,13 +2288,9 @@ void qgis_umesh::create_vector_layer_edge_type(QString fname, _variable * var, s
         bool layer_found = false;
         if (!layer_found)
         {
-            for (int i = 0; i < 4; ++i)  // Todo: HACK fixed number of edge type (so hard coded)
+            for (int i = 0; i < var->flag_meanings.size(); ++i)
             {
-                QString layer_name;
-                if (i == 0) { layer_name = "internal closed"; }
-                if (i == 1) { layer_name = "internal open"; }
-                if (i == 2) { layer_name = "boundary open"; }
-                if (i == 3) { layer_name = "boundary closed"; }
+                QString layer_name = QString::fromStdString(var->flag_meanings[i]);
 
                 QgsVectorLayer * vl;
                 QgsVectorDataProvider * dp_vl;
@@ -2315,7 +2311,7 @@ void qgis_umesh::create_vector_layer_edge_type(QString fname, _variable * var, s
 
                 for (int j = 0; j < edges->count; j++)
                 {
-                    if (i == int(z_value[j]))
+                    if (var->flag_values[i] == int(z_value[j]))
                     {
                         lines.clear();
                         point.clear();
