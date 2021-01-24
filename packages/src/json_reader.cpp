@@ -8,15 +8,15 @@ using c++11 regular expression functionality.
 #include <boost/property_tree/ptree.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/exceptions.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <type_traits>
 #include <regex>
 #include <vector>
 #include <iostream>
 #include <string>
-#include "read_json.h"
-#include "QMessageBox"
+#include "../JsonReader.h"
+//#include "QMessageBox"
 
 struct Getter
 {
@@ -41,6 +41,28 @@ struct Getter
                     }
                 }
             }
+            if (results.size() != 0) { return; }
+
+            for (auto& pvv : child)
+            {
+                for (auto& pv : pvv.second)
+                {
+                    for (auto& p : pv.second)
+                    {
+                        string a = p.first.data();
+                        string b = p.second.data();
+                        string c = pv.first.data();
+                        string d = pv.second.data();
+                        if (p.second.data() != "" && boost::iequals(pv.first.data(), key))
+                        {
+                            T val = p.second.get_value<T>();
+                            results.push_back(val);
+                        }
+                    }
+                }
+            }
+            if (results.size() != 0) { return; }
+
             for (auto& pv : child)
             {
                 for (auto& p : pv.second)
@@ -60,12 +82,14 @@ struct Getter
                     }
                 }
             }
+            if (results.size() != 0) { return; }
         }
+
         catch (const ptree_error &e)
         {
             //cout << e.what() << endl;
             //QString msg = QString::fromStdString(e.what()).trimmed();
-            //QMessageBox::warning(0, "READ_JSON::prop_get_json", QString("%1").arg(msg));
+            //QMessageBox::warning(0, "JsonReader::prop_get_json", QString("%1").arg(msg));
         }
     }
     template<typename T, class Ptree>
@@ -111,7 +135,7 @@ struct Getter
     }
 };
 
-READ_JSON::READ_JSON(string file_json)
+JsonReader::JsonReader(string file_json)
 {
     m_filename = file_json;
     try
@@ -122,29 +146,29 @@ READ_JSON::READ_JSON(string file_json)
     {
         //cout << e.what() << endl;
         //QString msg = QString::fromStdString(e.what()).trimmed();
-        //QMessageBox::warning(0, "READ_JSON::READ_JSON", QString("%1").arg(msg));
+        //QMessageBox::warning(0, "JsonReader::JsonReader", QString("%1").arg(msg));
     }
 }
 
-long READ_JSON::get(string data, vector<string> & strJsonResults)
+long JsonReader::get(string data, vector<string> & strJsonResults)
 {
     strJsonResults.clear();
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }
-long READ_JSON::get(string data, vector<double> & strJsonResults)
+long JsonReader::get(string data, vector<double> & strJsonResults)
 {
     strJsonResults.clear();
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }
-long READ_JSON::get(string data, vector < vector< vector<double>>> & strJsonResults)
+long JsonReader::get(string data, vector < vector< vector<double>>> & strJsonResults)
 {
     strJsonResults.clear();
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }
-string READ_JSON::get_filename()
+string JsonReader::get_filename()
 {
     return this->m_filename;
 }

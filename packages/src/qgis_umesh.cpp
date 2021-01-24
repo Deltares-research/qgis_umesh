@@ -968,7 +968,7 @@ void qgis_umesh::open_file_mdu()
 void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
 {
     string fname = jsonfile.absoluteFilePath().toStdString();
-    READ_JSON * pt_mdu = new READ_JSON(fname);
+    JSON_READER * pt_mdu = new JSON_READER(fname);
     if (pt_mdu == nullptr)
     {
         QMessageBox::warning(0, tr("Warning"), tr("Cannot open JSON file:\n%1.").arg(jsonfile.absoluteFilePath()));
@@ -1028,7 +1028,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = obser_file.toStdString();
-                READ_JSON * pt_obs = new READ_JSON(fname);
+                JSON_READER * pt_obs = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1062,7 +1062,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = extold_file.toStdString();
-                READ_JSON * pt_extold_file = new READ_JSON(fname);
+                JSON_READER * pt_extold_file = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1096,7 +1096,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = ext_file.toStdString();
-                READ_JSON * pt_ext_file = new READ_JSON(fname);
+                JSON_READER * pt_ext_file = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1129,7 +1129,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = struct_file.toStdString();
-                READ_JSON * pt_struct_file = new READ_JSON(fname);
+                JSON_READER * pt_struct_file = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1162,7 +1162,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = drypoints_file.toStdString();
-                READ_JSON * pt_file = new READ_JSON(fname);
+                JSON_READER * pt_file = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1195,7 +1195,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = abs_fname.toStdString();
-                READ_JSON * pt_profloc = new READ_JSON(fname);
+                JSON_READER * pt_profloc = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1228,7 +1228,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = obs_cross_file.toStdString();
-                READ_JSON * pt_obs_cross_file = new READ_JSON(fname);
+                JSON_READER * pt_obs_cross_file = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1261,7 +1261,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = thin_dam_file.toStdString();
-                READ_JSON * pt_thin_dam_file = new READ_JSON(fname);
+                JSON_READER * pt_thin_dam_file = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1294,7 +1294,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = fix_weir_file.toStdString();
-                READ_JSON * pt_file = new READ_JSON(fname);
+                JSON_READER * pt_file = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1327,7 +1327,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             else
             {
                 fname = full_file_name.toStdString();
-                READ_JSON * pt_file = new READ_JSON(fname);
+                JSON_READER * pt_file = new JSON_READER(fname);
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1401,7 +1401,7 @@ void qgis_umesh::open_file_link1d2d_json()
 void qgis_umesh::open_file_link1d2d_json(QFileInfo jsonfile)
 {
     string fname = jsonfile.absoluteFilePath().toStdString();
-    READ_JSON * pt_link1d2d = new READ_JSON(fname);
+    JSON_READER * pt_link1d2d = new JSON_READER(fname);
     if (pt_link1d2d == nullptr)
     {
         QMessageBox::warning(0, tr("Warning"), tr("Cannot open JSON file:\n%1.").arg(jsonfile.absoluteFilePath()));
@@ -1469,7 +1469,7 @@ void qgis_umesh::open_file_obs_point_json()
 void qgis_umesh::open_file_obs_point_json(QFileInfo jsonfile)
 {
     string fname = jsonfile.absoluteFilePath().toStdString();
-    READ_JSON * pt_file = new READ_JSON(fname);
+    JSON_READER * pt_file = new JSON_READER(fname);
     if (pt_file == nullptr)
     {
         QMessageBox::warning(0, tr("Warning"), tr("Cannot open JSON file:\n%1.").arg(jsonfile.absoluteFilePath()));
@@ -2910,7 +2910,7 @@ void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString
     }
 }
 // Create vector layer for the structures defined by the chainage on a branch, so it is a point
-void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (prop_tree != nullptr)
     {
@@ -2997,7 +2997,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, READ_JSON 
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
 }
-void qgis_umesh::create_vector_layer_observation_point(UGRID * ugrid_file, READ_JSON * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_observation_point(UGRID * ugrid_file, JSON_READER * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (pt_structures != nullptr)
     {
@@ -3018,7 +3018,7 @@ void qgis_umesh::create_vector_layer_observation_point(UGRID * ugrid_file, READ_
     }
 }
 // observation point defined by coordinate reference systeem (crs)
-void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     long status = -1;
     string json_key = "data.observationpoint.name";
@@ -3105,7 +3105,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, R
     connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
 }
 // observation point defined by chainage
-void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (prop_tree != nullptr)
     {
@@ -3220,7 +3220,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
     }
 }
 // sample point (x, y,z) defined by coordinate reference systeem (crs)
-void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     long status = -1;
     string json_key = "data.samplepoint.z";
@@ -3298,7 +3298,7 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, READ_JSON 
     connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
 }
 // Observation cross-section (D-Flow FM) filename given in mdu-file
-void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_file, READ_JSON *prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_file, JSON_READER *prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     vector<string> tmp_line_name;
@@ -3454,7 +3454,7 @@ void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_fil
 }
 //------------------------------------------------------------------------------
 // Structures (D-Flow FM) filename given in mdu-file
-void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     vector<string> fname;
@@ -3517,7 +3517,7 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, READ_JSON * p
             poly_lines.clear();
             line_name.clear();
             QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
-            READ_JSON * json_file = new READ_JSON(filename.toStdString());
+            JSON_READER * json_file = new JSON_READER(filename.toStdString());
 
             status = json_file->get("data.path.name", line_name);
             status = json_file->get("data.path.multiline", poly_lines);
@@ -3633,7 +3633,7 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, READ_JSON * p
 }
 //------------------------------------------------------------------------------
 // DryPointsFile (Dryareas) (D-Flow FM) filename given in mdu-file
-void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     vector<string> tmp_line_name;
@@ -3733,7 +3733,7 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, READ_JSON * p
 
 }
 //------------------------------------------------------------------------------
-void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (prop_tree != nullptr)
     {
@@ -3814,7 +3814,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
                 poly_points.clear();
                 line_name.clear();
                 QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
-                READ_JSON * json_file = new READ_JSON(filename.toStdString());
+                JSON_READER * json_file = new JSON_READER(filename.toStdString());
 
                 status = json_file->get("data.path.name", line_name);
                 status = json_file->get("data.path.multiline", poly_lines);
@@ -3977,7 +3977,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
                 poly_lines.clear();
                 line_name.clear();
                 QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
-                READ_JSON * json_file = new READ_JSON(filename.toStdString());
+                JSON_READER * json_file = new JSON_READER(filename.toStdString());
 
                 status = json_file->get("data.path.name", line_name);
                 status = json_file->get("data.path.multiline", poly_lines);
@@ -4096,7 +4096,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
                 poly_lines.clear();
                 line_name.clear();
                 QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
-                READ_JSON * json_file = new READ_JSON(filename.toStdString());
+                JSON_READER * json_file = new JSON_READER(filename.toStdString());
 
                 status = json_file->get("data.path.name", line_name);
                 status = json_file->get("data.path.multiline", poly_lines);
@@ -4360,7 +4360,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, REA
     }
 }
 //------------------------------------------------------------------------------
-void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     vector<string> tmp_line_name;
@@ -4460,7 +4460,7 @@ void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, READ_JSON * p
     }
 }
 //------------------------------------------------------------------------------
-void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     vector<string> tmp_line_name;
@@ -4559,7 +4559,7 @@ void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, READ_JSON * 
     }
 }
 //------------------------------------------------------------------------------
-void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, READ_JSON * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     long status = -1;
 
@@ -4679,7 +4679,7 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, READ_J
     }
 }
 //------------------------------------------------------------------------------
-void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_code)
+void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long epsg_code)
 {
     if (prop_tree != nullptr)
     {
@@ -4738,17 +4738,15 @@ void qgis_umesh::create_1D2D_link_vector_layer(READ_JSON * prop_tree, long epsg_
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
 
-            for (int j = 0; j < link_1d_point.size(); j++)
+            for (int j = 0; j < link_1d_point.size()/2; j++)
             {
                 lines.clear();
                 point.clear();
-                vector<string> token = tokenize(link_1d_point[j], ' ');
                 std::string::size_type sz;     // alias of size_t
-                double x1 = std::stod(token[0], &sz);
-                double y1 = std::stod(token[1], &sz);
-                token = tokenize(link_2d_point[j], ' ');
-                double x2 = std::stod(token[0], &sz);
-                double y2 = std::stod(token[1], &sz);
+                double x1 = std::stod(link_1d_point[2*j], &sz);
+                double y1 = std::stod(link_1d_point[2*j+1], &sz);
+                double x2 = std::stod(link_2d_point[2*j], &sz);
+                double y2 = std::stod(link_2d_point[2*j+1], &sz);
                 point.append(QgsPointXY(x1, y1));
                 point.append(QgsPointXY(x2, y2));
                 lines.append(point);

@@ -136,7 +136,7 @@
     <ClInclude Include="include\data_struct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\read_json.h">
+    <ClInclude Include="include\json_reader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
