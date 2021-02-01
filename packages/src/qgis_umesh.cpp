@@ -1006,7 +1006,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     }
 //------------------------------------------------------------------------------
     int i_json_key = 0;
-    int n_json_key = 10;
+    int n_json_key = 11;
     this->pgBar->setMaximum(1000);
     this->pgBar->setValue(i_json_key*1000/n_json_key);
     this->pgBar->show();
@@ -1337,6 +1337,39 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                 struct _mapping * mapping;
                 mapping = ugrid_file->get_grid_mapping();
                 create_vector_layer_1D_cross_section(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.geometry.retentionfile";
+    vector<string> retention_location_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, retention_location_file_name);
+    if (retention_location_file_name.size() != 0 && retention_location_file_name[0] != "null")
+    {
+        for (int i = 0; i < retention_location_file_name.size(); ++i)
+        {
+            QString full_file_name = jsonfile.absolutePath() + "/" + QString::fromStdString(retention_location_file_name[i]);
+            if (!QFileInfo(full_file_name).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Retention locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = full_file_name.toStdString();
+                JSON_READER* pt_file = new JSON_READER(fname);
+                UGRID* ugrid_file = m_ugrid_file[_fil_index];
+                if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = ugrid_file->get_grid_mapping();
+                create_vector_layer_1D_retention(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
     }
@@ -4667,6 +4700,126 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
 
         add_layer_to_group(vl, subTreeGroup);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+        for (int i = 0; i < tmp_layers.size(); i++)
+        {
+            if (tmp_layers[i]->name() == layer_name)
+            {
+                tmp_layers[i]->setItemVisibilityChecked(false);
+            }
+        }
+
+        connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+    }
+}
+//------------------------------------------------------------------------------
+void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
+{
+    long status = -1;
+
+    string json_key = "data.retention.id";
+    vector<string> retention_name;
+    status = prop_tree->get(json_key, retention_name);
+    if (retention_name.size() == 0)
+    {
+        QString fname = QString::fromStdString(prop_tree->get_filename());
+        QString msg = QString(tr("Retention locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+    }
+    else
+    {
+        json_key = "data.retention.branchid";
+        vector<string> branch_name;
+        status = prop_tree->get(json_key, branch_name);
+        if (branch_name.size() == 0)
+        {
+            QString fname = QString::fromStdString(prop_tree->get_filename());
+            QString msg = QString(tr("Retention locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            return;
+        }
+        json_key = "data.retention.chainage";
+        vector<double> chainage;
+        status = prop_tree->get(json_key, chainage);
+        if (chainage.size() == 0)
+        {
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            return;
+        }
+        if (retention_name.size() != branch_name.size() || branch_name.size() != chainage.size() || retention_name.size() != chainage.size())
+        {
+            QMessageBox::warning(0, tr("Message: create_vector_layer_1D_retention"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
+                + "\nRetention names: " + (int)retention_name.size()
+                + "\nBranches: " + (int)branch_name.size()
+                + "\nChainage: " + (int)chainage.size());
+            return;
+        }
+
+        QgsLayerTreeGroup* subTreeGroup;
+        subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+        QString layer_name = QString("Retention location");
+
+        // create the vector 
+        QgsVectorLayer* vl;
+        QgsVectorDataProvider* dp_vl;
+        QList <QgsField> lMyAttribField;
+
+        int nr_attrib_fields = 0;
+        lMyAttribField << QgsField("Retention name", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Retention Id (0-based)", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Retention Id (1-based)", QVariant::String);
+        nr_attrib_fields++;
+
+        QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+        vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->startEditing();
+        dp_vl = vl->dataProvider();
+        dp_vl->addAttributes(lMyAttribField);
+        //dp_vl->createSpatialIndex();
+        vl->updatedFields();
+
+        struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
+        struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+
+        double xp;
+        double yp;
+        double rotation;
+        for (int j = 0; j < retention_name.size(); j++)
+        {
+            status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
+            QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
+            QgsFeature MyFeature;
+            MyFeature.setGeometry(MyPoints);
+
+            MyFeature.initAttributes(nr_attrib_fields);
+            int k = -1;
+            k++;
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(retention_name[j]).trimmed()));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
+
+            dp_vl->addFeature(MyFeature);
+        }
+        vl->commitChanges();
+        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+
+        QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/retention_location_1d.svg"));
+        simple_marker->setSize(5.0);
+        simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Retention location")));
+
+        QgsSymbol* marker = new QgsMarkerSymbol();
+        marker->changeSymbolLayer(0, simple_marker);
+
+        //set up a renderer for the layer
+        QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
+        vl->setRenderer(mypRenderer);
+
+        add_layer_to_group(vl, subTreeGroup);
+        QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
         for (int i = 0; i < tmp_layers.size(); i++)
         {
             if (tmp_layers[i]->name() == layer_name)
