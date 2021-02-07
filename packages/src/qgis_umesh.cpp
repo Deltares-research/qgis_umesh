@@ -1761,6 +1761,14 @@ void qgis_umesh::activate_layers()
             if (mesh1d != nullptr)
             {
                 create_vector_layer_nodes(fname, QString("Mesh1D nodes"), mesh1d->node[0], mapping->epsg, treeGroup);
+                QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
+                for (int i = 0; i < tmp_layers.size(); i++)
+                {
+                    if (tmp_layers[i]->name() == "Mesh1D nodes")
+                    {
+                        tmp_layers[i]->setItemVisibilityChecked(false);
+                    }
+                }
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D edges."));
@@ -2958,76 +2966,359 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         vector<double> chainage;
         status = prop_tree->get(json_key, chainage);
         if (branch_name.size() == 0) { return; }
+        
+        json_key = "data.structure.type";
+        vector<string> structure_type;
+        status = prop_tree->get(json_key, structure_type);
 
-        QgsLayerTreeGroup * subTreeGroup;
-        subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-        QString layer_name = QString("Structures (1D)");
-
-        // create the vector layer for structures
-        QgsVectorLayer * vl;
-        QgsVectorDataProvider * dp_vl;
-        QList <QgsField> lMyAttribField;
-
-        int nr_attrib_fields = 0;
-        lMyAttribField << QgsField("Structure name", QVariant::String);
-        nr_attrib_fields++;
-        lMyAttribField << QgsField("Structure Id (0-based)", QVariant::String);
-        nr_attrib_fields++;
-        lMyAttribField << QgsField("Structure Id (1-based)", QVariant::String);
-        nr_attrib_fields++;
-
-        QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
-        vl = new QgsVectorLayer(uri, layer_name, "memory");
-        vl->startEditing();
-        dp_vl = vl->dataProvider();
-        dp_vl->addAttributes(lMyAttribField);
-        //dp_vl->createSpatialIndex();
-        vl->updatedFields();
-
-        QgsPointXY janm;
-        struct _ntw_geom * ntw_geom = ugrid_file->get_network_geometry();
-        struct _ntw_edges * ntw_edges = ugrid_file->get_network_edges();
-
-        double xp;
-        double yp;
-        double rotation;
+        // Count the differen types of weirs
+        int cnt_riverweirs = 0;
+        int cnt_bridgepillars = 0;
+        int cnt_culverts = 0;
+        int cnt_compounds = 0;
         for (int j = 0; j < id.size(); j++)
         {
-            status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
-            QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
-            QgsFeature MyFeature;
-            MyFeature.setGeometry(MyPoints);
-
-            MyFeature.initAttributes(nr_attrib_fields);
-            int k = -1;
-            k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
-            k++;
-            MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-            k++;
-            MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
-
-            dp_vl->addFeature(MyFeature);
+            if (structure_type[j] == "bridgePillar") { cnt_bridgepillars += 1; }
+            if (structure_type[j] == "compound") { cnt_compounds += 1; }
+            if (structure_type[j] == "culvert") { cnt_culverts += 1; }
+            if (structure_type[j] == "riverWeir") { cnt_riverweirs += 1; }
         }
-        vl->commitChanges();
-        vector<string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        if (id.size() != cnt_bridgepillars + cnt_compounds + cnt_culverts + cnt_riverweirs)
+        {
+            QString fname = QString::fromStdString(prop_tree->get_filename());
+            QString msg = QString(tr("Not all structure locations are support.\Investigate file \"%1\".")).arg(fname);
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+        }
 
-        QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
-        simple_marker->setSize(3.5);
-        simple_marker->setColor(QColor(0, 0, 0));
-        simple_marker->setFillColor(QColor(255, 0, 0));
-        simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Triangle);
+        if (cnt_bridgepillars > 0)
+        {
+            // Bride pillars
+            QgsLayerTreeGroup* subTreeGroup;
+            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            QString layer_name = QString("Bridge pillars (1D)");
 
-        QgsSymbol * marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
-        marker->changeSymbolLayer(0, simple_marker);
+            // create the vector layer for structures
+            QgsVectorLayer* vl;
+            QgsVectorDataProvider* dp_vl;
+            QList <QgsField> lMyAttribField;
 
-        //set up a renderer for the layer
-        QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
-        vl->setRenderer(mypRenderer);
+            int nr_attrib_fields = 0;
+            lMyAttribField << QgsField("Bridge pillars name", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Bridge pillars Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Bridge pillars Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
 
-        add_layer_to_group(vl, subTreeGroup);
-        connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+            QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+            vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->startEditing();
+            dp_vl = vl->dataProvider();
+            dp_vl->addAttributes(lMyAttribField);
+            //dp_vl->createSpatialIndex();
+            vl->updatedFields();
+
+            QgsPointXY janm;
+            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+
+            double xp;
+            double yp;
+            double rotation;
+            for (int j = 0; j < id.size(); j++)
+            {
+                if (structure_type[j] == "bridgePillar")
+                {
+                    status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
+                    QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
+                    QgsFeature MyFeature;
+                    MyFeature.setGeometry(MyPoints);
+
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    int k = -1;
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
+
+                    dp_vl->addFeature(MyFeature);
+                }
+            }
+            vl->commitChanges();
+            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+
+            QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_bridgepillar_1d.svg"));
+            simple_marker->setSize(5.0);
+            simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Bridege pillar location")));
+
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            marker->changeSymbolLayer(0, simple_marker);
+
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
+            vl->setRenderer(mypRenderer);
+
+            add_layer_to_group(vl, subTreeGroup);
+            QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
+            for (int i = 0; i < tmp_layers.size(); i++)
+            {
+                if (tmp_layers[i]->name() == layer_name)
+                {
+                    tmp_layers[i]->setItemVisibilityChecked(false);
+                }
+            }
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+        }
+        if (cnt_compounds > 0)
+        {
+            // Compound structures
+            QgsLayerTreeGroup* subTreeGroup;
+            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            QString layer_name = QString("Compound structures (1D)");
+
+            // create the vector layer for structures
+            QgsVectorLayer* vl;
+            QgsVectorDataProvider* dp_vl;
+            QList <QgsField> lMyAttribField;
+
+            int nr_attrib_fields = 0;
+            lMyAttribField << QgsField("Compound structures name", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Compound structures Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Compound structures Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
+
+            QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+            vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->startEditing();
+            dp_vl = vl->dataProvider();
+            dp_vl->addAttributes(lMyAttribField);
+            //dp_vl->createSpatialIndex();
+            vl->updatedFields();
+
+            QgsPointXY janm;
+            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+
+            double xp;
+            double yp;
+            double rotation;
+            for (int j = 0; j < id.size(); j++)
+            {
+                if (structure_type[j] == "compound")
+                {
+                    status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
+                    QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
+                    QgsFeature MyFeature;
+                    MyFeature.setGeometry(MyPoints);
+
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    int k = -1;
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
+
+                    dp_vl->addFeature(MyFeature);
+                }
+            }
+            vl->commitChanges();
+            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+
+            QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_compound_1d.svg"));
+            simple_marker->setSize(5.0);
+            simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Compound structure location")));
+
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            marker->changeSymbolLayer(0, simple_marker);
+
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
+            vl->setRenderer(mypRenderer);
+
+            add_layer_to_group(vl, subTreeGroup);
+            QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
+            for (int i = 0; i < tmp_layers.size(); i++)
+            {
+                if (tmp_layers[i]->name() == layer_name)
+                {
+                    tmp_layers[i]->setItemVisibilityChecked(false);
+                }
+            }
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+        }
+        if (cnt_culverts > 0)
+        {
+            // River weir
+            QgsLayerTreeGroup* subTreeGroup;
+            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            QString layer_name = QString("Culvert (1D)");
+
+            // create the vector layer for structures
+            QgsVectorLayer* vl;
+            QgsVectorDataProvider* dp_vl;
+            QList <QgsField> lMyAttribField;
+
+            int nr_attrib_fields = 0;
+            lMyAttribField << QgsField("Culvert name", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Culvert Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("Culvert Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
+
+            QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+            vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->startEditing();
+            dp_vl = vl->dataProvider();
+            dp_vl->addAttributes(lMyAttribField);
+            //dp_vl->createSpatialIndex();
+            vl->updatedFields();
+
+            QgsPointXY janm;
+            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+
+            double xp;
+            double yp;
+            double rotation;
+            for (int j = 0; j < id.size(); j++)
+            {
+                if (structure_type[j] == "culvert")
+                {
+                    status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
+                    QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
+                    QgsFeature MyFeature;
+                    MyFeature.setGeometry(MyPoints);
+
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    int k = -1;
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
+
+                    dp_vl->addFeature(MyFeature);
+                }
+            }
+            vl->commitChanges();
+            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+
+            QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_culvert_1d.svg"));
+            simple_marker->setSize(5.0);
+            simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Culvert location")));
+
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            marker->changeSymbolLayer(0, simple_marker);
+
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
+            vl->setRenderer(mypRenderer);
+
+            add_layer_to_group(vl, subTreeGroup);
+            QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
+            for (int i = 0; i < tmp_layers.size(); i++)
+            {
+                if (tmp_layers[i]->name() == layer_name)
+                {
+                    tmp_layers[i]->setItemVisibilityChecked(false);
+                }
+            }
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+        }
+        if (cnt_riverweirs > 0)
+        {
+            // River weir
+            QgsLayerTreeGroup* subTreeGroup;
+            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            QString layer_name = QString("Structures River Weir (1D)");
+
+            // create the vector layer for structures
+            QgsVectorLayer* vl;
+            QgsVectorDataProvider* dp_vl;
+            QList <QgsField> lMyAttribField;
+
+            int nr_attrib_fields = 0;
+            lMyAttribField << QgsField("River weir name", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("River weir Id (0-based)", QVariant::String);
+            nr_attrib_fields++;
+            lMyAttribField << QgsField("River weir Id (1-based)", QVariant::String);
+            nr_attrib_fields++;
+
+            QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+            vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->startEditing();
+            dp_vl = vl->dataProvider();
+            dp_vl->addAttributes(lMyAttribField);
+            //dp_vl->createSpatialIndex();
+            vl->updatedFields();
+
+            QgsPointXY janm;
+            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+
+            double xp;
+            double yp;
+            double rotation;
+            for (int j = 0; j < id.size(); j++)
+            {
+                if (structure_type[j] == "riverWeir")
+                {
+                    status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
+                    QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
+                    QgsFeature MyFeature;
+                    MyFeature.setGeometry(MyPoints);
+
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    int k = -1;
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
+
+                    dp_vl->addFeature(MyFeature);
+                }
+            }
+            vl->commitChanges();
+            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+
+            QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_riverweir_1d.svg"));
+            simple_marker->setSize(5.0);
+            simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("River weir location")));
+
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            marker->changeSymbolLayer(0, simple_marker);
+
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
+            vl->setRenderer(mypRenderer);
+
+            add_layer_to_group(vl, subTreeGroup);
+            QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
+            for (int i = 0; i < tmp_layers.size(); i++)
+            {
+                if (tmp_layers[i]->name() == layer_name)
+                {
+                    tmp_layers[i]->setItemVisibilityChecked(false);
+                }
+            }
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+        }
+
     }
 }
 void qgis_umesh::create_vector_layer_observation_point(UGRID * ugrid_file, JSON_READER * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
@@ -3249,6 +3540,14 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
         vl->setRenderer(mypRenderer);
 
         add_layer_to_group(vl, subTreeGroup);
+        QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
+        for (int i = 0; i < tmp_layers.size(); i++)
+        {
+            if (tmp_layers[i]->name() == layer_name)
+            {
+                tmp_layers[i]->setItemVisibilityChecked(false);
+            }
+        }
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
 }
@@ -4296,6 +4595,14 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             vl->setRenderer(mypRenderer);
 
             add_layer_to_group(vl, subTreeGroup);
+            QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
+            for (int i = 0; i < tmp_layers.size(); i++)
+            {
+                if (tmp_layers[i]->name() == layer_name)
+                {
+                    tmp_layers[i]->setItemVisibilityChecked(false);
+                }
+            }
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
 //------------------------------------------------------------------------------
@@ -4756,7 +5063,7 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
 
         QgsLayerTreeGroup* subTreeGroup;
         subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-        QString layer_name = QString("Retention location");
+        QString layer_name = QString("Retention area");
 
         // create the vector 
         QgsVectorLayer* vl;
@@ -4827,7 +5134,6 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
                 tmp_layers[i]->setItemVisibilityChecked(false);
             }
         }
-
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
 }
