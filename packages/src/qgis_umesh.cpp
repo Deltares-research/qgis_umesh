@@ -2639,7 +2639,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             int nr_attrib_fields = 0;
             //if (nodes->branch.size() != 0)
             {
-                lMyAttribField << QgsField("Edge length", QVariant::Double);
+                lMyAttribField << QgsField("Edge length", QVariant::String);
                 nr_attrib_fields++;
             }
             if (edges->name.size() != 0)
@@ -2692,7 +2692,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
 
                 MyFeature.initAttributes(nr_attrib_fields);
                 int k = -1;
-                if (edges->edge_length.size() != 0)
+                if (edges->edge_length.size() > 0)
                 {
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(edges->edge_length[j]));
@@ -2706,6 +2706,11 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
                             msg_given = true;
                         }
                     }
+                }
+                else if (edges->edge_length.size() == 0)
+                {
+                    k++;
+                    MyFeature.setAttribute(k, QString("--X--"));
                 }
 
                 if (edges->name.size() != 0)
@@ -2729,19 +2734,25 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             }
             vl->setTitle(layer_name + ": " + fname);
 
+            QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
             if (layer_name == QString("Mesh2D edges"))
             {
-                QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
                 line_marker->setWidth(0.25);
                 line_marker->setColor(QColor(0, 170, 255));
-
-                QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
-                symbol->changeSymbolLayer(0, line_marker);
-
-                //set up a renderer for the layer
-                QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
-                vl->setRenderer(mypRenderer);
             }
+            else if (layer_name == QString("Mesh contact edges"))
+            {
+                line_marker->setWidth(0.5);
+                line_marker->setColor(QColor(255, 153, 204));
+            }
+
+            QgsSymbol* symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            symbol->changeSymbolLayer(0, line_marker);
+
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(symbol);
+            vl->setRenderer(mypRenderer);
+
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
