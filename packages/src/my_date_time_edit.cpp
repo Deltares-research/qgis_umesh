@@ -1,9 +1,9 @@
 #include "../include/my_date_time_edit.h"
 
-MyQDateTimeEdit::MyQDateTimeEdit(QVector<QDateTime> q_times)
+MyQDateTimeEdit::MyQDateTimeEdit(QVector<QDateTime> q_times, int nsteps)
 {
     _qdt = q_times;
-    _nsteps = 0;
+    _nsteps = nsteps;
     _ansatz = false;
     _ansatz_d = 0;
     _ansatz_u = 0;
@@ -29,14 +29,14 @@ void MyQDateTimeEdit::stepBy(int step)
     case 1:
         if (maximumDateTime() > _qdt[_nsteps])
         {
-            _nsteps = _nsteps + step;
+            _nsteps = std::min(_qdt.size()-1, _nsteps + step);
             setDateTime(_qdt[_nsteps]);
         }
         break;
     case -1:
         if (minimumDateTime() < _qdt[_nsteps])
         {
-            _nsteps = _nsteps + step;
+            _nsteps = std::max(0, _nsteps + step);
             setDateTime(_qdt[_nsteps]);
         }
         break;

@@ -6,7 +6,7 @@ class MyQDateTimeEdit : public QDateTimeEdit
     Q_OBJECT
 
 public:
-    MyQDateTimeEdit(QVector<QDateTime>);
+    MyQDateTimeEdit(QVector<QDateTime>, int);
     void setAnsatz(int, int);
 
 public slots:

@@ -179,9 +179,9 @@ QGridLayout * MapTimeManagerWindow::create_date_time_layout()
     QLabel * lbl_curr_time = new QLabel(QString("Current time (presented)"));
     QLabel * lbl_stop_time = new QLabel(QString("Last time of animation"));
 
-    first_date_time = new MyQDateTimeEdit(_q_times);
-    curr_date_time = new MyQDateTimeEdit(_q_times);
-    last_date_time = new MyQDateTimeEdit(_q_times);
+    first_date_time = new MyQDateTimeEdit(_q_times, 0);
+    curr_date_time = new MyQDateTimeEdit(_q_times, 0);
+    last_date_time = new MyQDateTimeEdit(_q_times, _q_times.size()-1);
     QString format_date_time = QString("yyyy-MM-dd HH:mm:ss");
 
     // TODO set minimum and maximum within range first datetime and last datetime
