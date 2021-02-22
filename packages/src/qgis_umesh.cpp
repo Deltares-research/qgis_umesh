@@ -4339,7 +4339,7 @@ void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_fil
                     double dx_world = qrect.xMaximum() - qrect.xMinimum();
                     int pix_width = mQGisIface->mapCanvas()->width();
                     double pixels = dx_world / double(pix_width);  // width of one pixels in world coordinates
-                    double gamma = 0.5 * pixels;
+                    double gamma = 0.1 * chainage[nr_points-1];
                     double vlen = sqrt(dx * dx + dy * dy);  // The "length" of the vector
                     x2 = xp + gamma * dy / vlen;
                     y2 = yp - gamma * dx / vlen;

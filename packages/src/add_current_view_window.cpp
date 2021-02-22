@@ -87,7 +87,7 @@ void AddCurrentViewWindow::create_window()
     vl_main->addWidget(table);
 
     QPushButton * pb_add = new QPushButton("Add");
-    QPushButton * pb_quit = new QPushButton("Quit");
+    QPushButton * pb_quit = new QPushButton("Close");
 
     hl->addStretch();
     hl->addWidget(pb_add);
