@@ -2493,7 +2493,6 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable * va
                 myRend->updateSymbols(marker);
                 QgsColorBrewerColorRamp * ramp = new QgsColorBrewerColorRamp("Spectral", 5, true);
                 QStringList list = ramp->listSchemeNames();
-                QgsStringMap tmp = ramp->properties();
                 myRend->setSourceColorRamp(ramp);
                 vl->setRenderer(myRend);
             }
@@ -2698,10 +2697,9 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
                     MyFeature.setAttribute(k, QString("%1").arg(edges->edge_length[j]));
                     if (edges->edge_length[j] < 0)
                     {
-                        MyFeature.setAttribute(k, QString("--X--"));
                         if (!msg_given)
                         {
-                            QString msg = QString("Edge length are not supplied for layer \'%1\'.").arg(layer_name);
+                            QString msg = QString("Some edge lengths are negative (due to an error in orientation of the edge) \'%1\'.").arg(layer_name);
                             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
                             msg_given = true;
                         }
