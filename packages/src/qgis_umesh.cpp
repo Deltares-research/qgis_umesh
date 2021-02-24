@@ -2699,7 +2699,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
                     {
                         if (!msg_given)
                         {
-                            QString msg = QString("Some edge lengths are negative (due to an error in orientation of the edge) \'%1\'.").arg(layer_name);
+                            QString msg = QString("Some edge lengths are negative (due to an error in the orientation of the edge) \'%1\'.").arg(layer_name);
                             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
                             msg_given = true;
                         }
