@@ -2152,6 +2152,7 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -2265,6 +2266,7 @@ void qgis_umesh::create_vector_layer_data_on_edges(QString fname, _variable * va
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -2342,6 +2344,7 @@ void qgis_umesh::create_vector_layer_edge_type(QString fname, _variable * var, s
 
                 QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
                 vl = new QgsVectorLayer(uri, layer_name, "memory");
+                vl->blockSignals(true);
                 vl->startEditing();
                 dp_vl = vl->dataProvider();
                 dp_vl->addAttributes(lMyAttribField);
@@ -2452,6 +2455,7 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable * va
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -2545,6 +2549,7 @@ void qgis_umesh::create_vector_layer_geometry(QString fname, QString layer_name,
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -2658,6 +2663,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -2790,6 +2796,7 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -2886,7 +2893,7 @@ void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
-
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -2984,7 +2991,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         int cnt_bridges = 0;
         int cnt_bridgepillars = 0;
         int cnt_culverts = 0;
-        int cnt_compounds = 0;
+        int cnt_compound_structures = 0;
         int cnt_extra_resistances = 0;
         int cnt_generalstructures = 0;
         int cnt_inverted_siphons = 0;
@@ -2996,7 +3003,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         {
             if (structure_type[j] == "bridge") { cnt_bridges += 1; }
             if (structure_type[j] == "bridgePillar") { cnt_bridgepillars += 1; }
-            if (structure_type[j] == "compound") { cnt_compounds += 1; }
+            if (structure_type[j] == "compound") { cnt_compound_structures += 1; }
             if (structure_type[j] == "culvert") { cnt_culverts += 1; }
             if (structure_type[j] == "extraresistance") { cnt_extra_resistances += 1; }
             if (structure_type[j] == "generalstructure") { cnt_generalstructures += 1; }
@@ -3009,7 +3016,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         int sum =
             cnt_bridges +
             cnt_bridgepillars +
-            cnt_compounds +
+            cnt_compound_structures +
             cnt_culverts +
             cnt_extra_resistances +
             cnt_generalstructures +
@@ -3025,13 +3032,14 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             QString msg = QString(tr("Not all structure locations are supported.\Investigate file \"%1\".")).arg(fname);
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
         }
-
+        //
         if (cnt_bridges > 0)
         {
-            // Bridges
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("Bridge (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("Bridge");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3048,6 +3056,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3111,10 +3120,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         //
         if (cnt_bridgepillars > 0)
         {
-            // Bridge pillars
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("Bridge pillars (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("Bridge pillars");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3131,6 +3141,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3192,12 +3203,13 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
         //
-        if (cnt_compounds > 0)
+        if (cnt_compound_structures > 0)
         {
-            // Compound structures
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("Compound structures (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("Compound structures");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3214,6 +3226,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3277,10 +3290,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         //
         if (cnt_culverts > 0)
         {
-            // River weir
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("Culvert (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("Culvert");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3297,6 +3311,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3360,10 +3375,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         //
         if (cnt_extra_resistances > 0)
         {
-            // River weir
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("Extra resistance (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("Extra resistance");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3380,6 +3396,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3443,10 +3460,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         //
         if (cnt_generalstructures > 0)
         {
-            // General structure
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("General structure (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("General structure");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3463,6 +3481,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3526,10 +3545,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         //
         if (cnt_inverted_siphons > 0)
         {
-            // Inverted siphon
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("Inverted siphon (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("Inverted siphon");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3546,6 +3566,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3609,10 +3630,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         //
         if (cnt_orifices > 0)
         {
-            // Orifice
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("Orifice (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("Orifice");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3629,6 +3651,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3692,10 +3715,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         //
         if (cnt_pumps > 0)
         {
-            // Bridges
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("Pump (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("Pump");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3712,6 +3736,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3775,10 +3800,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         //
         if (cnt_riverweirs > 0)
         {
-            // River weir
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("River Weir (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("River Weir");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3795,6 +3821,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3858,10 +3885,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         //
         if (cnt_weirs > 0)
         {
-            // weir
+            QgsLayerTreeGroup* mainTreeGroup;
             QgsLayerTreeGroup* subTreeGroup;
-            subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-            QString layer_name = QString("Weir (1D)");
+            mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+            subTreeGroup = get_subgroup(mainTreeGroup, QString("Structures (1D)"));
+            QString layer_name = QString("Weir");
 
             // create the vector layer for structures
             QgsVectorLayer* vl;
@@ -3878,6 +3906,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -3938,8 +3967,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             }
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
-
-    }  // end proptree /= nullptr
+    }  // end proptree != nullptr
 }
 void qgis_umesh::create_vector_layer_observation_point(UGRID * ugrid_file, JSON_READER * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
@@ -4006,6 +4034,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
 
     QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
     vl = new QgsVectorLayer(uri, layer_name, "memory");
+    vl->blockSignals(true);
     vl->startEditing();
     dp_vl = vl->dataProvider();
     dp_vl->addAttributes(lMyAttribField);
@@ -4111,6 +4140,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
 
         QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->blockSignals(true);
         vl->startEditing();
         dp_vl = vl->dataProvider();
         dp_vl->addAttributes(lMyAttribField);
@@ -4207,6 +4237,7 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
 
     QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
     vl = new QgsVectorLayer(uri, layer_name, "memory");
+    vl->blockSignals(true);
     vl->startEditing();
     dp_vl = vl->dataProvider();
     dp_vl->addAttributes(lMyAttribField);
@@ -4253,17 +4284,149 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
 void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_file, JSON_READER *prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
-    vector<string> tmp_line_name;
+    vector<string> tmp_point_name;  // point object 1D simualtion
+    vector<string> tmp_line_name;  // line object 2D simulation
+    status = prop_tree->get("data.observationcrosssection.name", tmp_point_name);
+    status = prop_tree->get("data.path.name", tmp_line_name);
+    if (tmp_point_name.size() > 0)
+    {
+        create_vector_layer_1D_observation_cross_section(ugrid_file, prop_tree, epsg_code, treeGroup);
+    }
+    if (tmp_line_name.size() > 0)
+    {
+        create_vector_layer_2D_observation_cross_section(ugrid_file, prop_tree, epsg_code, treeGroup);
+    }
+}
+//
+// Observation cross-section (D-Flow 1D) filename given in mdu-file, point object when 1D simulation
+void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
+{
+    if (prop_tree != nullptr)
+    {
+        long status = -1;
+        string json_key = "data.observationcrosssection.name"; 
+        vector<string> names;
+        status = prop_tree->get(json_key, names);
+        json_key = "data.observationcrosssection.branchid";
+        vector<string> branch_name;
+        status = prop_tree->get(json_key, branch_name);
+        if (branch_name.size() == 0)
+        {
+            QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromStdString(json_key));
+            return;
+        }
+        json_key = "data.observationcrosssection.chainage";
+        vector<double> chainage;
+        status = prop_tree->get(json_key, chainage);
+        if (chainage.size() == 0)
+        {
+            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            return;
+        }
+        if (names.size() != branch_name.size() || branch_name.size() != chainage.size() || names.size() != chainage.size())
+        {
+            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
+                + "\nObservation points: " + (int)names.size()
+                + "\nBranches: " + (int)branch_name.size()
+                + "\nChainage: " + (int)chainage.size());
+            return;
+        }
+
+        QgsLayerTreeGroup* subTreeGroup;
+        subTreeGroup = get_subgroup(treeGroup, QString("Area"));
+        QString layer_name = QString("Observation Cross-sections points");
+
+        // create the vector layer for structures
+        QgsVectorLayer* vl;
+        QgsVectorDataProvider* dp_vl;
+        QList <QgsField> lMyAttribField;
+
+        int nr_attrib_fields = 0;
+        lMyAttribField << QgsField("Observation cross-sections name", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Observation cross-sections point Id (0-based)", QVariant::String);
+        nr_attrib_fields++;
+        lMyAttribField << QgsField("Observation cross-sections point Id (1-based)", QVariant::String);
+        nr_attrib_fields++;
+
+        QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+        vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->blockSignals(true);
+        vl->startEditing();
+        dp_vl = vl->dataProvider();
+        dp_vl->addAttributes(lMyAttribField);
+        //dp_vl->createSpatialIndex();
+        vl->updatedFields();
+
+        struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
+        struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+
+        double xp;
+        double yp;
+        double rotation;
+        for (int j = 0; j < names.size(); j++)
+        {
+            status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
+            QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
+            QgsFeature MyFeature;
+            MyFeature.setGeometry(MyPoints);
+
+            MyFeature.initAttributes(nr_attrib_fields);
+            int k = -1;
+            k++;
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(names[j]).trimmed()));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            k++;
+            MyFeature.setAttribute(k, QString("%1_b1").arg(j + 1));
+
+            dp_vl->addFeature(MyFeature);
+        }
+        vl->commitChanges();
+        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+
+        QgsSimpleMarkerSymbolLayer* simple_marker = new QgsSimpleMarkerSymbolLayer();
+        simple_marker->setSize(2.5);
+        simple_marker->setColor(QColor(1, 0, 0));
+        simple_marker->setFillColor(QColor(255, 0, 255));
+        simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Hexagon);
+
+        QgsSymbol* marker = new QgsMarkerSymbol();
+        marker->changeSymbolLayer(0, simple_marker);
+
+        //set up a renderer for the layer
+        QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
+        vl->setRenderer(mypRenderer);
+
+        add_layer_to_group(vl, subTreeGroup);
+        QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
+        for (int i = 0; i < tmp_layers.size(); i++)
+        {
+            if (tmp_layers[i]->name() == layer_name)
+            {
+                tmp_layers[i]->setItemVisibilityChecked(false);
+            }
+        }
+        connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+    }
+}
+//
+// Observation cross-section (D-Flow FM) filename given in mdu-file, line object when 2D simulation
+void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
+{
+    int status = -1;
+    vector<string> tmp_line_name;  
     status = prop_tree->get("data.path.name", tmp_line_name);
     if (tmp_line_name.size() != 0)
     {
-        QgsLayerTreeGroup * subTreeGroup;
+        QgsLayerTreeGroup* subTreeGroup;
         subTreeGroup = get_subgroup(treeGroup, QString("Area"));
         QString layer_name = QString("Observation cross-section");
 
         // create the vector 
-        QgsVectorLayer * vl;
-        QgsVectorDataProvider * dp_vl;
+        QgsVectorLayer* vl;
+        QgsVectorDataProvider* dp_vl;
         QList <QgsField> lMyAttribField;
 
         vector<string> line_name;
@@ -4281,6 +4444,7 @@ void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_fil
 
         QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->blockSignals(true);
         vl->startEditing();
         dp_vl = vl->dataProvider();
         dp_vl->addAttributes(lMyAttribField);
@@ -4288,7 +4452,7 @@ void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_fil
         vl->updatedFields();
 
         QFileInfo ug_file = ugrid_file->get_filename();
-        QgsMultiLineString * polylines = new QgsMultiLineString();
+        QgsMultiLineString* polylines = new QgsMultiLineString();
         QVector<QgsPointXY> point;
         QgsMultiPolylineXY lines;
 
@@ -4321,7 +4485,7 @@ void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_fil
                 double x2 = poly_lines[ii][0][j];
                 double y2 = poly_lines[ii][1][j];
 
-                chainage[j] = chainage[j - 1] + sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));  // Todo: HACK: this is just the euclidian distance
+                chainage[j] = chainage[j - 1] + sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));  // Todo: HACK: this is just the euclidian distance
             }
             double chainage_point = 0.5 * chainage[nr_points - 1];
             double xp;
@@ -4344,7 +4508,7 @@ void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_fil
                     double dx = x2 - x1;
                     double dy = y2 - y1;
 
-                    double gamma = 0.1 * chainage[nr_points-1];
+                    double gamma = 0.1 * chainage[nr_points - 1];
                     double vlen = sqrt(dx * dx + dy * dy);  // The "length" of the vector
                     x2 = xp + gamma * dy / vlen;
                     y2 = yp - gamma * dx / vlen;
@@ -4392,12 +4556,11 @@ void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_fil
         symbol->changeSymbolLayer(0, line_marker);
 
         //set up a renderer for the layer
-        QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
+        QgsSingleSymbolRenderer * mypRenderer = new QgsSingleSymbolRenderer(symbol);
         vl->setRenderer(mypRenderer);
 
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
-
     }
 }
 //------------------------------------------------------------------------------
@@ -4444,6 +4607,7 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER *
 
         QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->blockSignals(true);
         vl->startEditing();
         dp_vl = vl->dataProvider();
         dp_vl->addAttributes(lMyAttribField);
@@ -4613,6 +4777,7 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER *
 
         QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->blockSignals(true);
         vl->startEditing();
         dp_vl = vl->dataProvider();
         dp_vl->addAttributes(lMyAttribField);
@@ -4890,6 +5055,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -5009,6 +5175,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -5157,6 +5324,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -5249,6 +5417,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
             vl->startEditing();
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
@@ -5349,6 +5518,7 @@ void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER *
 
         QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->blockSignals(true);
         vl->startEditing();
         dp_vl = vl->dataProvider();
         dp_vl->addAttributes(lMyAttribField);
@@ -5448,6 +5618,7 @@ void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER 
 
         QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->blockSignals(true);
         vl->startEditing();
         dp_vl = vl->dataProvider();
         dp_vl->addAttributes(lMyAttribField);
@@ -5572,6 +5743,7 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
 
         QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->blockSignals(true);
         vl->startEditing();
         dp_vl = vl->dataProvider();
         dp_vl->addAttributes(lMyAttribField);
@@ -5692,6 +5864,7 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
 
         QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
+        vl->blockSignals(true);
         vl->startEditing();
         dp_vl = vl->dataProvider();
         dp_vl->addAttributes(lMyAttribField);
@@ -5798,8 +5971,9 @@ void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long eps
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
-
+            vl->blockSignals(true);
             vl->startEditing();
+
             dp_vl = vl->dataProvider();
             dp_vl->addAttributes(lMyAttribField);
             //dp_vl->createSpatialIndex();
@@ -5965,7 +6139,6 @@ void qgis_umesh::add_layer_to_group(QgsVectorLayer * vl, QgsLayerTreeGroup * tre
 QgsLayerTreeGroup * qgis_umesh::get_subgroup(QgsLayerTreeGroup * treeGroup, QString sub_group_name)
 {
     QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
-
     QgsLayerTreeGroup * subTreeGroup = treeGroup->findGroup(sub_group_name);
     if (subTreeGroup == nullptr)  // Treegroup Area does not exist create it
     {
@@ -5973,7 +6146,6 @@ QgsLayerTreeGroup * qgis_umesh::get_subgroup(QgsLayerTreeGroup * treeGroup, QStr
         subTreeGroup = treeGroup->findGroup(sub_group_name);
         subTreeGroup->setExpanded(true);  // true is the default 
         subTreeGroup->setItemVisibilityChecked(true);
-        //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
         subTreeGroup->setItemVisibilityCheckedRecursive(true);
     }
     return subTreeGroup;
