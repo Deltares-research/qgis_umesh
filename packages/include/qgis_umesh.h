@@ -108,7 +108,9 @@ class qgis_umesh
         void create_vector_layer_fixed_weir(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
         void create_vector_layer_thin_dams(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
         void create_vector_layer_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_cross_section(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_1D_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_2D_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
         void create_vector_layer_structure(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
         void create_vector_layer_drypoints(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
         void create_vector_layer_1D_cross_section(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
