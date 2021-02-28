@@ -87,11 +87,11 @@ void AddCurrentViewWindow::create_window()
     vl_main->addWidget(table);
 
     QPushButton * pb_add = new QPushButton("Add");
-    QPushButton * pb_quit = new QPushButton("Close");
+    QPushButton * pb_close = new QPushButton("Close");
 
     hl->addStretch();
     hl->addWidget(pb_add);
-    hl->addWidget(pb_quit);
+    hl->addWidget(pb_close);
 
     vl_main->addLayout(hl);  // push buttons
     wid->setLayout(vl_main);
@@ -99,7 +99,7 @@ void AddCurrentViewWindow::create_window()
     wid->show();
 
     connect(pb_add, &QPushButton::clicked, this, &AddCurrentViewWindow::clicked_add);
-    connect(pb_quit, &QPushButton::clicked, this, &AddCurrentViewWindow::clicked_quit);
+    connect(pb_close, &QPushButton::clicked, this, &AddCurrentViewWindow::clicked_close);
 
 }
 void AddCurrentViewWindow::clicked(QModelIndex indx)
@@ -112,7 +112,7 @@ void AddCurrentViewWindow::clicked_add()
     //QMessageBox::information(0, "Information", "AddCurrentViewWindow::clicked_ok()");
     create_vector_layer();
 }
-void AddCurrentViewWindow::clicked_quit()
+void AddCurrentViewWindow::clicked_close()
 {
     //QMessageBox::information(0, "Information", "AddCurrentViewWindow::clicked_cancel()");
     this->close();
