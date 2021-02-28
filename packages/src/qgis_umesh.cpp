@@ -2234,6 +2234,8 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
                 QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
                 vl->setRenderer(mypRenderer);
             }
+            vl->blockSignals(false);
+
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
@@ -2313,9 +2315,10 @@ void qgis_umesh::create_vector_layer_data_on_edges(QString fname, _variable * va
             //set up a renderer for the layer
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, treeGroup);
-            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));
 
             tmp_layers = treeGroup->findLayers();
             int ind = tmp_layers.size() - 1;
@@ -2411,6 +2414,7 @@ void qgis_umesh::create_vector_layer_edge_type(QString fname, _variable * var, s
                     //set up a renderer for the layer
                     QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(symbol);
                     vl->setRenderer(mypRenderer);
+                    vl->blockSignals(false);
 
                     add_layer_to_group(vl, treeGroup);
                     connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));
@@ -2500,6 +2504,7 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable * va
                 myRend->setSourceColorRamp(ramp);
                 vl->setRenderer(myRend);
             }
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -2614,6 +2619,8 @@ void qgis_umesh::create_vector_layer_geometry(QString fname, QString layer_name,
                 QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
                 vl->setRenderer(mypRenderer);
             }
+            vl->blockSignals(false);
+
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
@@ -2756,6 +2763,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(symbol);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -2850,6 +2858,7 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
             //set up a renderer for the layer
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -2960,6 +2969,7 @@ void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString
             //set up a renderer for the layer
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -3105,6 +3115,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3190,6 +3201,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3275,6 +3287,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3360,6 +3373,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3445,6 +3459,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3530,6 +3545,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3615,6 +3631,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3700,6 +3717,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3785,6 +3803,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3870,6 +3889,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -3955,6 +3975,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             //set up a renderer for the layer
             QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -4073,6 +4094,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
     //set up a renderer for the layer
     QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
     vl->setRenderer(mypRenderer);
+    vl->blockSignals(false);
 
     add_layer_to_group(vl, subTreeGroup);
     connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -4188,6 +4210,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
         //set up a renderer for the layer
         QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
         vl->setRenderer(mypRenderer);
+        vl->blockSignals(false);
 
         add_layer_to_group(vl, subTreeGroup);
         QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -4276,6 +4299,7 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
     //set up a renderer for the layer
     QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
     vl->setRenderer(mypRenderer);
+    vl->blockSignals(false);
 
     add_layer_to_group(vl, subTreeGroup);
     connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -4398,6 +4422,7 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
         //set up a renderer for the layer
         QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
         vl->setRenderer(mypRenderer);
+        vl->blockSignals(false);
 
         add_layer_to_group(vl, subTreeGroup);
         QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -4558,6 +4583,7 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_f
         //set up a renderer for the layer
         QgsSingleSymbolRenderer * mypRenderer = new QgsSingleSymbolRenderer(symbol);
         vl->setRenderer(mypRenderer);
+        vl->blockSignals(false);
 
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -4734,6 +4760,7 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER *
         //set up a renderer for the layer
         QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
         vl->setRenderer(mypRenderer);
+        vl->blockSignals(false);
 
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -4835,6 +4862,7 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER *
         //set up a renderer for the layer
         QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
         vl->setRenderer(mypRenderer);
+        vl->blockSignals(false);
 
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -4883,6 +4911,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             //lines
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl_lines = new QgsVectorLayer(uri, layer_name, "memory");
+            vl_lines->blockSignals(true);
             vl_lines->startEditing();
             dp_vl_lines = vl_lines->dataProvider();
             dp_vl_lines->addAttributes(lMyAttribField);
@@ -4891,6 +4920,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             //points
             uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl_points = new QgsVectorLayer(uri, layer_name, "memory");
+            vl_points->blockSignals(true);
             vl_points->startEditing();
             dp_vl_points = vl_points->dataProvider();
             dp_vl_points->addAttributes(lMyAttribField);
@@ -4997,6 +5027,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 marker->changeSymbolLayer(0, simple_marker);
                 QgsSingleSymbolRenderer* myPointRenderer = new QgsSingleSymbolRenderer(marker);
                 vl_points->setRenderer(myPointRenderer);
+                vl_points->blockSignals(false);
 
                 add_layer_to_group(vl_points, subTreeGroup);
                 connect(vl_points, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -5012,11 +5043,11 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 symbol->changeSymbolLayer(0, line_marker);
                 QgsSingleSymbolRenderer* myLineRenderer = new QgsSingleSymbolRenderer(symbol);
                 vl_lines->setRenderer(myLineRenderer);
- 
+                vl_lines->blockSignals(false);
+
                 add_layer_to_group(vl_lines, subTreeGroup);
                 connect(vl_lines, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
             }
-
         }
         //-------------------------------------------------------------------------------------------
         status = -1;
@@ -5139,6 +5170,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             //set up a renderer for the layer
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -5259,6 +5291,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             //set up a renderer for the layer
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -5373,6 +5406,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             //set up a renderer for the layer
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -5466,6 +5500,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             //set up a renderer for the layer
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             add_layer_to_group(vl, subTreeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -5576,6 +5611,7 @@ void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER *
         //set up a renderer for the layer
         QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
         vl->setRenderer(mypRenderer);
+        vl->blockSignals(false);
 
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -5676,6 +5712,7 @@ void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER 
         //set up a renderer for the layer
         QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
         vl->setRenderer(mypRenderer);
+        vl->blockSignals(false);
 
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
@@ -5788,6 +5825,7 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
         //set up a renderer for the layer
         QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
         vl->setRenderer(mypRenderer);
+        vl->blockSignals(false);
 
         add_layer_to_group(vl, subTreeGroup);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
@@ -5909,6 +5947,7 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
         //set up a renderer for the layer
         QgsSingleSymbolRenderer* mypRenderer = new QgsSingleSymbolRenderer(marker);
         vl->setRenderer(mypRenderer);
+        vl->blockSignals(false);
 
         add_layer_to_group(vl, subTreeGroup);
         QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
@@ -6021,6 +6060,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long eps
             //set up a renderer for the layer
             QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(symbol);
             vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
 
             QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
             treeRoot->insertLayer(0, vl);
