@@ -535,6 +535,10 @@ long HISCF::read_parameters()
                         if (!found && string(loc_type[j]->location_var_name) == token[i_token])
                         {
                             found = true;
+                            if (loc_type[j]->type == OBS_NONE) { 
+                                loc_type[j]->type = OBS_POINT; 
+                                loc_type[j]->node_count.push_back(1);
+                            }
                             // location_var_name is one of the tokens
                             // loop again over all tokens to find the x- and y- coordinates, ie doubling the token i_token
                             for (int i = 0; i < token.size(); i++)  // var_x, var_y, var_name
@@ -544,7 +548,7 @@ long HISCF::read_parameters()
                                 status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
                                 if (status == NC_NOERR)
                                 {
-                                    // just ceck the first one, other locations should hev the x,y-coordinate name
+                                    // just check the first one, other locations should have the x,y-coordinate name
                                     if (att_value == "projection_x_coordinate" || att_value == "longitude")
                                     {
                                         loc_type[j]->x_location_name = token[i];
