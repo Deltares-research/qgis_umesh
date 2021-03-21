@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QSlider>
 #include "map_property.h"
 #include "MyDrawingCanvas.h"
 
@@ -46,6 +47,8 @@ public slots:
     void clicked_ok();
     void clicked_cancel();
     void clicked_apply();
+    void setOpacityEditValue(int);
+    void setOpacitySliderValue(QString);
 
 signals:
     void draw_all();
@@ -55,6 +58,7 @@ private:
     QWidget * wid;
     QLabel * lbl_transparency;
     QLineEdit * le_transparency;
+    QSlider * sl_transparency;
     QLabel * lbl_refresh_time;
     QLineEdit * le_refresh_time;
     QLabel * lbl_min;
