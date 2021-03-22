@@ -52,6 +52,14 @@ Probably not needed
     qt5-qml: Qt5 QML
     qt5-tools: Qt5Designe & linguist (Development)
             
+##Note (QGIS 3.18.01)
+When compiling the source code I had to adjusted the file qgsdistancearea.h.
+An extra define of M_PI_2 is added at line 18
+
+#ifndef M_PI_2
+#define M_PI_2 1.57079632679489661923
+#endif
+
 ## Note (QGIS 3.16.03)
 When compiling the source code I had to adjusted the file
 c:\OSGeo4W64\apps\qgis\include\qgsabstractgeometry.h
@@ -67,6 +75,7 @@ Line 172
 and also file qgsgeometry.h:
 Line 2152
 #define M_PI 3.14159265358979323846264338327950288
+
 
 ## Note (QGIS 3.16.00)
 When QGIS 3.16.00 does close/crash without any message if reading a netCDF file, please use QGIS 3.16.01.
