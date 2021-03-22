@@ -15,6 +15,7 @@
 #include <QLabel>
 #include <QListWidget>
 #include <QMessageBox>
+#include <QProcessEnvironment>
 #include <QPushButton>
 #include <QSizePolicy>
 #include <QSlider>

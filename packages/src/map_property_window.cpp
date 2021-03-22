@@ -159,10 +159,9 @@ void MapPropertyWindow::create_window()
     connect(pb_ok, &QPushButton::clicked, this, &MapPropertyWindow::clicked_ok);
     connect(pb_cancel, &QPushButton::clicked, this, &MapPropertyWindow::clicked_cancel);
 
-    connect(le_transparency, &QLineEdit::returnPressed, this, &MapPropertyWindow::clicked_apply);
+    connect(le_transparency, &QLineEdit::textChanged, this, &MapPropertyWindow::clicked_apply);
     connect(le_transparency, &QLineEdit::textChanged, this, &MapPropertyWindow::setOpacitySliderValue);
     connect(sl_transparency, &QAbstractSlider::valueChanged, this, &MapPropertyWindow::setOpacityEditValue);
-    connect(sl_transparency, &QAbstractSlider::sliderReleased, this, &MapPropertyWindow::clicked_apply);
     connect(le_refresh_time, &QLineEdit::returnPressed, this, &MapPropertyWindow::clicked_apply);
     connect(le_min, &QLineEdit::returnPressed, this, &MapPropertyWindow::clicked_apply);
     connect(le_max, &QLineEdit::returnPressed, this, &MapPropertyWindow::clicked_apply);
