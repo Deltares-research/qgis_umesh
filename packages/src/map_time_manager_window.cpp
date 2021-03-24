@@ -721,7 +721,7 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
     m_cb_vec_2d->setMinimumSize(100, 22);
     QString text = QString::fromStdString(m2d[0]->var_name);
     status = create_parameter_selection_vector_2d_3d(text, m_cb_vec_2d, m_cb_vec_3d);
-    if (m_cb_vec_2d->count() == 0 && m_cb_vec_2d->count() == 0) { return nullptr;  }
+    if (m_cb_vec_2d->count() == 0 && m_cb_vec_3d->count() == 0) { return nullptr;  }
 
     QVBoxLayout * vl_tw_vec = new QVBoxLayout();  // VerticalLayout_TabWidget
     QGridLayout * gl = new QGridLayout();
