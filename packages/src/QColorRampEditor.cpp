@@ -82,6 +82,7 @@ QColorRampEditor::QColorRampEditor(QWidget* parent, int orientation) : QWidget(p
     setRamp(ini_ramp);
 
     chooser_ = new QColorDialog();
+    chooser_->setOption(QColorDialog::ShowAlphaChannel, true);
 }
 // -----------------------------------------------------------
 QColorRampEditor::~QColorRampEditor()
@@ -231,18 +232,20 @@ void QColorRampEditor::setMinMax(double z_min, double z_max)
     }
     setRamp(ramp);  // this ramp contains the real values
 }
-int QColorRampEditor::getRgbFromValue(double z_value)
+QColor QColorRampEditor::getRgbFromValue(double z_value)
 {
     bool within_ramp_range = true;
     ramp = getRamp();
-    int color = qRgb(128, 128, 128);  // default grey
+    QColor color = qRgba(128, 128, 128, 0);  // default grey
     int i = 0;
     if (z_value <= ramp[i].first)  // z_value before first color in ramp
     {
         int r = ramp[i].second.red();
         int g = ramp[i].second.green();
         int b = ramp[i].second.blue();
+        int a = ramp[i].second.alpha();
         color = qRgb(r, g, b);
+        color.setAlpha(a);
         within_ramp_range = false;
     }
     i = ramp.size() - 1;  // zero based
@@ -251,7 +254,9 @@ int QColorRampEditor::getRgbFromValue(double z_value)
         int r = ramp[i].second.red();
         int g = ramp[i].second.green();
         int b = ramp[i].second.blue();
+        int a = ramp[i].second.alpha();
         color = qRgb(r, g, b);
+        color.setAlpha(a);
         within_ramp_range = false;
     }
     if (within_ramp_range)
@@ -264,7 +269,9 @@ int QColorRampEditor::getRgbFromValue(double z_value)
                 int r = ramp[i - 1].second.red() + alpha * (ramp[i].second.red() - ramp[i - 1].second.red());
                 int g = ramp[i - 1].second.green() + alpha * (ramp[i].second.green() - ramp[i - 1].second.green());
                 int b = ramp[i - 1].second.blue() + alpha * (ramp[i].second.blue() - ramp[i - 1].second.blue());
+                int a = ramp[i - 1].second.alpha() + alpha * (ramp[i].second.alpha() - ramp[i - 1].second.alpha());
                 color = qRgb(r, g, b);
+                color.setAlpha(a);
                 break;
             }
         }
@@ -542,7 +549,7 @@ void QSlidersWidget::mouseReleaseEvent(QMouseEvent* e)
 {
     if (e->button() == Qt::LeftButton)
     {
-        int pos = e->pos().x();
+        //int pos = e->pos().x();
         activeSlider_ = -1;
         rampeditor_->updateRamp();
         emit rampeditor_->rampChanged();
@@ -584,6 +591,7 @@ void QSlidersWidget::mouseDoubleClickEvent(QMouseEvent* e)
 QColorRampEditorSlider::QColorRampEditorSlider(int orientation, QColor col, QWidget* parent) : QWidget(parent),
     ori_(orientation), color_(col)
 {
+    this->val = 0.0;
     if (ori_==Qt::Horizontal)
         setFixedSize(9, 16);
     else

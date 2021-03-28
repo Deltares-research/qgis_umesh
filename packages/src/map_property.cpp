@@ -2,7 +2,7 @@
 
 MapProperty::MapProperty()
 {
-    prop_opacity = 0.75;  // tranparancy = 1.0 - opacity 
+    prop_opacity = 0.75; 
     prop_dynamic_min_max = true;
     prop_refresh_time = 0.1;
     prop_min = INFINITY;

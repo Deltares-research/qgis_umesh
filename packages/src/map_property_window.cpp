@@ -62,29 +62,28 @@ void MapPropertyWindow::create_window()
     gl_rt->addWidget(le_refresh_time, 0, 1);
     vl_main->addLayout(gl_rt);
 
-    // Transparency (Opcatity)
+    // Opacity
     QGroupBox* gb_op = new QGroupBox();
-    gb_op->setTitle("Transparency");
+    gb_op->setTitle("Opacity");
 
     QGridLayout* gl_op = new QGridLayout();  // opacity
     QVBoxLayout* vl_op = new QVBoxLayout();  // opacity
-    lbl_transparency = new QLabel("Transparency: ");
-    le_transparency = new QLineEdit();
-    le_transparency->setToolTip("Transparency range: 0 - 100 %");
-    double transparency = 1.0 - m_property->get_opacity();
-    str = QString("%1").arg(100.*transparency);
-    le_transparency->setText(str);
-    gl_op->addWidget(lbl_transparency, 0, 0);
-    gl_op->addWidget(le_transparency, 0, 1);
+    lbl_opacity = new QLabel("Opacity: ");
+    le_opacity = new QLineEdit();
+    le_opacity->setToolTip("Opacity range: 0 - 100 %");
+    str = QString("%1").arg(100.* m_property->get_opacity());
+    le_opacity->setText(str);
+    gl_op->addWidget(lbl_opacity, 0, 0);
+    gl_op->addWidget(le_opacity, 0, 1);
     vl_op->addLayout(gl_op);
 
-    sl_transparency = new QSlider(Qt::Horizontal);
-    sl_transparency->setMinimum(0.0);
-    sl_transparency->setMaximum(100.0);
-    sl_transparency->setValue(transparency * 100.0);
-    sl_transparency->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    sl_opacity = new QSlider(Qt::Horizontal);
+    sl_opacity->setMinimum(0.0);
+    sl_opacity->setMaximum(100.0);
+    sl_opacity->setValue(100. * m_property->get_opacity());
+    sl_opacity->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-    vl_op->addWidget(sl_transparency);
+    vl_op->addWidget(sl_opacity);
     gb_op->setLayout(vl_op);
     vl_main->addWidget(gb_op);
 
@@ -159,9 +158,9 @@ void MapPropertyWindow::create_window()
     connect(pb_ok, &QPushButton::clicked, this, &MapPropertyWindow::clicked_ok);
     connect(pb_cancel, &QPushButton::clicked, this, &MapPropertyWindow::clicked_cancel);
 
-    connect(le_transparency, &QLineEdit::textChanged, this, &MapPropertyWindow::clicked_apply);
-    connect(le_transparency, &QLineEdit::textChanged, this, &MapPropertyWindow::setOpacitySliderValue);
-    connect(sl_transparency, &QAbstractSlider::valueChanged, this, &MapPropertyWindow::setOpacityEditValue);
+    connect(le_opacity, &QLineEdit::textChanged, this, &MapPropertyWindow::clicked_apply);
+    connect(le_opacity, &QLineEdit::textChanged, this, &MapPropertyWindow::setOpacitySliderValue);
+    connect(sl_opacity, &QAbstractSlider::valueChanged, this, &MapPropertyWindow::setOpacityEditValue);
     connect(le_refresh_time, &QLineEdit::returnPressed, this, &MapPropertyWindow::clicked_apply);
     connect(le_min, &QLineEdit::returnPressed, this, &MapPropertyWindow::clicked_apply);
     connect(le_max, &QLineEdit::returnPressed, this, &MapPropertyWindow::clicked_apply);
@@ -198,9 +197,9 @@ void MapPropertyWindow::set_dynamic_limits_enabled(bool enabled)
 void MapPropertyWindow::clicked_apply()
 {
     //QMessageBox::information(0, "Information", "MapPropertyWindow::clicked_apply()");
-    double transparency = le_transparency->text().toDouble()/100.0;
-    double mod_transparency = std::max(0.0, std::min(transparency, 1.0));
-    m_property->set_opacity(1.0 - mod_transparency);
+    double opacity = le_opacity->text().toDouble()/100.0;
+    double mod_opacity = std::max(0.0, std::min(opacity, 1.0));
+    m_property->set_opacity(mod_opacity);
     m_property->set_refresh_time(le_refresh_time->text().toDouble());
 
     m_property->set_dynamic_legend(m_ckb->isChecked());
@@ -213,11 +212,10 @@ void MapPropertyWindow::clicked_apply()
 }
 void MapPropertyWindow::setOpacitySliderValue(QString text)
 {
-    double transparency = le_transparency->text().toDouble()/100.;
-    double mod_transparency = std::max(0.0, std::min(transparency, 1.0));
-    m_property->set_opacity(1.0 - mod_transparency);
-    
-    sl_transparency->setValue(transparency * 100.0);
+    double opacity = le_opacity->text().toDouble()/100.;
+    double mod_opacity = std::max(0.0, std::min(opacity, 1.0));
+    m_property->set_opacity(mod_opacity);
+    sl_opacity->setValue(100.0 * mod_opacity);
     return;
 }
 void MapPropertyWindow::setOpacityEditValue(int value)
@@ -225,7 +223,7 @@ void MapPropertyWindow::setOpacityEditValue(int value)
     double fraction = double(value) / 100.;
     m_property->set_opacity(1.0 - fraction);
     QString str = QString("%1").arg(value);
-    le_transparency->setText(str);
+    le_opacity->setText(str);
     return;
 }
 void MapPropertyWindow::clicked_ok()

@@ -62,7 +62,7 @@ public:
     void setRamp(QVector<QPair<qreal, QColor> > ramp);
     void setNormRamp(QVector<QPair<qreal, QColor> > ramp);
     void setMinMax(double, double);
-    int getRgbFromValue(double);
+    QColor getRgbFromValue(double);
 
     // set flag for visualize 
     void setMappingTextVisualize(bool);

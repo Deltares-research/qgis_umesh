@@ -113,13 +113,13 @@ public:
     void copyCache(int backgroundCacheIndex, int drawCacheIndex);
 
     void drawDot(double x, double y);
-    void drawMultiDot(vector<double>, vector<double>, vector<int> rgb);
+    void drawMultiDot(vector<double>, vector<double>, vector<QColor> rgb);
     void drawPoint(double x, double y);  // Draw a single point with currently set colour by routine fillColor()
-    void drawMultiPoint(vector<double> xs, vector<double> ys, vector<int> rgb);  // Draw an array of points according the given array of colours
+    void drawMultiPoint(vector<double> xs, vector<double> ys, vector<QColor> rgb);  // Draw an array of points according the given array of colours
     void drawPolygon(vector<double>, vector<double>);  // Draw a polygon. The polygon gets a color according the routine setFillColor
 
     void drawPolyline(vector<double>, vector<double>);  // Draw a polyline. This line width and line colour has to be set before this call
-    void drawLineGradient(vector<double> xs, vector<double> ys, vector<int> rgb);
+    void drawLineGradient(vector<double> xs, vector<double> ys, vector<QColor> rgb);
 
     void drawRectangle(double x, double y, int width, int height);
 
@@ -129,8 +129,8 @@ public:
 
     void setPointSize(int size);
     void setLineWidth(int size);
-    void setLineColor(int rgb);
-    void setFillColor(int rgb);
+    void setLineColor(QColor rgb);
+    void setFillColor(QColor rgb);
     void setFontName(const char* name);
     void setFontColor(int rgb);
     void setFontPointSize(int size);
@@ -205,7 +205,7 @@ protected:
 private:
     // functions
     void paint( QPainter * );
-    void determine_min_max(double *, int, double *, double *, vector<int> &, double);
+    void determine_min_max(double *, int, double *, double *, vector<QColor> &, double);
     void determine_min_max(double *, int, double *, double *, double);
     double statistics_averaged_length_of_cell(struct _variable *);
 
@@ -260,7 +260,7 @@ private:
     vector<long> dims;
     vector<double> mesh1d_x;
     vector<double> mesh1d_y;
-    vector<int> m_rgb_color;
+    vector<QColor> m_rgb_color;
     MapProperty * m_property;
     bool m_vscale_determined;
     double m_vec_length;

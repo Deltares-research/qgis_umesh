@@ -101,9 +101,9 @@ class AbstractCanvas {
 
     virtual void setPointSize(int size) = 0;
     virtual void setLineWidth(int size) = 0;
-    virtual void setLineColor(int rgb) = 0;
+    virtual void setLineColor(long rgb) = 0;
     virtual void setLineStyle(LineStyle style) = 0;
-    virtual void setFillColor(int rgb) = 0;
+    virtual void setFillColor(long rgb) = 0;
     virtual void setFontName(const char* name) = 0;
     virtual void setFontColor(int rgb) = 0;
     virtual void setFontPointSize(int size) = 0;

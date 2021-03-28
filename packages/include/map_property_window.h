@@ -56,9 +56,9 @@ signals:
 
 private:
     QWidget * wid;
-    QLabel * lbl_transparency;
-    QLineEdit * le_transparency;
-    QSlider * sl_transparency;
+    QLabel * lbl_opacity;
+    QLineEdit * le_opacity;
+    QSlider * sl_opacity;
     QLabel * lbl_refresh_time;
     QLineEdit * le_refresh_time;
     QLabel * lbl_min;

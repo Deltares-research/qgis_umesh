@@ -23,6 +23,8 @@
 #  define strdup _strdup
 #endif
 
+using namespace std;
+
 #define DRAW_CACHES false
 
 //
@@ -224,7 +226,10 @@ void MyCanvas::draw_data_at_face()
             }
             if (in_view && z_value[i] != missing_value)
             {
-                setFillColor(m_ramph->getRgbFromValue(z_value[i]));
+                QColor col = m_ramph->getRgbFromValue(z_value[i]);
+                double alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
             }
         }
@@ -484,7 +489,7 @@ void MyCanvas::draw_vector_arrow_at_face()
             coord_x.push_back(unitv_x_head);
             coord_y.push_back(unitv_y_head);
 
-            this->setFillColor(RGB(255, 255, 255));
+            this->setFillColor(QColor(255, 255, 255));
             this->setLineWidth(1);
             mCache_painter->setOpacity(0.66);
             int vh = qy(coord_y[3]) - qy(coord_y[2]);  // vector height
@@ -813,7 +818,7 @@ void MyCanvas::draw_data_along_edge()
         this->setPointSize(13);
         vector<double> edge_x(2);
         vector<double> edge_y(2);
-        vector<int> edge_color(2);
+        vector<QColor> edge_color(2);
 
         double missing_value = _variable->fill_value;
         determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
@@ -905,7 +910,7 @@ void MyCanvas::setUgridFile(UGRID * ugrid_file)
     _ugrid_file = ugrid_file;
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::determine_min_max(double * z, int length, double * z_min, double * z_max, vector<int> &rgb_color, double missing_value)
+void MyCanvas::determine_min_max(double * z, int length, double * z_min, double * z_max, vector<QColor> &rgb_color, double missing_value)
 {
     if (m_property->get_dynamic_legend())
     {
@@ -1180,7 +1185,7 @@ void MyCanvas::drawDot(double x, double y)
     mCache_painter->setPen( current_pen );
 }
 
-void MyCanvas::drawMultiDot(vector<double> xs , vector<double> ys , vector<int> rgb)
+void MyCanvas::drawMultiDot(vector<double> xs , vector<double> ys , vector<QColor> rgb)
 {
     int    i, j;
     size_t k;
@@ -1280,7 +1285,7 @@ void MyCanvas::drawPoint(double x, double y)
 //-----------------------------------------------------------------------------
 //
 // Draw an array of points according the given array of colours
-void MyCanvas::drawMultiPoint(vector<double> xs, vector<double> ys, vector<int> rgb)
+void MyCanvas::drawMultiPoint(vector<double> xs, vector<double> ys, vector<QColor> rgb)
 {
     int    i, j;
     size_t k;
@@ -1408,7 +1413,7 @@ void MyCanvas::drawPolyline(vector<double> xs, vector<double> ys)
     }
     mCache_painter->drawPolyline(polyline);
 }
-void MyCanvas::drawLineGradient(vector<double> xs, vector<double> ys, vector<int> rgb)
+void MyCanvas::drawLineGradient(vector<double> xs, vector<double> ys, vector<QColor> rgb)
 {
     assert(xs.size() == 2);
     QVector<QPair<QPoint, QColor>> point;
@@ -1468,7 +1473,7 @@ void MyCanvas::setLineWidth(int width)
 //
 //-----------------------------------------------------------------------------
 //
-void MyCanvas::setLineColor(int rgb)
+void MyCanvas::setLineColor(QColor rgb)
 {
     QPen currentPen(mCache_painter->pen() );
     currentPen.setColor( rgb );
@@ -1479,11 +1484,12 @@ void MyCanvas::setLineColor(int rgb)
 //
 //-----------------------------------------------------------------------------
 //
-void MyCanvas::setFillColor(int rgb)
+void MyCanvas::setFillColor(QColor rgb)
 {
-    if (rgb == 0) {
-        mCache_painter->setBrush(Qt::NoBrush );
-    } else {
+    //if (rgb == 0) {
+    //    mCache_painter->setBrush(Qt::NoBrush );
+    //} else 
+    {
 		QBrush * qbr =  new QBrush( QColor( rgb ) );
         mCache_painter->setBrush(*qbr);
     }

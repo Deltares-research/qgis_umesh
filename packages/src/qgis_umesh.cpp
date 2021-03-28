@@ -2517,8 +2517,14 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable * va
 }
 void qgis_umesh::create_vector_layer_geometry(QString fname, QString layer_name, struct _ntw_geom * ntw_geom, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    if (ntw_geom != NULL)
+    if (ntw_geom != nullptr)
     {
+        if (ntw_geom->nr_ntw == 0)
+        {
+            QString msg = QString("No Mesh1D geometry given on file: %1").arg(fname);
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+            return;
+        }
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
 
         bool layer_found = false;
