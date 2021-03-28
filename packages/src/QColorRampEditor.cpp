@@ -574,11 +574,15 @@ void QSlidersWidget::mouseDoubleClickEvent(QMouseEvent* e)
         {
             if (rampeditor_->chooser_)
             {
+                rampeditor_->chooser_->setCurrentColor(rampeditor_->sliders_[index]->getColor());
                 rampeditor_->chooser_->exec();
-                rampeditor_->sliders_[index]->setColor(rampeditor_->chooser_->selectedColor());
-                rampeditor_->norm_ramp[index].second = rampeditor_->chooser_->selectedColor();
-                rampeditor_->updateRamp();
-                rampeditor_->rampChanged();
+                if (rampeditor_->chooser_->result() == QDialog::Accepted)
+                {
+                    rampeditor_->sliders_[index]->setColor(rampeditor_->chooser_->selectedColor());
+                    rampeditor_->norm_ramp[index].second = rampeditor_->chooser_->selectedColor();
+                    rampeditor_->updateRamp();
+                    rampeditor_->rampChanged();
+                }
             }
         }
     }
