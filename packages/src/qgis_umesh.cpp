@@ -744,17 +744,22 @@ void qgis_umesh::openFile()
     list->append(*str);
     str->clear();
 
-    str->append("UGRID");
+    str->append("UGRID map");
     str->append(" (*_map.nc)");
     list->append(*str);
     str->clear();
 
-    str->append("UGRID");
+    str->append("UGRID mesh");
     str->append(" (*_net.nc)");
     list->append(*str);
     str->clear();
 
-//    str->append("UGRID");
+    str->append("netCDF files");
+    str->append(" (*.nc)");
+    list->append(*str);
+    str->clear();
+
+    //    str->append("UGRID");
 //    str->append(" (*_clm.nc)");
 //    list->append(*str);
 //    str->clear();
@@ -802,7 +807,7 @@ void qgis_umesh::openFile(QFileInfo ncfile)
     free(fname_c); fname_c = nullptr;
     if (status != NC_NOERR)
     {
-        QMessageBox::warning(0, tr("Warning"), tr("Cannot open netCDF file:\n%1\nThis filename is not supported QGIS unstructured mesh program.").arg(ncfile.absoluteFilePath()));
+        QMessageBox::warning(0, tr("Warning"), tr("Cannot open netCDF file:\n%1\nThis file is not supported by this QGIS plugin.").arg(ncfile.absoluteFilePath()));
         return;
     }
     _fil_index++;
@@ -852,6 +857,12 @@ void qgis_umesh::open_file_his_cf()
     str->append(" (*_his.nc)"); 
     list->append(*str);
     str->clear();
+
+    str->append("netCDF files");
+    str->append(" (*.nc)");
+    list->append(*str);
+    str->clear();
+
     str->append("All files");
     str->append(" (*.*)");
     list->append(*str);
@@ -900,7 +911,7 @@ void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
     (void)nc_close(ncid);
     if (status != NC_NOERR)
     {
-        QMessageBox::warning(0, tr("Warning"), tr("Cannot open netCDF file:\n%1\nThis filename is not supported QGIS unstructured mesh program.").arg(ncfile.absoluteFilePath()));
+        QMessageBox::warning(0, tr("Warning"), tr("Cannot open netCDF file:\n%1\nThis file is not supported by this QGIS plugin.").arg(ncfile.absoluteFilePath()));
         return;
     }
     free(fname);
