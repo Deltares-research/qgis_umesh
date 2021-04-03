@@ -1384,37 +1384,93 @@ void MapTimeManagerWindow::setSliderValue(QDateTime date_time)
 }
 void MapTimeManagerWindow::show_hide_map_data_1d()
 {
-    m_show_map_data_1d = !m_show_map_data_1d;
+    if (m_show_check_1d->checkState() == Qt::Checked)
+    {
+        m_show_map_data_1d = true;
+        m_pb_cur_view->setEnabled(true);
+    }
+    else if (m_show_check_1d->checkState() == Qt::Unchecked)
+    {
+        m_show_map_data_1d = false;
+        if (m_show_check_1d2d->checkState() == Qt::Unchecked &&
+            m_show_check_2d->checkState() == Qt::Unchecked)
+        {
+            m_pb_cur_view->setEnabled(false);
+        }
+    }
     cb_clicked_1d(m_cb_1d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_1d2d()
 {
-    m_show_map_data_1d2d = !m_show_map_data_1d2d;
+    if (m_show_check_1d2d->checkState() == Qt::Checked)
+    {
+        m_show_map_data_1d2d = true;
+        m_pb_cur_view->setEnabled(false);
+    }
+    else if (m_show_check_1d2d->checkState() == Qt::Unchecked)
+    {
+        m_show_map_data_1d2d = false;
+        if (m_show_check_1d->checkState() == Qt::Unchecked &&
+            m_show_check_2d->checkState() == Qt::Unchecked)
+        {
+            m_pb_cur_view->setEnabled(false);
+        }
+    }
     cb_clicked_1d2d(m_cb_1d2d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_2d()
 {
-    m_show_map_data_2d = !m_show_map_data_2d;
-    m_pb_cur_view->setEnabled(false);
-    if (m_show_map_data_2d)
+    if (m_show_check_2d->checkState() == Qt::Checked)
     {
+        m_show_map_data_2d = true;
         m_pb_cur_view->setEnabled(true);
     }
+    else if (m_show_check_2d->checkState() == Qt::Unchecked)
+    {
+        m_show_map_data_2d = false;
+        if (m_show_check_1d->checkState() == Qt::Unchecked &&
+            m_show_check_1d2d->checkState() == Qt::Unchecked)
+        {
+            m_pb_cur_view->setEnabled(false);
+        }
+    }
+
     cb_clicked_2d(m_cb_2d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_3d()
 {
-    m_show_map_data_3d = !m_show_map_data_3d;
+    if (m_show_check_3d->checkState() == Qt::Checked)
+    {
+        m_show_map_data_3d = true;
+    }
+    else if (m_show_check_3d->checkState() == Qt::Unchecked)
+    {
+        m_show_map_data_3d = false;
+    }
     cb_clicked_3d(m_cb_3d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_vector_2d()
 {
-    m_show_map_vector_2d = !m_show_map_vector_2d;
+    if (m_show_check_vec_2d->checkState() == Qt::Checked)
+    {
+        m_show_map_vector_2d = true;
+    }
+    else if (m_show_check_vec_2d->checkState() == Qt::Unchecked)
+    {
+        m_show_map_vector_2d = false;
+    }
     cb_clicked_vec_2d(m_cb_vec_2d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_vector_3d()
 {
-    m_show_map_vector_3d = !m_show_map_vector_3d;
+    if (m_show_check_vec_3d->checkState() == Qt::Checked)
+    {
+        m_show_map_vector_3d = true;
+    }
+    else if (m_show_check_vec_3d->checkState() == Qt::Unchecked)
+    {
+        m_show_map_vector_3d = false;
+    }
     cb_clicked_vec_3d(m_cb_vec_3d->currentIndex());
 }
 void MapTimeManagerWindow::spinbox_value_changed(int i_lay)
@@ -1450,12 +1506,37 @@ void MapTimeManagerWindow::clicked_current_view()
     //QMessageBox::information(0, "Information", "MapPropertyWindow::current_view()");
     if (AddCurrentViewWindow::get_count() == 0)  // create a window if it is not already there.
     {
-        if (m_show_map_data_2d)
+        if (m_show_map_data_1d)
+        {
+            struct _mesh1d* mesh1d = _ugrid_file->get_mesh1d();
+            struct _mapping* mapping = _ugrid_file->get_grid_mapping();
+
+            QString date_time = curr_date_time->dateTime().toString("1D - yyyy-MM-dd, HH:mm:ss");
+            int time_indx = _q_times.indexOf(curr_date_time->dateTime());
+            QString text = m_cb_1d->currentText();
+            QString quantity = date_time + "; " + text;
+
+            QVariant j = m_cb_1d->currentData();
+            int jj = j.toInt();
+            struct _variable* var = m_vars->variable[jj];
+
+            DataValuesProvider2D<double> var_time = var->data_2d;
+            double* z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
+            if (var->location == "edge")
+            {
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d->edge[0]->x, mesh1d->edge[0]->y, mapping->epsg);
+            }
+            else if (var->location == "node")
+            {
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d->node[0]->x, mesh1d->node[0]->y, mapping->epsg);
+            }
+        }
+        else if (m_show_map_data_2d)
         {
             struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
             struct _mapping * mapping = _ugrid_file->get_grid_mapping();
 
-            QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
+            QString date_time = curr_date_time->dateTime().toString("2D - yyyy-MM-dd, HH:mm:ss");
             int time_indx = _q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_2d->currentText();
             QString quantity = date_time + "; " + text;

@@ -68,7 +68,7 @@ void AddCurrentViewWindow::create_window()
     //int tab_width = table->horizontalHeader()->length() + table->verticalHeader()->width();
     int tab_height = table->verticalHeader()->length() + table->horizontalHeader()->height();
     table->setFixedHeight(tab_height);
-    table->setColumnWidth(0, 175);
+    table->setColumnWidth(0, 200);
     table->setColumnWidth(1, 375);
     connect(table, SIGNAL(clicked(QModelIndex)), this, SLOT(clicked(QModelIndex)));
 
