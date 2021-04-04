@@ -76,6 +76,7 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
 {
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::~closeEvent()");
     this->object_count = 0;
+    stop_time_loop = true;
     QStringList coord;
     coord << "";
     _MyCanvas->set_coordinate_type(coord);
@@ -1392,8 +1393,7 @@ void MapTimeManagerWindow::show_hide_map_data_1d()
     else if (m_show_check_1d->checkState() == Qt::Unchecked)
     {
         m_show_map_data_1d = false;
-        if (m_show_check_1d2d->checkState() == Qt::Unchecked &&
-            m_show_check_2d->checkState() == Qt::Unchecked)
+        if (m_show_check_2d == nullptr || m_show_check_2d->checkState() == Qt::Unchecked)
         {
             m_pb_cur_view->setEnabled(false);
         }
@@ -1428,8 +1428,7 @@ void MapTimeManagerWindow::show_hide_map_data_2d()
     else if (m_show_check_2d->checkState() == Qt::Unchecked)
     {
         m_show_map_data_2d = false;
-        if (m_show_check_1d->checkState() == Qt::Unchecked &&
-            m_show_check_1d2d->checkState() == Qt::Unchecked)
+        if (m_show_check_1d == nullptr || m_show_check_1d->checkState() == Qt::Unchecked)
         {
             m_pb_cur_view->setEnabled(false);
         }
