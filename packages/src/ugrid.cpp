@@ -469,7 +469,7 @@ long UGRID::read_times()
                     QString janm2 = time.toString();
                     QString janm3 = RefDate->toString("yyyy-MM-dd hh:mm:ss.zzz");
 #endif
-                    time_series[0].times.reserve(time_series[0].nr_times);
+                    time_series[0].times.resize(time_series[0].nr_times);
                     status = nc_get_var_double(this->m_ncid, i_var, time_series[0].times.data());
                     dt = 0.0;
                     if (time_series[0].nr_times >= 2)

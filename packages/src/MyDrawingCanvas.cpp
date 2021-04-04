@@ -133,6 +133,8 @@ void MyCanvas::draw_dot_at_face()
     return;  // Todo:
     if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "face")
     {
+        //auto start = std::chrono::steady_clock::now();
+
         string var_name = _variable->var_name;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
         DataValuesProvider2D<double>std_data_at_face = _ugrid_file->get_variable_values(var_name);
@@ -142,6 +144,13 @@ void MyCanvas::draw_dot_at_face()
         m_rgb_color.resize(mesh2d->face[0]->x.size());
         determine_min_max(z_value, mesh2d->face[0]->x.size(), &m_z_min, &m_z_max, m_rgb_color, missing_value);
 
+        //auto end = std::chrono::steady_clock::now();
+        //std::chrono::duration<double> elapse_time = end - start;
+        //QString msg = QString(tr("Timing reading dot at face: %2 [sec]").arg(elapse_time.count()));
+        //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+
+        //start = std::chrono::steady_clock::now();
+
         this->startDrawing(0);
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
@@ -149,6 +158,11 @@ void MyCanvas::draw_dot_at_face()
         this->drawMultiDot(mesh2d->face[0]->x, mesh2d->face[0]->y, m_rgb_color);
         mCache_painter->setOpacity(opacity);
         this->finishDrawing();
+
+        //end = std::chrono::steady_clock::now();
+        //elapse_time = end - start;
+        //msg = QString(tr("Timing drawing dot at face: %2 [sec]").arg(elapse_time.count()));
+        //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
     }
 }
 //-----------------------------------------------------------------------------
@@ -156,6 +170,8 @@ void MyCanvas::draw_data_at_face()
 {
     if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "face")
     {
+        //auto start = std::chrono::steady_clock::now();
+
         string var_name = _variable->var_name;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
         if (_variable->dims.size() == 2) // 2D: time, xy_space
@@ -198,6 +214,13 @@ void MyCanvas::draw_data_at_face()
         m_rgb_color.resize(mesh2d->face_nodes.size());
         determine_min_max(z_value, mesh2d->face_nodes.size(), &m_z_min, &m_z_max, missing_value);
 
+        //auto end = std::chrono::steady_clock::now();
+        //std::chrono::duration<double> elapse_time = end - start;
+        //QString msg = QString(tr("Timing reading data at face: %2 [sec]").arg(elapse_time.count()));
+        //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+
+        //start = std::chrono::steady_clock::now();
+        
         this->startDrawing(0);
         mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
         double opacity = mCache_painter->opacity();
@@ -235,6 +258,11 @@ void MyCanvas::draw_data_at_face()
         }
         mCache_painter->setOpacity(opacity);
         this->finishDrawing();
+
+        //end = std::chrono::steady_clock::now();
+        //elapse_time = end - start;
+        //msg = QString(tr("Timing drawing data at face: %2 [sec]\n").arg(elapse_time.count()));
+        //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
     }
 }
 //-----------------------------------------------------------------------------

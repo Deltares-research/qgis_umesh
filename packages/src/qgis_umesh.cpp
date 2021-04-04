@@ -801,6 +801,7 @@ void qgis_umesh::openFile()
 void qgis_umesh::openFile(QFileInfo ncfile)
 {
     int ncid;
+    auto start = std::chrono::steady_clock::now();
     char * fname_c = strdup(ncfile.absoluteFilePath().toUtf8());
     int status = nc_open(fname_c, NC_NOWRITE, &ncid);
     (void)nc_close(ncid);
@@ -841,6 +842,11 @@ void qgis_umesh::openFile(QFileInfo ncfile)
         return;
     }
     activate_layers();
+
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapse_time = end - start;
+    QString msg = QString(tr("Timing reading meta data from netCDF file \"%1\": %2 [sec]").arg(ncfile.fileName()).arg(elapse_time.count()));
+    QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
 }
 //
 //-----------------------------------------------------------------------------
@@ -898,7 +904,6 @@ void qgis_umesh::open_file_his_cf()
         {
             this->pgBar->hide();
         }
-
     }
     delete fd;
     delete str;
@@ -906,6 +911,7 @@ void qgis_umesh::open_file_his_cf()
 void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
 {
     int ncid;
+    auto start = std::chrono::steady_clock::now();
     char * fname = strdup(ncfile.absoluteFilePath().toUtf8());
     int status = nc_open(fname, NC_NOWRITE, &ncid);
     (void)nc_close(ncid);
@@ -922,6 +928,11 @@ void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
     //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1.").arg(ncfile.absoluteFilePath()));
     _his_cf_file->read();
     activate_observation_layers();
+
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapse_time = end - start;
+    QString msg = QString(tr("Timing reading meta data from netCDF file \"%1\": %2 [sec]").arg(ncfile.fileName()).arg(elapse_time.count()));
+    QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
 }
 //
 //-----------------------------------------------------------------------------
