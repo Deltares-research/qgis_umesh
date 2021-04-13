@@ -16,7 +16,10 @@
 
 #include <QtGui/QIcon>
 
+#ifdef NATIVE_C
+#else
 #include <qgsmessagelog.h>
+#endif
 
 //#include <boost/timer/timer.hpp>
 #include "data_struct.h"
@@ -150,6 +153,7 @@ public:
     vector<int> flag_values;
     vector<string> flag_meanings;
     //
+    bool draw;
     bool read;
     bool time_series;
     vector<string> dim_names;

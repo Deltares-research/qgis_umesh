@@ -304,6 +304,8 @@ long UGRID::read_mesh()
         string mesh_b;
         string location_a;
         string location_b;
+        int topology_a;
+        int topology_b;
 
         int i = 0;
         for (int i_var = 0; i_var < nvars; i_var++)
@@ -314,12 +316,14 @@ long UGRID::read_mesh()
             {
                 mesh_a = m_mesh_contact->mesh_a;
                 location_a = m_mesh_contact->location_a;
+                status = get_attribute(this->m_ncid, i_var, "topology_dimension", &topology_a);
                 i++;
             }
             if (var_name == m_mesh_contact->mesh_b)
             {
                 mesh_b = m_mesh_contact->mesh_b;
                 location_b = m_mesh_contact->location_b;
+                status = get_attribute(this->m_ncid, i_var, "topology_dimension", &topology_b);
                 i++;
             }
             if (i == 2)
@@ -328,28 +332,71 @@ long UGRID::read_mesh()
             }
         }
         // looking for mesh_a
+
         m_mesh_contact->node[0]->x = vector<double>(m_mesh_contact->node[m_nr_mesh_contacts - 1]->count);
         m_mesh_contact->node[0]->y = vector<double>(m_mesh_contact->node[m_nr_mesh_contacts - 1]->count);
-        if (location_a == "node")
+
+        // begin HACK Dijkring48
+        // location_a = "node";
+        // topology_a = 1;
+        // location_b = "face";
+        // topology_b = 2;
+        // end HACK Dijkring48
+
+        for (int j = 0; j < m_mesh_contact->edge[0]->count; j++)
         {
-            for (int j = 0; j < m_mesh_contact->edge[0]->count; j++)
+            if (topology_a == 1)
             {
                 int p1 = m_mesh_contact->edge[0]->edge_nodes[j][0];
-                m_mesh_contact->node[0]->x[2 * j] = m_mesh1d->node[0]->x[p1];
-                m_mesh_contact->node[0]->y[2 * j] = m_mesh1d->node[0]->y[p1];
-                m_mesh_contact->edge[0]->edge_nodes[j][0] = 2 * j;
+                if (location_a == "node")
+                {
+                    m_mesh_contact->node[0]->x[2 * j] = m_mesh1d->node[0]->x[p1];
+                    m_mesh_contact->node[0]->y[2 * j] = m_mesh1d->node[0]->y[p1];
+                }
             }
+            else if (topology_a == 2)
+            {
+                int p1 = m_mesh_contact->edge[0]->edge_nodes[j][0];
+                if (location_a == "node")
+                {
+                    m_mesh_contact->node[0]->x[2 * j] = m_mesh2d->node[0]->x[p1];
+                    m_mesh_contact->node[0]->y[2 * j] = m_mesh2d->node[0]->y[p1];
+                }
+                if (location_a == "face")
+                {
+                    m_mesh_contact->node[0]->x[2 * j] = m_mesh2d->face[0]->x[p1];
+                    m_mesh_contact->node[0]->y[2 * j] = m_mesh2d->face[0]->y[p1];
+                }
+            }
+            m_mesh_contact->edge[0]->edge_nodes[j][0] = 2 * j;
         }
         // looking for mesh_b
-        if (location_b == "face")
+        for (int j = 0; j < m_mesh_contact->edge[0]->count; j++)
         {
-            for (int j = 0; j < m_mesh_contact->edge[0]->count; j++)
+            if (topology_b == 1)
             {
                 int p1 = m_mesh_contact->edge[0]->edge_nodes[j][1];
-                m_mesh_contact->node[0]->x[2 * j + 1] = m_mesh2d->face[0]->x[p1];
-                m_mesh_contact->node[0]->y[2 * j + 1] = m_mesh2d->face[0]->y[p1];
-                m_mesh_contact->edge[0]->edge_nodes[j][1] = 2 * j + 1;
+                if (location_b == "node")
+                {
+                    m_mesh_contact->node[0]->x[2 * j + 1] = m_mesh1d->node[0]->x[p1];
+                    m_mesh_contact->node[0]->y[2 * j + 1] = m_mesh1d->node[0]->y[p1];
+                }
             }
+            if (topology_b == 2)
+            {
+                int p1 = m_mesh_contact->edge[0]->edge_nodes[j][1];
+                if (location_b == "node")
+                {
+                    m_mesh_contact->node[0]->x[2 * j + 1] = m_mesh2d->node[0]->x[p1];
+                    m_mesh_contact->node[0]->y[2 * j + 1] = m_mesh2d->node[0]->y[p1];
+                }
+                else if (location_b == "face")
+                {
+                    m_mesh_contact->node[0]->x[2 * j + 1] = m_mesh2d->face[0]->x[p1];
+                    m_mesh_contact->node[0]->y[2 * j + 1] = m_mesh2d->face[0]->y[p1];
+                }
+            }
+            m_mesh_contact->edge[0]->edge_nodes[j][1] = 2 * j + 1;
         }
         length = m_mesh_contact->node[0]->name.size();
         length += m_mesh_contact->node[0]->long_name.size();
@@ -656,6 +703,7 @@ long UGRID::read_variables()
                 int a = 1;
             }
 
+            m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
             m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = false;
             for (int j = 0; j < ndims; j++)
             {
@@ -715,6 +763,7 @@ long UGRID::read_variables()
                                 std::stringstream ss;
                                 std::streamsize nsig = int(log10(nr_sedtot)) + 1;
                                 ss << std::setfill('0') << setw(nsig) << j + 1;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = false;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->mesh;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->location = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->location;
@@ -821,6 +870,7 @@ long UGRID::read_variables()
                                 ss << std::setfill('0') << setw(nsig) << j+1;
                                 string name_sed = "Sediment " + ss.str();
                                 // reduce dimension (from 3 to 2)
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->mesh;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->location = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->location;
@@ -878,6 +928,7 @@ long UGRID::read_variables()
                                     m_mesh_vars->variable[m_nr_mesh_var - 1] = new _variable();
                                     m_mesh_vars->nr_vars = m_nr_mesh_var;
                                 }
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->mesh;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->location = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->location;
@@ -919,7 +970,10 @@ long UGRID::read_variables()
                 // - z-space (nbedlayers)
                 QString qname = QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name);
                 QString msg = QString("Variable \'%1\' does have 4 dimensions, still under construction.").arg(qname) ;
+#ifdef NATIVE_C
+#else
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+#endif
                 bool contains_time_dimension = false;
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
@@ -964,6 +1018,7 @@ long UGRID::read_variables()
                                 ss << std::setfill('0') << setw(nsig) << j + 1;
                                 string name_sed = "Sediment " + ss.str();
                                 // reduce dimension (from 3 to 2)
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->mesh;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->location = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->location;
@@ -1160,8 +1215,11 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
             i_var = i;
             if (!m_mesh_vars->variable[i]->read)  // are the z_values already read
             {
+#ifdef NATIVE_C
+#else
                 m_pgBar->show();
                 m_pgBar->setValue(0);
+#endif
                 status = nc_inq_varid(this->m_ncid, var_name.c_str(), &var_id);
                 status = nc_inq_vartype(this->m_ncid, var_id, &var_type);
                 size_t length = 1;
@@ -1169,7 +1227,10 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
                 {
                     length *= m_mesh_vars->variable[i]->dims[j];
                 }
+#ifdef NATIVE_C
+#else
                 m_pgBar->setValue(400);
+#endif
                 double * values_c = (double *)malloc(sizeof(double) * length);
                 if (var_type == NC_DOUBLE)
                 {
@@ -1186,7 +1247,10 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
                     }
                     free(values_i);
                 }
+#ifdef NATIVE_C
+#else
                 m_pgBar->setValue(800);
+#endif
                 if (m_mesh_vars->variable[i]->dims.size() == 1)
                 {
                     long time_dim = 1;
@@ -1235,8 +1299,11 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
                     continue;
                 }
                 m_mesh_vars->variable[i]->read = true;
+#ifdef NATIVE_C
+#else
                 m_pgBar->setValue(1000);
                 m_pgBar->hide();
+#endif
                 return m_mesh_vars->variable[i_var]->data_2d; // variable value is found
             }
             return m_mesh_vars->variable[i_var]->data_2d;
@@ -1265,7 +1332,10 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
             i_var = i; 
             if (!m_mesh_vars->variable[i]->read)  // are the z_values already read
             {
+#ifdef NATIVE_C
+#else
                 m_pgBar->show();
+#endif
                 status = nc_inq_varid(this->m_ncid, var_name.c_str(), &var_id);
                 size_t length = 1;
                 for (int j = 0; j < m_mesh_vars->variable[i]->dims.size(); j++)
@@ -1276,7 +1346,10 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
                 //boost::timer::cpu_timer timer;
                 status = nc_get_var_double(this->m_ncid, var_id, read_c);
                 //std::cout << timer.format() << '\n';
+#ifdef NATIVE_C
+#else
                 m_pgBar->setValue(100);
+#endif
                 long time_dim = m_mesh_vars->variable[i]->dims[0];
                 long layer_dim = m_mesh_vars->variable[i]->dims[1];
                 long xy_dim = m_mesh_vars->variable[i]->dims[2];
@@ -1304,7 +1377,10 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
                                 values_c[k_target] = read_c[k_source];
 
                                 double fraction = 100. + 900. * double(k_target) / double(length);
+#ifdef NATIVE_C
+#else
                                 m_pgBar->setValue(int(fraction));
+#endif
                             }
                         }
                     }
@@ -1334,7 +1410,10 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
                 }
                 m_mesh_vars->variable[i_var]->data_3d = DataValuesProvider3D;
                 m_mesh_vars->variable[i]->read = true;
+#ifdef NATIVE_C
+#else
                 m_pgBar->hide();
+#endif
                 return m_mesh_vars->variable[i_var]->data_3d;  // if read, skip all remaining variables
             }
             return m_mesh_vars->variable[i_var]->data_3d;
@@ -1361,7 +1440,10 @@ DataValuesProvider4D<double> UGRID::get_variable_4d_values(const string var_name
         {
             if (!m_mesh_vars->variable[i]->read)  // are the z_values already read
             {
+#ifdef NATIVE_C
+#else
                 m_pgBar->show();
+#endif
                 status = nc_inq_varid(this->m_ncid, var_name.c_str(), &var_id);
                 size_t length = 1;
                 for (int j = 0; j < m_mesh_vars->variable[i]->dims.size(); j++)
@@ -1372,7 +1454,10 @@ DataValuesProvider4D<double> UGRID::get_variable_4d_values(const string var_name
                 //boost::timer::cpu_timer timer;
                 status = nc_get_var_double(this->m_ncid, var_id, read_c);
                 //std::cout << timer.format() << '\n';
+#ifdef NATIVE_C
+#else
                 m_pgBar->setValue(100);
+#endif
                 struct _mesh2d * m2d = this->get_mesh2d();
 
                 vector<long> dims(4);  // required order of dimensions: time, nbedlayers, nsedtot, nFaces
@@ -1459,7 +1544,10 @@ DataValuesProvider4D<double> UGRID::get_variable_4d_values(const string var_name
                 }
                 m_mesh_vars->variable[i]->data_4d = DataValuesProvider4D;
                 m_mesh_vars->variable[i]->read = true;
+#ifdef NATIVE_C
+#else
                 m_pgBar->hide();
+#endif
                 return m_mesh_vars->variable[i]->data_4d;  // if read, skip all remaining variables
             }
             return m_mesh_vars->variable[i]->data_4d;
@@ -1766,7 +1854,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
 
     string att_value;
 
-    if (cf_role == "parent_mesh_topology")  // 1D + 2D mesh
+    if (cf_role == "mesh_topology_contact")  // 1D + 2D mesh
     {
         m_nr_mesh_contacts += 1;
         if (m_nr_mesh_contacts == 1)
@@ -1778,7 +1866,18 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
         }
         m_mesh_contact_strings[m_nr_mesh_contacts - 1] = new _mesh_contact_string();
 
-        read_composite_mesh_attributes(m_mesh_contact_strings[m_nr_mesh_contacts - 1], i_var, var_name);
+        if (cf_role == "parent_mesh_topology")
+        {
+            read_composite_mesh_attributes(m_mesh_contact_strings[m_nr_mesh_contacts - 1], i_var, var_name);
+        }
+        else
+        {
+            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->meshes = "";
+            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_contact = var_name;
+
+            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_a = "";
+            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_b = "";
+        }
 
         if (m_nr_mesh_contacts == 1)
         {
@@ -1862,6 +1961,19 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
         m_mesh_contact->location_a = strdup(token[1].c_str());
         m_mesh_contact->mesh_b = strdup(token[2].c_str());
         m_mesh_contact->location_b = strdup(token[3].c_str());
+
+        if (m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_a == "")
+        {
+            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_a = m_mesh_contact->mesh_a;
+        }
+        if (m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_b == "")
+        {
+            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_b = m_mesh_contact->mesh_b;
+        }
+        if (m_mesh_contact_strings[m_nr_mesh_contacts - 1]->meshes == "")
+        {
+            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->meshes = m_mesh_contact->mesh_a + " " + m_mesh_contact->mesh_b;
+        }
 
         // (x, y) will be filled later, first the 1D nodes along branches should calculated
 
@@ -2731,8 +2843,11 @@ int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_va
     }
     else
     {
+#ifdef NATIVE_C
+#else
         QString msg = QString("UGRID::read_geometry_attributes\nFile does not contain the geometry coordinates attribute");
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+#endif
         status = 1;
     }
 

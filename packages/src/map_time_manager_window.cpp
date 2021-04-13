@@ -1050,6 +1050,19 @@ void MapTimeManagerWindow::last_date_time_changed(const QDateTime & date_time)
 
 void MapTimeManagerWindow::cb_clicked_1d(int item)
 {
+    for (int i = 0; i < m_cb_1d->count(); ++i)
+    {
+        QVariant k = m_cb_1d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+
+    QString str = m_cb_1d->itemText(item);
+    QVariant j = m_cb_1d->itemData(item);
+    int jj = j.toInt();
+    struct _variable* var = m_vars->variable[jj];
+
     _MyCanvas->reset_min_max();
     _MyCanvas->set_draw_vector(VECTOR_NONE);
     if (m_map_property_window != nullptr)
@@ -1062,14 +1075,14 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
         QStringList coord;
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
-        _MyCanvas->set_variable(nullptr);
-        _MyCanvas->empty_caches();
+        var->draw = false;
+        _MyCanvas->empty_cache(CACHE_1D);
         return;
     }
     else
     {
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
-        if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        //if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
@@ -1079,6 +1092,19 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
 
 void MapTimeManagerWindow::cb_clicked_1d2d(int item)
 {
+    for (int i = 0; i < m_cb_1d2d->count(); ++i)
+    {
+        QVariant k = m_cb_1d2d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+
+    QString str = m_cb_1d2d->itemText(item);
+    QVariant j = m_cb_1d2d->itemData(item);
+    int jj = j.toInt();
+    struct _variable* var = m_vars->variable[jj];
+
     _MyCanvas->reset_min_max();
     _MyCanvas->set_draw_vector(VECTOR_NONE);
     if (m_map_property_window != nullptr)
@@ -1091,8 +1117,8 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
         QStringList coord;
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
-        _MyCanvas->set_variable(nullptr);
-        _MyCanvas->empty_caches();
+        var->draw = false;
+        _MyCanvas->empty_cache(CACHE_1D2D);
         return;
     }
     else
@@ -1107,6 +1133,19 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
 }
 void MapTimeManagerWindow::cb_clicked_2d(int item)
 {
+    for (int i = 0; i < m_cb_2d->count(); ++i)
+    {
+        QVariant k = m_cb_2d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+
+    QString str = m_cb_2d->itemText(item);
+    QVariant j = m_cb_2d->itemData(item);
+    int jj = j.toInt();
+    struct _variable* var = m_vars->variable[jj];
+
     _MyCanvas->reset_min_max();
     _MyCanvas->set_draw_vector(VECTOR_NONE);
     if (m_map_property_window != nullptr)
@@ -1119,13 +1158,13 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
         QStringList coord;
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
-        _MyCanvas->set_variable(nullptr);
-        _MyCanvas->empty_caches();
+        var->draw = false;
+        _MyCanvas->empty_cache(CACHE_2D);
         return;
     }
     else
     {
-        if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
+        //if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
         if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
@@ -1135,6 +1174,14 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
 }
 void MapTimeManagerWindow::cb_clicked_3d(int item)
 {
+    for (int i = 0; i < m_cb_3d->count(); ++i)
+    {
+        QVariant k = m_cb_3d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+
     _MyCanvas->set_draw_vector(VECTOR_NONE);
     if (m_map_property_window != nullptr)
     {
@@ -1191,6 +1238,14 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
 }
 void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
 {
+    for (int i = 0; i < m_cb_vec_2d->count(); ++i)
+    {
+        QVariant k = m_cb_vec_2d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+
     _MyCanvas->reset_min_max();
     if (m_map_property_window != nullptr)
     {
@@ -1217,6 +1272,14 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
 }
 void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
 {
+    for (int i = 0; i < m_cb_vec_3d->count(); ++i)
+    {
+        QVariant k = m_cb_vec_3d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+
     QString str = m_cb_vec_3d->itemText(item);
     QVariant j = m_cb_vec_3d->itemData(item);
     QStringList slist = j.toStringList();
@@ -1297,18 +1360,17 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
     string var_name = var->var_name;
     string location = var->location;
 
-    if (location == "edge")
+    // begin HACK edge vs contact
+    if (location == "edge" || location == "contact")
     {
-        //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
-        _MyCanvas->set_variable(var);
+        var->draw = true;
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->set_current_step(i);
         _MyCanvas->draw_all();
     }
     else if (location == "face")  // || location == "volume")  // volume at same location as face, because of topview in a GIS system
     {
-        //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
-        _MyCanvas->set_variable(var);
+        var->draw = true;
         if (m_sb_hydro_layer != nullptr) {
             _MyCanvas->set_hydro_layer(m_sb_hydro_layer->value());
         }
@@ -1320,14 +1382,14 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
     }
     else if (location == "node")
     {
-        _MyCanvas->set_variable(var);
+        var->draw = true;
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->set_current_step(i);
         _MyCanvas->draw_all();
     }
     else
     {
-        QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+        QMessageBox::warning(0, tr("draw_time_dependent_data"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
     }
 }
 void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
@@ -1342,31 +1404,30 @@ void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
     string var_name = var->var_name;
     string location = var->location;
 
-    if (location == "edge")
+    // begin HACK edge vs contact
+    if (location == "edge" || location == "contact")
     {
-        //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
-        _MyCanvas->set_variable(var);
+        var->draw = true;;
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->set_current_step(i);
         _MyCanvas->draw_all();
     }
     else if (location == "face")
     {
-        //QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
-        _MyCanvas->set_variable(var);
+        var->draw = true;;
         //int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->draw_all();
     }
     else if (location == "node")
     {
-        _MyCanvas->set_variable(var);
+        var->draw = true;;
         int i = _q_times.indexOf(curr_date_time->dateTime());
         _MyCanvas->set_current_step(i);
         _MyCanvas->draw_all();
     }
     else
     {
-        QMessageBox::warning(0, tr("Message"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+        QMessageBox::warning(0, tr("draw_time_dependent_data_1d"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
     }
 }
 

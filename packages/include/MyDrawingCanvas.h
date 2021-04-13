@@ -48,13 +48,19 @@
 #include <QtWidgets/QWidget>
 
 
-#define NR_CACHES 1
 #define IMAGE_WIDTH  3840 // 1420 // 
 #define IMAGE_HEIGHT 2140 // 1080 // 
 enum vector_quantity {
     VECTOR_NONE,
     VECTOR_ARROW,
     VECTOR_DIRECTION 
+};
+enum drawing_cache {
+    CACHE_VEC_2D,
+    CACHE_1D,
+    CACHE_1D2D,
+    CACHE_2D,
+    NR_CACHES
 };
 
 class MyCanvas : public QgsMapTool, public QgsMapCanvasItem
@@ -96,6 +102,7 @@ public:
     MyCanvas(QgisInterface *);
     ~MyCanvas();
 
+    void empty_cache(drawing_cache);
     void empty_caches();
 
     void startDrawing(int);

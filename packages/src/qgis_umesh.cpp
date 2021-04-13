@@ -86,8 +86,6 @@ void qgis_umesh::onRemovedChildren(QString name)
 //
 qgis_umesh::~qgis_umesh()
 {
-    int i;
-    i = 5;
 }
 // -----------------------------------------------------------
 void qgis_umesh::CrsChanged()
@@ -800,8 +798,8 @@ void qgis_umesh::openFile()
 }
 void qgis_umesh::openFile(QFileInfo ncfile)
 {
-    int ncid;
     auto start = std::chrono::steady_clock::now();
+    int ncid;
     char * fname_c = strdup(ncfile.absoluteFilePath().toUtf8());
     int status = nc_open(fname_c, NC_NOWRITE, &ncid);
     (void)nc_close(ncid);
@@ -841,11 +839,16 @@ void qgis_umesh::openFile(QFileInfo ncfile)
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
         return;
     }
-    activate_layers();
-
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapse_time = end - start;
     QString msg = QString(tr("Timing reading meta data from netCDF file \"%1\": %2 [sec]").arg(ncfile.fileName()).arg(elapse_time.count()));
+    QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+
+    start = std::chrono::steady_clock::now();
+    activate_layers();
+    end = std::chrono::steady_clock::now();
+    elapse_time = end - start;
+    msg = QString(tr("Timing activate layers \"%1\": %2 [sec]").arg(ncfile.fileName()).arg(elapse_time.count()));
     QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
 }
 //

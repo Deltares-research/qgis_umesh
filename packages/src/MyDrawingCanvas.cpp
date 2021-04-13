@@ -126,6 +126,7 @@ void MyCanvas::draw_all()
     draw_line_at_edge();
     draw_vector_arrow_at_face();
     draw_vector_direction_at_face();
+    this->finishDrawing();
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_face()
@@ -151,7 +152,7 @@ void MyCanvas::draw_dot_at_face()
 
         //start = std::chrono::steady_clock::now();
 
-        this->startDrawing(0);
+        this->startDrawing(CACHE_2D);
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         this->setPointSize(13);
@@ -168,102 +169,110 @@ void MyCanvas::draw_dot_at_face()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_data_at_face()
 {
-    if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "face")
+    if (_ugrid_file == nullptr) { return; }
+
+    struct _mesh_variable* vars = _ugrid_file->get_variables();
+    struct _variable* var;
+    for (int i = 0; i < vars->nr_vars; ++i)
     {
-        //auto start = std::chrono::steady_clock::now();
+        var = vars->variable[i];
+        if (var->draw && var->location == "face")
+        {
+            //auto start = std::chrono::steady_clock::now();
 
-        string var_name = _variable->var_name;
-        struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
-        if (_variable->dims.size() == 2) // 2D: time, xy_space
-        {
-            DataValuesProvider2D<double> std_data_at_face = _ugrid_file->get_variable_values(var_name);
-            z_value = std_data_at_face.GetValueAtIndex(_current_step, 0);
-        }
-        else if (_variable->dims.size() == 3) // 3D: time, layer, xy_space
-        {
-            DataValuesProvider3D<double> std_data_at_face_3d = _ugrid_file->get_variable_3d_values(var_name);
-            if (_variable->sediment_index != -1)
+            string var_name = var->var_name;
+            struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
+            if (var->dims.size() == 2) // 2D: time, xy_space
             {
-                z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, _variable->sediment_index, 0);
+                DataValuesProvider2D<double> std_data_at_face = _ugrid_file->get_variable_values(var_name);
+                z_value = std_data_at_face.GetValueAtIndex(_current_step, 0);
             }
-            else
+            else if (var->dims.size() == 3) // 3D: time, layer, xy_space
             {
-                if (m_hydro_layer > 0)
+                DataValuesProvider3D<double> std_data_at_face_3d = _ugrid_file->get_variable_3d_values(var_name);
+                if (var->sediment_index != -1)
                 {
-                    z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+                    z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, var->sediment_index, 0);
                 }
-                if (m_bed_layer > 0)
+                else
                 {
-                    z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, m_bed_layer - 1, 0);
-                }
-            }
-        }
-        else if (_variable->dims.size() == 4) // 4D: time, layer, sediment, xy_space
-        {
-            DataValuesProvider4D<double> std_data_at_face_4d = _ugrid_file->get_variable_4d_values(var_name);
-            if (_variable->sediment_index != -1)
-            {
-                z_value = std_data_at_face_4d.GetValueAtIndex(_current_step, m_bed_layer-1, _variable->sediment_index, 0);
-            }
-        }
-        else
-        {
-            QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 4).").arg(var_name.c_str()));
-        }
-        double missing_value = _variable->fill_value;
-        m_rgb_color.resize(mesh2d->face_nodes.size());
-        determine_min_max(z_value, mesh2d->face_nodes.size(), &m_z_min, &m_z_max, missing_value);
-
-        //auto end = std::chrono::steady_clock::now();
-        //std::chrono::duration<double> elapse_time = end - start;
-        //QString msg = QString(tr("Timing reading data at face: %2 [sec]").arg(elapse_time.count()));
-        //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-
-        //start = std::chrono::steady_clock::now();
-        
-        this->startDrawing(0);
-        mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
-        double opacity = mCache_painter->opacity();
-        mCache_painter->setOpacity(m_property->get_opacity());
-        vector<double> vertex_x(mesh2d->face_nodes[0].size());
-        vector<double> vertex_y(mesh2d->face_nodes[0].size());
-        this->setPointSize(13);
-        for (int i = 0; i < mesh2d->face_nodes.size(); i++)
-        {
-            vertex_x.clear();
-            vertex_y.clear();
-            bool in_view = false;
-            for (int j = 0; j < mesh2d->face_nodes[i].size(); j++)
-            {
-                int p1 = mesh2d->face_nodes[i][j];
-                if ( p1 > -1)
-                {
-                    vertex_x.push_back(mesh2d->node[0]->x[p1]);
-                    vertex_y.push_back(mesh2d->node[0]->y[p1]);
-                    if (mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
-                        mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY())
+                    if (m_hydro_layer > 0)
                     {
-                        in_view = true; // point in visible area, do not skip thi polygon
+                        z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+                    }
+                    if (m_bed_layer > 0)
+                    {
+                        z_value = std_data_at_face_3d.GetValueAtIndex(_current_step, m_bed_layer - 1, 0);
                     }
                 }
             }
-            if (in_view && z_value[i] != missing_value)
+            else if (var->dims.size() == 4) // 4D: time, layer, sediment, xy_space
             {
-                QColor col = m_ramph->getRgbFromValue(z_value[i]);
-                double alpha = min(col.alphaF(), m_property->get_opacity());
-                mCache_painter->setOpacity(alpha);
-                this->setFillColor(col);
-                this->drawPolygon(vertex_x, vertex_y);
+                DataValuesProvider4D<double> std_data_at_face_4d = _ugrid_file->get_variable_4d_values(var_name);
+                if (var->sediment_index != -1)
+                {
+                    z_value = std_data_at_face_4d.GetValueAtIndex(_current_step, m_bed_layer-1, var->sediment_index, 0);
+                }
             }
-        }
-        mCache_painter->setOpacity(opacity);
-        this->finishDrawing();
+            else
+            {
+                QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 4).").arg(var_name.c_str()));
+            }
+            double missing_value = var->fill_value;
+            m_rgb_color.resize(mesh2d->face_nodes.size());
+            determine_min_max(z_value, mesh2d->face_nodes.size(), &m_z_min, &m_z_max, missing_value);
 
-        //end = std::chrono::steady_clock::now();
-        //elapse_time = end - start;
-        //msg = QString(tr("Timing drawing data at face: %2 [sec]\n").arg(elapse_time.count()));
-        //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            //auto end = std::chrono::steady_clock::now();
+            //std::chrono::duration<double> elapse_time = end - start;
+            //QString msg = QString(tr("Timing reading data at face: %2 [sec]").arg(elapse_time.count()));
+            //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+
+            //start = std::chrono::steady_clock::now();
+        
+            this->startDrawing(CACHE_2D);
+            mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
+            double opacity = mCache_painter->opacity();
+            mCache_painter->setOpacity(m_property->get_opacity());
+            vector<double> vertex_x(mesh2d->face_nodes[0].size());
+            vector<double> vertex_y(mesh2d->face_nodes[0].size());
+            this->setPointSize(13);
+            for (int i = 0; i < mesh2d->face_nodes.size(); i++)
+            {
+                vertex_x.clear();
+                vertex_y.clear();
+                bool in_view = false;
+                for (int j = 0; j < mesh2d->face_nodes[i].size(); j++)
+                {
+                    int p1 = mesh2d->face_nodes[i][j];
+                    if ( p1 > -1)
+                    {
+                        vertex_x.push_back(mesh2d->node[0]->x[p1]);
+                        vertex_y.push_back(mesh2d->node[0]->y[p1]);
+                        if (mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                            mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY())
+                        {
+                            in_view = true; // point in visible area, do not skip thi polygon
+                        }
+                    }
+                }
+                if (in_view && z_value[i] != missing_value)
+                {
+                    QColor col = m_ramph->getRgbFromValue(z_value[i]);
+                    double alpha = min(col.alphaF(), m_property->get_opacity());
+                    mCache_painter->setOpacity(alpha);
+                    this->setFillColor(col);
+                    this->drawPolygon(vertex_x, vertex_y);
+                }
+            }
+            mCache_painter->setOpacity(opacity);
+
+            //end = std::chrono::steady_clock::now();
+            //elapse_time = end - start;
+            //msg = QString(tr("Timing drawing data at face: %2 [sec]\n").arg(elapse_time.count()));
+            //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+        }
     }
+
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::set_draw_vector(vector_quantity vector_draw)
@@ -371,7 +380,7 @@ void MyCanvas::draw_vector_arrow_at_face()
             {
                 QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Layer velocities not yet implemented"));
             }
-            this->startDrawing(0);
+            this->startDrawing(CACHE_VEC_2D);
             //rgb_color.resize(u_value.size());
             //for (int i = 0; i < u_value.size(); i++)
             //{
@@ -587,7 +596,7 @@ void MyCanvas::draw_vector_direction_at_face()
 
         m_ramph_vec_dir->update();
 
-        this->startDrawing(0);
+        this->startDrawing(CACHE_2D);
         mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
@@ -644,7 +653,7 @@ void MyCanvas::draw_dot_at_node()
         m_rgb_color.resize(mesh1d->node[0]->x.size());
         determine_min_max(z_value, mesh1d->node[0]->x.size(), &m_z_min, &m_z_max, m_rgb_color, missing_value);
 
-        this->startDrawing(0);
+        this->startDrawing(CACHE_1D);
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         this->setPointSize(13);
@@ -703,7 +712,7 @@ void MyCanvas::draw_dot_at_edge()
             edge_y.push_back(0.5*(y1 + y2));
         }
 
-        this->startDrawing(0);
+        this->startDrawing(CACHE_1D);
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         this->setPointSize(13);
@@ -715,170 +724,186 @@ void MyCanvas::draw_dot_at_edge()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_line_at_edge()
 {
-    if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "edge")
+    if (_ugrid_file == nullptr) { return; }
+
+    struct _mesh_variable* vars = _ugrid_file->get_variables();
+    struct _variable* var;
+    for (int i = 0; i < vars->nr_vars; ++i)
     {
-        vector<double> edge_x(2);
-        vector<double> edge_y(2);
-        int length = 0;
-        string var_name = _variable->var_name;
-        if (_variable->dims.size() == 2) // 2D: time, nodes
+        var = vars->variable[i];
+        // begin HACK edge vs contact
+        if (var->draw && (var->location == "edge" || var->location == "contact"))
         {
-            DataValuesProvider2D<double>std_dot_at_edge = _ugrid_file->get_variable_values(var_name);
-            z_value = std_dot_at_edge.GetValueAtIndex(_current_step, 0);
-            length = std_dot_at_edge.m_numXY;
-        }
-        else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
-        {
-            DataValuesProvider3D<double> std_dot_at_edge_3d = _ugrid_file->get_variable_3d_values(var_name);
-            if (_variable->sediment_index != -1)
+            vector<double> edge_x(2);
+            vector<double> edge_y(2);
+            int length = 0;
+            string var_name = var->var_name;
+            if (var->dims.size() == 2) // 2D: time, nodes
             {
-                z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, _variable->sediment_index, 0);
+                DataValuesProvider2D<double>std_dot_at_edge = _ugrid_file->get_variable_values(var_name);
+                z_value = std_dot_at_edge.GetValueAtIndex(_current_step, 0);
+                length = std_dot_at_edge.m_numXY;
+            }
+            else if (var->dims.size() == 3) // 3D: time, layer, nodes
+            {
+                DataValuesProvider3D<double> std_dot_at_edge_3d = _ugrid_file->get_variable_3d_values(var_name);
+                if (var->sediment_index != -1)
+                {
+                    z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, var->sediment_index, 0);
+                }
+                else
+                {
+                    if (m_bed_layer > 0)
+                    {
+                        z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_bed_layer - 1, 0);
+                    }
+                    if (m_hydro_layer > 0)
+                    {
+                        z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+                    }
+                }
+                length = std_dot_at_edge_3d.m_numXY;
             }
             else
             {
-                if (m_bed_layer > 0)
+                QMessageBox::information(0, tr("MyCanvas::draw_dot_at_edge()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
+            }
+            if (length == 0)
+            {
+                return;
+            }
+            double missing_value = var->fill_value;
+            determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
+
+            struct _edge * edges = nullptr;
+            struct _mesh1d * mesh1d = nullptr;
+            struct _mesh1d_string ** m1d = _ugrid_file->get_mesh1d_string();
+            if (m1d != nullptr && var->mesh == m1d[0]->var_name)
+            {
+                mesh1d = _ugrid_file->get_mesh1d();
+                edges = mesh1d->edge[0];
+            }
+
+            struct _mesh2d * mesh2d = nullptr;
+            struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
+            if (m2d != nullptr && var->mesh == m2d[0]->var_name)
+            {
+                mesh2d = _ugrid_file->get_mesh2d();
+                edges = mesh2d->edge[0];
+            }
+
+            struct _mesh_contact * mesh1d2d = nullptr;
+            struct _mesh_contact_string ** m1d2d = _ugrid_file->get_mesh_contact_string();
+            if(m1d2d != nullptr && var->mesh == m1d2d[0]->mesh_contact)
+            {
+                mesh1d2d = _ugrid_file->get_mesh_contact();
+                edges = mesh1d2d->edge[0];
+            }
+
+            m_rgb_color.resize(edges->count);
+            this->startDrawing(CACHE_1D);
+            double opacity = mCache_painter->opacity();
+            mCache_painter->setOpacity(m_property->get_opacity());
+            for (int j = 0; j < edges->count; j++)
+            {
+                int p1 = edges->edge_nodes[j][0];
+                int p2 = edges->edge_nodes[j][1];
+                if (mesh1d != nullptr)
                 {
-                    z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_bed_layer - 1, 0);
+                    edge_x[0] = mesh1d->node[0]->x[p1];
+                    edge_y[0] = mesh1d->node[0]->y[p1];
+                    edge_x[1] = mesh1d->node[0]->x[p2];
+                    edge_y[1] = mesh1d->node[0]->y[p2];
                 }
-                if (m_hydro_layer > 0)
+                else if (mesh2d != nullptr)
                 {
-                    z_value = std_dot_at_edge_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
+                    edge_x[0] = mesh2d->node[0]->x[p1];
+                    edge_y[0] = mesh2d->node[0]->y[p1];
+                    edge_x[1] = mesh2d->node[0]->x[p2];
+                    edge_y[1] = mesh2d->node[0]->y[p2];
                 }
+                else if (mesh1d2d != nullptr)
+                {
+                    edge_x[0] = mesh1d2d->node[0]->x[p1];
+                    edge_y[0] = mesh1d2d->node[0]->y[p1];
+                    edge_x[1] = mesh1d2d->node[0]->x[p2];
+                    edge_y[1] = mesh1d2d->node[0]->y[p2];
+                }
+                this->setLineColor(m_ramph->getRgbFromValue(z_value[j]));
+                // 10 klasses: 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11
+                //double alpha = (*z_value[j] - m_z_min) / (m_z_max - m_z_min);
+                //double width = (1. - alpha) * 1. + alpha * 11.;
+                this->setPointSize(13);
+                this->setLineWidth(9);
+                this->drawPolyline(edge_x, edge_y);
             }
-            length = std_dot_at_edge_3d.m_numXY;
+            mCache_painter->setOpacity(opacity);
+            this->finishDrawing();
         }
-        else
-        {
-            QMessageBox::information(0, tr("MyCanvas::draw_dot_at_edge()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
-        }
-        if (length == 0)
-        {
-            return;
-        }
-        double missing_value = _variable->fill_value;
-        determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
-
-        struct _edge * edges = nullptr;
-        struct _mesh1d * mesh1d = nullptr;
-        struct _mesh1d_string ** m1d = _ugrid_file->get_mesh1d_string();
-        if (m1d != nullptr && _variable->mesh == m1d[0]->var_name)
-        {
-            mesh1d = _ugrid_file->get_mesh1d();
-            edges = mesh1d->edge[0];
-        }
-
-        struct _mesh2d * mesh2d = nullptr;
-        struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
-        if (m2d != nullptr && _variable->mesh == m2d[0]->var_name)
-        {
-            mesh2d = _ugrid_file->get_mesh2d();
-            edges = mesh2d->edge[0];
-        }
-
-        struct _mesh_contact * mesh1d2d = nullptr;
-        struct _mesh_contact_string ** m1d2d = _ugrid_file->get_mesh_contact_string();
-        if(m1d2d != nullptr && _variable->mesh == m1d2d[0]->mesh_contact)
-        {
-            mesh1d2d = _ugrid_file->get_mesh_contact();
-            edges = mesh1d2d->edge[0];
-        }
-
-        m_rgb_color.resize(edges->count);
-        this->startDrawing(0);
-        double opacity = mCache_painter->opacity();
-        mCache_painter->setOpacity(m_property->get_opacity());
-        for (int j = 0; j < edges->count; j++)
-        {
-            int p1 = edges->edge_nodes[j][0];
-            int p2 = edges->edge_nodes[j][1];
-            if (mesh1d != nullptr)
-            {
-                edge_x[0] = mesh1d->node[0]->x[p1];
-                edge_y[0] = mesh1d->node[0]->y[p1];
-                edge_x[1] = mesh1d->node[0]->x[p2];
-                edge_y[1] = mesh1d->node[0]->y[p2];
-            }
-            else if (mesh2d != nullptr)
-            {
-                edge_x[0] = mesh2d->node[0]->x[p1];
-                edge_y[0] = mesh2d->node[0]->y[p1];
-                edge_x[1] = mesh2d->node[0]->x[p2];
-                edge_y[1] = mesh2d->node[0]->y[p2];
-            }
-            else if (mesh1d2d != nullptr)
-            {
-                edge_x[0] = mesh1d2d->node[0]->x[p1];
-                edge_y[0] = mesh1d2d->node[0]->y[p1];
-                edge_x[1] = mesh1d2d->node[0]->x[p2];
-                edge_y[1] = mesh1d2d->node[0]->y[p2];
-            }
-            this->setLineColor(m_ramph->getRgbFromValue(z_value[j]));
-            // 10 klasses: 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11
-            //double alpha = (*z_value[j] - m_z_min) / (m_z_max - m_z_min);
-            //double width = (1. - alpha) * 1. + alpha * 11.;
-            this->setPointSize(13);
-            this->setLineWidth(7);
-            this->drawPolyline(edge_x, edge_y);
-        }
-        mCache_painter->setOpacity(opacity);
-        this->finishDrawing();
     }
 }
 
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_data_along_edge()
 {
-    if (_variable != nullptr && _ugrid_file != nullptr && _variable->location == "node")
+    if (_ugrid_file == nullptr) { return; }
+
+    struct _mesh_variable* vars = _ugrid_file->get_variables();
+    struct _variable* var;
+    for (int i = 0; i < vars->nr_vars; ++i)
     {
-        string var_name = _variable->var_name;
-        struct _mesh1d * mesh1d = _ugrid_file->get_mesh1d();
-
-        DataValuesProvider2D<double>std_data_at_node = _ugrid_file->get_variable_values(var_name);
-        z_value = std_data_at_node.GetValueAtIndex(_current_step, 0);
-        int length = std_data_at_node.m_numXY;
-
-        dims = _variable->dims;
-
-        struct _edge * edges = mesh1d->edge[0];
-        this->startDrawing(0);
-        double opacity = mCache_painter->opacity();
-        mCache_painter->setOpacity(m_property->get_opacity());
-        this->setPointSize(13);
-        vector<double> edge_x(2);
-        vector<double> edge_y(2);
-        vector<QColor> edge_color(2);
-
-        double missing_value = _variable->fill_value;
-        determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
-
-        if (true)  // boolean to draw gradient along line?
+        var = vars->variable[i];
+        if (var->draw && var->location == "node")
         {
-            for (int j = 0; j < edges->count; j++)
-            {
-                int p1 = edges->edge_nodes[j][0];
-                int p2 = edges->edge_nodes[j][1];
-                edge_x[0] = mesh1d->node[0]->x[p1];
-                edge_y[0] = mesh1d->node[0]->y[p1];
-                edge_x[1] = mesh1d->node[0]->x[p2];
-                edge_y[1] = mesh1d->node[0]->y[p2];
+            string var_name = var->var_name;
+            struct _mesh1d* mesh1d = _ugrid_file->get_mesh1d();
 
-                edge_color[0] = m_ramph->getRgbFromValue(z_value[p1]);
-                edge_color[1] = m_ramph->getRgbFromValue(z_value[p2]);
+            DataValuesProvider2D<double>std_data_at_node = _ugrid_file->get_variable_values(var_name);
+            z_value = std_data_at_node.GetValueAtIndex(_current_step, 0);
+            int length = std_data_at_node.m_numXY;
 
-                this->drawLineGradient(edge_x, edge_y, edge_color);
-            }
-        }
-        if (false)  // boolean to draw multidot?
-        {
-            m_rgb_color.resize(length);
-            for (int i = 0; i < length; i++)
+            dims = var->dims;
+
+            struct _edge* edges = mesh1d->edge[0];
+            this->startDrawing(CACHE_1D);
+            double opacity = mCache_painter->opacity();
+            mCache_painter->setOpacity(m_property->get_opacity());
+            this->setPointSize(13);
+            vector<double> edge_x(2);
+            vector<double> edge_y(2);
+            vector<QColor> edge_color(2);
+
+            double missing_value = var->fill_value;
+            determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
+
+            if (true)  // boolean to draw gradient along line?
             {
-                m_rgb_color[i] = m_ramph->getRgbFromValue(z_value[i]);
+                for (int j = 0; j < edges->count; j++)
+                {
+                    int p1 = edges->edge_nodes[j][0];
+                    int p2 = edges->edge_nodes[j][1];
+                    edge_x[0] = mesh1d->node[0]->x[p1];
+                    edge_y[0] = mesh1d->node[0]->y[p1];
+                    edge_x[1] = mesh1d->node[0]->x[p2];
+                    edge_y[1] = mesh1d->node[0]->y[p2];
+
+                    edge_color[0] = m_ramph->getRgbFromValue(z_value[p1]);
+                    edge_color[1] = m_ramph->getRgbFromValue(z_value[p2]);
+
+                    this->drawLineGradient(edge_x, edge_y, edge_color);
+                }
             }
-            this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
+            if (false)  // boolean to draw multidot?
+            {
+                m_rgb_color.resize(length);
+                for (int i = 0; i < length; i++)
+                {
+                    m_rgb_color[i] = m_ramph->getRgbFromValue(z_value[i]);
+                }
+                this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
+            }
+            mCache_painter->setOpacity(opacity);
         }
-        mCache_painter->setOpacity(opacity);
-        this->finishDrawing();
     }
 }
 void MyCanvas::setColorRamp(QColorRampEditor * ramph)
@@ -1007,6 +1032,13 @@ double MyCanvas::statistics_averaged_length_of_cell(struct _variable * var)
     return std::sqrt(avg_cell_area);
 }
 //-----------------------------------------------------------------------------
+void MyCanvas::empty_cache(drawing_cache cache_i)
+{
+    cacheArray[cache_i]->fill(Qt::transparent);
+
+    mMapCanvas->update();  // todo, niet uitvoeren na openen van twee map-files
+}
+//-----------------------------------------------------------------------------
 void MyCanvas::empty_caches()
 {
     for (int j = 0; j<NR_CACHES; j++)
@@ -1123,6 +1155,7 @@ void MyCanvas::renderPlugin( QPainter * Painter )
     draw_line_at_edge();
     draw_vector_arrow_at_face();
     draw_vector_direction_at_face();
+    this->finishDrawing();
 }
 //
 //-----------------------------------------------------------------------------
@@ -1453,7 +1486,7 @@ void MyCanvas::drawLineGradient(vector<double> xs, vector<double> ys, vector<QCo
     gradient.setColorAt(1, point[1].second);
     gradient.setStart(point[0].first);
     gradient.setFinalStop(point[1].first);
-    mCache_painter->setPen(QPen(QBrush(gradient), 7));
+    mCache_painter->setPen(QPen(QBrush(gradient), 9));
 
     mCache_painter->drawLine(point[0].first, point[1].first);
 }

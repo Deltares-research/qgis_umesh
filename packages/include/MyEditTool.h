@@ -33,7 +33,6 @@
 #include "qgsmaptool.h"
 #include "qgsrubberband.h"
 
-#define NR_CACHES 1
 #define IMAGE_WIDTH  3840 // 1420 // 
 #define IMAGE_HEIGHT 2140 // 1080 // 
 
@@ -83,7 +82,6 @@ private:
     QPaintDevice * pd;
     QWidget * w;
     QVBoxLayout * vb;
-    QLabel * label[NR_CACHES];
 };
 
 #endif  /* _INC_MYEDITTOOL */
