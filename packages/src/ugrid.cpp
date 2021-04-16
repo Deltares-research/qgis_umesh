@@ -337,10 +337,10 @@ long UGRID::read_mesh()
         m_mesh_contact->node[0]->y = vector<double>(m_mesh_contact->node[m_nr_mesh_contacts - 1]->count);
 
         // begin HACK Dijkring48
-        // location_a = "node";
-        // topology_a = 1;
-        // location_b = "face";
-        // topology_b = 2;
+        //location_a = "node";
+        //topology_a = 1;
+        //location_b = "face";
+        //topology_b = 2;
         // end HACK Dijkring48
 
         for (int j = 0; j < m_mesh_contact->edge[0]->count; j++)
