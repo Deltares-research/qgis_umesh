@@ -203,6 +203,7 @@ class qgis_umesh
         QIcon icon_mapoutput;
         QDir current_dir;
         QDir executable_dir;
+        QString m_working_dir;
         QProgressBar * pgBar;
 
         MyEditTool * mMyEditTool;
