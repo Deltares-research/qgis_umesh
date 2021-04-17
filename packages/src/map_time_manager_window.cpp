@@ -81,9 +81,12 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
     coord << "";
     _MyCanvas->set_coordinate_type(coord);
     _MyCanvas->set_determine_grid_size(true);
-    _MyCanvas->set_variable(nullptr);
     _MyCanvas->empty_caches();
-    // TODO Reset timers, ie _current timestep etc
+    for (int i = 0; i < m_vars->nr_vars; ++i)
+    {
+        m_vars->variable[i]->draw = false;
+    }
+    this->goto_begin();  // goto to begin of time loop
     if (m_cur_view != nullptr)
     {
         m_cur_view->close();

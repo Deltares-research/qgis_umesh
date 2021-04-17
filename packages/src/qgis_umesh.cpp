@@ -68,17 +68,17 @@ void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, in
         QString layer;
         QgsProject::instance()->layerWillBeRemoved(layer);  // root is invisible}
         // Remove the file entry belonging to this group
-        if (MapTimeManagerWindow::get_count() != 0)
-        {
-            // close the map time manager window
-            mtm_widget->close();
-            mtm_widget->deleteLater();
-        }
     }
     QString timings_file(m_working_dir + "/timing_qgis_umesh.log");
     PRINT_TIMERN(timings_file.toStdString());
     CLEAR_TIMER();
     m_working_dir = QString("");  // make it empty
+    if (MapTimeManagerWindow::get_count() != 0)
+    {
+        // close the map time manager window
+        mtm_widget->closeEvent(nullptr);
+        mtm_widget->close();
+    }
 }
 void qgis_umesh::onRemovedChildren(QString name)
 {
