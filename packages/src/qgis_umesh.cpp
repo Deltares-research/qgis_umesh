@@ -6258,7 +6258,7 @@ long qgis_umesh::find_location_boundary(struct _ntw_nodes * ntw_nodes, string bn
             *xp = ntw_nodes->node[0]->x[i];
             *yp = ntw_nodes->node[0]->y[i];
             status = 0;
-            return status;
+            break;
         }
     }
     STOP_TIMER(find_location_boundary)

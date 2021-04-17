@@ -147,12 +147,11 @@ void TestTimer::log(string out_file)
 		for (int i = 1; i < timing.size(); i++)  // skip the first one; it is the root and has level zero
 		{
 			std::string file_str = timing[i]->filename.substr(timing[i]->filename.find_last_of("/\\") + 1);
-			std::chrono::high_resolution_clock::duration d = timing[i]->stop - timing[i]->start;
 			os << std::setw(5) << timing[i]->level
 				<< "   "
 				<< std::setw(5) << timing[i]->nr_calls
 				<< "   "
-				<< std::setw(10) << fixed << setprecision(3) << d.count() * (double)std::chrono::high_resolution_clock::duration::period::num / std::chrono::high_resolution_clock::duration::period::den
+				<< std::setw(10) << fixed << setprecision(3) << timing[i]->elapse_time
 				<< "   "
 				<< left << std::setw(name_strlen) << timing[i]->name
 				<< "   "
