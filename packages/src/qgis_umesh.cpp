@@ -808,7 +808,7 @@ void qgis_umesh::openFile()
 }
 void qgis_umesh::openFile(QFileInfo ncfile)
 {
-    START_TIMERN(open_file)
+    START_TIMERN(open_file);
     int ncid;
     if (m_working_dir.isEmpty())
     {
@@ -821,6 +821,7 @@ void qgis_umesh::openFile(QFileInfo ncfile)
     if (status != NC_NOERR)
     {
         QMessageBox::warning(0, tr("Warning"), tr("Cannot open netCDF file:\n%1\nThis file is not supported by this QGIS plugin.").arg(ncfile.absoluteFilePath()));
+        STOP_TIMER(open_file);
         return;
     }
     _fil_index++;
@@ -842,6 +843,7 @@ void qgis_umesh::openFile(QFileInfo ncfile)
                 QString fname = ugrid_file->get_filename().fileName();
                 QString msg = QString("File \"%1\" is not UGRID-1.* compliant.\nThe file has Conventions attribute: \"%2\".").arg(fname).arg(globals->attribute[i]->cvalue.c_str());
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+                STOP_TIMER(open_file);
                 return;
             }
         }
@@ -851,13 +853,14 @@ void qgis_umesh::openFile(QFileInfo ncfile)
         QString fname = ugrid_file->get_filename().fileName();
         QString msg = QString(tr("No \"Conventions\" attribute found in file: \"%1\"").arg(fname));
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+        STOP_TIMER(open_file);
         return;
     }
-    STOP_TIMER(open_file)
+    STOP_TIMER(open_file);
 
-    START_TIMER(activate_layers)
+    START_TIMER(activate_layers);
     activate_layers();
-    STOP_TIMER(activate_layers)
+    STOP_TIMER(activate_layers);
 }
 //
 //-----------------------------------------------------------------------------
@@ -2150,7 +2153,7 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
 {
     if (nodes != NULL)
     {
-        START_TIMERN(create_vector_layer_nodes)
+        START_TIMERN(create_vector_layer_nodes);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
@@ -2273,14 +2276,14 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
-        STOP_TIMER(create_vector_layer_nodes)
+        STOP_TIMER(create_vector_layer_nodes);
     }
 }
 void qgis_umesh::create_vector_layer_data_on_edges(QString fname, _variable * var, struct _feature * nodes, struct _edge * edges, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr && edges != nullptr)
     {
-        START_TIMERN(create_vector_layer_data_on_edges)
+        START_TIMERN(create_vector_layer_data_on_edges);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
         QString layer_name = QString::fromStdString(var->long_name).trimmed();
 
@@ -2360,14 +2363,14 @@ void qgis_umesh::create_vector_layer_data_on_edges(QString fname, _variable * va
             int ind = tmp_layers.size() - 1;
             tmp_layers[ind]->setItemVisibilityChecked(false);
         }
-        STOP_TIMER(create_vector_layer_data_on_edges)
+        STOP_TIMER(create_vector_layer_data_on_edges);
     }
 }
 void qgis_umesh::create_vector_layer_edge_type(QString fname, _variable * var, struct _feature * nodes, struct _edge * edges, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr && edges != nullptr)
     {
-        START_TIMERN(create_vector_layer_edge_type)
+        START_TIMERN(create_vector_layer_edge_type);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
         bool layer_found = false;
         if (!layer_found)
@@ -2467,14 +2470,14 @@ void qgis_umesh::create_vector_layer_edge_type(QString fname, _variable * var, s
                 }
             }
         }
-        STOP_TIMER(create_vector_layer_edge_type)
+        STOP_TIMER(create_vector_layer_edge_type);
     }
 }
 void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable * var, struct _feature * nodes, double * z_value, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr)
     {
-        START_TIMERN(create_vector_layer_data_on_nodes)
+        START_TIMERN(create_vector_layer_data_on_nodes);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
         QString layer_name = QString::fromStdString(var->long_name).trimmed();
 
@@ -2553,20 +2556,20 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable * va
             int ind = tmp_layers.size()-1;
             tmp_layers[ind]->setItemVisibilityChecked(false);
         }
-        STOP_TIMER(create_vector_layer_data_on_nodes)
+        STOP_TIMER(create_vector_layer_data_on_nodes);
     }
 }
 void qgis_umesh::create_vector_layer_geometry(QString fname, QString layer_name, struct _ntw_geom * ntw_geom, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (ntw_geom != nullptr)
     {
-        START_TIMERN(create_vector_layer_geometry)
         if (ntw_geom->nr_ntw == 0)
         {
             QString msg = QString("No Mesh1D geometry given on file: %1").arg(fname);
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
             return;
         }
+        START_TIMERN(create_vector_layer_geometry);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
 
         bool layer_found = false;
@@ -2672,14 +2675,14 @@ void qgis_umesh::create_vector_layer_geometry(QString fname, QString layer_name,
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
-        STOP_TIMER(create_vector_layer_geometry)
+        STOP_TIMER(create_vector_layer_geometry);
     }
 }
 void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, struct _feature * nodes, struct _edge * edges, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (nodes != nullptr && edges != nullptr)
     {
-        START_TIMERN(create_vector_layer_edges)
+        START_TIMERN(create_vector_layer_edges);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
 
         bool layer_found = false;
@@ -2818,14 +2821,14 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
-        STOP_TIMER(create_vector_layer_edges)
+        STOP_TIMER(create_vector_layer_edges);
     }
 }
 void qgis_umesh::create_vector_layer_observation_point(QString fname, QString layer_name, _location_type * obs_points, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (obs_points != NULL && obs_points->type == OBS_POINT  || obs_points->type == OBS_POLYLINE)
     {
-        START_TIMERN(create_vector_layer_observation_point)
+        START_TIMERN(create_vector_layer_observation_point);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
@@ -2918,14 +2921,14 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
                                                                           //QMessageBox::information(0, tr("Message: create_vector_layer_geometry"), QString("CRS layer: %1").arg(crs.authid()));
                                                                           // todo: Probeersel symbology adjustements
         }
-        STOP_TIMER(create_vector_layer_observation_point)
+        STOP_TIMER(create_vector_layer_observation_point);
     }
 }
 void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString layer_name, _location_type * obs_points, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (obs_points != NULL && obs_points->type == OBS_POLYLINE)
     {
-        START_TIMERN(create_vector_layer_observation_polyline)
+        START_TIMERN(create_vector_layer_observation_polyline);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
@@ -3028,7 +3031,7 @@ void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString
             add_layer_to_group(vl, treeGroup);
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
-        STOP_TIMER(create_vector_layer_observation_polyline)
+        STOP_TIMER(create_vector_layer_observation_polyline);
     }
 }
 // Create vector layer for the structures defined by the chainage on a branch, so it is a point
@@ -3036,7 +3039,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
 {
     if (prop_tree != nullptr)
     {
-        START_TIMERN(create_vector_layer_1D_structure)
+        START_TIMERN(create_vector_layer_1D_structure);
         long status = -1;
         string json_key = "data.structure.id";
         vector<string> id;
@@ -3047,7 +3050,11 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         json_key = "data.structure.chainage";
         vector<double> chainage;
         status = prop_tree->get(json_key, chainage);
-        if (branch_name.size() == 0) { return; }
+        if (branch_name.size() == 0) 
+        {
+            STOP_TIMER(create_vector_layer_1D_structure);
+            return; 
+        }
         
         json_key = "data.structure.type";
         vector<string> structure_type;
@@ -4044,14 +4051,14 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             }
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
         }
-        STOP_TIMER(create_vector_layer_1D_structure)
+        STOP_TIMER(create_vector_layer_1D_structure);
     }  // end proptree != nullptr
 }
 void qgis_umesh::create_vector_layer_observation_point(UGRID * ugrid_file, JSON_READER * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (pt_structures != nullptr)
     {
-        START_TIMERN(create_vector_layer_observation_point)
+        START_TIMERN(create_vector_layer_observation_point);
         long status = -1;
         string json_key = "data.general.fileversion";
         vector<string> version;
@@ -4066,13 +4073,13 @@ void qgis_umesh::create_vector_layer_observation_point(UGRID * ugrid_file, JSON_
             // observation point defined by chainage
             create_vector_layer_chainage_observation_point(ugrid_file, pt_structures, epsg_code, treeGroup);
         }
-        STOP_TIMER(create_vector_layer_observation_point)
+        STOP_TIMER(create_vector_layer_observation_point);
     }
 }
 // observation point defined by coordinate reference systeem (crs)
 void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    START_TIMERN(create_vector_layer_crs_observation_point)
+    START_TIMERN(create_vector_layer_crs_observation_point);
 
     long status = -1;
     string json_key = "data.observationpoint.name";
@@ -4081,6 +4088,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
     if (obs_name.size() == 0)
     {
         QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of observation points is zero. JSON data: ")) + QString::fromStdString(json_key));
+        STOP_TIMER(create_vector_layer_crs_observation_point);
         return;
     }
     json_key = "data.observationpoint.x";
@@ -4089,6 +4097,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
     if (x.size() == 0)
     {
         QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of x-coordinates is zero. JSON data: ")) + QString::fromStdString(json_key));
+        STOP_TIMER(create_vector_layer_crs_observation_point);
         return;
     }
     json_key = "data.observationpoint.y";
@@ -4097,6 +4106,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
     if (y.size() == 0)
     {
         QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of y-coordinates is zero. JSON data: ")) + QString::fromStdString(json_key));
+        STOP_TIMER(create_vector_layer_crs_observation_point);
         return;
     }
     QgsLayerTreeGroup * subTreeGroup;
@@ -4160,14 +4170,14 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
     add_layer_to_group(vl, subTreeGroup);
     connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
 
-    STOP_TIMER(create_vector_layer_crs_observation_point)
+    STOP_TIMER(create_vector_layer_crs_observation_point);
 }
 // observation point defined by chainage
 void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (prop_tree != nullptr)
     {
-        START_TIMERN(create_vector_layer_chainage_observation_point)
+        START_TIMERN(create_vector_layer_chainage_observation_point);
         long status = -1;
         string json_key = "data.observationpoint.id";  // if "id" is not found try "name"
         vector<string> obs_name;
@@ -4179,6 +4189,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
             if (obs_name.size() == 0)
             {
                 QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of observation points is zero. JSON data: ")) + QString::fromStdString(json_key));
+                STOP_TIMER(create_vector_layer_chainage_observation_point);
                 return;
             }
         }
@@ -4188,6 +4199,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
         if (branch_name.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromStdString(json_key));
+            STOP_TIMER(create_vector_layer_chainage_observation_point);
             return;
         }
         json_key = "data.observationpoint.chainage";
@@ -4196,6 +4208,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
         if (chainage.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            STOP_TIMER(create_vector_layer_chainage_observation_point);
             return;
         }
         if (obs_name.size() != branch_name.size() || branch_name.size() != chainage.size() || obs_name.size() != chainage.size())
@@ -4204,6 +4217,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
                 + "\nObservation points: " + (int)obs_name.size()
                 + "\nBranches: " + (int)branch_name.size()
                 + "\nChainage: " + (int)chainage.size());
+            STOP_TIMER(create_vector_layer_chainage_observation_point);
             return;
         }
 
@@ -4287,13 +4301,13 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
         }
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
 
-        STOP_TIMER(create_vector_layer_chainage_observation_point)
+        STOP_TIMER(create_vector_layer_chainage_observation_point);
     }
 }
 // sample point (x, y,z) defined by coordinate reference systeem (crs)
 void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    START_TIMERN(create_vector_layer_sample_point)
+    START_TIMERN(create_vector_layer_sample_point);
         
     long status = -1;
     string json_key = "data.samplepoint.z";
@@ -4302,6 +4316,7 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
     if (z_value.size() == 0)
     {
         QMessageBox::warning(0, tr("Message: create_vector_layer_sample_point"), QString(tr("Number of sample points is zero. JSON data: ")) + QString::fromStdString(json_key));
+        STOP_TIMER(create_vector_layer_sample_point);
         return;
     }
     json_key = "data.samplepoint.x";
@@ -4372,12 +4387,12 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
     add_layer_to_group(vl, subTreeGroup);
     connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
 
-    STOP_TIMER(create_vector_layer_sample_point)
+    STOP_TIMER(create_vector_layer_sample_point);
 }
 // Observation cross-section (D-Flow FM) filename given in mdu-file
 void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_file, JSON_READER *prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    START_TIMERN(create_vector_layer_observation_cross_section)
+    START_TIMERN(create_vector_layer_observation_cross_section);
 
     int status = -1;
     vector<string> tmp_point_name;  // point object 1D simualtion
@@ -4392,7 +4407,7 @@ void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_fil
     {
         create_vector_layer_2D_observation_cross_section(ugrid_file, prop_tree, epsg_code, treeGroup);
     }
-    STOP_TIMER(create_vector_layer_observation_cross_section)
+    STOP_TIMER(create_vector_layer_observation_cross_section);
 }
 //
 // Observation cross-section (D-Flow 1D) filename given in mdu-file, point object when 1D simulation
@@ -4400,7 +4415,7 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
 {
     if (prop_tree != nullptr)
     {
-        START_TIMERN(create_vector_layer_1D_observation_cross_section)
+        START_TIMERN(create_vector_layer_1D_observation_cross_section);
             
         long status = -1;
         string json_key = "data.observationcrosssection.name"; 
@@ -4412,6 +4427,7 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
         if (branch_name.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromStdString(json_key));
+            STOP_TIMER(create_vector_layer_1D_observation_cross_section);
             return;
         }
         json_key = "data.observationcrosssection.chainage";
@@ -4420,6 +4436,7 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
         if (chainage.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            STOP_TIMER(create_vector_layer_1D_observation_cross_section);
             return;
         }
         if (names.size() != branch_name.size() || branch_name.size() != chainage.size() || names.size() != chainage.size())
@@ -4428,6 +4445,7 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
                 + "\nObservation points: " + (int)names.size()
                 + "\nBranches: " + (int)branch_name.size()
                 + "\nChainage: " + (int)chainage.size());
+            STOP_TIMER(create_vector_layer_1D_observation_cross_section);
             return;
         }
 
@@ -4509,14 +4527,14 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
             }
         }
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
-        STOP_TIMER(create_vector_layer_1D_observation_cross_section)
+        STOP_TIMER(create_vector_layer_1D_observation_cross_section);
     }
 }
 //
 // Observation cross-section (D-Flow FM) filename given in mdu-file, line object when 2D simulation
 void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
 {
-    START_TIMERN(create_vector_layer_2D_observation_cross_section)
+    START_TIMERN(create_vector_layer_2D_observation_cross_section);
         
     int status = -1;
     vector<string> tmp_line_name;  
@@ -4562,6 +4580,7 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_f
         if (poly_lines.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_vector_layer_observation_cross_section"), QString(tr("JSON data: ")) + QString::fromStdString("data.path.name"));
+            STOP_TIMER(create_vector_layer_2D_observation_cross_section);
             return;
         }
 
@@ -4666,13 +4685,13 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_f
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
-    STOP_TIMER(create_vector_layer_2D_observation_cross_section)
+    STOP_TIMER(create_vector_layer_2D_observation_cross_section);
 }
 //------------------------------------------------------------------------------
 // Structures (D-Flow FM) filename given in mdu-file
 void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    START_TIMERN(create_vector_layer_structure)
+    START_TIMERN(create_vector_layer_structure);
 
     int status = -1;
     vector<string> fname;
@@ -4744,6 +4763,7 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER *
             if (poly_lines.size() == 0)
             {
                 QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+                STOP_TIMER(create_vector_layer_structure);
                 return;
             }
 
@@ -4846,13 +4866,13 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER *
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
-    STOP_TIMER(create_vector_layer_structure)
+    STOP_TIMER(create_vector_layer_structure);
 }
 //------------------------------------------------------------------------------
 // DryPointsFile (Dryareas) (D-Flow FM) filename given in mdu-file
 void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    START_TIMERN(create_vector_layer_drypoints)
+    START_TIMERN(create_vector_layer_drypoints);
 
     int status = -1;
     vector<string> tmp_line_name;
@@ -4902,6 +4922,7 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER *
         if (poly_lines.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+            STOP_TIMER(create_vector_layer_drypoints);
             return;
         }
 
@@ -4951,14 +4972,14 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER *
         add_layer_to_group(vl, subTreeGroup);
         connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
     }
-    STOP_TIMER(create_vector_layer_drypoints)
+    STOP_TIMER(create_vector_layer_drypoints);
 }
 //------------------------------------------------------------------------------
 void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (prop_tree != nullptr)
     {
-        START_TIMERN(create_vector_layer_1D_external_forcing)
+        START_TIMERN(create_vector_layer_1D_external_forcing);
         long status;
         string json_key;
         vector<string> fname;
@@ -5051,6 +5072,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                     {
                         QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"),
                             QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
+                        STOP_TIMER(create_vector_layer_1D_external_forcing);
                         return;
                     }
 
@@ -5134,7 +5156,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 add_layer_to_group(vl_lines, subTreeGroup);
                 connect(vl_lines, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
             }
-            STOP_TIMER(sources_sinks);
+            STOP_TIMER(data.sources_sinks.filename);
         }
         //-------------------------------------------------------------------------------------------
         status = -1;
@@ -5215,6 +5237,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 {
                     QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), 
                         QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
+                    STOP_TIMER(data.boundary.locationfile);
                     return;
                 }
 
@@ -5338,6 +5361,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 {
                     QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), 
                         QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
+                    STOP_TIMER(data.lateral.locationfile);
                     return;
                 }
 
@@ -5409,6 +5433,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 QString fname = QString::fromStdString(prop_tree->get_filename());
                 QString msg = QString(tr("Lateral discharges are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+                STOP_TIMER(data.lateral.id);
                 return;
             }
             json_key = "data.lateral.chainage";
@@ -5417,6 +5442,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             if (chainage.size() == 0)
             {
                 QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+                STOP_TIMER(data.lateral.id);
                 return;
             }
             if (lateral_name.size() != branch_name.size() || branch_name.size() != chainage.size() || lateral_name.size() != chainage.size())
@@ -5425,6 +5451,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                     + "\nLateral points: " + (int)lateral_name.size()
                     + "\nBranches: " + (int)branch_name.size()
                     + "\nChainage: " + (int)chainage.size());
+                STOP_TIMER(data.lateral.id);
                 return;
             }
 
@@ -5664,6 +5691,7 @@ void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER *
         if (poly_lines.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+            STOP_TIMER(create_vector_layer_thin_dams);
             return;
         }
 
@@ -5767,6 +5795,7 @@ void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER 
         if (poly_lines.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+            STOP_TIMER(create_vector_layer_fixed_weir);
             return;
         }
 
@@ -5843,6 +5872,7 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
             QString fname = QString::fromStdString(prop_tree->get_filename());
             QString msg = QString(tr("Cross-section are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            STOP_TIMER(create_vector_layer_1D_cross_section);
             return;
         }
         json_key = "data.crosssection.chainage";
@@ -5851,6 +5881,7 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
         if (chainage.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            STOP_TIMER(create_vector_layer_1D_cross_section);
             return;
         }
         if (crosssection_name.size() != branch_name.size() || branch_name.size() != chainage.size() || crosssection_name.size() != chainage.size())
@@ -5859,6 +5890,7 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
                 + "\nCross-section names: " + (int)crosssection_name.size()
                 + "\nBranches: " + (int)branch_name.size()
                 + "\nChainage: " + (int)chainage.size());
+            STOP_TIMER(create_vector_layer_1D_cross_section);
             return;
         }
 
@@ -5967,6 +5999,7 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
             QString fname = QString::fromStdString(prop_tree->get_filename());
             QString msg = QString(tr("Retention locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            STOP_TIMER(create_vector_layer_1D_retention);
             return;
         }
         json_key = "data.retention.chainage";
@@ -5975,6 +6008,7 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
         if (chainage.size() == 0)
         {
             QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            STOP_TIMER(create_vector_layer_1D_retention);
             return;
         }
         if (retention_name.size() != branch_name.size() || branch_name.size() != chainage.size() || retention_name.size() != chainage.size())
@@ -5983,6 +6017,7 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
                 + "\nRetention names: " + (int)retention_name.size()
                 + "\nBranches: " + (int)branch_name.size()
                 + "\nChainage: " + (int)chainage.size());
+            STOP_TIMER(create_vector_layer_1D_retention);
             return;
         }
 
@@ -6091,6 +6126,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long eps
                 QString fname = QString::fromStdString(prop_tree->get_filename());
                 QString msg = QString(tr("Links between 1D and 2D mesh is skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+                STOP_TIMER(create_1D2D_link_vector_layer);
                 return;
             }
             if (link_1d_point.size() != link_2d_point.size())
@@ -6098,6 +6134,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long eps
                 QMessageBox::warning(0, tr("Message: create_1D2D_link_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
                     + "\nPoints on 1D mesh: " + (int)link_1d_point.size()
                     + "\nPoints on 2D mesh: " + (int)link_2d_point.size());
+                STOP_TIMER(create_1D2D_link_vector_layer);
                 return;
             }
 
@@ -6243,12 +6280,12 @@ long qgis_umesh::compute_location_along_geometry(struct _ntw_geom * ntw_geom, st
             }
         }
     }
-    STOP_TIMER(compute_location_along_geometry)
+    STOP_TIMER(compute_location_along_geometry);
     return status;
 }
 long qgis_umesh::find_location_boundary(struct _ntw_nodes * ntw_nodes, string bnd_name, double * xp, double * yp)
 {
-    START_TIMERN(find_location_boundary)
+    START_TIMERN(find_location_boundary);
 
     long status = -1;
     for (int i = 0; i < ntw_nodes->node[0]->count; i++)
@@ -6261,14 +6298,14 @@ long qgis_umesh::find_location_boundary(struct _ntw_nodes * ntw_nodes, string bn
             break;
         }
     }
-    STOP_TIMER(find_location_boundary)
+    STOP_TIMER(find_location_boundary);
     return status;
 }
 
 
 void qgis_umesh::add_layer_to_group(QgsVectorLayer * vl, QgsLayerTreeGroup * treeGroup)
 {
-    START_TIMERN(add_layer_to_group)
+    START_TIMERN(add_layer_to_group);
         
     QgsLayerTree * root = QgsProject::instance()->layerTreeRoot();
 
@@ -6288,7 +6325,7 @@ void qgis_umesh::add_layer_to_group(QgsVectorLayer * vl, QgsLayerTreeGroup * tre
         }
     }
     root->removeLayer(map_layer);
-    STOP_TIMER(add_layer_to_group)
+    STOP_TIMER(add_layer_to_group);
 }
 //
 QgsLayerTreeGroup * qgis_umesh::get_subgroup(QgsLayerTreeGroup * treeGroup, QString sub_group_name)
