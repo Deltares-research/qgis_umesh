@@ -27,6 +27,7 @@ using namespace std;
 
 #include "ugrid.h"
 #include "netcdf.h"
+#include "perf_timer.h"
 
 //------------------------------------------------------------------------------
 #ifdef NATIVE_C
@@ -1208,6 +1209,7 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
             i_var = i;
             if (!m_mesh_vars->variable[i]->read)  // are the z_values already read
             {
+                START_TIMERN(read_variable);
 #ifdef NATIVE_C
 #else
                 m_pgBar->show();
@@ -1297,6 +1299,8 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
                 m_pgBar->setValue(1000);
                 m_pgBar->hide();
 #endif
+                STOP_TIMER(read_variable);
+
                 return m_mesh_vars->variable[i_var]->data_2d; // variable value is found
             }
             return m_mesh_vars->variable[i_var]->data_2d;
