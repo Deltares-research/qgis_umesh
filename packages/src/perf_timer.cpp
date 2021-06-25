@@ -12,8 +12,6 @@
 
 #include "perf_timer.h"
 
-using namespace std;
-
 int TestTimer::object_count = 0;
 TestTimer* TestTimer::obj = nullptr;  // Initialize static member of class System
 
@@ -81,7 +79,7 @@ void TestTimer::stop(const std::string& name)
         }
     }
 }
-void TestTimer::log(string out_file)
+void TestTimer::log(std::string out_file)
 {
     if (timing.size() > 1)
     {
@@ -104,10 +102,10 @@ void TestTimer::log(string out_file)
         size_t function_strlen = 8;
         for (auto& t : timing)
         {
-            name_strlen = max(name_strlen, t.name.length());
+            name_strlen = std::max(name_strlen, t.name.length());
             std::string file_str = t.filename.substr(t.filename.find_last_of("/\\") + 1);
-            file_strlen = max(file_strlen, file_str.length());
-            function_strlen = max(function_strlen, t.functionname.length());
+            file_strlen = std::max(file_strlen, file_str.length());
+            function_strlen = std::max(function_strlen, t.functionname.length());
         }
         size_t const total_strlen = 5 + 3 +  // level
             5 + 3 +  // calls
@@ -119,15 +117,15 @@ void TestTimer::log(string out_file)
 
         os << std::string(total_strlen, '=') << std::endl;
         os << "level" << "   " << "calls" << "   "
-            << right << setw(10) << " time[s]"
+            << std::right << std::setw(10) << " time[s]"
             << "   "
-            << left << std::setw(name_strlen) << "name"
+            << std::left << std::setw(name_strlen) << "name"
             << "   "
-            << left << std::setw(file_strlen) << "file"
+            << std::left << std::setw(file_strlen) << "file"
             << "   "
-            << left << std::setw(function_strlen) << "function"
+            << std::left << std::setw(function_strlen) << "function"
             << "   "
-            << right << std::setw(6) << "line"
+            << std::right << std::setw(6) << "line"
             << std::endl;
         os << std::string(total_strlen, '-') << std::endl;
         for (auto& t : timing)
@@ -141,15 +139,15 @@ void TestTimer::log(string out_file)
                 << "   "
                 << std::setw(5) << t.nr_calls
                 << "   "
-                << std::setw(10) << fixed << setprecision(3) << t.elapse_time
+                << std::setw(10) << std::fixed << std::setprecision(3) << t.elapse_time
                 << "   "
-                << left << std::setw(name_strlen) << t.name
+                << std::left << std::setw(name_strlen) << t.name
                 << "   "
-                << left << std::setw(file_strlen) << file_str
+                << std::left << std::setw(file_strlen) << file_str
                 << "   "
-                << left << std::setw(function_strlen) << t.functionname
+                << std::left << std::setw(function_strlen) << t.functionname
                 << "   "
-                << right << std::setw(6) << t.line_number
+                << std::right << std::setw(6) << t.line_number
                 << std::endl;
         }
         os << std::string(total_strlen, '=') << std::endl;

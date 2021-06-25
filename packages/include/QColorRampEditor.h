@@ -18,7 +18,6 @@
 #include <QtGui/QPainter>
 
 #include <iostream>
-using namespace std;
 
 // -----------------------------------------------------------
 // QColorRampEditor ------------------------------------------

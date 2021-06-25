@@ -33,8 +33,6 @@
 #   define PRINT_TIMERS(x)
 #endif
 
-using namespace std;
-
 class Timing {
 public:
     Timing() = default;
@@ -49,13 +47,13 @@ public:
     }
 
     bool running;
-    string name;
+    std::string name;
     int level;
     int line_number;
     int nr_calls;
     double elapse_time;
-    string filename;
-    string functionname;
+    std::string filename;
+    std::string functionname;
     std::chrono::high_resolution_clock::time_point start;
     std::chrono::high_resolution_clock::time_point stop;
 };
@@ -69,9 +67,9 @@ public:
     {
         if (obj == nullptr)
         {
-            obj = new TestTimer(string("root"),
-                string("---"),
-                string("---"),
+            obj = new TestTimer(std::string("root"),
+                std::string("---"),
+                std::string("---"),
                 0);
             obj->m_level = 0;
         }
@@ -80,8 +78,8 @@ public:
     }
 
     int get_count();
-    void log(string);
-    vector<Timing> timing;
+    void log(std::string);
+    std::vector<Timing> timing;
 
     TestTimer(const std::string& name, 
         const std::string& fileName,

@@ -3,8 +3,6 @@
 #include <fstream>
 #include <iomanip>
 
-using namespace std;
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -132,7 +130,7 @@ long UGRID::read_global_attributes()
     {
         status = nc_inq_attname(this->m_ncid, NC_GLOBAL, i, att_name_c);
         status = nc_inq_att(this->m_ncid, NC_GLOBAL, att_name_c, &att_type, &att_length);
-        this->global_attributes->attribute[i]->name = string(strdup(att_name_c));
+        this->global_attributes->attribute[i]->name = std::string(strdup(att_name_c));
         this->global_attributes->attribute[i]->type = att_type;
         this->global_attributes->attribute[i]->length = att_length;
         if (att_type == NC_CHAR)
@@ -141,7 +139,7 @@ long UGRID::read_global_attributes()
             att_value_c[0] = '\0';
             status = nc_get_att_text(this->m_ncid, NC_GLOBAL, att_name_c, att_value_c);
             att_value_c[att_length] = '\0';
-            this->global_attributes->attribute[i]->cvalue = string(strdup(att_value_c));
+            this->global_attributes->attribute[i]->cvalue = std::string(strdup(att_value_c));
             free(att_value_c);
             att_value_c = nullptr;
         }
@@ -183,10 +181,10 @@ long UGRID::read_mesh()
 {
     int ndims, nvars, natts, nunlimited;
     int unlimid;
-    string cf_role;
-    string grid_mapping_name;
-    string std_name;
-    vector<string> tmp_dim_names;
+    std::string cf_role;
+    std::string grid_mapping_name;
+    std::string std_name;
+    std::vector<std::string> tmp_dim_names;
     int status = 1;
     size_t length;
 
@@ -206,8 +204,8 @@ long UGRID::read_mesh()
     {
         status = nc_inq_dimlen(this->m_ncid, i, &m_dimids[i]);
         status = nc_inq_dimname(this->m_ncid, i, var_name_c);
-        m_dim_names.push_back(string(var_name_c));
-        m_map_dim[string(var_name_c)] = m_dimids[i];
+        m_dim_names.push_back(std::string(var_name_c));
+        m_map_dim[std::string(var_name_c)] = m_dimids[i];
     }
     status = nc_inq_unlimdim(this->m_ncid, &unlimid);
     for (int i_var = 0; i_var < nvars; i_var++)
@@ -219,7 +217,7 @@ long UGRID::read_mesh()
             var_dimids = (int *)malloc(sizeof(int) * ndims);
         }
         status = nc_inq_var(this->m_ncid, i_var, var_name_c, &nc_type, &ndims, var_dimids, &natts);
-        string var_name(var_name_c);
+        std::string var_name(var_name_c);
 #ifdef NATIVE_C
         fprintf(stderr, "UGRID::read_mesh()\n\tVariable name: %d - %s\n", i_var + 1, var_name.c_str());
 #else
@@ -240,7 +238,7 @@ long UGRID::read_mesh()
             tmp_dim_names = get_dimension_names(this->m_ncid, var_name);
             for (int i = 0; i < tmp_dim_names.size(); i++)
             {
-                if (tmp_dim_names[i].find("nterface") != string::npos)  // Todo: HACK: dimension name should have the sub-string 'interface' or 'Interface'
+                if (tmp_dim_names[i].find("nterface") != std::string::npos)  // Todo: HACK: dimension name should have the sub-string 'interface' or 'Interface'
                 {
                     m_map_dim_name["zs_dim_interface"] = tmp_dim_names[i];
                     m_map_dim_name["zs_name_interface"] = var_name;
@@ -258,12 +256,12 @@ long UGRID::read_mesh()
             tmp_dim_names = get_dimension_names(this->m_ncid, var_name);
             for (int i = 0; i < tmp_dim_names.size(); i++)
             {
-                if (tmp_dim_names[i].find("nterface") != string::npos)
+                if (tmp_dim_names[i].find("nterface") != std::string::npos)
                 {
                     m_map_dim_name["zs_dim_interface"] = tmp_dim_names[i];
                     m_map_dim_name["zs_name_interface"] = var_name;
                 }
-                else if (tmp_dim_names[i].find("Layer") != string::npos)
+                else if (tmp_dim_names[i].find("Layer") != std::string::npos)
                 {
                     m_map_dim_name["zs_dim_layer"] = tmp_dim_names[i];
                     m_map_dim_name["zs_name_layer"] = var_name;
@@ -275,7 +273,7 @@ long UGRID::read_mesh()
             tmp_dim_names = get_dimension_names(this->m_ncid, var_name);
             for (int i = 0; i < tmp_dim_names.size(); i++)
             {
-                if (tmp_dim_names[i].find("nBedLayers") != string::npos)
+                if (tmp_dim_names[i].find("nBedLayers") != std::string::npos)
                 {
                     m_map_dim_name["zs_dim_bed_layer"] = tmp_dim_names[i];
                     m_map_dim_name["zs_name_bed_layer"] = var_name;
@@ -301,10 +299,10 @@ long UGRID::read_mesh()
     {
         // create the mesh contact edges
         // llog first for the meshes (ie the var_names) and contact points
-        string mesh_a;
-        string mesh_b;
-        string location_a;
-        string location_b;
+        std::string mesh_a;
+        std::string mesh_b;
+        std::string location_a;
+        std::string location_b;
         int topology_a;
         int topology_b;
 
@@ -312,7 +310,7 @@ long UGRID::read_mesh()
         for (int i_var = 0; i_var < nvars; i_var++)
         {
             status = nc_inq_varname(this->m_ncid, i_var, var_name_c);
-            string var_name(var_name_c);
+            std::string var_name(var_name_c);
             if (var_name == m_mesh_contact->mesh_a)
             {
                 mesh_a = m_mesh_contact->mesh_a;
@@ -334,8 +332,8 @@ long UGRID::read_mesh()
         }
         // looking for mesh_a
 
-        m_mesh_contact->node[0]->x = vector<double>(m_mesh_contact->node[m_nr_mesh_contacts - 1]->count);
-        m_mesh_contact->node[0]->y = vector<double>(m_mesh_contact->node[m_nr_mesh_contacts - 1]->count);
+        m_mesh_contact->node[0]->x = std::vector<double>(m_mesh_contact->node[m_nr_mesh_contacts - 1]->count);
+        m_mesh_contact->node[0]->y = std::vector<double>(m_mesh_contact->node[m_nr_mesh_contacts - 1]->count);
 
         for (int j = 0; j < m_mesh_contact->edge[0]->count; j++)
         {
@@ -408,7 +406,7 @@ long UGRID::read_mesh()
     return status;
 }
 //------------------------------------------------------------------------------
-long UGRID::set_grid_mapping_epsg(long epsg, string epsg_code)
+long UGRID::set_grid_mapping_epsg(long epsg, std::string epsg_code)
 {
     long status = 0;
     m_mapping->epsg = epsg;
@@ -597,7 +595,7 @@ long UGRID::get_count_times()
     return (long) nr;
 }
 //------------------------------------------------------------------------------
-vector<double> UGRID::get_times()
+std::vector<double> UGRID::get_times()
 {
     return time_series[0].times;
 }
@@ -622,7 +620,7 @@ long UGRID::read_variables()
 #endif
     m_nr_mesh_var = 0;
 
-    string tmp_string;
+    std::string tmp_string;
     char * var_name_c = (char *) malloc(sizeof(char) * (NC_MAX_NAME + 1));
     status = nc_inq(this->m_ncid, &ndims, &nvars, &natts, &nunlimited);
 
@@ -635,7 +633,7 @@ long UGRID::read_variables()
             var_dimids = (int *)malloc(sizeof(int) * ndims);
         }
         status = nc_inq_var(this->m_ncid, i_var, var_name_c, &nc_type, &ndims, var_dimids, &natts);
-        string var_name(var_name_c);
+        std::string var_name(var_name_c);
         status = get_attribute(this->m_ncid, i_var, "mesh", &tmp_string);  // statement, to detect if this is a variable on a mesh
         if (status == NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "location", &tmp_string); } // each variable does have a location
         if (status == NC_NOERR)
@@ -676,12 +674,12 @@ long UGRID::read_variables()
             status = get_attribute(this->m_ncid, i_var, "_FillValue", &m_mesh_vars->variable[m_nr_mesh_var - 1]->fill_value);
             if (status != NC_NOERR)
             {
-                m_mesh_vars->variable[m_nr_mesh_var - 1]->fill_value = numeric_limits<double>::quiet_NaN();
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->fill_value = std::numeric_limits<double>::quiet_NaN();
             }
             status = get_attribute(this->m_ncid, i_var, "comment", &m_mesh_vars->variable[m_nr_mesh_var - 1]->comment);
 
             // variable with flag_values and flag_meanings
-            string flag_meanings;
+            std::string flag_meanings;
             status = get_attribute(this->m_ncid, i_var, "flag_meanings", &flag_meanings);
             if (status == NC_NOERR)
             {
@@ -743,7 +741,7 @@ long UGRID::read_variables()
                     {
                         if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == "nSedTot")  // todo: hard coded sediment dimension
                         {
-                            vector<string> sed_name = get_string_var(this->m_ncid, "sedfrac_name");
+                            std::vector<std::string> sed_name = get_string_var(this->m_ncid, "sedfrac_name");
                             int nr_sedtot = m_mesh_vars->variable[m_nr_mesh_var - 1]->dims[i];
                             for (int j = 0; j < nr_sedtot; j++)
                             {
@@ -756,7 +754,7 @@ long UGRID::read_variables()
                                 }
                                 std::stringstream ss;
                                 std::streamsize nsig = int(log10(nr_sedtot)) + 1;
-                                ss << std::setfill('0') << setw(nsig) << j + 1;
+                                ss << std::setfill('0') << std::setw(nsig) << j + 1;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = false;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->mesh;
@@ -766,7 +764,7 @@ long UGRID::read_variables()
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->topology_dimension = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->topology_dimension;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->nc_type;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
-                                string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
+                                std::string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
                             }
                         }
@@ -794,12 +792,12 @@ long UGRID::read_variables()
                             int nr_lay = m_map_dim[m_map_dim_name["zs_dim_layer"]];
                             m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_lay;
 
-                            string name = m_map_dim_name["zs_name_layer"];
+                            std::string name = m_map_dim_name["zs_name_layer"];
                             int ii;
                             status = nc_inq_varid(m_ncid, name.c_str(), &ii);
                             double * values_c = (double *)malloc(sizeof(double) * nr_lay);
                             status = nc_get_var_double(this->m_ncid, ii, values_c);
-                            vector<double> values;
+                            std::vector<double> values;
                             values.reserve(nr_lay);
                             for (int j = 0; j < nr_lay; j++)
                             {
@@ -812,12 +810,12 @@ long UGRID::read_variables()
                             int nr_lay = m_map_dim[m_map_dim_name["zs_dim_interface"]];
                             m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_lay;
 
-                            string name = m_map_dim_name["zs_name_interface"];
+                            std::string name = m_map_dim_name["zs_name_interface"];
                             int ii;
                             status = nc_inq_varid(m_ncid, name.c_str(), &ii);
                             double * values_c = (double *)malloc(sizeof(double) * nr_lay);
                             status = nc_get_var_double(this->m_ncid, ii, values_c);
-                            vector<double> values;
+                            std::vector<double> values;
                             values.reserve(nr_lay);
                             for (int j = 0; j < nr_lay; j++)
                             {
@@ -830,8 +828,8 @@ long UGRID::read_variables()
                             int nr_layers = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
                             m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
 
-                            string name = m_map_dim_name["zs_name_bed_layer"];
-                            vector<double> values;
+                            std::string name = m_map_dim_name["zs_name_bed_layer"];
+                            std::vector<double> values;
                             values.reserve(nr_layers);
                             for (int j = 0; j < nr_layers; j++)
                             {
@@ -848,7 +846,7 @@ long UGRID::read_variables()
                             // - sediment dimension
                             // - space dimension
 
-                            vector<string> sed_name = get_string_var(this->m_ncid, "sedfrac_name");
+                            std::vector<std::string> sed_name = get_string_var(this->m_ncid, "sedfrac_name");
                             int nr_sedtot = m_mesh_vars->variable[m_nr_mesh_var - 1]->dims[i];
                             for (int j = 0; j < nr_sedtot; j++)
                             {
@@ -861,8 +859,8 @@ long UGRID::read_variables()
                                 }
                                 std::stringstream ss;
                                 std::streamsize nsig = int(log10(nr_sedtot)) + 1;
-                                ss << std::setfill('0') << setw(nsig) << j+1;
-                                string name_sed = "Sediment " + ss.str();
+                                ss << std::setfill('0') << std::setw(nsig) << j+1;
+                                std::string name_sed = "Sediment " + ss.str();
                                 // reduce dimension (from 3 to 2)
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
@@ -875,7 +873,7 @@ long UGRID::read_variables()
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dims = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dims;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dim_names;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
-                                string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
+                                std::string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
 
                                 if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
@@ -883,8 +881,8 @@ long UGRID::read_variables()
                                     int nr_layers = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
                                     m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
 
-                                    string name = m_map_dim_name["zs_name_bed_layer"];
-                                    vector<double> values;
+                                    std::string name = m_map_dim_name["zs_name_bed_layer"];
+                                    std::vector<double> values;
                                     values.reserve(nr_layers);
                                     for (int jj = 0; jj < nr_layers; jj++)
                                     {
@@ -903,14 +901,14 @@ long UGRID::read_variables()
                             // - sediment dimension
                             // - space dimension
 
-                            vector<string> sed_name;
+                            std::vector<std::string> sed_name;
                             int nr_sedtot = m_mesh_vars->variable[m_nr_mesh_var - 1]->dims[i];
                             for (int j = 0; j < nr_sedtot; j++)
                             {
                                 std::stringstream ss;
                                 std::streamsize nsig = int(log10(nr_sedtot)) + 1;
-                                ss << std::setfill('0') << setw(nsig) << j + 1;
-                                string janm = "Sediment " + ss.str();
+                                ss << std::setfill('0') << std::setw(nsig) << j + 1;
+                                std::string janm = "Sediment " + ss.str();
                                 sed_name.push_back(janm);
                             }
                             for (int j = 0; j < nr_sedtot; j++)
@@ -933,7 +931,7 @@ long UGRID::read_variables()
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dims = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dims;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dim_names;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
-                                string janm = var_name + "- " + sed_name[j] + " - " + "nSedSus";
+                                std::string janm = var_name + "- " + sed_name[j] + " - " + "nSedSus";
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
 
                                 if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
@@ -941,8 +939,8 @@ long UGRID::read_variables()
                                     int nr_layers = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
                                     m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
 
-                                    string name = m_map_dim_name["zs_name_bed_layer"];
-                                    vector<double> values;
+                                    std::string name = m_map_dim_name["zs_name_bed_layer"];
+                                    std::vector<double> values;
                                     values.reserve(nr_layers);
                                     for (int jj = 0; jj < nr_layers; jj++)
                                     {
@@ -997,7 +995,7 @@ long UGRID::read_variables()
                     {
                         if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == "nSedTot")  // todo: hard coded sediment dimension
                         {
-                            vector<string> sed_name = get_string_var(this->m_ncid, "sedfrac_name");
+                            std::vector<std::string> sed_name = get_string_var(this->m_ncid, "sedfrac_name");
                             for (int j = 0; j < nr_sedtot; j++)
                             {
                                 if (j > 0)
@@ -1009,8 +1007,8 @@ long UGRID::read_variables()
                                 }
                                 std::stringstream ss;
                                 std::streamsize nsig = int(log10(nr_sedtot)) + 1;
-                                ss << std::setfill('0') << setw(nsig) << j + 1;
-                                string name_sed = "Sediment " + ss.str();
+                                ss << std::setfill('0') << std::setw(nsig) << j + 1;
+                                std::string name_sed = "Sediment " + ss.str();
                                 // reduce dimension (from 3 to 2)
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
@@ -1024,15 +1022,15 @@ long UGRID::read_variables()
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dim_names;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
-                                string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
+                                std::string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
 
                                 for (int ii = 0; ii < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); ii++)
                                 {
                                     if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[ii] == m_map_dim_name["zs_dim_bed_layer"])
                                     {
-                                        string name = m_map_dim_name["zs_name_bed_layer"];
-                                        vector<double> values;
+                                        std::string name = m_map_dim_name["zs_name_bed_layer"];
+                                        std::vector<double> values;
                                         values.reserve(nr_layers);
                                         for (int jj = 0; jj < nr_layers; jj++)
                                         {
@@ -1170,7 +1168,7 @@ struct _mapping * UGRID::get_grid_mapping()
     return m_mapping;
 }
 //------------------------------------------------------------------------------
-struct _variable * UGRID::get_var_by_std_name(struct _mesh_variable * vars, string mesh, string standard_name)
+struct _variable * UGRID::get_var_by_std_name(struct _mesh_variable * vars, std::string mesh, std::string standard_name)
 {
     for (int i = 0; i < vars->nr_vars; i++)
     {
@@ -1182,14 +1180,14 @@ struct _variable * UGRID::get_var_by_std_name(struct _mesh_variable * vars, stri
     return nullptr;
 }
 //------------------------------------------------------------------------------
-DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name)
+DataValuesProvider2D<double> UGRID::get_variable_values(const std::string var_name)
 {
     // return: 1d dimensional value(x), ie time independent
     // return: 2d dimensional value(time, x)
     return get_variable_values(var_name, -1);
 }
 //------------------------------------------------------------------------------
-DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, int array_index)
+DataValuesProvider2D<double> UGRID::get_variable_values(const std::string var_name, int array_index)
 // return: 2d dimensional value(array, x)
 {
     int var_id;
@@ -1309,7 +1307,7 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const string var_name, i
     return data_pointer;
 }
 //------------------------------------------------------------------------------
-DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name)
+DataValuesProvider3D<double> UGRID::get_variable_3d_values(const std::string var_name)
 // return: 3d dimensional value(time, layer, x)
 {
     int var_id;
@@ -1419,7 +1417,7 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const string var_name
     return data_pointer;
 }
 //------------------------------------------------------------------------------
-DataValuesProvider4D<double> UGRID::get_variable_4d_values(const string var_name)
+DataValuesProvider4D<double> UGRID::get_variable_4d_values(const std::string var_name)
 // return: 4d dimensional value(time, bed/hydro-layer, sediment, xy_space)
 {
     int var_id;
@@ -1457,9 +1455,9 @@ DataValuesProvider4D<double> UGRID::get_variable_4d_values(const string var_name
 #endif
                 struct _mesh2d * m2d = this->get_mesh2d();
 
-                vector<long> dims(4);  // required order of dimensions: time, nbedlayers, nsedtot, nFaces
+                std::vector<long> dims(4);  // required order of dimensions: time, nbedlayers, nsedtot, nFaces
                 bool correct_order = true;
-                vector<long> dim_to;
+                std::vector<long> dim_to;
                 dim_to.resize(m_mesh_vars->variable[i]->dims.size());
                 for (int j = 0; j < m_mesh_vars->variable[i]->dims.size(); j++)
                 {
@@ -1555,7 +1553,7 @@ DataValuesProvider4D<double> UGRID::get_variable_4d_values(const string var_name
 //==============================================================================
 // PRIVATE functions
 //==============================================================================
-int UGRID::get_attribute_by_var_name(int ncid, string var_name, string att_name, string * att_value)
+int UGRID::get_attribute_by_var_name(int ncid, std::string var_name, std::string att_name, std::string * att_value)
 {
     int status = -1;
     int i_var;
@@ -1583,7 +1581,7 @@ int UGRID::get_attribute(int ncid, int i_var, char * att_name, char ** att_value
     return status;
 }
 //------------------------------------------------------------------------------
-int UGRID::get_attribute(int ncid, int i_var, char * att_name, string * att_value)
+int UGRID::get_attribute(int ncid, int i_var, char * att_name, std::string * att_value)
 {
     size_t length = 0;
     int status = -1;
@@ -1598,14 +1596,14 @@ int UGRID::get_attribute(int ncid, int i_var, char * att_name, string * att_valu
         char * tmp_value = (char *)malloc(sizeof(char) * (length + 1));
         status = nc_get_att(ncid, i_var, att_name, tmp_value);
         tmp_value[length] = '\0';
-        *att_value = string(tmp_value, length);
+        *att_value = std::string(tmp_value, length);
         free(tmp_value);
         tmp_value = nullptr;
     }
     return status;
 }
 //------------------------------------------------------------------------------
-int UGRID::get_attribute(int ncid, int i_var, string att_name, string * att_value)
+int UGRID::get_attribute(int ncid, int i_var, std::string att_name, std::string * att_value)
 {
     size_t length = 0;
     int status = -1;
@@ -1620,7 +1618,7 @@ int UGRID::get_attribute(int ncid, int i_var, string att_name, string * att_valu
         char * tmp_value = (char *)malloc(sizeof(char) * (length + 1));
         status = nc_get_att(ncid, i_var, att_name.c_str(), tmp_value);
         tmp_value[length] = '\0';
-        *att_value = string(tmp_value, length);
+        *att_value = std::string(tmp_value, length);
         free(tmp_value);
         tmp_value = nullptr;
     }
@@ -1668,7 +1666,7 @@ int UGRID::get_dimension(int ncid, char * dim_name, size_t * dim_length)
     return status;
 }
 //------------------------------------------------------------------------------
-int UGRID::get_dimension(int ncid, string dim_name, size_t * dim_length)
+int UGRID::get_dimension(int ncid, std::string dim_name, size_t * dim_length)
 {
     int dimid;
     int status = -1;
@@ -1682,7 +1680,7 @@ int UGRID::get_dimension(int ncid, string dim_name, size_t * dim_length)
     return status;
 }
 //------------------------------------------------------------------------------
-int UGRID::get_dimension_var(int ncid, string var_name, size_t * dim_length)
+int UGRID::get_dimension_var(int ncid, std::string var_name, size_t * dim_length)
 {
     // get the total dimension length in bytes of the var_name variable
     int dimid;
@@ -1702,11 +1700,11 @@ int UGRID::get_dimension_var(int ncid, string var_name, size_t * dim_length)
     }
     return status;
 }
-vector<string>  UGRID::get_dimension_names(int ncid, string var_name)
+std::vector<std::string>  UGRID::get_dimension_names(int ncid, std::string var_name)
 {
     int varid;
     int status = -1;
-    vector<string> dim_names;
+    std::vector<std::string> dim_names;
 
     if (var_name.size() != 0)
     {
@@ -1723,7 +1721,7 @@ vector<string>  UGRID::get_dimension_names(int ncid, string var_name)
             //status = nc_inq_vardimid(this->m_ncid, dimid, janm);
             char * tmp_value = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
             status = nc_inq_dimname(ncid, var_dimids[i], tmp_value);
-            dim_names.push_back(string(tmp_value));
+            dim_names.push_back(std::string(tmp_value));
             free(tmp_value);
             tmp_value = nullptr;
         }
@@ -1731,11 +1729,11 @@ vector<string>  UGRID::get_dimension_names(int ncid, string var_name)
     return dim_names;
 }
 //------------------------------------------------------------------------------
-vector<string> UGRID::get_names(int ncid, string names, size_t count)
+std::vector<std::string> UGRID::get_names(int ncid, std::string names, size_t count)
 {
     int var_id;
     int status;
-    vector<string> token;
+    std::vector<std::string> token;
 
     status = nc_inq_varid(ncid, names.c_str(), &var_id);
     if (status == NC_NOERR)
@@ -1759,14 +1757,14 @@ vector<string> UGRID::get_names(int ncid, string names, size_t count)
     return token;
 }
 //------------------------------------------------------------------------------
-vector<string> UGRID::get_string_var(int ncid, string var_name)
+std::vector<std::string> UGRID::get_string_var(int ncid, std::string var_name)
 {
     int varid;
     int ndims;
     int nr_names = 0;
     nc_type nc_type;
     int status = -1;
-    vector<string> result;
+    std::vector<std::string> result;
 
     char * dim_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
     dim_name_c[0] = '\0';
@@ -1824,7 +1822,7 @@ vector<string> UGRID::get_string_var(int ncid, string var_name)
             for (int k = 0; k < nr_names; k++)
             {
                 strncpy(janm, location_chars + k * name_len, name_len);
-                result.push_back(string(janm));
+                result.push_back(std::string(janm));
             }
             free(janm);
         }
@@ -1838,7 +1836,7 @@ vector<string> UGRID::get_string_var(int ncid, string var_name)
     return result;
 }
 //------------------------------------------------------------------------------
-int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_role, int ndims, int * var_dimids)
+int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::string cf_role, int ndims, int * var_dimids)
 {
     int topology_dimension;
     int status = 1;
@@ -1849,7 +1847,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
     long nr_mesh1d = 0;
     long nr_mesh2d = 0;
 
-    string att_value;
+    std::string att_value;
 
     if (cf_role == "mesh_topology_contact")  // 1D + 2D mesh
     {
@@ -1933,7 +1931,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
             }
         }
 
-        string att_string;
+        std::string att_string;
         status = get_attribute(this->m_ncid, var_id, "contact", &att_string);
         // search for mesh_a, after semi colon is the location in mesh_a defined
         // search for mesh_b, after semi colon is the location in mesh_b defined
@@ -1944,7 +1942,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 att_string.replace(i, 1, " ");
             }
         }
-        vector<string> token = tokenize(att_string, ' ');
+        std::vector<std::string> token = tokenize(att_string, ' ');
         if (token.size() != 4)
         {
 #if defined NATIVE_C
@@ -1988,7 +1986,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
         status = get_attribute(this->m_ncid, i_var, "topology_dimension", &topology_dimension);
         if (topology_dimension == 1)  // it is one dimensional
         {
-            string coordinate_space;
+            std::string coordinate_space;
             status = get_attribute(this->m_ncid, i_var, "coordinate_space", &coordinate_space);
             if (status == NC_ENOTATT)  // attribute "coordinate_space" not found, so it is a geometry
             {
@@ -2041,7 +2039,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 free(dimids);
                 dimids = nullptr;
                 // get the branch length
-                m_ntw_edges->edge[nr_ntw - 1]->edge_length = vector<double>(m_ntw_edges->edge[nr_ntw - 1]->count);
+                m_ntw_edges->edge[nr_ntw - 1]->edge_length = std::vector<double>(m_ntw_edges->edge[nr_ntw - 1]->count);
 
                 var_id = -1;
                 size_t start1[] = { 0 };
@@ -2078,8 +2076,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 /* Read the data (x, y)-coordinate of each node */
                 status = get_dimension_var(this->m_ncid, m_ntw_strings[nr_ntw - 1]->x_ntw_name, &m_ntw_nodes->node[nr_ntw - 1]->count);
 
-                m_ntw_nodes->node[nr_ntw - 1]->x = vector<double>(m_ntw_nodes->node[nr_ntw - 1]->count);
-                m_ntw_nodes->node[nr_ntw - 1]->y = vector<double>(m_ntw_nodes->node[nr_ntw - 1]->count);
+                m_ntw_nodes->node[nr_ntw - 1]->x = std::vector<double>(m_ntw_nodes->node[nr_ntw - 1]->count);
+                m_ntw_nodes->node[nr_ntw - 1]->y = std::vector<double>(m_ntw_nodes->node[nr_ntw - 1]->count);
 
                 status = nc_inq_varid(this->m_ncid, m_ntw_strings[nr_ntw - 1]->x_ntw_name.c_str(), &var_id);
                 status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
@@ -2143,8 +2141,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 {
                     m_ntw_geom->geom[nr_ntw - 1]->nodes[i] = new _feature;
                     m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->count = geom_node_count[i];
-                    m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->x = vector<double>(geom_node_count[i]);
-                    m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->y = vector<double>(geom_node_count[i]);
+                    m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->x = std::vector<double>(geom_node_count[i]);
+                    m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->y = std::vector<double>(geom_node_count[i]);
                 }
                 m_ntw_geom->nr_ntw = nr_ntw;
 
@@ -2154,8 +2152,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 dimids = (int *)malloc(sizeof(int) * ndims);
                 status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
 
-                vector<double> x = vector<double>(m_dimids[dimids[0]]);
-                vector<double> y = vector<double>(m_dimids[dimids[0]]);
+                std::vector<double> x = std::vector<double>(m_dimids[dimids[0]]);
+                std::vector<double> y = std::vector<double>(m_dimids[dimids[0]]);
 
                 status = nc_inq_varid(this->m_ncid, m_geom_strings[nr_ntw - 1]->x_geom_name.c_str(), &var_id);
                 status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
@@ -2304,7 +2302,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     status = get_dimension_var(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->node_branch, &m_mesh1d->node[nr_mesh1d - 1]->count);
 
                     status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->node_branch.c_str(), &var_id);
-                    m_mesh1d->node[nr_mesh1d - 1]->branch = vector<long>(m_mesh1d->node[nr_mesh1d - 1]->count);
+                    m_mesh1d->node[nr_mesh1d - 1]->branch = std::vector<long>(m_mesh1d->node[nr_mesh1d - 1]->count);
                     status = nc_get_var_long(this->m_ncid, var_id, m_mesh1d->node[nr_mesh1d - 1]->branch.data());
 
                     status = nc_get_att_int(this->m_ncid, var_id, "start_index", &start_index);
@@ -2316,15 +2314,15 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                         }
                     }
 
-                    m_mesh1d->node[nr_mesh1d - 1]->chainage = vector<double>(m_mesh1d->node[nr_mesh1d - 1]->count);
+                    m_mesh1d->node[nr_mesh1d - 1]->chainage = std::vector<double>(m_mesh1d->node[nr_mesh1d - 1]->count);
                     status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->node_chainage.c_str(), &var_id);
                     status = nc_get_var_double(this->m_ncid, var_id, m_mesh1d->node[nr_mesh1d - 1]->chainage.data());
                 }
                 else
                 {
                     status = get_dimension_var(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->x_node_name, &m_mesh1d->node[nr_mesh1d - 1]->count);
-                    m_mesh1d->node[nr_mesh1d - 1]->x = vector<double>(m_mesh1d->node[nr_mesh1d - 1]->count);
-                    m_mesh1d->node[nr_mesh1d - 1]->y = vector<double>(m_mesh1d->node[nr_mesh1d - 1]->count);
+                    m_mesh1d->node[nr_mesh1d - 1]->x = std::vector<double>(m_mesh1d->node[nr_mesh1d - 1]->count);
+                    m_mesh1d->node[nr_mesh1d - 1]->y = std::vector<double>(m_mesh1d->node[nr_mesh1d - 1]->count);
                     status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->x_node_name.c_str(), &var_id);
                     status = nc_get_var_double(this->m_ncid, var_id, m_mesh1d->node[nr_mesh1d - 1]->x.data());
                     status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->y_node_name.c_str(), &var_id);
@@ -2337,7 +2335,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                     status = get_dimension_var(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->edge_branch, &m_mesh1d->edge[nr_mesh1d - 1]->count);
 
                     status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->edge_branch.c_str(), &var_id);
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_branch = vector<long>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1);
+                    m_mesh1d->edge[nr_mesh1d - 1]->edge_branch = std::vector<long>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1);
                     status = nc_get_var_long(this->m_ncid, var_id, m_mesh1d->edge[nr_mesh1d - 1]->edge_branch.data());
 
                     status = nc_get_att_int(this->m_ncid, var_id, "start_index", &start_index);
@@ -2349,7 +2347,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                         }
                     }
                     // determine the edge length between the nodes (by definition >= 0)
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_length = vector<double>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
+                    m_mesh1d->edge[nr_mesh1d - 1]->edge_length = std::vector<double>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
                     for (int j = 0; j < m_mesh1d->edge[nr_mesh1d - 1]->count; j++)
                     {
                         int j_branch = m_mesh1d->edge[nr_mesh1d - 1]->edge_branch[j];
@@ -2380,8 +2378,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 {
                     // determine the edge_branch array
                     // not done yet, edge_length set to -1
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_branch = vector<long>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1);
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_length = vector<double>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
+                    m_mesh1d->edge[nr_mesh1d - 1]->edge_branch = std::vector<long>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1);
+                    m_mesh1d->edge[nr_mesh1d - 1]->edge_length = std::vector<double>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
                 }
 
                 /////////////////////////////////////////////////////////////////////
@@ -2468,7 +2466,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, mesh2d_edge_nodes);
 
                 // get the branch length
-                m_mesh2d->edge[nr_mesh2d - 1]->edge_length = vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
+                m_mesh2d->edge[nr_mesh2d - 1]->edge_length = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
 
                 status = get_attribute(this->m_ncid, var_id, "start_index", &start_index);
                 if (status == NC_NOERR)
@@ -2489,8 +2487,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
             /* Read the data (x, y)-coordinate of each node */
             status = get_dimension_var(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name, &m_mesh2d->node[nr_mesh2d - 1]->count);
 
-            m_mesh2d->node[nr_mesh2d - 1]->x = vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
-            m_mesh2d->node[nr_mesh2d - 1]->y = vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
+            m_mesh2d->node[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
+            m_mesh2d->node[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
             status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
             status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
             if (att_value == "projection_x_coordinate" || att_value == "longitude")
@@ -2512,8 +2510,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                 status = get_dimension_var(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name, &m_mesh2d->edge[nr_mesh2d - 1]->count);
                 if (m_mesh2d->edge[nr_mesh2d - 1]->count != 0)  // not required attribute
                 {
-                    m_mesh2d->edge[nr_mesh2d - 1]->x = vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
-                    m_mesh2d->edge[nr_mesh2d - 1]->y = vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
+                    m_mesh2d->edge[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
+                    m_mesh2d->edge[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
                     status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name.c_str(), &var_id);
                     status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
                     if (att_value == "projection_x_coordinate" || att_value == "longitude")
@@ -2567,8 +2565,8 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
 
                 if (m_mesh2d->face[nr_mesh2d - 1]->count != 0)  // not required attribute
                 {
-                    m_mesh2d->face[nr_mesh2d - 1]->x = vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
-                    m_mesh2d->face[nr_mesh2d - 1]->y = vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
+                    m_mesh2d->face[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
+                    m_mesh2d->face[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
                     status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name.c_str(), &var_id);
                     status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
                     if (att_value == "projection_x_coordinate" || att_value == "longitude")
@@ -2583,7 +2581,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
                         status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
                         status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->face[nr_mesh2d - 1]->x.data());
                     }
-                    string janm;
+                    std::string janm;
                     status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->x_bound_face_name);
                     status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_face_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->y_bound_face_name);
                     int a = 1;
@@ -2614,7 +2612,7 @@ int UGRID::read_variables_with_cf_role(int i_var, string var_name, string cf_rol
             {
                 start_index = 0;
             }
-            vector<int> value;
+            std::vector<int> value;
             int kk = -1;
             for (int m = 0; m < m_dimids[dimids[0]]; m++)  // faces
             {
@@ -2716,7 +2714,7 @@ int UGRID::get_coordinate(char * mesh, char * location, int p, double * x, doubl
     return -1;
 }
 
-int UGRID::read_grid_mapping(int i_var, string var_name, string grid_mapping_name)
+int UGRID::read_grid_mapping(int i_var, std::string var_name, std::string grid_mapping_name)
 {
     int status = -1;
     m_mapping->epsg = -1;
@@ -2735,26 +2733,26 @@ int UGRID::read_grid_mapping(int i_var, string var_name, string grid_mapping_nam
 
     if (m_mapping->epsg == -1 && m_mapping->epsg_code.size() != 0)
     {
-        vector<string> token = tokenize(m_mapping->epsg_code, ':');
+        std::vector<std::string> token = tokenize(m_mapping->epsg_code, ':');
         m_mapping->epsg = atoi(token[1].c_str());  // second token contains the plain EPSG code
     }
 
     return status;
 }
-int UGRID::read_composite_mesh_attributes(struct _mesh_contact_string * mesh_contact_strings, int i_var, string var_name)
+int UGRID::read_composite_mesh_attributes(struct _mesh_contact_string * mesh_contact_strings, int i_var, std::string var_name)
 {
     int status = -1;
     mesh_contact_strings->var_name = var_name;
     status = get_attribute(this->m_ncid, i_var, "meshes", &mesh_contact_strings->meshes);
     status = get_attribute(this->m_ncid, i_var, "mesh_contact", &mesh_contact_strings->mesh_contact);
 
-    vector<string> token = tokenize(mesh_contact_strings->meshes, ' ');
+    std::vector<std::string> token = tokenize(mesh_contact_strings->meshes, ' ');
     mesh_contact_strings->mesh_a = token[0];
     mesh_contact_strings->mesh_b = token[1];
 
     return status;
 }
-int UGRID::read_network_attributes(struct _ntw_string * ntw_strings, int i_var, string var_name, size_t topology_dimension)
+int UGRID::read_network_attributes(struct _ntw_string * ntw_strings, int i_var, std::string var_name, size_t topology_dimension)
 {
     int status = 1;
 
@@ -2777,7 +2775,7 @@ int UGRID::read_network_attributes(struct _ntw_string * ntw_strings, int i_var, 
 
     //get nodes (x_geom_name y_geom_name) of the network (ie connection nodes)
     // split the node_coordinates string into two separate strings (x_geom_name and y_geom_name)
-    vector<string> token = tokenize(ntw_strings->node_coordinates, ' ');
+    std::vector<std::string> token = tokenize(ntw_strings->node_coordinates, ' ');
     ntw_strings->x_ntw_name = token[0];
     ntw_strings->y_ntw_name = token[1];
 
@@ -2797,7 +2795,7 @@ int UGRID::read_network_attributes(struct _ntw_string * ntw_strings, int i_var, 
     return status;
 }
 
-int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_var, string var_name, int topology_dimension)
+int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_var, std::string var_name, int topology_dimension)
 {
     int status = -1;
     geom_strings->var_name = var_name;
@@ -2832,7 +2830,7 @@ int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_va
 
     // get geometry nodes (x_geom_name y_geom_name) of the network geometry (thalweg)
     // split the geom_node_coordinates string into two separate strings (x_geom_name and y_geom_name)
-    vector<string> token = tokenize(geom_strings->node_coordinates, ' ');
+    std::vector<std::string> token = tokenize(geom_strings->node_coordinates, ' ');
     if (token.size() == 2)
     {
         geom_strings->x_geom_name = token[0];
@@ -2851,7 +2849,7 @@ int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_va
     return status;
 }
 
-int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_var, string var_name, int topology_dimension)
+int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_var, std::string var_name, int topology_dimension)
 {
     int status = 1;
 
@@ -2878,13 +2876,13 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
     }
 
     // split 'node coordinate' string
-    vector<string> token = tokenize(mesh1d_strings->node_coordinates, ' ');
+    std::vector<std::string> token = tokenize(mesh1d_strings->node_coordinates, ' ');
     int var_id;
     for (int i = 0; i < token.size(); i++)
     {
         var_id = -1;
         status = nc_inq_varid(this->m_ncid, token[i].c_str(), &var_id);
-        string att_value;
+        std::string att_value;
         status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
         if (status == NC_NOERR)
         {
@@ -2928,7 +2926,7 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
     {
         var_id = -1;
         status = nc_inq_varid(this->m_ncid, token[i].c_str(), &var_id);
-        string att_value;
+        std::string att_value;
         status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
         if (status == NC_NOERR)
         {
@@ -2986,7 +2984,7 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
     return status;
     }
 
-int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_var, string var_name, int topology_dimension)
+int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_var, std::string var_name, int topology_dimension)
 {
     int status = 1;
 
@@ -3041,7 +3039,7 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
         mesh2d_strings->layer_interface_dimension = "";
     }
     // split required 'node coordinate' string
-    vector<string> token = tokenize(mesh2d_strings->node_coordinates, ' ');
+    std::vector<std::string> token = tokenize(mesh2d_strings->node_coordinates, ' ');
     if (token.size() == 2)
     {
         mesh2d_strings->x_node_name = token[0];
@@ -3093,12 +3091,12 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
     int status = -1;
     for (int i_mesh1d = 1; i_mesh1d <= mesh1d->nr_mesh1d; i_mesh1d++)  // loop over 1D meshes
     {
-        mesh1d->node[i_mesh1d - 1]->x = vector<double>(mesh1d->node[i_mesh1d - 1]->count);
-        mesh1d->node[i_mesh1d - 1]->y = vector<double>(mesh1d->node[i_mesh1d - 1]->count);
+        mesh1d->node[i_mesh1d - 1]->x = std::vector<double>(mesh1d->node[i_mesh1d - 1]->count);
+        mesh1d->node[i_mesh1d - 1]->y = std::vector<double>(mesh1d->node[i_mesh1d - 1]->count);
 
         double xp;
         double yp;
-        vector<double> chainage;
+        std::vector<double> chainage;
         for (int branch = 0; branch < ntw_geom->geom[nr_ntw - 1]->count; branch++)  // loop over the geometries
         {
             double branch_length = ntw_edges->edge[nr_ntw - 1]->edge_length[branch];
@@ -3244,7 +3242,7 @@ std::vector<std::string> UGRID::tokenize(const std::string& s, std::size_t count
     return tokens;
 }
 
-double *  UGRID::permute_array(double * in_arr, vector<long> order, vector<long> dim)
+double *  UGRID::permute_array(double * in_arr, std::vector<long> order, std::vector<long> dim)
 {
     //
     // in_array: array which need to be permuted
@@ -3258,7 +3256,7 @@ double *  UGRID::permute_array(double * in_arr, vector<long> order, vector<long>
     long k_source;
     long k_target;
     long length = 1;
-    vector<long> cnt(4);
+    std::vector<long> cnt(4);
     for (long i = 0; i < dim.size(); ++i)
     {
         length *= dim[i];

@@ -1,11 +1,8 @@
-#include "qgis_umesh.h"
 #include "qgis_umesh_version.h"
+#include "qgis_umesh.h"
 #include "perf_timer.h"
 
 #define GUI_EXPORT __declspec(dllimport)
-#include "qgisinterface.h"
-#include "qgsapplication.h"
-#include "qgscoordinatereferencesystem.h"
 
 #if defined(WIN64)
 #  include <windows.h>
@@ -425,7 +422,7 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
         if (globals->attribute[i]->name == "Conventions")
         {
             conventions_found = true;
-            if (globals->attribute[i]->cvalue.find("UGRID-1.") == string::npos)
+            if (globals->attribute[i]->cvalue.find("UGRID-1.") == std::string::npos)
             {
                 QMessageBox::information(0, "Information", QString("Time manager will not start because this file is not UGRID-1.* compliant.\nThis file has file format: %1.").arg(globals->attribute[i]->cvalue.c_str()));
                 return;
@@ -747,8 +744,9 @@ void qgis_umesh::openFile()
     QStringList * list = new QStringList();
 
     str->clear();
-    str->append("UGRID");
-    str->append(" (*_map.nc *_net.nc)");
+
+    str->append("netCDF files");
+    str->append(" (*.nc)");
     list->append(*str);
     str->clear();
 
@@ -762,12 +760,7 @@ void qgis_umesh::openFile()
     list->append(*str);
     str->clear();
 
-    str->append("netCDF files");
-    str->append(" (*.nc)");
-    list->append(*str);
-    str->clear();
-
-    //    str->append("UGRID");
+//    str->append("UGRID");
 //    str->append(" (*_clm.nc)");
 //    list->append(*str);
 //    str->clear();
@@ -838,7 +831,7 @@ void qgis_umesh::openFile(QFileInfo ncfile)
         if (globals->attribute[i]->name == "Conventions")
         {
             conventions_found = true;
-            if (globals->attribute[i]->cvalue.find("UGRID-1.") == string::npos)
+            if (globals->attribute[i]->cvalue.find("UGRID-1.") == std::string::npos)
             {
                 QString fname = ugrid_file->get_filename().fileName();
                 QString msg = QString("File \"%1\" is not UGRID-1.* compliant.\nThe file has Conventions attribute: \"%2\".").arg(fname).arg(globals->attribute[i]->cvalue.c_str());
@@ -1003,7 +996,7 @@ void qgis_umesh::open_file_mdu()
 }
 void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
 {
-    string fname = jsonfile.absoluteFilePath().toStdString();
+    std::string fname = jsonfile.absoluteFilePath().toStdString();
     JSON_READER * pt_mdu = new JSON_READER(fname);
     if (pt_mdu == nullptr)
     {
@@ -1012,8 +1005,8 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     }
     _mdu_files.push_back(pt_mdu);
     //MDU * _mdu_file = new MDU(jsonfile, this->pgBar);
-    string json_key = "data.geometry.netfile";
-    vector<string> ncfile;
+    std::string json_key = "data.geometry.netfile";
+    std::vector<std::string> ncfile;
     long status = pt_mdu->get(json_key, ncfile);
     QString mesh;
     if (ncfile.size() == 1)
@@ -1048,7 +1041,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     this->pgBar->show();
 
     json_key = "data.output.obsfile";
-    vector<string> obs_file;
+    std::vector<std::string> obs_file;
     status = pt_mdu->get(json_key, obs_file);
     if (obs_file.size() != 0 && obs_file[0] != "null")
     {
@@ -1081,7 +1074,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.external_forcing.extforcefile";
-    vector<string> extold_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> extold_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, extold_file_name);
 
     if (extold_file_name.size() != 0 && extold_file_name[0] != "null" )
@@ -1115,7 +1108,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.external_forcing.extforcefilenew";
-    vector<string> ext_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> ext_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, ext_file_name);
 
     if (ext_file_name.size() != 0 && ext_file_name[0] != "null")
@@ -1149,7 +1142,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.structurefile";
-    vector<string> structure_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> structure_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, structure_file_name);
     if (structure_file_name.size() != 0 && structure_file_name[0] != "null")
     {
@@ -1182,7 +1175,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.drypointsfile";
-    vector<string> drypoints_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> drypoints_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, drypoints_file_name);
     if (drypoints_file_name.size() != 0 && drypoints_file_name[0] != "null")
     {
@@ -1215,7 +1208,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.proflocfile";
-    vector<string> prof_loc_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> prof_loc_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, prof_loc_file_name);
     if (prof_loc_file_name.size() != 0 && prof_loc_file_name[0] != "null")
     {
@@ -1248,7 +1241,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.output.crsfile";
-    vector<string> cross_section_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> cross_section_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, cross_section_file_name);
     if (cross_section_file_name.size() != 0 && cross_section_file_name[0] != "null")
     {
@@ -1281,7 +1274,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.thindamfile";
-    vector<string> thin_dam_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> thin_dam_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, thin_dam_file_name);
     if (thin_dam_file_name.size() != 0 && thin_dam_file_name[0] != "null")
     {
@@ -1314,7 +1307,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.fixedweirfile";
-    vector<string> fixed_weir_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> fixed_weir_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, fixed_weir_file_name);
     if (fixed_weir_file_name.size() != 0 && fixed_weir_file_name[0] != "null")
     {
@@ -1347,7 +1340,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.crosslocfile";
-    vector<string> cross_section_location_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> cross_section_location_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, cross_section_location_file_name);
     if (cross_section_location_file_name.size() != 0 && cross_section_location_file_name[0] != "null")
     {
@@ -1380,7 +1373,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     i_json_key += 1;
     this->pgBar->setValue(i_json_key * 1000 / n_json_key);
     json_key = "data.geometry.retentionfile";
-    vector<string> retention_location_file_name;  // There is just one name, so size should be 1
+    std::vector<std::string> retention_location_file_name;  // There is just one name, so size should be 1
     status = pt_mdu->get(json_key, retention_location_file_name);
     if (retention_location_file_name.size() != 0 && retention_location_file_name[0] != "null")
     {
@@ -1469,7 +1462,7 @@ void qgis_umesh::open_file_link1d2d_json()
 }
 void qgis_umesh::open_file_link1d2d_json(QFileInfo jsonfile)
 {
-    string fname = jsonfile.absoluteFilePath().toStdString();
+    std::string fname = jsonfile.absoluteFilePath().toStdString();
     JSON_READER * pt_link1d2d = new JSON_READER(fname);
     if (pt_link1d2d == nullptr)
     {
@@ -1537,7 +1530,7 @@ void qgis_umesh::open_file_obs_point_json()
 }
 void qgis_umesh::open_file_obs_point_json(QFileInfo jsonfile)
 {
-    string fname = jsonfile.absoluteFilePath().toStdString();
+    std::string fname = jsonfile.absoluteFilePath().toStdString();
     JSON_READER * pt_file = new JSON_READER(fname);
     if (pt_file == nullptr)
     {
@@ -1550,7 +1543,7 @@ void qgis_umesh::open_file_obs_point_json(QFileInfo jsonfile)
     QgsLayerTreeGroup * treeGroup;
     treeGroup = get_subgroup(treeRoot, QString("Location point"));
 
-    vector<string> token = tokenize(pt_file->get_filename(), '/');
+    std::vector<std::string> token = tokenize(pt_file->get_filename(), '/');
     UGRID * ugrid_file = new UGRID(QFileInfo(QString::fromStdString(token[token.size()-1])), nullptr);
     create_vector_layer_observation_point(ugrid_file, pt_file, epsg, treeGroup);  // i.e. a JSON file
 }
@@ -1974,7 +1967,7 @@ void qgis_umesh::activate_layers()
 //
 void qgis_umesh::activate_observation_layers()
 {
-    vector<_location_type *> obs_type;
+    std::vector<_location_type *> obs_type;
 
     if (_his_cf_fil_index < 0) { return; }  // No history file opened
 
@@ -2703,7 +2696,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             int nr_attrib_fields = 0;
             //if (nodes->branch.size() != 0)
             {
-                lMyAttribField << QgsField("Edge length", QVariant::String);
+                lMyAttribField << QgsField("Edge length", QVariant::Double);
                 nr_attrib_fields++;
             }
             if (edges->name.size() != 0)
@@ -2760,7 +2753,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
                 if (edges->edge_length.size() > 0)
                 {
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(edges->edge_length[j]));
+                    MyFeature.setAttribute(k, edges->edge_length[j]);
                     if (edges->edge_length[j] < 0)
                     {
                         if (!msg_given)
@@ -2893,7 +2886,7 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
             vl->setTitle(layer_name + ": " + fname);
 
             QgsSymbol * marker = new QgsMarkerSymbol();
-            if (string(obs_points->location_dim_name).find("lateral") != std::string::npos)
+            if (std::string(obs_points->location_dim_name).find("lateral") != std::string::npos)
             {
                 QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
                 simple_marker->setSize(2.7);
@@ -3011,7 +3004,7 @@ void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
-            if (string(obs_points->location_dim_name).find("structures") != std::string::npos)
+            if (std::string(obs_points->location_dim_name).find("structures") != std::string::npos)
             {
                 line_marker->setColor(QColor(255, 0, 0));
             }
@@ -3041,14 +3034,14 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
     {
         START_TIMERN(create_vector_layer_1D_structure);
         long status = -1;
-        string json_key = "data.structure.id";
-        vector<string> id;
+        std::string json_key = "data.structure.id";
+        std::vector<std::string> id;
         status = prop_tree->get(json_key, id);
         json_key = "data.structure.branchid";
-        vector<string> branch_name;
+        std::vector<std::string> branch_name;
         status = prop_tree->get(json_key, branch_name);
         json_key = "data.structure.chainage";
-        vector<double> chainage;
+        std::vector<double> chainage;
         status = prop_tree->get(json_key, chainage);
         if (branch_name.size() == 0)
         {
@@ -3057,7 +3050,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         }
 
         json_key = "data.structure.type";
-        vector<string> structure_type;
+        std::vector<std::string> structure_type;
         status = prop_tree->get(json_key, structure_type);
 
         // Count the differen types of weirs
@@ -3108,7 +3101,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
         if (id.size() != sum)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Not all structure locations are supported.\Investigate file \"%1\".")).arg(fname);
+            QString msg = QString(tr("Not all structure locations are supported.\nInvestigate file \"%1\".")).arg(fname);
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
         }
         //
@@ -3171,7 +3164,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_bridge_1d.svg"));
@@ -3257,7 +3250,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_bridgepillar_1d.svg"));
@@ -3343,7 +3336,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_compound_1d.svg"));
@@ -3429,7 +3422,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_culvert_1d.svg"));
@@ -3519,7 +3512,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_extra_resistance_1d.svg"));
@@ -3605,7 +3598,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_general_structure_1d.svg"));
@@ -3691,7 +3684,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_inverted_siphon_1d.svg"));
@@ -3777,7 +3770,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_orifice_1d.svg"));
@@ -3863,7 +3856,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_pump_1d.svg"));
@@ -3949,7 +3942,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_riverweir_1d.svg"));
@@ -4039,7 +4032,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                 }
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_weir_1d.svg"));
@@ -4074,8 +4067,8 @@ void qgis_umesh::create_vector_layer_observation_point(UGRID * ugrid_file, JSON_
     {
         START_TIMERN(create_vector_layer_observation_point);
         long status = -1;
-        string json_key = "data.general.fileversion";
-        vector<string> version;
+        std::string json_key = "data.general.fileversion";
+        std::vector<std::string> version;
         status = pt_structures->get(json_key, version);
         if (version[0] == "1.00")
         {
@@ -4096,8 +4089,8 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
     START_TIMERN(create_vector_layer_crs_observation_point);
 
     long status = -1;
-    string json_key = "data.observationpoint.name";
-    vector<string> obs_name;
+    std::string json_key = "data.observationpoint.name";
+    std::vector<std::string> obs_name;
     status = prop_tree->get(json_key, obs_name);
     if (obs_name.size() == 0)
     {
@@ -4106,7 +4099,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
         return;
     }
     json_key = "data.observationpoint.x";
-    vector<double> x;
+    std::vector<double> x;
     status = prop_tree->get(json_key, x);
     if (x.size() == 0)
     {
@@ -4115,7 +4108,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
         return;
     }
     json_key = "data.observationpoint.y";
-    vector<double> y;
+    std::vector<double> y;
     status = prop_tree->get(json_key, y);
     if (y.size() == 0)
     {
@@ -4164,7 +4157,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
         dp_vl->addFeature(MyFeature);
     }
     vl->commitChanges();
-    vector<string> token = tokenize(prop_tree->get_filename(), '/');
+    std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
     vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
     QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
@@ -4193,8 +4186,8 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
     {
         START_TIMERN(create_vector_layer_chainage_observation_point);
         long status = -1;
-        string json_key = "data.observationpoint.id";  // if "id" is not found try "name"
-        vector<string> obs_name;
+        std::string json_key = "data.observationpoint.id";  // if "id" is not found try "name"
+        std::vector<std::string> obs_name;
         status = prop_tree->get(json_key, obs_name);
         if (obs_name.size() == 0)
         {
@@ -4208,7 +4201,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
             }
         }
         json_key = "data.observationpoint.branchid";
-        vector<string> branch_name;
+        std::vector<std::string> branch_name;
         status = prop_tree->get(json_key, branch_name);
         if (branch_name.size() == 0)
         {
@@ -4217,7 +4210,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
             return;
         }
         json_key = "data.observationpoint.chainage";
-        vector<double> chainage;
+        std::vector<double> chainage;
         status = prop_tree->get(json_key, chainage);
         if (chainage.size() == 0)
         {
@@ -4286,7 +4279,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
             dp_vl->addFeature(MyFeature);
         }
         vl->commitChanges();
-        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
@@ -4324,8 +4317,8 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
     START_TIMERN(create_vector_layer_sample_point);
 
     long status = -1;
-    string json_key = "data.samplepoint.z";
-    vector<double> z_value;
+    std::string json_key = "data.samplepoint.z";
+    std::vector<double> z_value;
     status = prop_tree->get(json_key, z_value);
     if (z_value.size() == 0)
     {
@@ -4334,8 +4327,8 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
         return;
     }
     json_key = "data.samplepoint.x";
-    vector<double> x;
-    vector<double> y;
+    std::vector<double> x;
+    std::vector<double> y;
     status = prop_tree->get(json_key, x);
     json_key = "data.samplepoint.y";
     status = prop_tree->get(json_key, y);
@@ -4381,7 +4374,7 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
         dp_vl->addFeature(MyFeature);
     }
     vl->commitChanges();
-    vector<string> token = tokenize(prop_tree->get_filename(), '/');
+    std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
     vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
     QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
@@ -4409,8 +4402,8 @@ void qgis_umesh::create_vector_layer_observation_cross_section(UGRID * ugrid_fil
     START_TIMERN(create_vector_layer_observation_cross_section);
 
     int status = -1;
-    vector<string> tmp_point_name;  // point object 1D simualtion
-    vector<string> tmp_line_name;  // line object 2D simulation
+    std::vector<std::string> tmp_point_name;  // point object 1D simualtion
+    std::vector<std::string> tmp_line_name;  // line object 2D simulation
     status = prop_tree->get("data.observationcrosssection.name", tmp_point_name);
     status = prop_tree->get("data.path.name", tmp_line_name);
     if (tmp_point_name.size() > 0)
@@ -4432,11 +4425,11 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
         START_TIMERN(create_vector_layer_1D_observation_cross_section);
 
         long status = -1;
-        string json_key = "data.observationcrosssection.name";
-        vector<string> names;
+        std::string json_key = "data.observationcrosssection.name";
+        std::vector<std::string> names;
         status = prop_tree->get(json_key, names);
         json_key = "data.observationcrosssection.branchid";
-        vector<string> branch_name;
+        std::vector<std::string> branch_name;
         status = prop_tree->get(json_key, branch_name);
         if (branch_name.size() == 0)
         {
@@ -4445,7 +4438,7 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
             return;
         }
         json_key = "data.observationcrosssection.chainage";
-        vector<double> chainage;
+        std::vector<double> chainage;
         status = prop_tree->get(json_key, chainage);
         if (chainage.size() == 0)
         {
@@ -4514,7 +4507,7 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
             dp_vl->addFeature(MyFeature);
         }
         vl->commitChanges();
-        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleMarkerSymbolLayer* simple_marker = new QgsSimpleMarkerSymbolLayer();
@@ -4551,7 +4544,7 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_f
     START_TIMERN(create_vector_layer_2D_observation_cross_section);
 
     int status = -1;
-    vector<string> tmp_line_name;
+    std::vector<std::string> tmp_line_name;
     status = prop_tree->get("data.path.name", tmp_line_name);
     if (tmp_line_name.size() != 0)
     {
@@ -4564,8 +4557,8 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_f
         QgsVectorDataProvider* dp_vl;
         QList <QgsField> lMyAttribField;
 
-        vector<string> line_name;
-        vector<vector<vector<double>>> poly_lines;
+        std::vector<std::string> line_name;
+        std::vector<std::vector<std::vector<double>>> poly_lines;
         status = prop_tree->get("data.path.name", line_name);
         status = prop_tree->get("data.path.multiline", poly_lines);
 
@@ -4612,7 +4605,7 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_f
 
             point.clear();
             int nr_points = poly_lines[ii][0].size();
-            vector<double> chainage(nr_points);
+            std::vector<double> chainage(nr_points);
             chainage[0] = 0.0;
             for (int j = 1; j < nr_points; j++)
             {
@@ -4681,7 +4674,7 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_f
             dp_vl->addFeature(MyFeature);
             vl->commitChanges();
         }
-        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -4708,8 +4701,8 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER *
     START_TIMERN(create_vector_layer_structure);
 
     int status = -1;
-    vector<string> fname;
-    string json_key = "data.structure.polylinefile";
+    std::vector<std::string> fname;
+    std::string json_key = "data.structure.polylinefile";
     status = prop_tree->get(json_key, fname);
     if (fname.size() == 0)
     {
@@ -4759,8 +4752,8 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER *
         QVector<QgsPointXY> point;
         QgsMultiPolylineXY lines;
 
-        vector<string> line_name;
-        vector<vector<vector<double>>> poly_lines;
+        std::vector<std::string> line_name;
+        std::vector<std::vector<std::vector<double>>> poly_lines;
 
         for (int i = 0; i < fname.size(); i++)
         {
@@ -4793,7 +4786,7 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER *
 
                 point.clear();
                 int nr_points = poly_lines[ii][0].size();
-                vector<double> chainage(nr_points);
+                std::vector<double> chainage(nr_points);
                 chainage[0] = 0.0;
                 for (int j = 1; j < nr_points; j++)
                 {
@@ -4889,8 +4882,8 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER *
     START_TIMERN(create_vector_layer_drypoints);
 
     int status = -1;
-    vector<string> tmp_line_name;
-    string json_key = "data.path.name";
+    std::vector<std::string> tmp_line_name;
+    std::string json_key = "data.path.name";
     status = prop_tree->get(json_key, tmp_line_name);
     if (tmp_line_name.size() != 0)
     {
@@ -4902,8 +4895,8 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER *
         QgsVectorDataProvider * dp_vl;
         QList <QgsField> lMyAttribField;
 
-        vector<string> line_name;
-        vector<vector<vector<double>>> poly_lines;
+        std::vector<std::string> line_name;
+        std::vector<std::vector<std::vector<double>>> poly_lines;
         status = prop_tree->get("data.path.name", line_name);
         status = prop_tree->get("data.path.multiline", poly_lines);
 
@@ -4968,7 +4961,7 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER *
             dp_vl->addFeature(MyFeature);
             vl->commitChanges();
         }
-        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->setTitle(layer_name + ": " +  QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -4995,8 +4988,8 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
     {
         START_TIMERN(create_vector_layer_1D_external_forcing);
         long status;
-        string json_key;
-        vector<string> fname;
+        std::string json_key;
+        std::vector<std::string> fname;
         //-------------------------------------------------------------------------------------------
         status = -1;
         json_key = "data.sources_sinks.filename";
@@ -5052,9 +5045,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
 
-            vector<string> line_name;
-            vector<vector<vector<double>>> poly_lines;
-            vector<vector<vector<double>>> poly_points;
+            std::vector<std::string> line_name;
+            std::vector<std::vector<std::vector<double>>> poly_lines;
+            std::vector<std::vector<std::vector<double>>> poly_points;
 
             for (int i = 0; i < fname.size(); i++)
             {
@@ -5136,7 +5129,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                     }
                 }
             }
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             if (vl_points->featureCount() != 0)
             {
                 vl_points->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
@@ -5179,7 +5172,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
         status = prop_tree->get(json_key, fname);
         if (fname.size() == 0)
         {
-            string json_key_old = "data.boundary.filename";
+            std::string json_key_old = "data.boundary.filename";
             status = prop_tree->get(json_key_old, fname);
             if (fname.size() == 0)
             {
@@ -5222,8 +5215,8 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
 
-            vector<string> line_name;
-            vector<vector<vector<double>>> poly_lines;
+            std::vector<std::string> line_name;
+            std::vector<std::vector<std::vector<double>>> poly_lines;
 
             for (int i = 0; i < fname.size(); i++)
             {
@@ -5282,7 +5275,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                     vl->commitChanges();
                 }
             }
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -5346,8 +5339,8 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
 
-            vector<string> line_name;
-            vector<vector<vector<double>>> poly_lines;
+            std::vector<std::string> line_name;
+            std::vector<std::vector<std::vector<double>>> poly_lines;
 
             for (int i = 0; i < fname.size(); i++)
             {
@@ -5406,7 +5399,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                     vl->commitChanges();
                 }
             }
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -5428,7 +5421,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
  //------------------------------------------------------------------------------
         status = -1;
         json_key = "data.lateral.id";
-        vector<string> lateral_name;
+        std::vector<std::string> lateral_name;
         status = prop_tree->get(json_key, lateral_name);
         if (lateral_name.size() == 0)
         {
@@ -5440,7 +5433,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
         {
             START_TIMER(data.lateral.id);
             json_key = "data.lateral.branchid";
-            vector<string> branch_name;
+            std::vector<std::string> branch_name;
             status = prop_tree->get(json_key, branch_name);
             if (branch_name.size() == 0)
             {
@@ -5451,7 +5444,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 return;
             }
             json_key = "data.lateral.chainage";
-            vector<double> chainage;
+            std::vector<double> chainage;
             status = prop_tree->get(json_key, chainage);
             if (chainage.size() == 0)
             {
@@ -5524,7 +5517,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 dp_vl->addFeature(MyFeature);
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
@@ -5556,7 +5549,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
 //------------------------------------------------------------------------------
         status = -1;
         json_key = "data.boundary.nodeid";
-        vector<string> bnd_name;
+        std::vector<std::string> bnd_name;
         status = prop_tree->get(json_key, bnd_name);
         if (bnd_name.size() == 0)
         {
@@ -5619,7 +5612,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 dp_vl->addFeature(MyFeature);
             }
             vl->commitChanges();
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
@@ -5656,8 +5649,8 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
 void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
-    vector<string> tmp_line_name;
-    string json_key = "data.path.name";
+    std::vector<std::string> tmp_line_name;
+    std::string json_key = "data.path.name";
     status = prop_tree->get(json_key, tmp_line_name);
     if (tmp_line_name.size() != 0)
     {
@@ -5671,8 +5664,8 @@ void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER *
         QgsVectorDataProvider * dp_vl;
         QList <QgsField> lMyAttribField;
 
-        vector<string> line_name;
-        vector<vector<vector<double>>> poly_lines;
+        std::vector<std::string> line_name;
+        std::vector<std::vector<std::vector<double>>> poly_lines;
         status = prop_tree->get("data.path.name", line_name);
         status = prop_tree->get("data.path.multiline", poly_lines);
 
@@ -5737,7 +5730,7 @@ void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER *
             dp_vl->addFeature(MyFeature);
             vl->commitChanges();
         }
-        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -5761,8 +5754,8 @@ void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER *
 void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
-    vector<string> tmp_line_name;
-    string json_key = "data.path.name";
+    std::vector<std::string> tmp_line_name;
+    std::string json_key = "data.path.name";
     status = prop_tree->get(json_key, tmp_line_name);
     if (tmp_line_name.size() != 0)
     {
@@ -5775,8 +5768,8 @@ void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER 
         QgsVectorDataProvider * dp_vl;
         QList <QgsField> lMyAttribField;
 
-        vector<string> line_name;
-        vector<vector<vector<double>>> poly_lines;
+        std::vector<std::string> line_name;
+        std::vector<std::vector<std::vector<double>>> poly_lines;
         status = prop_tree->get("data.path.name", line_name);
         status = prop_tree->get("data.path.multiline", poly_lines);
 
@@ -5841,7 +5834,7 @@ void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER 
             dp_vl->addFeature(MyFeature);
             vl->commitChanges();
         }
-        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -5866,8 +5859,8 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
 {
     long status = -1;
 
-    string json_key = "data.crosssection.id";
-    vector<string> crosssection_name;
+    std::string json_key = "data.crosssection.id";
+    std::vector<std::string> crosssection_name;
     status = prop_tree->get(json_key, crosssection_name);
     if (crosssection_name.size() == 0)
     {
@@ -5879,7 +5872,7 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
     {
         START_TIMERN(create_vector_layer_1D_cross_section);
         json_key = "data.crosssection.branchid";
-        vector<string> branch_name;
+        std::vector<std::string> branch_name;
         status = prop_tree->get(json_key, branch_name);
         if (branch_name.size() == 0)
         {
@@ -5890,7 +5883,7 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
             return;
         }
         json_key = "data.crosssection.chainage";
-        vector<double> chainage;
+        std::vector<double> chainage;
         status = prop_tree->get(json_key, chainage);
         if (chainage.size() == 0)
         {
@@ -5959,7 +5952,7 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
             dp_vl->addFeature(MyFeature);
         }
         vl->commitChanges();
-        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/cross_section_location_1d.svg"));
@@ -5993,8 +5986,8 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
 {
     long status = -1;
 
-    string json_key = "data.retention.id";
-    vector<string> retention_name;
+    std::string json_key = "data.retention.id";
+    std::vector<std::string> retention_name;
     status = prop_tree->get(json_key, retention_name);
     if (retention_name.size() == 0)
     {
@@ -6006,7 +5999,7 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
     {
         START_TIMERN(create_vector_layer_1D_retention);
         json_key = "data.retention.branchid";
-        vector<string> branch_name;
+        std::vector<std::string> branch_name;
         status = prop_tree->get(json_key, branch_name);
         if (branch_name.size() == 0)
         {
@@ -6017,7 +6010,7 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
             return;
         }
         json_key = "data.retention.chainage";
-        vector<double> chainage;
+        std::vector<double> chainage;
         status = prop_tree->get(json_key, chainage);
         if (chainage.size() == 0)
         {
@@ -6086,7 +6079,7 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
             dp_vl->addFeature(MyFeature);
         }
         vl->commitChanges();
-        vector<string> token = tokenize(prop_tree->get_filename(), '/');
+        std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/retention_location_1d.svg"));
@@ -6120,8 +6113,8 @@ void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long eps
     if (prop_tree != nullptr)
     {
         long status = -1;
-        string json_key = "data.link1d2d.xy_1d";
-        vector<string> link_1d_point;
+        std::string json_key = "data.link1d2d.xy_1d";
+        std::vector<std::string> link_1d_point;
         status = prop_tree->get(json_key, link_1d_point);
         if (link_1d_point.size() == 0)
         {
@@ -6133,7 +6126,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long eps
         {
             START_TIMERN(create_1D2D_link_vector_layer);
             json_key = "data.link1d2d.xy_2d";
-            vector<string> link_2d_point;
+            std::vector<std::string> link_2d_point;
             status = prop_tree->get(json_key, link_2d_point);
             if (link_2d_point.size() == 0)
             {
@@ -6203,7 +6196,7 @@ void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long eps
                 dp_vl->addFeature(MyFeature);
                 vl->commitChanges();
             }
-            vector<string> token = tokenize(prop_tree->get_filename(), '/');
+            std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -6227,14 +6220,14 @@ void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long eps
     }
 }
 //------------------------------------------------------------------------------
-long qgis_umesh::compute_location_along_geometry(struct _ntw_geom * ntw_geom, struct _ntw_edges * ntw_edges, string branch_name, double chainage_node, double * xp, double * yp, double * rotation)
+long qgis_umesh::compute_location_along_geometry(struct _ntw_geom * ntw_geom, struct _ntw_edges * ntw_edges, std::string branch_name, double chainage_node, double * xp, double * yp, double * rotation)
 {
     START_TIMERN(compute_location_along_geometry);
 
     long status = -1;
     int nr_ntw = 1;  // Todo: HACK just one network supported
     *rotation = 0.0;
-    vector<double> chainage;
+    std::vector<double> chainage;
     for (int branch = 0; branch < ntw_geom->geom[nr_ntw - 1]->count; branch++)  // loop over the geometries
     {
         if (status == 0) { break; }
@@ -6297,7 +6290,7 @@ long qgis_umesh::compute_location_along_geometry(struct _ntw_geom * ntw_geom, st
     STOP_TIMER(compute_location_along_geometry);
     return status;
 }
-long qgis_umesh::find_location_boundary(struct _ntw_nodes * ntw_nodes, string bnd_name, double * xp, double * yp)
+long qgis_umesh::find_location_boundary(struct _ntw_nodes * ntw_nodes, std::string bnd_name, double * xp, double * yp)
 {
     START_TIMERN(find_location_boundary);
 

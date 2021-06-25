@@ -45,6 +45,7 @@
 #include <qgslinestring.h>
 #include <qgsmultilinestring.h>
 #include <qgslinesymbollayer.h>
+#include <qgsmarkersymbol.h>
 #include <qgsmarkersymbollayer.h>
 #include <qgsabstract3drenderer.h>
 #include <QgsGraduatedSymbolRenderer.h>
@@ -118,8 +119,8 @@ class qgis_umesh
         void create_vector_layer_sample_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
 
         void create_1D2D_link_vector_layer(JSON_READER *, long);
-        long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, string, double, double *, double *, double *);
-        long find_location_boundary(struct _ntw_nodes *, string, double *, double *);
+        long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, std::string, double, double *, double *, double *);
+        long find_location_boundary(struct _ntw_nodes *, std::string, double *, double *);
 
 
         QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
@@ -165,7 +166,7 @@ class qgis_umesh
         QIcon get_icon_file(QDir, QString);
         int QT_SpawnProcess(int, char *, char **);
         std::vector<std::string> tokenize(const std::string &, const char);
-        std::vector<std::string> tokenize(const std::string &, std::size_t);
+        std::vector<std::string> tokenize(const std::string &, size_t);
 
         // variables
         QgisInterface * mQGisIface; // Pointer to the QGIS interface object
@@ -214,11 +215,11 @@ class qgis_umesh
         char * actionIcon_c = (char *)malloc(PATH_LENGTH * sizeof(char *));
 
         int _fil_index;
-        vector<UGRID *> m_ugrid_file;
+        std::vector<UGRID *> m_ugrid_file;
         int _his_cf_fil_index;
-        vector<HISCF *> m_his_cf_file;
+        std::vector<HISCF *> m_his_cf_file;
         int _mdu_fil_index;
-        vector<JSON_READER *> _mdu_files;
+        std::vector<JSON_READER *> _mdu_files;
 
         QgsCoordinateReferenceSystem m_crs;
 };

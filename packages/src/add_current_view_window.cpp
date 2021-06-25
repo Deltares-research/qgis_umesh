@@ -6,7 +6,7 @@ AddCurrentViewWindow::AddCurrentViewWindow() : QWidget()
 {
     object_count = 1;
 }
-AddCurrentViewWindow::AddCurrentViewWindow(QgisInterface * QGisIface, QString label, QString quantity, double * z_value, vector<double> x, vector<double> y, long epsg) : QWidget()
+AddCurrentViewWindow::AddCurrentViewWindow(QgisInterface * QGisIface, QString label, QString quantity, double * z_value, std::vector<double> x, std::vector<double> y, long epsg) : QWidget()
 {
     //QMessageBox::information(0, "Information", "AddCurrentViewWindow::AddCurrentViewWindow()");
     object_count = 1;

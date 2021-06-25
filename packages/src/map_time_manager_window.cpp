@@ -1360,8 +1360,8 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
     int jj = j.toInt();
 
     struct _variable * var = m_vars->variable[jj];
-    string var_name = var->var_name;
-    string location = var->location;
+    std::string var_name = var->var_name;
+    std::string location = var->location;
 
     // begin HACK edge vs contact
     if (location == "edge" || location == "contact")
@@ -1404,8 +1404,8 @@ void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
     //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
 
     struct _variable * var = m_vars->variable[jj];
-    string var_name = var->var_name;
-    string location = var->location;
+    std::string var_name = var->var_name;
+    std::string location = var->location;
 
     // begin HACK edge vs contact
     if (location == "edge" || location == "contact")

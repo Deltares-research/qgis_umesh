@@ -25,7 +25,6 @@
 #include "data_struct.h"
 #include "netcdf.h"
 
-using namespace std;
 template<typename T>
 struct DataValuesProvider2D
 {
@@ -128,8 +127,8 @@ struct _time_series {
     QString * long_name;
     QString * unit;
     QString * dim_name;
-    vector<double> times;  // vector of seconds
-    map<string, string> map_dim_name;
+    std::vector<double> times;  // vector of seconds
+    std::map<std::string, std::string> map_dim_name;
 };
 
 
@@ -137,46 +136,46 @@ struct _variable {
 public:
     _variable() {};
     double fill_value;
-    vector<long> dims;
+    std::vector<long> dims;
     nc_type nc_type;
     int topology_dimension;
-    string var_name;
-    string location;
-    string mesh;
-    string coordinates;
-    string cell_methods;
-    string standard_name;
-    string long_name;
-    string units;
-    string grid_mapping;
-    string comment;
-    vector<int> flag_values;
-    vector<string> flag_meanings;
+    std::string var_name;
+    std::string location;
+    std::string mesh;
+    std::string coordinates;
+    std::string cell_methods;
+    std::string standard_name;
+    std::string long_name;
+    std::string units;
+    std::string grid_mapping;
+    std::string comment;
+    std::vector<int> flag_values;
+    std::vector<std::string> flag_meanings;
     //
     bool draw;
     bool read;
     bool time_series;
-    vector<string> dim_names;
+    std::vector<std::string> dim_names;
     int nr_hydro_layers = -1;
     int nr_bed_layers = -1;
     int sediment_index = -1;
     int sediment_array = -1;
-    vector<double> layer_center;
-    vector<double> layer_interface;
+    std::vector<double> layer_center;
+    std::vector<double> layer_interface;
     DataValuesProvider2D<double> data_2d;
     DataValuesProvider3D<double> data_3d;
     DataValuesProvider4D<double> data_4d;
-    vector<vector<vector <double *>>> z_3d;
-    map<string, string> map_dim_name;
+    std::vector<std::vector<std::vector <double *>>> z_3d;
+    std::map<std::string, std::string> map_dim_name;
 };
 struct _feature {
     size_t count;
-    vector<long> branch;  // 1D, on which branch the node is
-    vector<double> chainage;  // 1D, chainage of the node
-    vector<double> x;
-    vector<double> y;
-    vector<string> name;
-    vector<string> long_name;
+    std::vector<long> branch;  // 1D, on which branch the node is
+    std::vector<double> chainage;  // 1D, chainage of the node
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<std::string> name;
+    std::vector<std::string> long_name;
 };
 ////////////////////////////////////////////////////////////////////////////////
 struct _mesh_variable {
@@ -189,7 +188,7 @@ struct _mesh2d {
     struct _feature ** node;
     struct _edge ** edge;
     struct _feature ** face;  // face: the location of the mass centre
-    vector<vector<int>> face_nodes;  // face: the location of the mass centre
+    std::vector<std::vector<int>> face_nodes;  // face: the location of the mass centre
 };
 
 struct _mesh1d {
@@ -200,10 +199,10 @@ struct _mesh1d {
 
 struct _mesh_contact {
     long nr_mesh_contact;
-    string mesh_a;  // long_name of the first mesh
-    string mesh_b;  // long_name of the second mesh
-    string location_a;
-    string location_b;
+    std::string mesh_a;  // long_name of the first mesh
+    std::string mesh_b;  // long_name of the second mesh
+    std::string location_a;
+    std::string location_b;
     struct _feature ** node;
     struct _edge ** edge;
 };
@@ -215,8 +214,8 @@ struct _ntw_geom {
 struct _geom {
     size_t count;
     struct _feature ** nodes;
-    vector<string> name;
-    vector<string> long_name;
+    std::vector<std::string> name;
+    std::vector<std::string> long_name;
 };
 
 struct _ntw_edges {
@@ -230,131 +229,131 @@ struct _ntw_nodes {
 
 struct _edge {
     size_t count;
-    vector<double> x;
-    vector<double> y;
-    vector<vector<double>> x_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
-    vector<vector<double>> y_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<std::vector<double>> x_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
+    std::vector<std::vector<double>> y_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
     int ** edge_nodes;
-    vector<long> edge_branch;
-    vector<double> edge_length;
-    vector<string> name;
-    vector<string> long_name;
+    std::vector<long> edge_branch;
+    std::vector<double> edge_length;
+    std::vector<std::string> name;
+    std::vector<std::string> long_name;
 };
 struct _faces {
     size_t count;
-    vector<double> x;
-    vector<double> y;
-    vector<vector<double>> x_bounds;  // polygon used when drawing quantities, not necessarily the total face
-    vector<vector<double>> y_bounds;  // polygon used when drawing quantities, not necessarily the total face
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<std::vector<double>> x_bounds;  // polygon used when drawing quantities, not necessarily the total face
+    std::vector<std::vector<double>> y_bounds;  // polygon used when drawing quantities, not necessarily the total face
 };
 
 struct _ntw_string {
-    string var_name;
-    string cf_role;
-    string edge_dimension;
-    string edge_geometry;
-    string edge_length;
-    string edge_node_connectivity;
-    string edge_type;  // not yet used
-    string long_name;
-    string node_coordinates;
+    std::string var_name;
+    std::string cf_role;
+    std::string edge_dimension;
+    std::string edge_geometry;
+    std::string edge_length;
+    std::string edge_node_connectivity;
+    std::string edge_type;  // not yet used
+    std::string long_name;
+    std::string node_coordinates;
     size_t toplogy_dimension;
     //
-    string x_ntw_name;
-    string y_ntw_name;
+    std::string x_ntw_name;
+    std::string y_ntw_name;
     //
-    string node_names;
-    string node_long_names;
-    string edge_names;
-    string edge_long_names;
-    string edge_order;
+    std::string node_names;
+    std::string node_long_names;
+    std::string edge_names;
+    std::string edge_long_names;
+    std::string edge_order;
 };
 struct _geom_string {
-    string var_name;
-    string cf_role;
-    string long_name;
-    string node_count;
-    string node_coordinates;
+    std::string var_name;
+    std::string cf_role;
+    std::string long_name;
+    std::string node_count;
+    std::string node_coordinates;
     //
-    string x_geom_name;
-    string y_geom_name;
+    std::string x_geom_name;
+    std::string y_geom_name;
     //
-    string node_dimension;
+    std::string node_dimension;
 };
 struct _mesh1d_string {
-    string var_name;
-    string cf_role;
-    string coordinate_space;
-    string edge_node_connectivity;
-    string edge_type;  // open or closed 1D-edge
-    string long_name;
-    string node_coordinates;
-    string node_dimension;
-    string node_names;
-    string node_long_names;
-    string edge_coordinates;  // 1D optional required
-    string edge_names;
-    string edge_long_names;
+    std::string var_name;
+    std::string cf_role;
+    std::string coordinate_space;
+    std::string edge_node_connectivity;
+    std::string edge_type;  // open or closed 1D-edge
+    std::string long_name;
+    std::string node_coordinates;
+    std::string node_dimension;
+    std::string node_names;
+    std::string node_long_names;
+    std::string edge_coordinates;  // 1D optional required
+    std::string edge_names;
+    std::string edge_long_names;
     size_t topology_dimension;
     //
-    string node_branch;
-    string node_chainage;
-    string x_node_name;
-    string y_node_name;
+    std::string node_branch;
+    std::string node_chainage;
+    std::string x_node_name;
+    std::string y_node_name;
     //
-    string edge_dimension;
-    string edge_branch;
-    string edge_chainage;
-    string x_edge_name;  //  mid point of edge (in general)
-    string y_edge_name;  //  mid point of edge (in general)
-    string node_edge_exchange;
+    std::string edge_dimension;
+    std::string edge_branch;
+    std::string edge_chainage;
+    std::string x_edge_name;  //  mid point of edge (in general)
+    std::string y_edge_name;  //  mid point of edge (in general)
+    std::string node_edge_exchange;
     //
-    vector<string> dim_name;;  // in case of 2DV simualtion
+    std::vector<std::string> dim_name;;  // in case of 2DV simualtion
 };
 struct _mesh2d_string {
-    string var_name;
-    string long_name;
-    string edge_coordinates;  // 2D
-    string x_edge_name;  // 2D
-    string y_edge_name;  // 2D
-    string face_coordinates;  // 2D
-    string x_face_name;  // 2D
-    string y_face_name;  // 2D
-    string node_coordinates;  // 1D, 2D
-    string x_node_name;  // 2D
-    string y_node_name;  // 2D
+    std::string var_name;
+    std::string long_name;
+    std::string edge_coordinates;  // 2D
+    std::string x_edge_name;  // 2D
+    std::string y_edge_name;  // 2D
+    std::string face_coordinates;  // 2D
+    std::string x_face_name;  // 2D
+    std::string y_face_name;  // 2D
+    std::string node_coordinates;  // 1D, 2D
+    std::string x_node_name;  // 2D
+    std::string y_node_name;  // 2D
     size_t topology_dimension;
     //
-    string edge_dimension;
-    string edge_geometry;
-    string edge_length;
-    string edge_face_connectivity;
-    string edge_node_connectivity;
-    string edge_type;  // internal_closed, internal, boundary, boundary_closed
-    string face_dimension;
-    string face_edge_connectivity;
-    string face_face_connectivity;
-    string face_node_connectivity;
-    string max_face_nodes_dimension;
-    string node_edge_exchange;
-    string layer_dimension;
-    string layer_interface_dimension;
+    std::string edge_dimension;
+    std::string edge_geometry;
+    std::string edge_length;
+    std::string edge_face_connectivity;
+    std::string edge_node_connectivity;
+    std::string edge_type;  // internal_closed, internal, boundary, boundary_closed
+    std::string face_dimension;
+    std::string face_edge_connectivity;
+    std::string face_face_connectivity;
+    std::string face_node_connectivity;
+    std::string max_face_nodes_dimension;
+    std::string node_edge_exchange;
+    std::string layer_dimension;
+    std::string layer_interface_dimension;
     //
-    vector<string> dim_name;  // in case of 3D-sigma simualtion
-    string x_bound_edge_name;
-    string y_bound_edge_name;
-    string x_bound_face_name;
-    string y_bound_face_name;
+    std::vector<std::string> dim_name;  // in case of 3D-sigma simualtion
+    std::string x_bound_edge_name;
+    std::string y_bound_edge_name;
+    std::string x_bound_face_name;
+    std::string y_bound_face_name;
 };
 
 struct _mesh_contact_string {
-    string var_name;
-    string meshes;
-    string mesh_a;
-    string mesh_b;
-    string mesh_contact;
+    std::string var_name;
+    std::string meshes;
+    std::string mesh_a;
+    std::string mesh_b;
+    std::string mesh_contact;
     //
-    vector<string> dim_name;  // in case of 2DV + 3D-sigma simulation
+    std::vector<std::string> dim_name;  // in case of 2DV + 3D-sigma simulation
 };
 
 class UGRID
@@ -387,26 +386,26 @@ public:
     struct _mesh2d * get_mesh2d();
     struct _mapping * get_grid_mapping();
 
-    long set_grid_mapping_epsg(long, string);
-    vector<string> get_names(int, string, size_t);
+    long set_grid_mapping_epsg(long, std::string);
+    std::vector<std::string> get_names(int, std::string, size_t);
 
     std::vector<std::string> tokenize(const std::string & , const char );
     std::vector<std::string> tokenize(const std::string & , std::size_t );
 
     long get_count_times();
     QDateTime * m_RefDate;
-    vector<double> get_times();
+    std::vector<double> get_times();
     QVector<QDateTime> get_qdt_times();  // qdt: Qt Date Time
     QVector<QDateTime> qdt_times;
 
     struct _mesh_variable * get_variables();
-    DataValuesProvider2D<double> get_variable_values(const string);
-    DataValuesProvider2D<double> get_variable_values(const string, int);
+    DataValuesProvider2D<double> get_variable_values(const std::string);
+    DataValuesProvider2D<double> get_variable_values(const std::string, int);
 
-    DataValuesProvider3D<double> get_variable_3d_values(const string);
-    DataValuesProvider4D<double> get_variable_4d_values(const string);
+    DataValuesProvider3D<double> get_variable_3d_values(const std::string);
+    DataValuesProvider4D<double> get_variable_4d_values(const std::string);
 
-    struct _variable * get_var_by_std_name(struct _mesh_variable *, string, string);
+    struct _variable * get_var_by_std_name(struct _mesh_variable *, std::string, std::string);
 
 #if defined (DEBUG)
     char  janm;
@@ -414,32 +413,32 @@ public:
 
 private:
     char * strndup(const char *, size_t);
-    int read_network_attributes(struct _ntw_string *, int, string, size_t);
-    int read_geometry_attributes(struct _geom_string *, int, string, int);
-    int read_mesh1d_attributes(struct _mesh1d_string *, int, string, int);
-    int read_mesh2d_attributes(struct _mesh2d_string *, int, string, int);
-    int read_composite_mesh_attributes(struct _mesh_contact_string *, int, string);
+    int read_network_attributes(struct _ntw_string *, int, std::string, size_t);
+    int read_geometry_attributes(struct _geom_string *, int, std::string, int);
+    int read_mesh1d_attributes(struct _mesh1d_string *, int, std::string, int);
+    int read_mesh2d_attributes(struct _mesh2d_string *, int, std::string, int);
+    int read_composite_mesh_attributes(struct _mesh_contact_string *, int, std::string);
 
-    int get_attribute_by_var_name(int, string, string, string *);
+    int get_attribute_by_var_name(int, std::string, std::string, std::string *);
     int get_attribute(int, int, char *, char **);
-    int get_attribute(int, int, char *, string *);
-    int get_attribute(int, int, string, string *);
+    int get_attribute(int, int, char *, std::string *);
+    int get_attribute(int, int, std::string, std::string *);
     int get_attribute(int, int, char *, double *);
     int get_attribute(int, int, char *, int *);
     int get_attribute(int, int, char *, long *);
     int get_dimension(int, char *, size_t *);
-    int get_dimension(int, string, size_t *);
-    int get_dimension_var(int, string, size_t *);
-    vector<string> get_string_var(int, string);
-    vector<string> get_dimension_names(int, string);
+    int get_dimension(int, std::string, size_t *);
+    int get_dimension_var(int, std::string, size_t *);
+    std::vector<std::string> get_string_var(int, std::string);
+    std::vector<std::string> get_dimension_names(int, std::string);
     int get_coordinate(char *, char *, int, double *, double *);
 
-    int read_variables_with_cf_role(int, string, string, int, int *);
-    int read_grid_mapping(int, string, string);
+    int read_variables_with_cf_role(int, std::string, std::string, int, int *);
+    int read_grid_mapping(int, std::string, std::string);
     int create_mesh1d_nodes(struct _mesh1d *, struct _ntw_edges *, struct _ntw_geom *);
     int create_mesh_contacts(struct _ntw_nodes *, struct _ntw_edges *, struct _ntw_geom *);
 
-    double * permute_array(double *, vector<long>, vector<long>);
+    double * permute_array(double *, std::vector<long>, std::vector<long>);
     long get_index_in_c_array(long, long, long, long, long, long, long, long);
 
     struct _ntw_nodes * m_ntw_nodes = nullptr;
@@ -459,15 +458,15 @@ private:
     struct _mesh2d_string ** m_mesh2d_strings = nullptr;
     struct _mesh_contact_string ** m_mesh_contact_strings = nullptr;
 
-    vector<_time_series> time_series;
+    std::vector<_time_series> time_series;
 
     long m_nr_mesh_contacts;
     long m_nr_mesh_var;
     size_t _two;
     size_t * m_dimids;
-    vector<string> m_dim_names;
-    map<string, long> m_map_dim;
-    map<string, string> m_map_dim_name;
+    std::vector<std::string> m_dim_names;
+    std::map<std::string, long> m_map_dim;
+    std::map<std::string, std::string> m_map_dim_name;
 
     int m_ncid;
     int * topo_edge_nodes;

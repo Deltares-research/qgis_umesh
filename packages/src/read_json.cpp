@@ -21,19 +21,18 @@ using c++11 regular expression functionality.
 struct Getter
 {
     template<typename T, class Ptree>
-    static void prop_get_json(Ptree &pt, const string & data, vector<T> & results)
+    static void prop_get_json(Ptree &pt, const std::string & data, std::vector<T> & results)
     {
-        int a = 0;
         try {
             // first strip key from data, ex. data=data.boundary.nodeid, chapter==data.boundary, key==nodeid
             size_t i = data.find_last_of(".");
-            string chapter = data.substr(0, i);
-            string key = data.substr(i + 1);
+            std::string chapter = data.substr(0, i);
+            std::string key = data.substr(i + 1);
             auto child = pt.get_child(chapter);
             for (auto& p : child)
             {
-                string a = p.first.data();
-                string b = p.second.data();
+                std::string a = p.first.data();
+                std::string b = p.second.data();
                 if (boost::iequals(p.first.data(), key))
                 {
                     if (!p.second.data().empty())
@@ -51,10 +50,10 @@ struct Getter
                 {
                     for (auto& p : pv.second)
                     {
-                        string a = p.first.data();
-                        string b = p.second.data();
-                        string c = pv.first.data();
-                        string d = pv.second.data();
+                        std::string a = p.first.data();
+                        std::string b = p.second.data();
+                        std::string c = pv.first.data();
+                        std::string d = pv.second.data();
                         if (p.second.data() != "" && boost::iequals(pv.first.data(), key))
                         {
                             T val = p.second.get_value<T>();
@@ -95,16 +94,16 @@ struct Getter
         }
     }
     template<typename T, class Ptree>
-    static void prop_get_json(Ptree &pt, const string & data, vector< vector<vector<T>>> & results)
+    static void prop_get_json(Ptree &pt, const std::string & data, std::vector< std::vector< std::vector<T>>> & results)
     {
         try
         {
-            vector<double> vec;
-            vector<vector<double>> coord;
+            std::vector<double> vec;
+            std::vector<std::vector<double>> coord;
 
             size_t i = data.find_last_of(".");
-            string chapter = data.substr(0, i);
-            string key = data.substr(i + 1);
+            std::string chapter = data.substr(0, i);
+            std::string key = data.substr(i + 1);
             for (auto & v1 : pt.get_child(chapter))
             {
                 for (auto& p1 : v1.second)
@@ -117,7 +116,7 @@ struct Getter
                             {
                                 for (auto& p : p2.second)
                                 {
-                                    string str = p.second.data();
+                                    std::string str = p.second.data();
                                     vec.push_back(stod(str));
                                 }
                                 coord.push_back(vec);
@@ -137,7 +136,7 @@ struct Getter
     }
 };
 
-JSON_READER::JSON_READER(string file_json)
+JSON_READER::JSON_READER(std::string file_json)
 {
     m_filename = file_json;
     try
@@ -152,25 +151,25 @@ JSON_READER::JSON_READER(string file_json)
     }
 }
 
-long JSON_READER::get(string data, vector<string> & strJsonResults)
+long JSON_READER::get(std::string data, std::vector<std::string> & strJsonResults)
 {
     strJsonResults.clear();
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }
-long JSON_READER::get(string data, vector<double> & strJsonResults)
+long JSON_READER::get(std::string data, std::vector<double> & strJsonResults)
 {
     strJsonResults.clear();
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }
-long JSON_READER::get(string data, vector < vector< vector<double>>> & strJsonResults)
+long JSON_READER::get(std::string data, std::vector < std::vector< std::vector<double>>> & strJsonResults)
 {
     strJsonResults.clear();
     Getter::prop_get_json(m_ptrtree, data, strJsonResults);
     return 0;
 }
-string JSON_READER::get_filename()
+std::string JSON_READER::get_filename()
 {
     return this->m_filename;
 }

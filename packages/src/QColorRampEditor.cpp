@@ -129,7 +129,7 @@ QVector<QPair<qreal, QColor> > QColorRampEditor::getRamp()
         ret.push_back(QPair<qreal, QColor>(sliders_[i]->val,col));
     }
     // sort the slider list
-    qSort(ret.begin(), ret.end(), QColorRampEditor::colorRampSort);
+    std::sort(ret.begin(), ret.end(), QColorRampEditor::colorRampSort);
 
     return ret;
 }
@@ -183,7 +183,7 @@ void QColorRampEditor::setRamp(QVector<QPair<qreal, QColor> > ramp_in)
     if (ramp.size()<2) return;
 
     // sort the slider list
-    qSort(ramp.begin(), ramp.end(), QColorRampEditor::colorRampSort);
+    std::sort(ramp.begin(), ramp.end(), QColorRampEditor::colorRampSort);
     for (int i=0; i<sliders_.size(); i++) delete(sliders_[i]);
     sliders_.clear();
 
@@ -400,7 +400,7 @@ void QColorRampEditor::mousePressEvent(QMouseEvent* e)
                     }
                 }
                 sl->show();
-                qSort(sliders_.begin(), sliders_.end(), QColorRampEditor::SliderSort);
+                std::sort(sliders_.begin(), sliders_.end(), QColorRampEditor::SliderSort);
                 updateRamp();
             }
         }
@@ -414,7 +414,7 @@ void QColorRampEditor::mousePressEvent(QMouseEvent* e)
                 sl->move(0,e->pos().y());
                 updateValue(sl);
                 sl->show();
-                qSort(sliders_.begin(), sliders_.end(), QColorRampEditor::SliderSort);
+                std::sort(sliders_.begin(), sliders_.end(), QColorRampEditor::SliderSort);
                 updateRamp();
             }
         }
@@ -538,7 +538,7 @@ void QSlidersWidget::mouseMoveEvent(QMouseEvent* e)
                 rampeditor_->sliders_[activeSlider_]->move(0,e->pos().y());
 
             rampeditor_->updateValue(rampeditor_->sliders_[activeSlider_], activeSlider_);
-            qSort(rampeditor_->sliders_.begin(), rampeditor_->sliders_.end(), QColorRampEditor::SliderSort);
+            std::sort(rampeditor_->sliders_.begin(), rampeditor_->sliders_.end(), QColorRampEditor::SliderSort);
             if (rampeditor_->slideUpdate_) rampeditor_->updateRamp();
         }
         update();
@@ -664,9 +664,9 @@ void QSliderTextWidget::paintEvent(QPaintEvent* e)
         {
             QString txt1 = QString::number(rampeditor_->sliders_.first()->val, 'f', rampeditor_->textAcc_);
             QString txt2 = QString::number(rampeditor_->sliders_.last()->val, 'f', rampeditor_->textAcc_);
-            int w = fm.width(txt1) + 4;
+            int w = fm.horizontalAdvance(txt1) + 4;
             if (w>this->width()) setFixedWidth(w);
-            w = fm.width(txt2) + 4;
+            w = fm.horizontalAdvance(txt2) + 4;
             if (w>this->width()) setFixedWidth(w);
         }
         // draw the text for vertical orientation
@@ -685,11 +685,10 @@ void QSliderTextWidget::paintEvent(QPaintEvent* e)
             int pos = rampeditor_->sliders_[i]->pos().x();
             qreal val = rampeditor_->sliders_[i]->val;
             QString txt = QString::number(val, 'f', rampeditor_->textAcc_);
-            if ((pos+fm.width(txt))>width()) pos += -fm.width(txt) + rampeditor_->sliders_[i]->width();
+            if ((pos+fm.horizontalAdvance(txt))>width()) pos += -fm.horizontalAdvance(txt) + rampeditor_->sliders_[i]->width();
             painter.drawText(pos, 2+fm.height(), txt);
         }
     }
 
     QWidget::paintEvent(e);
 }
-

@@ -2,8 +2,6 @@
 #include <fstream>
 #include <iomanip>
 
-using namespace std;
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -121,7 +119,7 @@ long HISCF::read_global_attributes()
     {
         status = nc_inq_attname(this->m_ncid, NC_GLOBAL, i, att_name_c);
         status = nc_inq_att(this->m_ncid, NC_GLOBAL, att_name_c, &att_type, &att_length);
-        this->global_attributes->attribute[i]->name = string(att_name_c);
+        this->global_attributes->attribute[i]->name = std::string(att_name_c);
         this->global_attributes->attribute[i]->type = att_type;
         this->global_attributes->attribute[i]->length = att_length;
         if (att_type == NC_CHAR)
@@ -130,7 +128,7 @@ long HISCF::read_global_attributes()
             att_value_c[0] = '\0';
             status = nc_get_att_text(this->m_ncid, NC_GLOBAL, att_name_c, att_value_c);
             att_value_c[att_length] = '\0';
-            this->global_attributes->attribute[i]->cvalue = string(strdup(att_value_c));
+            this->global_attributes->attribute[i]->cvalue = std::string(strdup(att_value_c));
             free(att_value_c);
             att_value_c = nullptr;
         }
@@ -155,7 +153,7 @@ struct _global_attributes * HISCF::get_global_attributes()
     return this->global_attributes;
 }
 //------------------------------------------------------------------------------
-vector<_location_type *> HISCF::get_observation_location()
+std::vector<_location_type *> HISCF::get_observation_location()
 {
 #ifdef NATIVE_C
     fprintf(stderr, "HISCF::get_observation_location()\n");
@@ -192,7 +190,7 @@ long HISCF::read_locations()
     long * sn_dims; // station names dimensions
     bool model_wide_found = false;
     bool model_wide_exist = false;
-    string grid_mapping_name;
+    std::string grid_mapping_name;
 
 
     int nr_par_loc = 0;
@@ -309,8 +307,8 @@ long HISCF::read_locations()
                         loc.name = janm;
                         loc_type[i_par_loc]->location.push_back(loc);
                     }
-                    loc_type[i_par_loc]->x_location_name = string("---");
-                    loc_type[i_par_loc]->y_location_name = string("---");
+                    loc_type[i_par_loc]->x_location_name = std::string("---");
+                    loc_type[i_par_loc]->y_location_name = std::string("---");
                     free(location_strings);
                 }
                 else if (nc_type == NC_CHAR)
@@ -327,8 +325,8 @@ long HISCF::read_locations()
                         loc.name = janm;
                         loc_type[i_par_loc]->location.push_back(loc);
                     }
-                    loc_type[i_par_loc]->x_location_name = string("---");
-                    loc_type[i_par_loc]->y_location_name = string("---");
+                    loc_type[i_par_loc]->x_location_name = std::string("---");
+                    loc_type[i_par_loc]->y_location_name = std::string("---");
                     free(janm);
                     free(location_chars);
                 }
@@ -361,10 +359,10 @@ long HISCF::read_parameters()
     int status;
     size_t length;
     char * var_name_c;
-    string coord;
-    string geometry;
-    string att_value;
-    string coord_geom;
+    std::string coord;
+    std::string geometry;
+    std::string att_value;
+    std::string coord_geom;
 
     size_t * par_dim;
     long i_par_loc = -1;
@@ -372,7 +370,7 @@ long HISCF::read_parameters()
     int i_geom_node = -1;
     size_t geom_node_count;
     int * geom_count;
-    vector<bool> timeseries_geom_found;
+    std::vector<bool> timeseries_geom_found;
     for (int i = 0; i < loc_type.size(); i++)
     {
         timeseries_geom_found.push_back(false);
@@ -403,7 +401,7 @@ long HISCF::read_parameters()
             // if status != NC_NOERR then it is an old format
             if (status == NC_NOERR)
             {
-                vector<string> token = tokenize(coord, ' ');
+                std::vector<std::string> token = tokenize(coord, ' ');
                 //  loop over the variables with the cf_role == "timeseries_id"
                 for (int j = 0; j < loc_type.size(); j++)
                 {
@@ -436,7 +434,7 @@ long HISCF::read_parameters()
                         }
                         //
                         status = get_attribute(this->m_ncid, i_geom_id, "node_coordinates", &coord_geom);
-                        vector<string> token_geom = tokenize(coord_geom, ' ');
+                        std::vector<std::string> token_geom = tokenize(coord_geom, ' ');
                         for (int i = 0; i < token_geom.size(); i++)  // var_x, var_y
                         {
                             int var_id = -1;
@@ -511,7 +509,7 @@ long HISCF::read_parameters()
                 //QMessageBox::information(0, QString("HISCF::read_parameters()"), QString("Old type not anymore supported. Attribute 'geometry' missing."));
 #endif
                 //  loop over the variables with the cf_role == "timeseries_id"
-                vector<string> token = tokenize(coord, ' ');
+                std::vector<std::string> token = tokenize(coord, ' ');
                 for (int j = 0; j < loc_type.size(); j++)
                 {
                     // only variables with the attribute "coordinates" are treated
@@ -532,7 +530,7 @@ long HISCF::read_parameters()
                     for (int i_token = 0; i_token < token.size(); i_token++)  // var_x, var_y, var_name
                     {
                         // is one of the tokens equal to one of the loc_types?
-                        if (!found && string(loc_type[j]->location_var_name) == token[i_token])
+                        if (!found && std::string(loc_type[j]->location_var_name) == token[i_token])
                         {
                             found = true;
                             if (loc_type[j]->type == OBS_NONE) { 
@@ -631,8 +629,8 @@ long HISCF::read_parameters()
         {
             for (int n = 0; n < loc_type[j]->location.size(); n++)
             {
-                loc_type[j]->location[n].x.push_back(numeric_limits<double>::quiet_NaN());
-                loc_type[j]->location[n].y.push_back(numeric_limits<double>::quiet_NaN());
+                loc_type[j]->location[n].x.push_back(std::numeric_limits<double>::quiet_NaN());
+                loc_type[j]->location[n].y.push_back(std::numeric_limits<double>::quiet_NaN());
             }
         }
     }
@@ -640,7 +638,7 @@ long HISCF::read_parameters()
     return status;
 }
 //------------------------------------------------------------------------------
-long HISCF::set_grid_mapping_epsg(long epsg, string epsg_code)
+long HISCF::set_grid_mapping_epsg(long epsg, std::string epsg_code)
 {
     long status = 0;
     m_mapping->epsg = epsg;
@@ -680,7 +678,7 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, char ** att_value
     return status;
 }
 //------------------------------------------------------------------------------
-int HISCF::get_attribute(int ncid, int i_var, char * att_name, string * att_value)
+int HISCF::get_attribute(int ncid, int i_var, char * att_name, std::string * att_value)
 {
     size_t length = 0;
     int status = -1;
@@ -696,13 +694,13 @@ int HISCF::get_attribute(int ncid, int i_var, char * att_name, string * att_valu
         tmp_value[0] = '\0';
         status = nc_get_att(ncid, i_var, att_name, tmp_value);
         tmp_value[length] = '\0';
-        *att_value = string(tmp_value, length);
+        *att_value = std::string(tmp_value, length);
         free(tmp_value);
     }
     return status;
 }
 //------------------------------------------------------------------------------
-int HISCF::get_attribute(int ncid, int i_var, string att_name, string * att_value)
+int HISCF::get_attribute(int ncid, int i_var, std::string att_name, std::string * att_value)
 {
     size_t length = 0;
     int status = -1;
@@ -718,7 +716,7 @@ int HISCF::get_attribute(int ncid, int i_var, string att_name, string * att_valu
         tmp_value[0] = '\0';
         status = nc_get_att(ncid, i_var, att_name.c_str(), tmp_value);
         tmp_value[length] = '\0';
-        *att_value = string(tmp_value, length);
+        *att_value = std::string(tmp_value, length);
         free(tmp_value);
     }
     return status;
@@ -765,7 +763,7 @@ int HISCF::get_dimension(int ncid, char * dim_name, size_t * dim_length)
     return status;
 }
 //------------------------------------------------------------------------------
-int HISCF::get_dimension(int ncid, string dim_name, size_t * dim_length)
+int HISCF::get_dimension(int ncid, std::string dim_name, size_t * dim_length)
 {
     int dimid;
     int status = -1;
@@ -779,7 +777,7 @@ int HISCF::get_dimension(int ncid, string dim_name, size_t * dim_length)
     return status;
 }
 //------------------------------------------------------------------------------
-int HISCF::get_dimension_var(int ncid, string var_name, size_t * dim_length)
+int HISCF::get_dimension_var(int ncid, std::string var_name, size_t * dim_length)
 {
     // get the total dimension length in bytes of the var_name variable
     int dimid;
@@ -799,11 +797,11 @@ int HISCF::get_dimension_var(int ncid, string var_name, size_t * dim_length)
     }
     return status;
 }
-vector<string>  HISCF::get_dimension_names(int ncid, string var_name)
+std::vector<std::string>  HISCF::get_dimension_names(int ncid, std::string var_name)
 {
     int dimid;
     int status = -1;
-    vector<string> dim_names;
+    std::vector<std::string> dim_names;
 
     if (var_name.size() != 0)
     {
@@ -819,11 +817,11 @@ vector<string>  HISCF::get_dimension_names(int ncid, string var_name)
     return dim_names;
 }
 //------------------------------------------------------------------------------
-vector<string> HISCF::get_names(int ncid, string names, size_t count)
+std::vector<std::string> HISCF::get_names(int ncid, std::string names, size_t count)
 {
     int var_id;
     int status;
-    vector<string> token;
+    std::vector<std::string> token;
 
     status = nc_inq_varid(ncid, names.c_str(), &var_id);
     if (status == NC_NOERR)
@@ -848,7 +846,7 @@ vector<string> HISCF::get_names(int ncid, string names, size_t count)
 }
 
 //------------------------------------------------------------------------------
-int HISCF::read_grid_mapping(int i_var, string var_name, string grid_mapping_name)
+int HISCF::read_grid_mapping(int i_var, std::string var_name, std::string grid_mapping_name)
 {
     int status = -1;
     m_mapping->epsg = -1;
@@ -867,7 +865,7 @@ int HISCF::read_grid_mapping(int i_var, string var_name, string grid_mapping_nam
 
     if (m_mapping->epsg == -1 && m_mapping->epsg_code.size() != 0)
     {
-        vector<string> token = tokenize(m_mapping->epsg_code, ':');
+        std::vector<std::string> token = tokenize(m_mapping->epsg_code, ':');
         m_mapping->epsg = atoi(token[1].c_str());  // second token contains the plain EPSG code
     }
 

@@ -28,8 +28,7 @@
 #include <qgsvectorlayer.h>
 #include <qgsmarkersymbollayer.h>
 #include <QgsSingleSymbolRenderer.h>
-
-using namespace std;
+#include <QgsSymbol.h>
 
 class AddCurrentViewWindow 
     : public QWidget
@@ -40,7 +39,7 @@ public:
     static int object_count;
 
     AddCurrentViewWindow();  // Constructor
-    AddCurrentViewWindow(QgisInterface *, QString, QString, double *, vector<double>, vector<double>, long);  // Constructor
+    AddCurrentViewWindow(QgisInterface *, QString, QString, double *, std::vector<double>, std::vector<double>, long);  // Constructor
     ~AddCurrentViewWindow();  // Destructor
     static AddCurrentViewWindow * getInstance()
     {
@@ -71,8 +70,8 @@ private:
     QString m_label;
     QString m_quantity;
     double * m_z_value;
-    vector<double> m_x;
-    vector<double> m_y;
+    std::vector<double> m_x;
+    std::vector<double> m_y;
     long m_epsg;
     int m_cur_view;
 };
