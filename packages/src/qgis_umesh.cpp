@@ -3314,10 +3314,37 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             double xp;
             double yp;
             double rotation;
+            std::vector<std::string> numstructures;
+            json_key = "data.structure.numstructures";
+            status = prop_tree->get(json_key, numstructures);
+            std::vector<std::string> structure_ids;
+            json_key = "data.structure.structureids";
+            status = prop_tree->get(json_key, structure_ids);
+            int i_cmp_struct = -1;
+            int cnt;
             for (int j = 0; j < id.size(); j++)
             {
                 if (structure_type[j] == "compound")
                 {
+                    i_cmp_struct += 1;
+                    if (i_cmp_struct == 0)
+                    {
+                        cnt = 0;
+                    }
+                    else
+                    {
+
+                        cnt += atoi(numstructures[i_cmp_struct-1].c_str());
+                    }
+                    for (int k = 0; k < id.size(); ++k)
+                    {
+                        if (structure_ids[cnt] == id[k])
+                        {
+                            branch_name[j] = branch_name[k];
+                            chainage[j] = chainage[k];
+                        }
+                    }
+
                     status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
                     QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
                     QgsFeature MyFeature;
