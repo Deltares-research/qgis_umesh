@@ -2726,7 +2726,7 @@ int UGRID::read_grid_mapping(int i_var, std::string var_name, std::string grid_m
     status = get_attribute(this->m_ncid, i_var, "semi_major_axis", &m_mapping->semi_major_axis);
     status = get_attribute(this->m_ncid, i_var, "semi_minor_axis", &m_mapping->semi_minor_axis);
     status = get_attribute(this->m_ncid, i_var, "inverse_flattening", &m_mapping->inverse_flattening);
-    status = get_attribute(this->m_ncid, i_var, "epsg_code", &m_mapping->epsg_code);
+    status = get_attribute(this->m_ncid, i_var, "EPSG_code", &m_mapping->epsg_code);
     status = get_attribute(this->m_ncid, i_var, "value", &m_mapping->value);
     status = get_attribute(this->m_ncid, i_var, "projection_name", &m_mapping->projection_name);
     status = get_attribute(this->m_ncid, i_var, "wkt", &m_mapping->wkt);
