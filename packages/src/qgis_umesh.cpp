@@ -1875,7 +1875,7 @@ void qgis_umesh::activate_layers()
             struct _mesh_variable * var = ugrid_file->get_variables();
 
             bool time_independent_data = false;
-            if (mesh2d != nullptr)
+            if (mesh2d != nullptr && var != nullptr)
             {
                 for (int i = 0; i < var->nr_vars; i++)
                 {
