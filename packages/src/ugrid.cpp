@@ -315,14 +315,14 @@ long UGRID::read_mesh()
             {
                 mesh_a = m_mesh_contact->mesh_a;
                 location_a = m_mesh_contact->location_a;
-                status = get_attribute(this->m_ncid, i_var, "topology_dimension", &topology_a);
+                status = get_attribute(this->m_ncid, i_var, const_cast<char*>("topology_dimension"), &topology_a);
                 i++;
             }
             if (var_name == m_mesh_contact->mesh_b)
             {
                 mesh_b = m_mesh_contact->mesh_b;
                 location_b = m_mesh_contact->location_b;
-                status = get_attribute(this->m_ncid, i_var, "topology_dimension", &topology_b);
+                status = get_attribute(this->m_ncid, i_var, const_cast<char*>("topology_dimension"), &topology_b);
                 i++;
             }
             if (i == 2)
@@ -671,7 +671,7 @@ long UGRID::read_variables()
             }
             status = get_attribute(this->m_ncid, i_var, "units", &m_mesh_vars->variable[m_nr_mesh_var - 1]->units);
             status = get_attribute(this->m_ncid, i_var, "grid_mapping", &m_mesh_vars->variable[m_nr_mesh_var - 1]->grid_mapping);
-            status = get_attribute(this->m_ncid, i_var, "_FillValue", &m_mesh_vars->variable[m_nr_mesh_var - 1]->fill_value);
+            status = get_attribute(this->m_ncid, i_var, const_cast<char*>("_FillValue"), &m_mesh_vars->variable[m_nr_mesh_var - 1]->fill_value);
             if (status != NC_NOERR)
             {
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->fill_value = std::numeric_limits<double>::quiet_NaN();
@@ -686,7 +686,7 @@ long UGRID::read_variables()
                 size_t length;
                 status = nc_inq_attlen(this->m_ncid, i_var, "flag_values", &length);
                 int* flag_values_c = (int*)malloc(sizeof(int) * length);
-                status = get_attribute(this->m_ncid, i_var, "flag_values", flag_values_c);
+                status = get_attribute(this->m_ncid, i_var, const_cast<char*>("flag_values"), flag_values_c);
                 for (int j = 0; j < length; ++j)
                 {
                     m_mesh_vars->variable[m_nr_mesh_var - 1]->flag_values.push_back(flag_values_c[j]);
@@ -712,7 +712,7 @@ long UGRID::read_variables()
             int topo_dim;
             int mesh_id;
             status = nc_inq_varid(this->m_ncid, m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh.c_str(), &mesh_id);
-            status = get_attribute(this->m_ncid, mesh_id, "topology_dimension", &topo_dim);
+            status = get_attribute(this->m_ncid, mesh_id, const_cast<char*>("topology_dimension"), &topo_dim);
             m_mesh_vars->variable[m_nr_mesh_var - 1]->topology_dimension = topo_dim;
             if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 1)
             {
@@ -1918,7 +1918,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
         status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, contact_edge_nodes);
 
         int start_index;
-        status = get_attribute(this->m_ncid, var_id, "start_index", &start_index);
+        status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
         if (status == NC_NOERR)
         {
             if (start_index != 0)
@@ -1983,7 +1983,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
     {
         // is is a mesh or geometry
         topology_dimension = 0;
-        status = get_attribute(this->m_ncid, i_var, "topology_dimension", &topology_dimension);
+        status = get_attribute(this->m_ncid, i_var, const_cast<char*>("topology_dimension"), &topology_dimension);
         if (topology_dimension == 1)  // it is one dimensional
         {
             std::string coordinate_space;
@@ -2060,7 +2060,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
                 status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, topo_edge_nodes);
 
                 int start_index;
-                status = get_attribute(this->m_ncid, var_id, "start_index", &start_index);
+                status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
                 if (status == NC_NOERR)
                 {
                     if (start_index != 0)
@@ -2266,7 +2266,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
                     status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->edge_node_connectivity.c_str(), &var_id);
                     status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, mesh1d_edge_nodes);
 
-                    status = get_attribute(this->m_ncid, var_id, "start_index", &start_index);
+                    status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
                     if (status == NC_NOERR)
                     {
                         if (start_index != 0)
@@ -2468,7 +2468,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
                 // get the branch length
                 m_mesh2d->edge[nr_mesh2d - 1]->edge_length = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
 
-                status = get_attribute(this->m_ncid, var_id, "start_index", &start_index);
+                status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
                 if (status == NC_NOERR)
                 {
                     if (start_index != 0)
@@ -2607,7 +2607,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
             status = nc_get_var_int(this->m_ncid, var_id, values_c);
 
             m_mesh2d->face_nodes.reserve(length);
-            status = get_attribute(this->m_ncid, var_id, "start_index", &start_index);
+            status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
             if (status != NC_NOERR)
             {
                 start_index = 0;
@@ -2720,12 +2720,12 @@ int UGRID::read_grid_mapping(int i_var, std::string var_name, std::string grid_m
     m_mapping->epsg = -1;
 
     status = get_attribute(this->m_ncid, i_var, "name", &m_mapping->name);
-    status = get_attribute(this->m_ncid, i_var, "epsg", &m_mapping->epsg);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("epsg"), &m_mapping->epsg);
     m_mapping->grid_mapping_name = grid_mapping_name; //  == status = get_attribute(this->m_ncid, i_var, "grid_mapping_name", &map->grid_mapping_name);
-    status = get_attribute(this->m_ncid, i_var, "longitude_of_prime_meridian", &m_mapping->longitude_of_prime_meridian);
-    status = get_attribute(this->m_ncid, i_var, "semi_major_axis", &m_mapping->semi_major_axis);
-    status = get_attribute(this->m_ncid, i_var, "semi_minor_axis", &m_mapping->semi_minor_axis);
-    status = get_attribute(this->m_ncid, i_var, "inverse_flattening", &m_mapping->inverse_flattening);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("longitude_of_prime_meridian"), &m_mapping->longitude_of_prime_meridian);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("semi_major_axis"), &m_mapping->semi_major_axis);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("semi_minor_axis"), &m_mapping->semi_minor_axis);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("inverse_flattening"), &m_mapping->inverse_flattening);
     status = get_attribute(this->m_ncid, i_var, "EPSG_code", &m_mapping->epsg_code);
     status = get_attribute(this->m_ncid, i_var, "value", &m_mapping->value);
     status = get_attribute(this->m_ncid, i_var, "projection_name", &m_mapping->projection_name);
@@ -2941,7 +2941,7 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
             else
             {
                 char * att_value_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
-                status = get_attribute(this->m_ncid, var_id, "units", &att_value_c);  // does the units attribute exist?
+                status = get_attribute(this->m_ncid, var_id, const_cast<char*>("units"), &att_value_c);  // does the units attribute exist?
                 if (status == NC_NOERR)
                 {
                     mesh1d_strings->edge_chainage = token[i];
@@ -2957,7 +2957,7 @@ int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_
         else  // no standard name found
         {
             char * att_value_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
-            status = get_attribute(this->m_ncid, var_id, "units", &att_value_c);  // does the attribute units exists?
+            status = get_attribute(this->m_ncid, var_id, const_cast<char*>("units"), &att_value_c);  // does the attribute units exists?
             if (status == NC_NOERR)
             {
                 mesh1d_strings->edge_chainage = token[i];

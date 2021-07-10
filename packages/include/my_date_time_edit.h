@@ -1,3 +1,6 @@
+#ifndef _INC_MYQDATETIMEEDIT
+#define _INC_MYQDATETIMEEDIT
+
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QDateTimeEdit>
 
@@ -23,3 +26,5 @@ public:
     int _nsteps;
     bool _ansatz;
 };
+
+#endif _INC_MYQDATETIMEEDIT

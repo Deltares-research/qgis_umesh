@@ -852,12 +852,12 @@ int HISCF::read_grid_mapping(int i_var, std::string var_name, std::string grid_m
     m_mapping->epsg = -1;
 
     status = get_attribute(this->m_ncid, i_var, "name", &m_mapping->name);
-    status = get_attribute(this->m_ncid, i_var, "epsg", &m_mapping->epsg);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("epsg"), &m_mapping->epsg);
     m_mapping->grid_mapping_name = grid_mapping_name; //  == status = get_attribute(this->ncid, i_var, "grid_mapping_name", &map->grid_mapping_name);
-    status = get_attribute(this->m_ncid, i_var, "longitude_of_prime_meridian", &m_mapping->longitude_of_prime_meridian);
-    status = get_attribute(this->m_ncid, i_var, "semi_major_axis", &m_mapping->semi_major_axis);
-    status = get_attribute(this->m_ncid, i_var, "semi_minor_axis", &m_mapping->semi_minor_axis);
-    status = get_attribute(this->m_ncid, i_var, "inverse_flattening", &m_mapping->inverse_flattening);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("longitude_of_prime_meridian"), &m_mapping->longitude_of_prime_meridian);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("semi_major_axis"), &m_mapping->semi_major_axis);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("semi_minor_axis"), &m_mapping->semi_minor_axis);
+    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("inverse_flattening"), &m_mapping->inverse_flattening);
     status = get_attribute(this->m_ncid, i_var, "epsg_code", &m_mapping->epsg_code);
     status = get_attribute(this->m_ncid, i_var, "value", &m_mapping->value);
     status = get_attribute(this->m_ncid, i_var, "projection_name", &m_mapping->projection_name);
