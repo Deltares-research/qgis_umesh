@@ -81,7 +81,7 @@ set(ALL_FILES
 ################################################################################
 # Target
 ################################################################################
-add_executable(${PROJECT_NAME} ${ALL_FILES})
+add_library(${PROJECT_NAME} SHARED ${ALL_FILES})
 
 use_props(${PROJECT_NAME} "${CMAKE_CONFIGURATION_TYPES}" "${DEFAULT_CXX_PROPS}")
 set(ROOT_NAMESPACE interaction-example)
@@ -213,6 +213,9 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
         "Qt5Guid;"
         "Qt5Widgetsd;"
         "Qt5PrintSupportd"
+        "qgis_analysis"
+        "qgis_core"
+        "qgis_gui"
     ">"
     "$<$<CONFIG:Release>:"
         "qtmain;"
@@ -220,13 +223,17 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
         "Qt5Gui;"
         "Qt5Widgets;"
         "Qt5PrintSupport"
+        "qgis_analysis"
+        "qgis_core"
+        "qgis_gui"
     ">"
     "netcdf"
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
 
 target_link_directories(${PROJECT_NAME} PRIVATE
-    "$ENV{QT5DIR64}/lib;"
+    "$ENV{QT5DIR64OSGEO}/lib;"
+    "c:/OSGeoW/apps/qgis/lib"
     "${CMAKE_CURRENT_SOURCE_DIR}/../lib/${CMAKE_VS_PLATFORM_NAME}/$<CONFIG>"
 )
 
