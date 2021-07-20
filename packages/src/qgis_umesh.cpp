@@ -2694,7 +2694,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            //if (nodes->branch.size() != 0)
+            if (edges->count != 0)
             {
                 lMyAttribField << QgsField("Edge length", QVariant::Double);
                 nr_attrib_fields++;
@@ -2767,7 +2767,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
                 else if (edges->edge_length.size() == 0)
                 {
                     k++;
-                    MyFeature.setAttribute(k, QString("--X--"));
+                    MyFeature.setAttribute(k, std::numeric_limits<double>::quiet_NaN());
                 }
 
                 if (edges->name.size() != 0)
