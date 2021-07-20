@@ -1,5 +1,10 @@
 set(PROJECT_NAME qgis_umesh)
 
+add_custom_command( TARGET ${library_name}
+                   PRE_BUILD
+                   COMMAND  call ${update_version_script_path} ${fortran_version_file} ${svn_version_path} ${version_file})
+
+
 ################################################################################
 # Source groups
 ################################################################################
