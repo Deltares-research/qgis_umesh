@@ -1,10 +1,5 @@
 set(PROJECT_NAME qgis_umesh)
 
-add_custom_command( TARGET ${library_name}
-                   PRE_BUILD
-                   COMMAND  call ${update_version_script_path} ${fortran_version_file} ${svn_version_path} ${version_file})
-
-
 ################################################################################
 # Source groups
 ################################################################################
@@ -202,10 +197,10 @@ add_custom_command_if(
     TARGET ${PROJECT_NAME}
     PRE_BUILD
     COMMANDS
-    COMMAND   $<CONFIG:Debug> call ..\\scripts\\git_insert_hash.cmd .\\include plot_cf_time_series_version.h
-    COMMAND   $<CONFIG:Debug> call ..\\scripts\\git_insert_hash.cmd .\\include plot_cf_time_series_version.rc
-    COMMAND $<CONFIG:Release> call ..\\scripts\\git_insert_hash.cmd .\\include plot_cf_time_series_version.h
-    COMMAND $<CONFIG:Release> call ..\\scripts\\git_insert_hash.cmd .\\include plot_cf_time_series_version.rc
+    COMMAND   $<CONFIG:Debug> call ../scripts/git_insert_hash.cmd ./include qgis_umesh_version.h
+    COMMAND   $<CONFIG:Debug> call ../scripts/git_insert_hash.cmd ./include qgis_umesh_version.rc
+    COMMAND $<CONFIG:Release> call ../scripts/git_insert_hash.cmd ./include qgis_umesh_version.h
+    COMMAND $<CONFIG:Release> call ../scripts/git_insert_hash.cmd ./include qgis_umesh_version.rc
 )
 
 ################################################################################
