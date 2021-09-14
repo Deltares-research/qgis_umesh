@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unordered_map>
 
 #if defined(WIN32) || defined(WIN64)
 #  include <direct.h>
@@ -2630,6 +2631,8 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
             // if edge connectivity is not given create the arrays for the face_node_connectivity array which is required by the UGRID standard
             if (m_mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity == "")
             {
+                START_TIMERN(edge_node_connectivity);
+
                 // TODO improve the performance of this algorithm
                 int max_edges_per_face = m_dimids[dimids[0]] + m_dimids[dimids[1]] - m_mesh2d->face_nodes.size();  // only applicable if number of dimensions is two
                 int total_edges = m_dimids[dimids[0]] * m_dimids[dimids[1]];
@@ -2655,33 +2658,54 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
                 m_mesh2d->edge[nr_mesh2d - 1]->count = m_mesh2d->face_nodes.size() * max_edges_per_face;
 
                 // Edge array contains double entries: ex. a->b and b->a then retain a->b
-                int cnt = 0;
-                for (int i = 0; i < m_mesh2d->edge[nr_mesh2d - 1]->count; i++)
+                // Creates an empty hashMap ummap
+                std::unordered_multimap<int, int> ummap;
+                ummap.reserve(m_mesh2d->edge[nr_mesh2d - 1]->count);
+
+                // Traverse through the given array
+                int j = 0;
+                int first = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][0];
+                int sec = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][1];
+                std::pair<int, int> mypair0(first, sec);
+                ummap.insert(mypair0);
+
+                for (int i = 1; i < m_mesh2d->edge[nr_mesh2d - 1]->count; i++)
                 {
-                    for (int j = i + 1; j < m_mesh2d->edge[nr_mesh2d - 1]->count; j++)
-                    {
-                        if (m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] == m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][1] &&
-                            m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] == m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][0])
+                    // First and second elements of current pair
+                    first = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0];
+                    sec = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1];
+
+                    std::pair<int, int> mypair(first, sec);
+                    bool found = false;
+
+                    auto its = ummap.equal_range(mypair.first);
+                    for (auto it = its.first; it != its.second; ++it) {
+                        if (it->second == sec)
                         {
-                            m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][0] = -1;
-                            m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][1] = -1;
-                            cnt += 1;
-                            break;
+                            found = true;
                         }
                     }
-                }
-                kk = 0;
-                for (int i = 0; i < m_mesh2d->edge[nr_mesh2d - 1]->count; i++)
-                {
-                    if (m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] != -1 &&
-                        m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] != -1)
+                    its = ummap.equal_range(mypair.second);
+                    for (auto it = its.first; it != its.second; ++it) {
+                        if (it->second == first)
+                        {
+                            found = true;
+                        }
+                    }
+                    if (!found)
                     {
-                        m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[kk][0] = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0];
-                        m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[kk][1] = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1];
-                        kk++;
+                        ummap.insert(mypair);
                     }
                 }
-                m_mesh2d->edge[nr_mesh2d - 1]->count = kk;
+                size_t cnt = -1;
+                for (auto it = ummap.begin(); it != ummap.end(); ++it)
+                {
+                    cnt++;
+                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[cnt][0] = it->first;
+                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[cnt][1] = it->second;
+                }
+                m_mesh2d->edge[nr_mesh2d - 1]->count = cnt+1;
+                STOP_TIMER(edge_node_connectivity);
             }
             free(dimids);
             dimids = nullptr;

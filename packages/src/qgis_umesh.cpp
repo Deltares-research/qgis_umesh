@@ -2192,6 +2192,7 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
             MyFeatures.reserve(nodes->count);
 
             // int nsig = long( log10(nodes->count) ) + 1;
+            START_TIMER(create_vector_layer_nodes_add_features);
             for (int j = 0; j < nodes->count; j++)
             {
                 //QMessageBox::warning(0, tr("Warning"), tr("Count: %1, %5\nCoord: (%2,%3)\nName : %4\nLong name: %5").arg(ntw_nodes->nodes[i]->count).arg(ntw_nodes->nodes[i]->x[j]).arg(ntw_nodes->nodes[i]->y[j]).arg(ntw_nodes->nodes[i]->id[j]).arg(ntw_nodes->nodes[i]->name[j]));
@@ -2221,6 +2222,8 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
+            STOP_TIMER(create_vector_layer_nodes_add_features);
+
             vl->setTitle(layer_name + ": " + fname);
 
             if (layer_name == QString("Mesh1D Connection nodes") ||
@@ -2695,7 +2698,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            if (edges->count != 0)
+            if (edges->edge_length.size() != 0)
             {
                 lMyAttribField << QgsField("Edge length", QVariant::Double);
                 nr_attrib_fields++;
@@ -2732,18 +2735,13 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
 
             int nsig = long(log10(edges->count)) + 1;
             bool msg_given = false;
+            START_TIMER(create_vector_layer_edges_add_features);
             for (int j = 0; j < edges->count; j++)
             {
                 lines.clear();
                 point.clear();
-                int p1 = edges->edge_nodes[j][0];
-                int p2 = edges->edge_nodes[j][1];
-                double x1 = nodes->x[p1];
-                double y1 = nodes->y[p1];
-                double x2 = nodes->x[p2];
-                double y2 = nodes->y[p2];
-                point.append(QgsPointXY(x1, y1));
-                point.append(QgsPointXY(x2, y2));
+                point.append(QgsPointXY(nodes->x[edges->edge_nodes[j][0]], nodes->y[edges->edge_nodes[j][0]]));
+                point.append(QgsPointXY(nodes->x[edges->edge_nodes[j][1]], nodes->y[edges->edge_nodes[j][1]]));
                 //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5).").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
                 lines.append(point);
 
@@ -2766,12 +2764,6 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
                         }
                     }
                 }
-                else if (edges->edge_length.size() == 0)
-                {
-                    k++;
-                    MyFeature.setAttribute(k, std::numeric_limits<double>::quiet_NaN());
-                }
-
                 if (edges->name.size() != 0)
                 {
                     k++;
@@ -2791,6 +2783,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
+            STOP_TIMER(create_vector_layer_edges_add_features);
             vl->setTitle(layer_name + ": " + fname);
 
             QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
