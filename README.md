@@ -52,13 +52,26 @@ Probably not needed
     qt5-qml: Qt5 QML
     qt5-tools: Qt5Designe & linguist (Development)
             
-##Note (QGIS 3.18.01)
+##Note (QGIS 3.18.01 and higher)
 When compiling the source code I had to adjusted the file qgsdistancearea.h.
-An extra define of M_PI_2 is added at line 18
+An extra define of M_PI_2 is added at line 215
 
 #ifndef M_PI_2
 #define M_PI_2 1.57079632679489661923
 #endif
+
+and file qgsabstractgeometry.h
+Line 574
+#ifndef M_PI
+#define M_PI 3.14159265358979323846264338327950288
+#endif
+
+and also file qgsvector.h:
+Line 172
+#ifndef M_PI
+#define M_PI 3.14159265358979323846264338327950288
+#endif
+
 
 ## Note (QGIS 3.16.03)
 When compiling the source code I had to adjusted the file
@@ -66,15 +79,16 @@ c:\OSGeo4W64\apps\qgis\include\qgsabstractgeometry.h
 An extra define of M_PI is added.
 
 Line 543
+#ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288
+#endif
 
 and also file qgsvector.h:
 Line 172
+#ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288
+#endif
 
-and also file qgsgeometry.h:
-Line 2152
-#define M_PI 3.14159265358979323846264338327950288
 
 
 ## Note (QGIS 3.16.00)
