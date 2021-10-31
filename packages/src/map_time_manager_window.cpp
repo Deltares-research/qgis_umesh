@@ -47,6 +47,7 @@ MapTimeManagerWindow::~MapTimeManagerWindow()
 }
 void MapTimeManagerWindow::MyMouseReleaseEvent(QMouseEvent* e)
 {
+    Q_UNUSED(e);
     QMessageBox::information(0, "Information", "MapTimeManagerWindow::MyMouseReleaseEvent()");
 }
 void MapTimeManagerWindow::ramp_changed()
@@ -57,6 +58,7 @@ void MapTimeManagerWindow::ramp_changed()
 
 void MapTimeManagerWindow::contextMenu(const QPoint & point)
 {
+    Q_UNUSED(point);
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::contextMenu()");
     if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
     {
@@ -74,6 +76,7 @@ void MapTimeManagerWindow::contextMenu(const QPoint & point)
 //
 void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
 {
+    Q_UNUSED(ce);
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::~closeEvent()");
     this->object_count = 0;
     stop_time_loop = true;
@@ -110,7 +113,6 @@ void MapTimeManagerWindow::create_window()
 
     QWidget * wid = new QWidget();
     QVBoxLayout * vl = new QVBoxLayout();
-    QAction * _show_p = new QAction();
 
     QGridLayout * gl = create_date_time_layout();
     vl->addLayout(gl);
@@ -260,7 +262,6 @@ QHBoxLayout * MapTimeManagerWindow::create_push_buttons_layout_animation()
 QHBoxLayout * MapTimeManagerWindow::create_push_buttons_layout_steps()
 {
     QHBoxLayout * hl = new QHBoxLayout();
-    int width = 30;
 
     QPushButton * pb_begin = new QPushButton();
     QPushButton * pb_back = new QPushButton();
@@ -667,7 +668,7 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             QVariant j = m_cb_3d->itemData(0);
             int jj = j.toInt();
             struct _variable * var = m_vars->variable[jj];
-            if (var->nr_hydro_layers != -1)
+            if (var->nr_hydro_layers > 0)
             {
                 m_layerLabelPrefix = new QLabel(tr("Layer"));
                 m_layerLabelSuffix = new QLabel(tr("[0,0]"));
@@ -684,7 +685,7 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
                 row += 1;
                 hl->addLayout(sp_group_3d, row, 1);
             }
-            if (var->nr_bed_layers != -1)
+            if (var->nr_bed_layers > 0)
             {
                 m_layerLabelPrefix = new QLabel(tr("Layer"));
                 m_layerLabelSuffix = new QLabel();
