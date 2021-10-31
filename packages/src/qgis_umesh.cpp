@@ -56,6 +56,7 @@ qgis_umesh::qgis_umesh(QgisInterface* iface):
 }
 void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, int indexTo)
 {
+    Q_UNUSED(indexTo);
     QString name = node->name();  // contains the group name
     QList <QgsLayerTreeNode*> children =  node->children();
     if (children.size() == 0 && (name.contains("UGRID - ") || name.contains("History -")))
@@ -88,7 +89,6 @@ void qgis_umesh::onRemovedChildren(QString name)
 {
     QString msg = QString("Clean up the memory for this group: \'%1\'").arg(name);
     QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-    int a = 1;
 }
 
 //
@@ -153,7 +153,6 @@ void qgis_umesh::initGui()
 #include "vsi.xpm"
     START_TIMERN(initgui)
 
-    QIcon * icon_file_open = new QIcon(QPixmap(vsi));
     std::cout << "HelloWorldPlugin::initGui" << std::endl;
 
     m_crs = QgsProject::instance()->crs();
