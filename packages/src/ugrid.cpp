@@ -53,22 +53,25 @@ UGRID::~UGRID()
     free(this->fname);
     free(this->ugrid_file_name);
 #endif    
-    (void)nc_close(this->m_ncid);
-
-    // free the memory
-    for (long i = 0; i < global_attributes->count; i++)
+    int status;
+    status = nc_close(this->m_ncid);
+    if (status == NC_NOERR)
     {
-        //delete global_attributes->attribute[i];
-    }
-    free(global_attributes->attribute);
-    delete global_attributes;
-    // free DataValueProvider2D3D
-    for (int i = 0; i < m_nr_mesh_var; i++)
-    {
-        free(m_mesh_vars->variable[m_nr_mesh_var - 1]->data_2d.m_arrayPtr);
-        m_mesh_vars->variable[m_nr_mesh_var - 1]->data_2d.m_arrayPtr = nullptr;
-        free(m_mesh_vars->variable[m_nr_mesh_var - 1]->data_3d.m_arrayPtr);
-        m_mesh_vars->variable[m_nr_mesh_var - 1]->data_3d.m_arrayPtr = nullptr;
+        // free the memory
+        for (long i = 0; i < global_attributes->count; i++)
+        {
+            //delete global_attributes->attribute[i];
+        }
+        free(global_attributes->attribute);
+        delete global_attributes;
+        // free DataValueProvider2D3D
+        for (int i = 0; i < m_nr_mesh_var; i++)
+        {
+            free(m_mesh_vars->variable[m_nr_mesh_var - 1]->data_2d.m_arrayPtr);
+            m_mesh_vars->variable[m_nr_mesh_var - 1]->data_2d.m_arrayPtr = nullptr;
+            free(m_mesh_vars->variable[m_nr_mesh_var - 1]->data_3d.m_arrayPtr);
+            m_mesh_vars->variable[m_nr_mesh_var - 1]->data_3d.m_arrayPtr = nullptr;
+        }
     }
 }
 //------------------------------------------------------------------------------
@@ -79,17 +82,17 @@ long UGRID::read()
     status = nc_open(this->ugrid_file_name, NC_NOWRITE, &this->m_ncid);
     if (status != NC_NOERR)
     {
-        fprintf(stderr, "UGRID::read()\n\tFailed to open file: %s\n", this->ugrid_file_name);
+        fprintf(stderr, "UGRID::read()\n    Failed to open file: %s\n", this->ugrid_file_name);
         return status;
     }
-    fprintf(stderr, "UGRID::read()\n\tOpened: %s\n", this->ugrid_file_name);
+    fprintf(stderr, "UGRID::read()\n    Opened: %s\n", this->ugrid_file_name);
 
 #else
     char * ug_fname = strdup(this->fname.absoluteFilePath().toUtf8());
     status = nc_open(ug_fname, NC_NOWRITE, &this->m_ncid);
     if (status != NC_NOERR)
     {
-        QMessageBox::critical(0, QString("Error"), QString("UGRID::read()\n\tFailed to open file: %1").arg(ug_fname));
+        QMessageBox::critical(0, QString("Error"), QString("UGRID::read()\n    Failed to open file: %1").arg(ug_fname));
         return status;
     }
     free(ug_fname);
@@ -147,7 +150,7 @@ long UGRID::read_global_attributes()
         else
         {
 #ifdef NATIVE_C
-            fprintf(stderr, "\tAttribute nc_type: %d\n", att_type);
+            fprintf(stderr, "    Attribute nc_type: %d\n", att_type);
 #endif    
         }
     }
@@ -220,7 +223,7 @@ long UGRID::read_mesh()
         status = nc_inq_var(this->m_ncid, i_var, var_name_c, &nc_type, &ndims, var_dimids, &natts);
         std::string var_name(var_name_c);
 #ifdef NATIVE_C
-        fprintf(stderr, "UGRID::read_mesh()\n\tVariable name: %d - %s\n", i_var + 1, var_name.c_str());
+        fprintf(stderr, "UGRID::read_mesh()\n    Variable name: %d - %s\n", i_var + 1, var_name.c_str());
 #else
         m_pgBar->setValue(20 + (i_var + 1) / nvars * (500 - 20));
         //QMessageBox::warning(0, QString("Warning"), QString("UGRID::get_grid_mapping()\nProgress: (%1, %2) %3").arg(i_var + 1).arg(nvars).arg(var_name));
@@ -693,7 +696,6 @@ long UGRID::read_variables()
                     m_mesh_vars->variable[m_nr_mesh_var - 1]->flag_values.push_back(flag_values_c[j]);
                 }
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->flag_meanings = tokenize(flag_meanings, ' ');
-                int a = 1;
             }
 
             m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
@@ -1396,7 +1398,7 @@ DataValuesProvider3D<double> UGRID::get_variable_3d_values(const std::string var
                     if (m_map_dim_name["z_sigma_interface"] == m_mesh_vars->variable[i]->dim_names[j])
                     {
 #ifdef NATIVE_C
-                        fprintf(stderr, "\t3D data on interfaces not yet supported.\n");
+                        fprintf(stderr, "    3D data on interfaces not yet supported.\n");
 #else
                         QMessageBox::warning(0, QString("Warning"), QString("3D data on interfaces not yet supported,\ndata: %1").arg(var_name.c_str()));
 #endif
@@ -1462,7 +1464,6 @@ DataValuesProvider4D<double> UGRID::get_variable_4d_values(const std::string var
                 dim_to.resize(m_mesh_vars->variable[i]->dims.size());
                 for (int j = 0; j < m_mesh_vars->variable[i]->dims.size(); j++)
                 {
-                    m_mesh_vars->variable[i]->dim_names[j];
                     if (m_mesh_vars->variable[i]->dim_names[j] == m_map_dim_name["time"])
                     {
                         dims[0] = m_map_dim[m_map_dim_name["time"]];
@@ -1530,7 +1531,7 @@ DataValuesProvider4D<double> UGRID::get_variable_4d_values(const std::string var
                     if (m_map_dim_name["z_sigma_interface"] == m_mesh_vars->variable[i]->dim_names[j])
                     {
 #ifdef NATIVE_C
-                        fprintf(stderr, "\t3D data on interfaces not yet supported.\n");
+                        fprintf(stderr, "    3D data on interfaces not yet supported.\n");
 #else
                         QMessageBox::warning(0, QString("Warning"), QString("3D data on interfaces not yet supported,\ndata: %1").arg(var_name.c_str()));
 #endif
@@ -1839,6 +1840,7 @@ std::vector<std::string> UGRID::get_string_var(int ncid, std::string var_name)
 //------------------------------------------------------------------------------
 int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::string cf_role, int ndims, int * var_dimids)
 {
+    Q_UNUSED(var_dimids);
     int topology_dimension;
     int status = 1;
     int var_id = -1;
@@ -2233,7 +2235,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
                 m_mesh1d->nr_mesh1d = nr_mesh1d;
 
 #ifdef NATIVE_C
-                fprintf(stderr, "\tVariables with \'mesh_topology\' attribute: %s\n", var_name.c_str());
+                fprintf(stderr, "    Variables with \'mesh_topology\' attribute: %s\n", var_name.c_str());
 #endif
 
                 //get edge nodes
@@ -2434,7 +2436,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
             m_mesh2d->nr_mesh2d = nr_mesh2d;
 
 #ifdef NATIVE_C
-            fprintf(stderr, "\tVariables with \'mesh_topology\' attribute: %s\n", var_name.c_str());
+            fprintf(stderr, "    Variables with \'mesh_topology\' attribute: %s\n", var_name.c_str());
 #endif
 
             //get edge nodes, optional required
@@ -2530,7 +2532,6 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
 
                     status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->x_bound_edge_name);
                     status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_edge_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->y_bound_edge_name);
-                    int a = 1;
                 }
             }
             else
@@ -2582,10 +2583,8 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
                         status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
                         status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->face[nr_mesh2d - 1]->x.data());
                     }
-                    std::string janm;
                     status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->x_bound_face_name);
                     status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_face_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->y_bound_face_name);
-                    int a = 1;
                 }
             }
             else
@@ -2733,6 +2732,11 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
 //------------------------------------------------------------------------------
 int UGRID::get_coordinate(char * mesh, char * location, int p, double * x, double * y)
 {
+    Q_UNUSED(mesh);
+    Q_UNUSED(location);
+    Q_UNUSED(p);
+    Q_UNUSED(x);
+    Q_UNUSED(y);
     // find the mesh
     // find the location coordinates
     return -1;
@@ -2821,6 +2825,7 @@ int UGRID::read_network_attributes(struct _ntw_string * ntw_strings, int i_var, 
 
 int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_var, std::string var_name, int topology_dimension)
 {
+    Q_UNUSED(topology_dimension);
     int status = -1;
     geom_strings->var_name = var_name;
 
@@ -2835,7 +2840,7 @@ int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_va
         {
             geom_strings->node_dimension = strdup("nnetwork_geometry");
 #ifdef NATIVE_C
-            fprintf(stderr, "\tAttribute \'node_dimension\' not found, set to: %s\n", geom_strings->node_dimension.c_str());
+            fprintf(stderr, "    Attribute \'node_dimension\' not found, set to: %s\n", geom_strings->node_dimension.c_str());
 #else
             //QMessageBox::warning(0, "Message", QString("UGRID::read_mesh()\nAttribute \'node_dimension\' not found, set to: %1\n").arg(ntw->geom_node_dimension));
 #endif
@@ -2846,7 +2851,7 @@ int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_va
     {
         geom_strings->node_dimension = strdup("nnetwork_geometry");
 #ifdef NATIVE_C
-        fprintf(stderr, "\tAttribute \'node_dimension\' not found, set to: %s\n", geom_strings->node_dimension.c_str());
+        fprintf(stderr, "    Attribute \'node_dimension\' not found, set to: %s\n", geom_strings->node_dimension.c_str());
 #else
         //QMessageBox::warning(0, "Message", QString("UGRID::read_mesh()\nAttribute \'node_dimension\' not found, set to: %1\n").arg(ntw->geom_node_dimension));
 #endif
@@ -3026,7 +3031,7 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
     if (status != NC_NOERR)
     {
 #ifdef NATIVE_C
-        fprintf(stderr, "\tMesh \'%s\' does not meet the UGRID standard for 2D meshes. Required attributes are missing.\n", mesh2d_strings->var_name.c_str());
+        fprintf(stderr, "    Mesh \'%s\' does not meet the UGRID standard for 2D meshes. Required attributes are missing.\n", mesh2d_strings->var_name.c_str());
 #else
         //QMessageBox::warning(0, "Message", QString("UGRID::read_mesh2d_attributes()\nMesh \'%1\"does not meet the UGRID standard\nRequired attributes are missing").arg(mesh2d_strings->var_name.c_str()));
 #endif
@@ -3148,7 +3153,7 @@ int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_
                     if (fraction < 0.0 || fraction > 1.0)
                     {
 #ifdef NATIVE_C
-                        fprintf(stderr, "UGRID::determine_computational_node_on_geometry()\n\tBranch(%d). Offset %f is larger then branch length %f.\n", branch + 1, chainage_node, branch_length);
+                        fprintf(stderr, "UGRID::determine_computational_node_on_geometry()\n    Branch(%d). Offset %f is larger then branch length %f.\n", branch + 1, chainage_node, branch_length);
 #else
                         //QMessageBox::warning(0, "Message", QString("UGRID::determine_computational_node_on_geometry()\nBranch(%3). Offset %1 is larger then branch length %2.\n").arg(offset).arg(branch_length).arg(branch+1));
 #endif
@@ -3191,7 +3196,8 @@ int UGRID::create_mesh_contacts(struct _ntw_nodes * mesh1d_nodes, struct _ntw_ed
     // haal bijbehorende (x, y) coordinate van beginpunt van de edge op
     // zoek variabele mesh_b
     // haal bijbehorende (x, y) coordinate van het eindpunt van de edge op
-
+    Q_UNUSED(ntw_edges);
+    Q_UNUSED(ntw_geom);
     //int k = 0;
     for (int i = 0; i <m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count; i++)
     {
@@ -3306,6 +3312,7 @@ double *  UGRID::permute_array(double * in_arr, std::vector<long> order, std::ve
 }
 long UGRID::get_index_in_c_array(long t, long l, long s, long xy, long time_dim, long layer_dim, long sed_dim, long xy_dim)
 {
+    Q_UNUSED(time_dim);
     return t * layer_dim * sed_dim * xy_dim + l * sed_dim * xy_dim + s * xy_dim + xy;
 }
 
