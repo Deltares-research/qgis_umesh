@@ -77,10 +77,14 @@ void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, in
                 mtm_widget->closeEvent(nullptr);
                 mtm_widget->close();
             }
-            for (int i = m_ugrid_file.size()-1; i >= 0; --i)
+            for (int i = m_ugrid_file.size() - 1; i >= 0; --i)
             {
-                delete m_ugrid_file[i];
-                m_ugrid_file.erase(m_ugrid_file.begin() + i);
+                QString filename = m_ugrid_file[i]->get_filename().fileName();
+                if (name.contains(filename))
+                {
+                    delete m_ugrid_file[i];
+                    m_ugrid_file.erase(m_ugrid_file.begin() + i);
+                }
             }
         }
     }
