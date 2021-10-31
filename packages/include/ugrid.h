@@ -60,10 +60,10 @@ struct DataValuesProvider3D
 {
 public:
     DataValuesProvider3D() {};
-    T* m_arrayPtr;
-    int m_numTimes;
-    int m_numLayer;
-    int m_numXY;
+    T* m_arrayPtr = nullptr;
+    int m_numTimes = 0;
+    int m_numLayer = 0;
+    int m_numXY = 0;
 
     // copy the pointer and values
     DataValuesProvider3D(T* arrayPtr, int numTimes, int numLayer, int numXY) :
@@ -92,11 +92,11 @@ struct DataValuesProvider4D
 {
 public:
     DataValuesProvider4D() {};
-    T* m_arrayPtr;
-    int m_numTimes;
-    int m_numLayer;
-    int m_numSed;
-    int m_numXY;
+    T* m_arrayPtr = nullptr;
+    int m_numTimes = 0;
+    int m_numLayer = 0;
+    int m_numSed = 0;
+    int m_numXY = 0;
 
     // copy the pointer and values
     DataValuesProvider4D(T* arrayPtr, int numTimes, int numLayer, int numSed, int numXY) :
