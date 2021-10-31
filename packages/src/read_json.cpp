@@ -88,6 +88,7 @@ struct Getter
 
         catch (const ptree_error &e)
         {
+            (void)e;  // to prevent compiler warning
             //cout << e.what() << endl;
             //QString msg = QString::fromStdString(e.what()).trimmed();
             //QMessageBox::warning(0, "JSON_READER::prop_get_json", QString("%1").arg(msg));
@@ -131,6 +132,7 @@ struct Getter
         }
         catch (const boost::property_tree::ptree_error& e)
         {
+            (void)e;  // to prevent compiler warning
             //std::cout << e.what() << endl;
         }
     }
@@ -145,6 +147,7 @@ JSON_READER::JSON_READER(std::string file_json)
     }
     catch (const ptree_error &e)
     {
+        (void)e;  // to prevent compiler warning
         //cout << e.what() << endl;
         //QString msg = QString::fromStdString(e.what()).trimmed();
         //QMessageBox::warning(0, "JSON_READER::JSON_READER", QString("%1").arg(msg));
