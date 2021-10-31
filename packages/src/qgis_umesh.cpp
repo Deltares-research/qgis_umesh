@@ -53,28 +53,35 @@ qgis_umesh::qgis_umesh(QgisInterface* iface):
     //connect(treeRoot, &QgsLayerTree::removedChildren, this, &qgis_umesh::onWillRemoveChildren);
     connect(treeRoot, SIGNAL(removedChildren(QgsLayerTreeNode *, int, int)), this, SLOT(onWillRemoveChildren(QgsLayerTreeNode *, int, int)));
     connect(treeRoot, SIGNAL(layerWillBeRemoved(QString)), this, SLOT(onRemovedChildren(QString)));
-    //root.willRemoveChildren.connect(onWillRemoveChildren)
-    //    root.removedChildren.connect(onRemovedChildren)
 }
 void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, int indexTo)
 {
-    if (node->name() == (""))
+    QString name = node->name();  // contains the group name
+    QList <QgsLayerTreeNode*> children =  node->children();
+    if (children.size() == 0 && (name.contains("UGRID - ") || name.contains("History -")))
     {
-        //QString msg = QString("Clean up the memory for this group");
-        //QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-        QString layer;
-        QgsProject::instance()->layerWillBeRemoved(layer);  // root is invisible}
-        // Remove the file entry belonging to this group
-    }
-    QString timings_file(m_working_dir + "/timing_qgis_umesh.log");
-    PRINT_TIMERN(timings_file.toStdString());
-    CLEAR_TIMER();
-    m_working_dir = QString("");  // make it empty
-    if (MapTimeManagerWindow::get_count() != 0)
-    {
-        // close the map time manager window
-        mtm_widget->closeEvent(nullptr);
-        mtm_widget->close();
+        if (indexFrom == 0)
+        {
+            // remove the complete group only when the selected name is the group name
+            // Close the map time manager window
+            // Remove the file entry belonging to this group
+
+            QString timings_file(m_working_dir + "/timing_qgis_umesh.log");
+            PRINT_TIMERN(timings_file.toStdString());
+            CLEAR_TIMER();
+            m_working_dir = QString("");  // make it empty
+            if (MapTimeManagerWindow::get_count() != 0)
+            {
+                // close the map time manager window
+                mtm_widget->closeEvent(nullptr);
+                mtm_widget->close();
+            }
+            for (int i = m_ugrid_file.size()-1; i >= 0; --i)
+            {
+                delete m_ugrid_file[i];
+                m_ugrid_file.erase(m_ugrid_file.begin() + i);
+            }
+        }
     }
 }
 void qgis_umesh::onRemovedChildren(QString name)
