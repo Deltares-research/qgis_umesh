@@ -15,19 +15,20 @@
 #define ARCH "Win64"
 #define EXPERIMENT 1
 
-static const QString ident = QObject::tr( "@(#)" COMPANY ", " PROGRAM ", " QGIS_UMESH_VERSION ", " ARCH", " __DATE__", " __TIME__ );
-static const QString sName = QObject::tr( "" COMPANY ", " PROGRAM " Development");
-static const QString sDescription = QObject::tr("Plugin to read 1D and 2D unstructured meshes, UGRID-format (" __DATE__", " __TIME__")");
-static const QString sCategory = QObject::tr("Plugins");
-static const QString sPluginVersion = QObject::tr(QGIS_UMESH_VERSION);
-static const QgisPlugin::PluginType sPluginType = QgisPlugin::UI;
-static const QString * sPluginIcon;
+/* static */ const QString qgis_umesh::s_ident = QObject::tr("@(#)" COMPANY ", " PROGRAM ", " QGIS_UMESH_VERSION ", " ARCH", " __DATE__", " __TIME__);
+/* static */ const QString qgis_umesh::s_name = QObject::tr("" COMPANY ", " PROGRAM " Development");
+/* static */ const QString qgis_umesh::s_description = QObject::tr("Plugin to read 1D and 2D unstructured meshes, UGRID-format (" __DATE__", " __TIME__")");
+/* static */ const QString qgis_umesh::s_category = QObject::tr("Plugins");
+/* static */ const QString qgis_umesh::s_plugin_version = QObject::tr(QGIS_UMESH_VERSION);
+
+/* static */ const QgisPlugin::PluginType qgis_umesh::s_plugin_type = QgisPlugin::UI;
+/* static */ const QString* s_plugin_icon;
 
 //
 //-----------------------------------------------------------------------------
 //
 qgis_umesh::qgis_umesh(QgisInterface* iface):
-    QgisPlugin(sName, sDescription, sCategory, sPluginVersion, sPluginType),
+    QgisPlugin(s_name, s_description, s_category, s_plugin_version, s_plugin_type),
     mQGisIface(iface)
 {
 #include "vsi.xpm"
@@ -1867,7 +1868,6 @@ void qgis_umesh::activate_layers()
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
 
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D edges."));
                 if (mesh2d->edge[0]->count > 0)
                 {
                     create_vector_layer_edges(fname, QString("Mesh2D edges"), mesh2d->node[0], mesh2d->edge[0], mapping->epsg, treeGroup);
@@ -2695,7 +2695,6 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
         {
-            //QMessageBox::warning(0, tr("Message: create_vector_layer_edges"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
             if (layer_name == tmp_layers[i]->name())
             {
                 layer_found = true;
@@ -6442,51 +6441,52 @@ void qgis_umesh::dummy_slot()
 // Return the type (either UI or MapLayer plugin)
 QGISEXTERN int type()
 {
-    return sPluginType; // eerste, na selectie in plugin manager
+    return qgis_umesh::s_plugin_type; // eerste, na selectie in plugin manager
 }
 
 // Class factory to return a new instance of the plugin class
 QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
 {
-    std::cout << "::classFactory" << std::endl;
+    //QgsMessageLog::logMessage("::classFactory()", "QGIS umesh", Qgis::Info, true);
     qgis_umesh * p = new qgis_umesh(iface);
     return (QgisPlugin*) p; // tweede na selectie in plugin manager
 }
 
-QGISEXTERN QString name()
+QGISEXTERN QString & name()
 {
-    std::cout << "::name" << std::endl;
-    return sName; // derde vanuit QGIS
+    //QgsMessageLog::logMessage("::name()", "QGIS umesh", Qgis::Info, true);
+    return QString(qgis_umesh::s_name); // derde vanuit QGIS
 }
 
 QGISEXTERN QString category(void)
 {
-    std::cout << "::category" << std::endl;
-    return sCategory; //
+    //QgsMessageLog::logMessage("::category()", "QGIS umesh", Qgis::Info, true);
+    return QString(qgis_umesh::s_category); //
 }
 
 QGISEXTERN QString description()
 {
-    std::cout << "::description" << std::endl;
-    return sDescription; // tweede vanuit QGIS
+    //QgsMessageLog::logMessage("::description()", "QGIS umesh", Qgis::Info, true);
+    return QString(qgis_umesh::s_description); // tweede vanuit QGIS
 }
 
 QGISEXTERN QString version()
 {
-    std::cout << "::version" << std::endl;
-    return sPluginVersion;
+    //QgsMessageLog::logMessage("::version()", "QGIS umesh", Qgis::Info, true);
+    return QString(qgis_umesh::s_plugin_version);
 }
 
 QGISEXTERN QString icon() // derde vanuit QGIS
 {
+    //QgsMessageLog::logMessage("::icon()", "QGIS umesh", Qgis::Info, true);
     QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
     QString q_icon_file = program_files + QString("/deltares/qgis_umesh/icons/qgis_umesh.png");
-    return q_icon_file;
+    return QString("");
 }
 // Delete ourself
 QGISEXTERN void unload(QgisPlugin* the_qgis_umesh_pointer)
 {
+    //QgsMessageLog::logMessage("::unload()", "QGIS umesh", Qgis::Info, true);
     the_qgis_umesh_pointer->unload();
     delete the_qgis_umesh_pointer;
 }
-

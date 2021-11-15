@@ -85,6 +85,9 @@ class qgis_umesh
     Q_OBJECT
 
     public:
+        static const QString s_ident, s_name, s_description, s_category, s_version, s_icon, s_plugin_version;
+        static const QgisPlugin::PluginType s_plugin_type;
+
         qgis_umesh(QgisInterface* iface);
         ~qgis_umesh();
         void initGui();
