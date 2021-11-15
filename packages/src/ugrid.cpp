@@ -2538,24 +2538,21 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
             {
                 // Compute the edge coordinates from the node coordinates, halfway on distance between nodes. 
                 // Boundary of the edge is determined by the node coordinates (edge_nodes)
-                status = get_dimension_var(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name, &m_mesh2d->edge[nr_mesh2d - 1]->count);
-                if (m_mesh2d->edge[nr_mesh2d - 1]->count != 0)  // not required attribute
+                // Number of edges determined when reading edge_node_connectivity
+                int p1, p2;
+                double x1, x2;
+                double y1, y2;
+                for (int j = 0; j < m_mesh2d->edge[0]->count; j++)
                 {
-                    int p1, p2;
-                    double x1, x2;
-                    double y1, y2;
-                    for (int j = 0; j < m_mesh2d->edge[0]->count; j++)
-                    {
-                        p1 = m_mesh2d->edge[0]->edge_nodes[j][0];
-                        p2 = m_mesh2d->edge[0]->edge_nodes[j][1];
-                        x1 = m_mesh2d->node[0]->x[p1];
-                        y1 = m_mesh2d->node[0]->y[p1];
-                        x2 = m_mesh2d->node[0]->x[p2];
-                        y2 = m_mesh2d->node[0]->y[p2];
+                    p1 = m_mesh2d->edge[0]->edge_nodes[j][0];
+                    p2 = m_mesh2d->edge[0]->edge_nodes[j][1];
+                    x1 = m_mesh2d->node[0]->x[p1];
+                    y1 = m_mesh2d->node[0]->y[p1];
+                    x2 = m_mesh2d->node[0]->x[p2];
+                    y2 = m_mesh2d->node[0]->y[p2];
 
-                        m_mesh2d->edge[nr_mesh2d - 1]->x.push_back(0.5*(x1 + x2));
-                        m_mesh2d->edge[nr_mesh2d - 1]->y.push_back(0.5*(y1 + y2));
-                    }
+                    m_mesh2d->edge[nr_mesh2d - 1]->x.push_back(0.5*(x1 + x2));
+                    m_mesh2d->edge[nr_mesh2d - 1]->y.push_back(0.5*(y1 + y2));
                 }
             }
 
