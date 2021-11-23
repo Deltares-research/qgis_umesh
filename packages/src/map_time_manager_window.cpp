@@ -1061,6 +1061,7 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
+    _MyCanvas->empty_cache(CACHE_1D);
 
     QString str = m_cb_1d->itemText(item);
     QVariant j = m_cb_1d->itemData(item);
@@ -1080,7 +1081,6 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
         var->draw = false;
-        _MyCanvas->empty_cache(CACHE_1D);
         return;
     }
     else
@@ -1103,6 +1103,7 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
+    _MyCanvas->empty_cache(CACHE_1D2D);
 
     QString str = m_cb_1d2d->itemText(item);
     QVariant j = m_cb_1d2d->itemData(item);
@@ -1121,8 +1122,8 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
         QStringList coord;
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
+        _MyCanvas->set_variable(nullptr);
         var->draw = false;
-        _MyCanvas->empty_cache(CACHE_1D2D);
         return;
     }
     else
@@ -1144,6 +1145,7 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
+    _MyCanvas->empty_caches();
 
     QString str = m_cb_2d->itemText(item);
     QVariant j = m_cb_2d->itemData(item);
@@ -1162,8 +1164,8 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
         QStringList coord;
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
+        _MyCanvas->set_variable(nullptr);
         var->draw = false;
-        _MyCanvas->empty_cache(CACHE_2D);
         return;
     }
     else
@@ -1185,6 +1187,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
+    _MyCanvas->empty_caches();
 
     _MyCanvas->set_draw_vector(VECTOR_NONE);
     if (m_map_property_window != nullptr)
@@ -1227,7 +1230,6 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
-        _MyCanvas->empty_caches();
         return;
     }
     else
@@ -1249,6 +1251,7 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
+    _MyCanvas->empty_caches();
 
     _MyCanvas->reset_min_max();
     if (m_map_property_window != nullptr)
@@ -1261,7 +1264,6 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
-        _MyCanvas->empty_caches();
         return;
     }
     else
@@ -1283,6 +1285,7 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
+    _MyCanvas->empty_caches();
 
     QString str = m_cb_vec_3d->itemText(item);
     QVariant j = m_cb_vec_3d->itemData(item);
@@ -1306,7 +1309,6 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
         coord << "";
         _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
-        _MyCanvas->empty_caches();
         return;
     }
     else
