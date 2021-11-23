@@ -6481,7 +6481,7 @@ QGISEXTERN QString icon() // derde vanuit QGIS
     //QgsMessageLog::logMessage("::icon()", "QGIS umesh", Qgis::Info, true);
     QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
     QString q_icon_file = program_files + QString("/deltares/qgis_umesh/icons/qgis_umesh.png");
-    return QString("");
+    return QString(q_icon_file);
 }
 // Delete ourself
 QGISEXTERN void unload(QgisPlugin* the_qgis_umesh_pointer)
