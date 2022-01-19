@@ -2225,9 +2225,9 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
                     //MyFeature.setAttribute(k, QString::fromStdString(nodes->long_name[j]).trimmed());
                 }
                 k++;
-                MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
-                MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
                 MyFeatures.append(MyFeature);
             }
             dp_vl->addFeatures(MyFeatures);
@@ -2654,9 +2654,9 @@ void qgis_umesh::create_vector_layer_geometry(QString fname, QString layer_name,
                         MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(ntw_geom->geom[i]->long_name[j]).trimmed()));
                     }
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
                     MyFeatures.append(MyFeature);
                 }
                 dp_vl->addFeatures(MyFeatures);
@@ -2784,9 +2784,9 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(edges->long_name[j]).trimmed()));
                 }
                 k++;
-                MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
-                MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
                 MyFeature.setValid(true);
                 MyFeatures.append(MyFeature);
             }
@@ -2882,9 +2882,9 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
                     MyFeature.setAttribute(k, QString("%1").arg(QString(obs_points->location[j].name).trimmed()));
                 }
                 k++;
-                MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
-                MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
                 MyFeatures.append(MyFeature);
             }
             dp_vl->addFeatures(MyFeatures);
@@ -2999,9 +2999,9 @@ void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString
                         MyFeature.setAttribute(k, QString("%1").arg(QString(obs_points->location[i].name).trimmed()));
                     }
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(i + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(i + 1));
                     MyFeatures.append(MyFeature);
                 }
             }
@@ -3163,9 +3163,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -3249,9 +3249,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -3362,9 +3362,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -3448,9 +3448,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -3538,9 +3538,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -3624,9 +3624,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -3710,9 +3710,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -3796,9 +3796,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -3882,9 +3882,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -3968,9 +3968,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -4058,9 +4058,9 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                     dp_vl->addFeature(MyFeature);
                 }
@@ -4186,9 +4186,9 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
         k++;
         MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(obs_name[j]).trimmed()));
         k++;
-        MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+        MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
         k++;
-        MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+        MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
         MyFeatures.append(MyFeature);
     }
     dp_vl->addFeatures(MyFeatures);
@@ -4310,9 +4310,9 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(obs_name[j]).trimmed()));
             k++;
-            MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
-            MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+            MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
             MyFeatures.append(MyFeature);
         }
         dp_vl->addFeatures(MyFeatures);
@@ -4406,9 +4406,9 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
         k++;
         MyFeature.setAttribute(k, z_value[j]);
         k++;
-        MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+        MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
         k++;
-        MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+        MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
         MyFeatures.append(MyFeature);
     }
     dp_vl->addFeatures(MyFeatures);
@@ -4541,9 +4541,9 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(names[j]).trimmed()));
             k++;
-            MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
-            MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+            MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
             MyFeatures.append(MyFeature);
         }
         dp_vl->addFeatures(MyFeatures);
@@ -4709,9 +4709,9 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_f
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
             k++;
-            MyFeature.setAttribute(k, QString("%1:0").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
+            MyFeature.setAttribute(k, QString("0:%1").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
-            MyFeature.setAttribute(k, QString("%1:1").arg(ii + 1));
+            MyFeature.setAttribute(k, QString("1:%1").arg(ii + 1));
             MyFeatures.append(MyFeature);
         }
         dp_vl->addFeatures(MyFeatures);
@@ -4891,9 +4891,9 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER *
                 k++;
                 MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
                 k++;
-                MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                MyFeature.setAttribute(k, QString("0:%1").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
-                MyFeature.setAttribute(k, QString("%1:1").arg(i + 1));
+                MyFeature.setAttribute(k, QString("1:%1").arg(i + 1));
                 MyFeatures.append(MyFeature);
             }
             dp_vl->addFeatures(MyFeatures);
@@ -4998,9 +4998,9 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER *
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
             k++;
-            MyFeature.setAttribute(k, QString("%1:0").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
+            MyFeature.setAttribute(k, QString("0:%1").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
-            MyFeature.setAttribute(k, QString("%1:1").arg(ii + 1));
+            MyFeature.setAttribute(k, QString("1:%1").arg(ii + 1));
             MyFeatures.append(MyFeature);
         }
         dp_vl->addFeatures(MyFeatures);
@@ -5135,9 +5135,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[0]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(i + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(i + 1));
 
                     dp_vl_points->addFeature(MyFeature);
                     vl_points->commitChanges();
@@ -5162,9 +5162,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                         k++;
                         MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
                         k++;
-                        MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                        MyFeature.setAttribute(k, QString("0:%1").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                         k++;
-                        MyFeature.setAttribute(k, QString("%1:1").arg(i + 1));
+                        MyFeature.setAttribute(k, QString("1:%1").arg(i + 1));
 
                         dp_vl_lines->addFeature(MyFeature);
                         vl_lines->commitChanges();
@@ -5308,9 +5308,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[0]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(i + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(i + 1));
 
                     dp_vl->addFeature(MyFeature);
                     vl->commitChanges();
@@ -5431,9 +5431,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                     k++;
                     MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[0]).trimmed()));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    MyFeature.setAttribute(k, QString("0:%1").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(i + 1));
+                    MyFeature.setAttribute(k, QString("1:%1").arg(i + 1));
 
                     dp_vl->addFeature(MyFeature);
                     vl->commitChanges();
@@ -5550,9 +5550,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 k++;
                 MyFeature.setAttribute(k, QString("%1").arg(rotation));
                 k++;
-                MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
-                MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                 dp_vl->addFeature(MyFeature);
             }
@@ -5645,9 +5645,9 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 k++;
                 MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(bnd_name[j]).trimmed()));
                 k++;
-                MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
-                MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
                 dp_vl->addFeature(MyFeature);
             }
@@ -5762,9 +5762,9 @@ void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER *
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
             k++;
-            MyFeature.setAttribute(k, QString("%1:0").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
+            MyFeature.setAttribute(k, QString("0:%1").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
-            MyFeature.setAttribute(k, QString("%1:1").arg(ii + 1));
+            MyFeature.setAttribute(k, QString("1:%1").arg(ii + 1));
 
             dp_vl->addFeature(MyFeature);
             vl->commitChanges();
@@ -5865,9 +5865,9 @@ void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER 
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
             k++;
-            MyFeature.setAttribute(k, QString("%1:0").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
+            MyFeature.setAttribute(k, QString("0:%1").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
-            MyFeature.setAttribute(k, QString("%1:1").arg(ii + 1));
+            MyFeature.setAttribute(k, QString("1:%1").arg(ii + 1));
 
             dp_vl->addFeature(MyFeature);
             vl->commitChanges();
@@ -5983,9 +5983,9 @@ void qgis_umesh::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_R
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(crosssection_name[j]).trimmed()));
             k++;
-            MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
-            MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+            MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
             dp_vl->addFeature(MyFeature);
         }
@@ -6110,9 +6110,9 @@ void qgis_umesh::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER
             k++;
             MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(retention_name[j]).trimmed()));
             k++;
-            MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
-            MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+            MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
 
             dp_vl->addFeature(MyFeature);
         }
@@ -6226,8 +6226,8 @@ void qgis_umesh::create_1D2D_link_vector_layer(JSON_READER * prop_tree, long eps
                 MyFeature.setGeometry(QgsGeometry::fromMultiPolylineXY(lines));
 
                 MyFeature.initAttributes(nr_attrib_fields);
-                MyFeature.setAttribute(0, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                MyFeature.setAttribute(1, QString("%1:1").arg(j + 1));
+                MyFeature.setAttribute(0, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                MyFeature.setAttribute(1, QString("1:%1").arg(j + 1));
                 MyFeature.setValid(true);
 
                 dp_vl->addFeature(MyFeature);
@@ -6452,36 +6452,36 @@ QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
     return (QgisPlugin*) p; // tweede na selectie in plugin manager
 }
 
-QGISEXTERN QString & name()
+QGISEXTERN QString const& name()
 {
     //QgsMessageLog::logMessage("::name()", "QGIS umesh", Qgis::Info, true);
-    return QString(qgis_umesh::s_name); // derde vanuit QGIS
+    return qgis_umesh::s_name; // derde vanuit QGIS
 }
 
-QGISEXTERN QString category(void)
+QGISEXTERN QString const& category(void)
 {
     //QgsMessageLog::logMessage("::category()", "QGIS umesh", Qgis::Info, true);
-    return QString(qgis_umesh::s_category); //
+    return qgis_umesh::s_category; //
 }
 
-QGISEXTERN QString description()
+QGISEXTERN QString const& description()
 {
     //QgsMessageLog::logMessage("::description()", "QGIS umesh", Qgis::Info, true);
-    return QString(qgis_umesh::s_description); // tweede vanuit QGIS
+    return qgis_umesh::s_description; // tweede vanuit QGIS
 }
 
-QGISEXTERN QString version()
+QGISEXTERN QString const& version()
 {
     //QgsMessageLog::logMessage("::version()", "QGIS umesh", Qgis::Info, true);
-    return QString(qgis_umesh::s_plugin_version);
+    return qgis_umesh::s_plugin_version;
 }
 
-QGISEXTERN QString icon() // derde vanuit QGIS
+QGISEXTERN QString const& icon() // derde vanuit QGIS
 {
     //QgsMessageLog::logMessage("::icon()", "QGIS umesh", Qgis::Info, true);
     QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
     QString q_icon_file = program_files + QString("/deltares/qgis_umesh/icons/qgis_umesh.png");
-    return QString(q_icon_file);
+    return q_icon_file;
 }
 // Delete ourself
 QGISEXTERN void unload(QgisPlugin* the_qgis_umesh_pointer)

@@ -6,7 +6,7 @@ project(qgis_umesh VERSION 0.15.0 LANGUAGES CXX)
 
 set(CMAKE_PREFIX_PATH "c:/OSGeo4W/apps/Qt5/")
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Boost 1.75.0 COMPONENTS REQUIRED)
+find_package(Boost 1.77.0 COMPONENTS REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
