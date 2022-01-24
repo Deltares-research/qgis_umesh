@@ -99,9 +99,18 @@ long UGRID::read()
     ug_fname = nullptr;
 #endif
     status = this->read_global_attributes();
+
+    START_TIMERN(Read mesh);
     status = this->read_mesh();
+    STOP_TIMER(Read mesh);
+
+    START_TIMER(Read times);
     status = this->read_times();
+    STOP_TIMER(Read times);
+
+    START_TIMER(Read variables);
     status = this->read_variables();
+    STOP_TIMER(Read variables);
 
     return status;
 }
