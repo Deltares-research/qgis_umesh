@@ -6441,6 +6441,7 @@ void qgis_umesh::dummy_slot()
 // Return the type (either UI or MapLayer plugin)
 QGISEXTERN int type()
 {
+    //QgsMessageLog::logMessage("::type()", "Hello World", Qgis::Info, true);
     return qgis_umesh::s_plugin_type; // eerste, na selectie in plugin manager
 }
 
@@ -6452,36 +6453,37 @@ QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
     return (QgisPlugin*) p; // tweede na selectie in plugin manager
 }
 
-QGISEXTERN QString const& name()
+QGISEXTERN const QString* name()
 {
     //QgsMessageLog::logMessage("::name()", "QGIS umesh", Qgis::Info, true);
-    return qgis_umesh::s_name; // derde vanuit QGIS
+    return &qgis_umesh::s_name; // derde vanuit QGIS
 }
 
-QGISEXTERN QString const& category(void)
+QGISEXTERN const QString* category()
 {
     //QgsMessageLog::logMessage("::category()", "QGIS umesh", Qgis::Info, true);
-    return qgis_umesh::s_category; //
+    return &qgis_umesh::s_category; //
 }
 
-QGISEXTERN QString const& description()
+QGISEXTERN const QString* description()
 {
     //QgsMessageLog::logMessage("::description()", "QGIS umesh", Qgis::Info, true);
-    return qgis_umesh::s_description; // tweede vanuit QGIS
+    return &qgis_umesh::s_description; // tweede vanuit QGIS
 }
 
-QGISEXTERN QString const& version()
+QGISEXTERN const QString* version()
 {
     //QgsMessageLog::logMessage("::version()", "QGIS umesh", Qgis::Info, true);
-    return qgis_umesh::s_plugin_version;
+    return &qgis_umesh::s_plugin_version;
 }
 
-QGISEXTERN QString const& icon() // derde vanuit QGIS
+QGISEXTERN const QString* icon()  // derde vanuit QGIS
 {
     //QgsMessageLog::logMessage("::icon()", "QGIS umesh", Qgis::Info, true);
-    QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
-    QString q_icon_file = program_files + QString("/deltares/qgis_umesh/icons/qgis_umesh.png");
-    return q_icon_file;
+    //QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
+    //QString q_icon_file = program_files + QString("/deltares/qgis_umesh/icons/qgis_umesh.png");
+    QString q_icon_file = QStringLiteral("C:/Program Files/deltares/qgis_umesh/icons/qgis_umesh.png");
+    return &q_icon_file;
 }
 // Delete ourself
 QGISEXTERN void unload(QgisPlugin* the_qgis_umesh_pointer)

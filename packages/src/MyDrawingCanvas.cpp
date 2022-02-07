@@ -139,7 +139,7 @@ void MyCanvas::draw_dot_at_face()
 #endif
         string var_name = _variable->var_name;
         struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
-        DataValuesProvider2D<double>std_data_at_face = _ugrid_file->get_variable_values(var_name);
+        DataValuesProvider2D<double> std_data_at_face = _ugrid_file->get_variable_values(var_name);
         z_value = std_data_at_face.GetValueAtIndex(_current_step, 0);
 
         double missing_value = _variable->fill_value;

@@ -1251,6 +1251,7 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const std::string var_na
                         values_c[ii] = (double)values_i[ii];
                     }
                     free(values_i);
+
                 }
 #ifdef NATIVE_C
 #else
