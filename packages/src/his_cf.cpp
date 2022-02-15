@@ -893,17 +893,32 @@ std::vector<std::string> HISCF::tokenize(const std::string& s, char c) {
     return v;
 }
 
-std::vector<std::string> HISCF::tokenize(const std::string& s, std::size_t count)
+std::vector<std::string> HISCF::tokenize(const std::string & str, size_t count)
 {
-    size_t minsize = s.size() / count;
     std::vector<std::string> tokens;
-    for (size_t i = 0, offset = 0; i < count; ++i)
+    if (str.size() == 0) { return tokens; }
+    size_t parts = str.size() / count;
+    for (size_t i = 0, offset = 0; i < parts; ++i)
     {
-        size_t size = minsize;
-        if ((offset + size) < s.size())
-            tokens.push_back(s.substr(offset, size));
+        size_t size = count;
+        if ((offset + size) < str.size())
+        {
+            std::string tmp_str = str.substr(offset, size);
+
+            auto end = std::remove(tmp_str.begin(), tmp_str.end(), '\0');
+            tmp_str.erase(end, tmp_str.end());
+
+            tokens.push_back(tmp_str);
+        }
         else
-            tokens.push_back(s.substr(offset, s.size() - offset));
+        {
+            std::string tmp_str = str.substr(offset, str.size() - offset);
+
+            auto end = std::remove(tmp_str.begin(), tmp_str.end(), '\0');
+            tmp_str.erase(end, tmp_str.end());
+
+            tokens.push_back(tmp_str);
+        }
         offset += size;
     }
     return tokens;

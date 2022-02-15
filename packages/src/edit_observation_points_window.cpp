@@ -5,7 +5,7 @@
 int EditObsPoints::object_count = 0;
 
 
-EditObsPoints::EditObsPoints(QgsMapLayer * obs_layer, QgsMapLayer * geom_layer, UGRID * ugrid_file, QgisInterface * QGisIface) :
+EditObsPoints::EditObsPoints(QgsMapLayer * obs_layer, QgsMapLayer * geom_layer, UGRIDAPI_WRAPPER* ugrid_file, QgisInterface * QGisIface) :
     QDockWidget()
 {
     object_count++;
@@ -14,8 +14,8 @@ EditObsPoints::EditObsPoints(QgsMapLayer * obs_layer, QgsMapLayer * geom_layer, 
     QGisIface->mapCanvas();
     m_obs_layer = obs_layer;
     m_geom_layer = geom_layer;
-    m_ugrid_files = ugrid_file;
-    m_ntw_geom = ugrid_file->get_network_geometry();
+    m_ugrid_file = ugrid_file;
+    m_network_1d = ugrid_file->get_network();
 
     create_window(); //QMessageBox::information(0, "Information", "DockWindow::DockWindow()");
 
@@ -34,6 +34,7 @@ EditObsPoints::~EditObsPoints()
 void EditObsPoints::closeEvent(QCloseEvent * ce)
 {
     //QMessageBox::information(0, "Information", "EditObsPoints::~closeEvent()");
+    Q_UNUSED(ce);
     this->object_count--;
     m_QGisIface->mapCanvas()->unsetMapTool(m_MyCanvas);
     m_MyCanvas->set_variable(nullptr);
@@ -51,10 +52,10 @@ void EditObsPoints::create_window()
     this->setWindowTitle(QString("Edit observation points"));
     QFrame * frame = new QFrame(this);
     QWidget * wid = new QWidget(frame);
-    QVBoxLayout * vl = new QVBoxLayout();
-    QHBoxLayout * hl = new QHBoxLayout();
+    //QVBoxLayout * vl = new QVBoxLayout();
+    //QHBoxLayout * hl = new QHBoxLayout();
     QGridLayout * gl = new QGridLayout();
-    QAction * _show_p = new QAction();
+    //QAction * _show_p = new QAction();
 
     QFrame* line = new QFrame();
     line->setFrameShape(QFrame::HLine);
@@ -63,7 +64,7 @@ void EditObsPoints::create_window()
 
     QLabel * lbl00 = new QLabel("Coordinate space: ");
     QLabel * lbl01 = new QLabel("---");;
-    if (m_geom_layer != nullptr)
+    if (m_network_1d.node_x.size() != 0)
     {
         lbl01 = new QLabel(m_geom_layer->name());
     }
@@ -94,11 +95,11 @@ void EditObsPoints::create_window()
     this->setWidget(wid);
     return;
 }
-void EditObsPoints::cb_clicked(int)
+void EditObsPoints::cb_clicked(int a)
 {
-    int a = 1;;
+    Q_UNUSED(a);
 }
 void EditObsPoints::MyMouseReleaseEvent(QgsMapMouseEvent * me)
 {
-    double length = 0.0;
+    Q_UNUSED(me);
 }

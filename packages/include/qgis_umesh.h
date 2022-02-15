@@ -59,12 +59,13 @@
 #include "MyEditTool.h"
 #include "MyDrawingCanvas.h"
 #include "netcdf.h"
-#include "ugrid.h"
+#include "ugridapi_wrapper.h"
 #include "his_cf.h"
 #include "json_reader.h"
 #include "edit_observation_points_window.h"
 #include "map_time_manager_window.h"
 #include "map_property_window.h"
+#include "data_provider.h" 
 
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
@@ -74,6 +75,8 @@
 
 #define    WAIT_MODE 1
 #define NO_WAIT_MODE 0
+
+using namespace boost;
 
 class QAction;
 class UGRID;
@@ -94,41 +97,58 @@ class qgis_umesh
         void unload();
 
         //  qgis_umesh functions
-        char* stripSpaces(char *);
-        void create_vector_layer_data_on_edges(QString, _variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_edge_type(QString, _variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_data_on_nodes(QString, _variable * var, struct _feature *, double *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_nodes(QString, QString, struct _feature *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_edges(QString, QString, struct _feature *, struct _edge *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_geometry(QString, QString, struct _ntw_geom *, long, QgsLayerTreeGroup *);
+        std::string trim(std::string);
+        void create_vector_layer_data_on_edges(QString, _variable_ugridapi* var, struct _feature*, struct _edge*, double*, long, QgsLayerTreeGroup*);
+        template <typename T> 
+        void create_vector_layer_data_on_edges_template(QString, _variable_ugridapi* var, T *, double*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_edge_type(QString, _variable_ugridapi* var, struct _mesh_2d *, double*, long, QgsLayerTreeGroup*);
+
+        void create_vector_layer_data_on_nodes(QString, _variable_ugridapi* var, std::vector<double>*, std::vector<double>*, double*, long, QgsLayerTreeGroup*);
+
+        void create_vector_layer_nodes(QString, QString, struct _feature*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_point_nodes(QString, QString, std::vector<double> *, std::vector<double> *, 
+            std::vector<std::string> *, std::vector<std::string> *, long, QgsLayerTreeGroup*);
+
+        void create_vector_layer_edges(QString, QString, 
+            std::vector<int>*, std::vector<double>*, std::vector<double>*,
+            std::vector<double>*, std::vector<std::string>*, std::vector<std::string>*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_edges_contacts(QString, QString, 
+            std::vector<int>*,
+            std::vector<double>*, std::vector<double>*,
+            std::vector<double>*, std::vector<double>*, 
+            std::vector<std::string>*, std::vector<std::string>*, 
+            long, QgsLayerTreeGroup*);
+
+        void create_vector_layer_geometry(QString, QString, struct _network_1d*, long, QgsLayerTreeGroup*);
+        //void create_vector_layer_geometry(QString, QString, struct _ntw_geom*, long, QgsLayerTreeGroup*);
         void create_vector_layer_observation_point(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
         void create_vector_layer_observation_polyline(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
 
         // Reading input files (ie JSON format)
-        void create_vector_layer_1D_external_forcing(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_structure(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_chainage_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_crs_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_fixed_weir(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_thin_dams(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_1D_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_2D_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_structure(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_drypoints(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_1D_cross_section(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_retention(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_sample_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_external_forcing(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_structure(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_chainage_observation_point(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_crs_observation_point(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_fixed_weir(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_thin_dams(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_point(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_cross_section(UGRIDAPI_WRAPPER *, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_1D_observation_cross_section(UGRIDAPI_WRAPPER *, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_2D_observation_cross_section(UGRIDAPI_WRAPPER *, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_structure(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_drypoints(UGRIDAPI_WRAPPER *, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_1D_cross_section(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_retention(UGRIDAPI_WRAPPER *, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_sample_point(UGRIDAPI_WRAPPER *, JSON_READER *, long, QgsLayerTreeGroup *);
 
-        void create_1D2D_link_vector_layer(JSON_READER *, long);
-        long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, std::string, double, double *, double *, double *);
-        long find_location_boundary(struct _ntw_nodes *, std::string, double *, double *);
+        void create_vector_layer_1D2D_link(JSON_READER *, long);
+        long compute_location_along_geometry(struct _network_1d *, std::string, double, double *, double *, double *);
+        long find_location_boundary(struct _network_1d *, std::string, double *, double *);
 
 
         QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
         void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
-        void show_map_output(UGRID *);
+        void show_map_output(UGRIDAPI_WRAPPER *);
         void edit_1d_obs_points();
         void experiment();
 
@@ -150,7 +170,7 @@ class qgis_umesh
         void activate_observation_layers();
         void ShowUserManual();
 
-        UGRID * get_active_ugrid_file(QString);
+        UGRIDAPI_WRAPPER * get_active_ugrid_file(QString);
         HISCF * get_active_his_cf_file(QString);
         void set_show_map_output();
         void start_plotcfts();
@@ -168,8 +188,9 @@ class qgis_umesh
         void unload_vector_layers();
         QIcon get_icon_file(QDir, QString);
         int QT_SpawnProcess(int, char *, char **);
+        int qgis_umesh::get_variable_nctype(int ncid, std::string var_name, nc_type * svar_type);
         std::vector<std::string> tokenize(const std::string &, const char);
-        std::vector<std::string> tokenize(const std::string &, size_t);
+        std::vector<std::string> tokenize(const std::string &, std::size_t);
 
         // variables
         QgisInterface * mQGisIface; // Pointer to the QGIS interface object
@@ -218,11 +239,12 @@ class qgis_umesh
         char * actionIcon_c = (char *)malloc(PATH_LENGTH * sizeof(char *));
 
         int _fil_index;
-        std::vector<UGRID *> m_ugrid_file;
+        std::vector<UGRIDAPI_WRAPPER *> m_ugrid_file;
         int _his_cf_fil_index;
         std::vector<HISCF *> m_his_cf_file;
         int _mdu_fil_index;
-        std::vector<JSON_READER *> _mdu_files;
+        std::vector<JSON_READER *> m_mdu_files;
+
 
         QgsCoordinateReferenceSystem m_crs;
 };

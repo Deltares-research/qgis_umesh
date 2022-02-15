@@ -24,9 +24,6 @@
     <ClCompile Include="src\MyEditTool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ugrid.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\qgis_umesh_version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -72,12 +69,6 @@
     <ClCompile Include="src\read_json.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\edit_observation_points_window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="generated\moc_edit_observation_points_window.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
     <ClCompile Include="generated\moc_add_current_view_window.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
@@ -86,6 +77,15 @@
     </ClCompile>
     <ClCompile Include="src\perf_timer.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ugridapi_wrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\edit_observation_points_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generated\moc_edit_observation_points_window.cpp">
+      <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -113,18 +113,15 @@
     <CustomBuild Include="include\map_property_window.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="include\edit_observation_points_window.h">
+    <CustomBuild Include="include\add_current_view_window.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="include\add_current_view_window.h">
+    <CustomBuild Include="include\edit_observation_points_window.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\netcdf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ugrid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\AbstractCanvas.h">
@@ -143,6 +140,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\perf_timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ugridapi_wrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\data_provider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

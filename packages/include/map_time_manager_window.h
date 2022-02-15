@@ -33,7 +33,7 @@
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
 
-#include "ugrid.h"
+#include "ugridapi_wrapper.h"
 #include "MyDrawingCanvas.h"
 #include "my_date_time_edit.h"
 #include "QColorRampEditor.h"
@@ -42,7 +42,7 @@
 #include "add_current_view_window.h"
 
 #if defined WIN64
-#define _sleep _sleep
+#define SLEEP _sleep
 #endif
 
 class MapTimeManagerWindow
@@ -55,7 +55,7 @@ public:
     static int object_count;
 
     public:
-        MapTimeManagerWindow(QgisInterface *, UGRID *, MyCanvas *);
+        MapTimeManagerWindow(QgisInterface *, UGRIDAPI_WRAPPER*, MyCanvas *);
         ~MapTimeManagerWindow();
         static int get_count();
 
@@ -101,7 +101,7 @@ public:
 
     private:
         QgisInterface * m_QGisIface; // Pointer to the QGIS interface object
-        UGRID * _ugrid_file;
+        UGRIDAPI_WRAPPER* m_ugrid_file;
         MyCanvas * _MyCanvas;
         void create_window();
         QGridLayout * create_date_time_layout();
@@ -117,16 +117,17 @@ public:
         QCheckBox * check_vector_3d();
         QSpinBox * spinbox_layer(int);
 
-        QComboBox * create_parameter_selection_1d(QString);
-        QComboBox * create_parameter_selection_1d2d(QString);
-        int create_parameter_selection_2d_3d(QString, QComboBox *, QComboBox *);
+        QComboBox * create_parameter_selection_1d();
+        QComboBox * create_parameter_selection_1d2d();
+        int create_parameter_selection_2d_3d(QComboBox *, QComboBox *);
         QVBoxLayout * create_scalar_selection_1d_2d_3d();
         QVBoxLayout * create_vector_selection_2d_3d();
         int create_parameter_selection_vector_2d_3d(QString, QComboBox *, QComboBox *);
 
         QColorRampEditor * create_color_ramp(vector_quantity);
         void draw_time_dependent_data_1d(QComboBox *, int);
-        void draw_time_dependent_data(QComboBox *, int);
+        void draw_time_dependent_data_1d2d(QComboBox*, int);
+        void draw_time_dependent_data_2d(QComboBox*, int);
         void draw_time_dependent_vector(QComboBox *, int);
         QColorRampEditor * m_ramph;
         QColorRampEditor * m_ramph_vec_dir;
@@ -178,7 +179,10 @@ public:
         bool m_show_map_data_3d;
         bool m_show_map_vector_2d;
         bool m_show_map_vector_3d;
-        struct _mesh_variable * m_vars;
+        std::vector<_variable_ugridapi*> m_vars;
+        std::vector<_variable_ugridapi*> m_vars_1d;
+        std::vector<_variable_ugridapi*> m_vars_1d2d;
+        std::vector<_variable_ugridapi*> m_vars_2d;
 
         MapProperty * m_property;
         vector_quantity m_vector_draw;

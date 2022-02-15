@@ -77,6 +77,7 @@ MyEditTool::~MyEditTool()
 //
 void MyEditTool::paint(QPainter * p)
 {
+    Q_UNUSED(p);
 }
 
 //
@@ -117,6 +118,7 @@ void MyEditTool::wheelEvent( QWheelEvent * we )
 void MyEditTool::MyWheelEvent ( QWheelEvent * we )
 {
     //QMessageBox::warning( 0, "Message", QString(tr("MyEditTool::MyWheelEvent")));
+    Q_UNUSED(we);
     mMapCanvas->update();
 }
 
@@ -133,6 +135,7 @@ void MyEditTool::MyMouseDoubleClickEvent( QMouseEvent * me)
 void MyEditTool::MyMouseMoveEvent      ( QMouseEvent * me)
 {
     //QMessageBox::warning(0, "Message", QString(tr("MyEditTool::MyMouseMoveEvent: %1").arg(me->button())));
+    Q_UNUSED(me);
 }
 //
 //-----------------------------------------------------------------------------
@@ -156,6 +159,7 @@ void MyEditTool::MyKeyPressEvent( QKeyEvent* ke)
     if (ke->modifiers() & Qt::ShiftModifier)
     {
         int pressed_key = ke->key() & Qt::ShiftModifier;
+        Q_UNUSED(pressed_key);
         {
             QMessageBox::warning(0, "Message", QString(tr("MyEditTool::MyKeyPressEvent: %1").arg(ke->key())));
         }
@@ -169,4 +173,5 @@ void MyEditTool::MyKeyPressEvent( QKeyEvent* ke)
 void MyEditTool::MyKeyReleasedEvent( QKeyEvent * ke)
 {
     //QMessageBox::warning(0, "Message", QString(tr("MyEditTool::MyKeyReleasedEvent: %1").arg(ke->key())));
+    Q_UNUSED(ke);
 }

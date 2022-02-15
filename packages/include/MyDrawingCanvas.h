@@ -8,7 +8,7 @@
 #include <math.h>       /* sqrt */
 
 #include "AbstractCanvas.h"
-#include "ugrid.h"
+#include "ugridapi_wrapper.h"
 #include "QColorRampEditor.h"
 #include "map_property.h"
 
@@ -170,10 +170,10 @@ public:
     void setFullExtend(double minX, double maxX, double minY, double maxY);
     void zoomToExtend(double minX, double maxX, double minY, double maxY);
 
-    void setUgridFile(UGRID *);
+    void setUgridFile(UGRIDAPI_WRAPPER*);
     void reset_min_max();
-    void set_variable(struct _variable *);
-    void set_variables(struct _mesh_variable * variables);
+    void set_variable(struct _variable_ugridapi*);
+    void set_variables(std::vector<_variable_ugridapi *>);
     void set_coordinate_type(QStringList);
     void set_determine_grid_size(bool);
 
@@ -184,18 +184,18 @@ public:
     void setColorRampVector(QColorRampEditor *);
     void set_draw_vector(vector_quantity);
 
-    void draw_dot_at_edge();
     void draw_dot_at_face();
     void draw_dot_at_node();
+    void draw_data_at_edge();
     void draw_data_along_edge();
     void draw_data_at_face();
     void draw_line_at_edge();
     void draw_vector_arrow_at_face();
     void draw_vector_direction_at_face();
 
-    double * z_value;
-    double * u_value;
-    double * v_value;
+    double* m_z_value;
+    double* m_u_value;
+    double* m_v_value;
     double m_z_min;
     double m_z_max;
     QColorRampEditor * m_ramph;
@@ -214,7 +214,7 @@ private:
     void paint( QPainter * );
     void determine_min_max(double *, int, double *, double *, std::vector<QColor> &, double);
     void determine_min_max(double *, int, double *, double *, double);
-    double statistics_averaged_length_of_cell(struct _variable *);
+    double statistics_averaged_length_of_cell(struct _variable_ugridapi *);
 
     // variables
     QgisInterface* mQGisIface;
@@ -257,13 +257,13 @@ private:
     void InitDrawEachCaches(void);
     void DrawEachCaches(void);
 
-    UGRID * _ugrid_file;
-    struct _variable * _variable;
-    struct _mesh_variable * m_variables;
+    UGRIDAPI_WRAPPER* m_ugrid_file;
+    std::vector<_variable_ugridapi *> m_variables;
+    _variable_ugridapi* m_variable{ nullptr };
     QStringList m_coordinate_type;
     int m_bed_layer;
     int m_hydro_layer;
-    int _current_step;
+    int m_current_step;
     std::vector<long> dims;
     std::vector<double> mesh1d_x;
     std::vector<double> mesh1d_y;

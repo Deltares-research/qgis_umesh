@@ -5,7 +5,7 @@
 int MapTimeManagerWindow::object_count = 0;
 MapProperty * MapProperty::obj;  // Initialize static member of class MapProperty (Singleton)
 
-MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ugrid_file, MyCanvas * MyCanvas) : QDockWidget()
+MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRIDAPI_WRAPPER* ugrid_file, MyCanvas * MyCanvas) : QDockWidget()
 {
     object_count = 1;
     m_QGisIface = QGisIface;
@@ -16,11 +16,14 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_ramph_vec_dir = nullptr;
     m_map_property_window = nullptr;
     m_cur_view = nullptr;
-    _ugrid_file = ugrid_file;
+    m_ugrid_file = ugrid_file;
     _MyCanvas = MyCanvas;
-    _MyCanvas->setUgridFile(_ugrid_file);
-    _q_times = _ugrid_file->get_qdt_times();
-    m_vars = _ugrid_file->get_variables();  // before create window
+    _MyCanvas->setUgridFile(m_ugrid_file);
+    _q_times = m_ugrid_file->get_qdt_times();
+    m_vars_1d = m_ugrid_file->get_variables_1d();  // before create window
+    m_vars_1d2d = m_ugrid_file->get_variables_1d2d();  // before create window
+    m_vars_2d = m_ugrid_file->get_variables_2d();  // before create window
+    m_vars = m_ugrid_file->get_variables();  // before create window
     create_window(); //QMessageBox::information(0, "Information", "DockWindow::DockWindow()");
     _MyCanvas->empty_caches();
     _current_step = 0;
@@ -85,9 +88,9 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
     _MyCanvas->set_coordinate_type(coord);
     _MyCanvas->set_determine_grid_size(true);
     _MyCanvas->empty_caches();
-    for (int i = 0; i < m_vars->nr_vars; ++i)
+    for (int i = 0; i < m_vars.size(); ++i)
     {
-        m_vars->variable[i]->draw = false;
+        m_vars[i]->draw = false;
     }
     this->goto_begin();  // goto to begin of time loop
     if (m_cur_view != nullptr)
@@ -117,6 +120,13 @@ void MapTimeManagerWindow::create_window()
     QGridLayout * gl = create_date_time_layout();
     vl->addLayout(gl);
 
+    // Animation 
+
+    QFrame* line = new QFrame();
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    vl->addWidget(line);
+
     QHBoxLayout * hl1 = create_push_buttons_layout_animation();  // animation
     vl->addLayout(hl1);
 
@@ -124,12 +134,12 @@ void MapTimeManagerWindow::create_window()
     vl->addLayout(hl2);
 
     m_slider = create_time_slider();
-
-    QFrame* line = new QFrame();
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
-    vl->addWidget(line);
     vl->addWidget(m_slider);
+
+    QFrame* line2 = new QFrame();
+    line2->setFrameShape(QFrame::HLine);
+    line2->setFrameShadow(QFrame::Sunken);
+    vl->addWidget(line2);
 
     // Selection of parameter and/or vector 
 
@@ -175,7 +185,7 @@ void MapTimeManagerWindow::create_window()
 }
 QGridLayout * MapTimeManagerWindow::create_date_time_layout()
 {
-    _q_times = _ugrid_file->get_qdt_times();
+    _q_times = m_ugrid_file->get_qdt_times();
     nr_times = _q_times.size();
     first_date_time_indx = 0;
     last_date_time_indx = nr_times - 1;
@@ -498,24 +508,23 @@ QPushButton * MapTimeManagerWindow::show_parameter()
     //pb->setSizeIncrement(vsi_size);
     return pb;
 }
-QComboBox * MapTimeManagerWindow::create_parameter_selection_1d(QString text)
+QComboBox * MapTimeManagerWindow::create_parameter_selection_1d()
 {
     QComboBox * cb = new QComboBox();
     cb->setMinimumSize(100, 22);
 
     cb->blockSignals(true);
-    for (int i = 0; i < m_vars->nr_vars; i++)
+    for (int i = 0; i < m_vars_1d.size(); i++)
     {
-        if (m_vars->variable[i]->time_series)
+        if (m_vars_1d[i]->time_series)
         {
+            int error_code;
+            std::string att_value;
             QMap<QString, int> map;
-            QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, m_vars[i]->var_name, "long_name", att_value);
+            QString name = QString::fromStdString(att_value).trimmed();
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
-            if (mesh_var_name == text)
-            {
-                cb->addItem(name, map[name]);
-            }
+            cb->addItem(name, map[name]);
         }
     }
     cb->model()->sort(0);  // sort alphabetical order, should be set after combobox is filled
@@ -525,24 +534,23 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d(QString text)
 
     return cb;
 }
-QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
+QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d()
 {
     QComboBox * cb = new QComboBox();
     cb->setMinimumSize(100, 22);
 
     cb->blockSignals(true);
-    for (int i = 0; i < m_vars->nr_vars; i++)
+    for (int i = 0; i < m_vars_1d2d.size(); i++)
     {
-        if (m_vars->variable[i]->time_series)
+        if (m_vars_1d2d[i]->time_series)
         {
+            int error_code;
+            std::string att_value;
             QMap<QString, int> map;
-            QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, m_vars_1d2d[i]->var_name, "long_name", att_value);
+            QString name = QString::fromStdString(att_value).trimmed();
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
-            if (mesh_var_name == text)
-            {
-                cb->addItem(name, map[name]);
-            }
+            cb->addItem(name, map[name]);
         }
     }
     cb->model()->sort(0);  // sort alphabetical order, should be set after combobox is filled
@@ -552,7 +560,7 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
 
     return cb;
 }
-int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboBox * cb_2d, QComboBox * cb_3d)
+int MapTimeManagerWindow::create_parameter_selection_2d_3d(QComboBox * cb_2d, QComboBox * cb_3d)
 {
     cb_2d->setMinimumSize(100, 22);
     cb_3d->setMinimumSize(100, 22);
@@ -563,41 +571,38 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
     cb_2d->setInsertPolicy(QComboBox::InsertAlphabetically);
     cb_3d->setInsertPolicy(QComboBox::InsertAlphabetically);
 
-    for (int i = 0; i < m_vars->nr_vars; i++)
+    for (int i = 0; i < m_vars_2d.size(); i++)
     {
-        if (m_vars->variable[i]->time_series)
+        if (m_vars_2d[i]->time_series)
         {
+            int error_code;
+            std::string att_value;
             QMap<QString, int> map;
-            QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, m_vars_2d[i]->var_name, "long_name", att_value);
+            QString name = QString::fromStdString(att_value).trimmed();
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
-            if (m_vars->variable[i]->dims.size() == 2)  // Todo: HACK: assumed time, xy-space
+
+            int dimension_count;
+            error_code = ugridapi::ug_variable_count_dimensions(m_ugrid_file->m_ncid, m_vars_2d[i]->var_name, dimension_count);
+
+            if (dimension_count == 2)  // Todo: HACK: assumed time, xy-space
             {
-                if (mesh_var_name == text)
+                cb_2d->addItem(name, map[name]);
+            }
+            else if (dimension_count == 3)  // Todo: HACK: assumed time, xy-space, layer
+            {
+                if (m_vars_2d[i]->sediment_index != -1)
                 {
                     cb_2d->addItem(name, map[name]);
                 }
-            }
-            else if (m_vars->variable[i]->dims.size() == 3)  // Todo: HACK: assumed time, xy-space, layer
-            {
-                if (mesh_var_name == text)
-                {
-                    if (m_vars->variable[i]->sediment_index != -1)
-                    {
-                        cb_2d->addItem(name, map[name]);
-                    }
-                    else
-                    {
-                        cb_3d->addItem(name, map[name]);
-                    }
-                }
-            }
-            else if (m_vars->variable[i]->dims.size() == 4)  // Todo: HACK Dimensions are: time, xy_space, hydro/bed-layer, sediment
-            {
-                if (mesh_var_name == text)
+                else
                 {
                     cb_3d->addItem(name, map[name]);
                 }
+            }
+            else if (dimension_count == 4)  // Todo: HACK Dimensions are: time, xy_space, hydro/bed-layer, sediment
+            {
+                cb_3d->addItem(name, map[name]);
             }
         }
     }
@@ -621,34 +626,31 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
 
     int status = 1;
     int row = 0;
-    struct _mesh1d_string ** m1d = _ugrid_file->get_mesh1d_string();
-    if (_ugrid_file->get_mesh1d_string() != nullptr)
+    struct _mesh_1d m1d = m_ugrid_file->get_mesh_1d();
+    if (m1d.name.size() != 0)
     {
         m_show_check_1d = check_parameter_1d();
         hl->addWidget(m_show_check_1d, row, 0);
-        QString txt = QString::fromStdString(m1d[0]->var_name);
-        m_cb_1d = create_parameter_selection_1d(txt);
+        m_cb_1d = create_parameter_selection_1d();
         hl->addWidget(m_cb_1d, row, 1);
     }
 
-    struct _mesh_contact_string ** m1d2d = _ugrid_file->get_mesh_contact_string();
-    if (_ugrid_file->get_mesh_contact_string() != nullptr)
+    struct _contacts  m1d2d = m_ugrid_file->get_mesh_contacts();
+    if (m1d2d.name.size() != 0)
     {
         row += 1;
         m_show_check_1d2d = check_parameter_1d2d();
         hl->addWidget(m_show_check_1d2d, row, 0);
-        QString txt = QString::fromStdString(m1d2d[0]->mesh_contact);
-        m_cb_1d2d = create_parameter_selection_1d2d(txt);
+        m_cb_1d2d = create_parameter_selection_1d2d();
         hl->addWidget(m_cb_1d2d, row, 1);
     }
 
-    struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
-    if (_ugrid_file->get_mesh2d_string() != nullptr)
+    struct _mesh_2d m2d = m_ugrid_file->get_mesh_2d();
+    if (m2d.name.size() != 0)
     {
-        QString txt = QString::fromStdString(m2d[0]->var_name);
         m_cb_2d = new QComboBox();
         m_cb_3d = new QComboBox();
-        status = create_parameter_selection_2d_3d(txt, m_cb_2d, m_cb_3d);
+        status = create_parameter_selection_2d_3d(m_cb_2d, m_cb_3d);
         if (m_cb_2d->count() != 0)
         {
             row += 1;
@@ -667,12 +669,12 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             // spinbox and layer selection
             QVariant j = m_cb_3d->itemData(0);
             int jj = j.toInt();
-            struct _variable * var = m_vars->variable[jj];
+            struct _variable_ugridapi * var = m_vars_2d[jj];
             if (var->nr_hydro_layers > 0)
             {
                 m_layerLabelPrefix = new QLabel(tr("Layer"));
                 m_layerLabelSuffix = new QLabel(tr("[0,0]"));
-                m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_hydro_layers - 1]));
+                m_layerLabelSuffix->setText(tr("z/sigma: %1"));  //.arg(var->layer_center[var->nr_hydro_layers - 1]));
                 m_sb_hydro_layer = spinbox_layer(var->nr_hydro_layers);
                 connect(m_sb_hydro_layer, SIGNAL(valueChanged(int)), this, SLOT(spinbox_value_changed(int)));
 
@@ -689,7 +691,7 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             {
                 m_layerLabelPrefix = new QLabel(tr("Layer"));
                 m_layerLabelSuffix = new QLabel();
-                m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[0]));
+                m_layerLabelSuffix->setText(tr("Bed layer: %1"));  // .arg(var->layer_center[0]));
                 m_sb_bed_layer = spinbox_layer(var->nr_bed_layers);
                 m_sb_bed_layer->setValue(1);
                 connect(m_sb_bed_layer, SIGNAL(valueChanged(int)), this, SLOT(spinbox_value_changed(int)));
@@ -718,13 +720,13 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
     int status = 1;
     int row = -1;
 
-    struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
-    if (m2d == nullptr) { return nullptr; }
+    struct _mesh_2d m2d = m_ugrid_file->get_mesh_2d();
+    if (m2d.name.size() == 0) { return nullptr; }
 
     m_cb_vec_2d = new QComboBox();
     m_cb_vec_3d = new QComboBox();
     m_cb_vec_2d->setMinimumSize(100, 22);
-    QString text = QString::fromStdString(m2d[0]->var_name);
+    QString text = QString::fromStdString(m2d.name);
     status = create_parameter_selection_vector_2d_3d(text, m_cb_vec_2d, m_cb_vec_3d);
     if (m_cb_vec_2d->count() == 0 && m_cb_vec_3d->count() == 0) { return nullptr;  }
 
@@ -750,10 +752,10 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
         // spinbox and layer selection
         QVariant j = m_cb_vec_3d->itemData(0);
         QStringList strings= j.toStringList();
-        struct _variable * var = m_vars->variable[strings[3].toInt()];
+        struct _variable_ugridapi * var = m_vars_2d[strings[3].toInt()];
         m_layerLabelPrefix_vec = new QLabel(tr("Layer"));
         m_layerLabelSuffix_vec = new QLabel(tr("[0,0]"));
-        m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_hydro_layers - 1]));
+        m_layerLabelSuffix_vec->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[var->nr_hydro_layers - 1]));
         m_sb_hydro_layer_vec = spinbox_layer(var->nr_hydro_layers);
         connect(m_sb_hydro_layer_vec, SIGNAL(valueChanged(int)), this, SLOT(spinbox_vec_value_changed(int)));
 
@@ -782,47 +784,51 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
     int vec_spherical_component_2dh = 0;
     int vec_cartesian_component = 0;
     int vec_spherical_component = 0;
-    QStringList cart_2dh;
-    QStringList cart_layer;
-    QStringList spher_2dh;
-    QStringList spher_layer;
-    cart_2dh << "" << "" << "" << "";  // JanM: Is there no smarter way to generate a list of 4 items
-    cart_layer << "" << "" << "" << "";
-    spher_2dh << "" << "" << "" << "";
-    spher_layer << "" << "" << "" << "";
+    QStringList cart_2dh{ "","","","" };
+    QStringList cart_layer{ "","","","" };
+    QStringList spher_2dh{ "","","","" };
+    QStringList spher_layer{ "","","","" };
 
     cb_vec_2d->setMinimumSize(100, 22);
     cb_vec_3d->setMinimumSize(100, 22);
 
     cb_vec_2d->blockSignals(true);
     cb_vec_3d->blockSignals(true);
-    for (int i = 0; i < m_vars->nr_vars; i++)
+    for (int i = 0; i < m_vars_2d.size(); i++)
     {
-        if (m_vars->variable[i]->time_series)
+        if (m_vars_2d[i]->time_series)
         {
+            int error_code;
             QMap<QString, int> map;
-            QString std_name = QString::fromStdString(m_vars->variable[i]->standard_name).trimmed();
+            std::string att_value;
+            int dimension_count;
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, m_vars_2d[i]->var_name, "standard_name", att_value);
+            QString std_name = QString::fromStdString(att_value).trimmed();
             if (std_name.isEmpty())
             {
-                std_name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();  // Todo: HACK for sediment, they do not have standard names
+                error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, m_vars_2d[i]->var_name, "long_name", att_value);
+                std_name = QString::fromStdString(att_value).trimmed();  // Todo: HACK for sediment, they do not have standard names
+
             }
             map[std_name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
-            if (m_vars->variable[i]->dims.size() == 2)  // Todo: HACK: assumed time, xy-space
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, m_vars_2d[i]->var_name, "mesh", att_value);
+            QString mesh_var_name = QString::fromStdString(att_value).trimmed();
+            error_code = ugridapi::ug_variable_count_dimensions(m_ugrid_file->m_ncid, m_vars_2d[i]->var_name, dimension_count);
+            if (dimension_count == 2)  // Todo: HACK: assumed time, xy-space
             {
                 if (mesh_var_name == text)
                 {
                     if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                     {
                         vec_cartesian_component_2dh += 1;
-                        if (std_name.contains("sea_water_x_velocity")) { cart_2dh[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                        if (std_name.contains("sea_water_y_velocity")) { cart_2dh[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                        if (std_name.contains("sea_water_x_velocity")) { cart_2dh[1] = QString::fromStdString(m_vars_2d[i]->var_name).trimmed(); }
+                        if (std_name.contains("sea_water_y_velocity")) { cart_2dh[2] = QString::fromStdString(m_vars_2d[i]->var_name).trimmed(); }
                     }
                     if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                     {
                         vec_spherical_component_2dh += 1;
-                        if (std_name.contains("eastward_sea_water_velocity")) { spher_2dh[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                        if (std_name.contains("northward_sea_water_velocity")) { spher_2dh[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                        if (std_name.contains("eastward_sea_water_velocity")) { spher_2dh[1] = QString::fromStdString(m_vars_2d[i]->var_name).trimmed(); }
+                        if (std_name.contains("northward_sea_water_velocity")) { spher_2dh[2] = QString::fromStdString(m_vars_2d[i]->var_name).trimmed(); }
                     }
                     if (vec_cartesian_component_2dh == 2 || vec_spherical_component_2dh == 2)
                     {
@@ -845,19 +851,19 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
                     }
                 }
             }
-            else if (m_vars->variable[i]->dims.size() == 3)  // Todo: HACK: assumed time, xy-space, layer
+            else if (dimension_count == 3)  // Todo: HACK: assumed time, xy-space, layer
             {
                 if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                 {
                     vec_cartesian_component += 1;
-                    if (std_name.contains("sea_water_x_velocity")) { cart_layer[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                    if (std_name.contains("sea_water_y_velocity")) { cart_layer[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                    if (std_name.contains("sea_water_x_velocity")) { cart_layer[1] = QString::fromStdString(m_vars_2d[i]->var_name).trimmed(); }
+                    if (std_name.contains("sea_water_y_velocity")) { cart_layer[2] = QString::fromStdString(m_vars_2d[i]->var_name).trimmed(); }
                 }
                 if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                 {
                     vec_spherical_component += 1;
-                    if (std_name.contains("eastward_sea_water_velocity")) { spher_layer[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                    if (std_name.contains("northward_sea_water_velocity")) { spher_layer[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                    if (std_name.contains("eastward_sea_water_velocity")) { spher_layer[1] = QString::fromStdString(m_vars_2d[i]->var_name).trimmed(); }
+                    if (std_name.contains("northward_sea_water_velocity")) { spher_layer[2] = QString::fromStdString(m_vars_2d[i]->var_name).trimmed(); }
                 }
                 if (vec_cartesian_component == 2 || vec_spherical_component == 2)
                 {
@@ -906,7 +912,7 @@ void MapTimeManagerWindow::start_reverse()
             break;
         }
         double msec = 1000.*m_property->get_refresh_time();
-        _sleep(msec);
+        SLEEP(msec);
     }
     if (_current_step <= first_date_time_indx)
     {
@@ -933,7 +939,7 @@ void MapTimeManagerWindow::start_forward()
             break;
         }
         double msec = 1000.*m_property->get_refresh_time();
-        _sleep(msec);
+        SLEEP(msec);
     }
     if (_current_step >= last_date_time_indx)
     {
@@ -1058,15 +1064,14 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
     {
         QVariant k = m_cb_1d->itemData(i);
         int kk = k.toInt();
-        struct _variable* var = m_vars->variable[kk];
-        var->draw = false;
+        m_vars_1d[kk]->draw = false;
     }
     _MyCanvas->empty_cache(CACHE_1D);
 
     QString str = m_cb_1d->itemText(item);
     QVariant j = m_cb_1d->itemData(item);
     int jj = j.toInt();
-    struct _variable* var = m_vars->variable[jj];
+    struct _variable_ugridapi* var = m_vars_1d[jj];
 
     _MyCanvas->reset_min_max();
     _MyCanvas->set_draw_vector(VECTOR_NONE);
@@ -1077,8 +1082,7 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
 
     if (!m_show_map_data_1d)
     {
-        QStringList coord;
-        coord << "";
+        QStringList coord{ "" };
         _MyCanvas->set_coordinate_type(coord);
         var->draw = false;
         return;
@@ -1100,15 +1104,14 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
     {
         QVariant k = m_cb_1d2d->itemData(i);
         int kk = k.toInt();
-        struct _variable* var = m_vars->variable[kk];
-        var->draw = false;
+        m_vars_1d2d[kk]->draw = false;
     }
     _MyCanvas->empty_cache(CACHE_1D2D);
 
     QString str = m_cb_1d2d->itemText(item);
     QVariant j = m_cb_1d2d->itemData(item);
     int jj = j.toInt();
-    struct _variable* var = m_vars->variable[jj];
+    struct _variable_ugridapi* var = m_vars_1d2d[jj];
 
     _MyCanvas->reset_min_max();
     _MyCanvas->set_draw_vector(VECTOR_NONE);
@@ -1133,7 +1136,7 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
-        draw_time_dependent_data(m_cb_1d2d, item);
+        draw_time_dependent_data_1d2d(m_cb_1d2d, item);
     }
 }
 void MapTimeManagerWindow::cb_clicked_2d(int item)
@@ -1142,15 +1145,14 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
     {
         QVariant k = m_cb_2d->itemData(i);
         int kk = k.toInt();
-        struct _variable* var = m_vars->variable[kk];
-        var->draw = false;
+        m_vars_2d[kk]->draw = false;
     }
     _MyCanvas->empty_caches();
 
     QString str = m_cb_2d->itemText(item);
     QVariant j = m_cb_2d->itemData(item);
     int jj = j.toInt();
-    struct _variable* var = m_vars->variable[jj];
+    struct _variable_ugridapi * var = m_vars_2d[jj];
 
     _MyCanvas->reset_min_max();
     _MyCanvas->set_draw_vector(VECTOR_NONE);
@@ -1161,8 +1163,8 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
 
     if (!m_show_map_data_2d)
     {
-        QStringList coord;
-        coord << "";
+        QStringList coord{ "" };
+        //coord << "";
         _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
         var->draw = false;
@@ -1175,7 +1177,7 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
-        draw_time_dependent_data(m_cb_2d, item);
+        draw_time_dependent_data_2d(m_cb_2d, item);
     }
 }
 void MapTimeManagerWindow::cb_clicked_3d(int item)
@@ -1184,8 +1186,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
     {
         QVariant k = m_cb_3d->itemData(i);
         int kk = k.toInt();
-        struct _variable* var = m_vars->variable[kk];
-        var->draw = false;
+        m_vars_2d[kk]->draw = false;
     }
     _MyCanvas->empty_caches();
 
@@ -1199,7 +1200,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
     QVariant j = m_cb_3d->itemData(item);
     int jj = j.toInt();
 
-    struct _variable * var = m_vars->variable[jj];
+    struct _variable_ugridapi * var = m_vars_2d[jj];
 
     if (var->nr_hydro_layers > 0)
     {
@@ -1209,7 +1210,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
             m_sb_hydro_layer->setValue(var->nr_hydro_layers);
         }
         int i_lay = m_sb_hydro_layer->value();
-        m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[i_lay - 1]));
     }
 
     if (var->nr_bed_layers > 0)
@@ -1220,7 +1221,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
             m_sb_bed_layer->setValue(var->nr_bed_layers);
         }
         int i_lay = m_sb_bed_layer->value();
-        m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("Bed layer: %1"));  // .arg(var->layer_center[i_lay - 1]));
     }
     
     _MyCanvas->reset_min_max();
@@ -1239,7 +1240,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
         if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
-        draw_time_dependent_data(m_cb_3d, item);
+        draw_time_dependent_data_2d(m_cb_3d, item);
     }
 }
 void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
@@ -1248,8 +1249,7 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
     {
         QVariant k = m_cb_vec_2d->itemData(i);
         int kk = k.toInt();
-        struct _variable* var = m_vars->variable[kk];
-        var->draw = false;
+        m_vars_2d[kk]->draw = false;
     }
     _MyCanvas->empty_caches();
 
@@ -1282,8 +1282,7 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
     {
         QVariant k = m_cb_vec_3d->itemData(i);
         int kk = k.toInt();
-        struct _variable* var = m_vars->variable[kk];
-        var->draw = false;
+        m_vars_2d[kk]->draw = false;
     }
     _MyCanvas->empty_caches();
 
@@ -1292,7 +1291,7 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
     QStringList slist = j.toStringList();
     int jj = slist[3].toInt();
 
-    struct _variable * var = m_vars->variable[jj];
+    struct _variable_ugridapi * var = m_vars_2d[jj];
 
     m_sb_hydro_layer_vec->setRange(1, var->nr_hydro_layers);
     if (m_sb_hydro_layer_vec->value() == 0)
@@ -1300,7 +1299,7 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
         m_sb_hydro_layer_vec->setValue(var->nr_hydro_layers);
     }
     int i_lay = m_sb_hydro_layer_vec->value();
-    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[i_lay - 1]));
 
     _MyCanvas->reset_min_max();
     if (!m_show_map_vector_3d)
@@ -1331,7 +1330,7 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
 
     _MyCanvas->set_current_step(i);
     _MyCanvas->set_determine_grid_size(true);
-    _MyCanvas->set_variables(m_vars);
+    _MyCanvas->set_variables(m_vars_2d);
     _MyCanvas->set_coordinate_type(coord);
 
     if (!str.contains("Depth Averaged"))
@@ -1354,17 +1353,94 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
     }
     _MyCanvas->set_draw_vector(m_vector_draw);
 }
-void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
+void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
 {
-    //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
+    int error_code{ -1 }; 
 
     QString str = cb->itemText(item);
     QVariant j = cb->itemData(item);
     int jj = j.toInt();
 
-    struct _variable * var = m_vars->variable[jj];
+    //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
+
+    struct _variable_ugridapi * var = m_vars_1d[jj];
     std::string var_name = var->var_name;
-    std::string location = var->location;
+    std::string location;
+    error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, var_name, "location", location);
+
+    // begin HACK edge vs contact
+    if (location == "edge" || location == "contact")
+    {
+        var->draw = true;;
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->draw_all();
+    }
+    else if (location == "face")
+    {
+        var->draw = true;;
+        //int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->draw_all();
+    }
+    else if (location == "node")
+    {
+        var->draw = true;;
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->draw_all();
+    }
+    else
+    {
+        QMessageBox::warning(0, tr("draw_time_dependent_data_1d"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+    }
+}
+void MapTimeManagerWindow::draw_time_dependent_data_1d2d(QComboBox* cb, int item)
+{
+    //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
+    int error_code{ -1 };
+
+    QString str = cb->itemText(item);
+    QVariant j = cb->itemData(item);
+    int jj = j.toInt();
+
+    struct _variable_ugridapi* var = m_vars_1d2d[jj];
+    std::string var_name = var->var_name;
+    std::string location;
+    error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, var_name, "location", location);
+
+    // begin HACK edge vs contact
+    if (location == "edge" || location == "contact")
+    {
+        var->draw = true;
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->draw_all();
+    }
+    else if (location == "node")
+    {
+        var->draw = true;
+        int i = _q_times.indexOf(curr_date_time->dateTime());
+        _MyCanvas->set_current_step(i);
+        _MyCanvas->draw_all();
+    }
+    else
+    {
+        QMessageBox::warning(0, tr("draw_time_dependent_data_1d2d"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+    }
+}
+void MapTimeManagerWindow::draw_time_dependent_data_2d(QComboBox* cb, int item)
+{
+    //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
+    int error_code{ -1 };
+
+    QString str = cb->itemText(item);
+    QVariant j = cb->itemData(item);
+    int jj = j.toInt();
+
+    struct _variable_ugridapi* var = m_vars_2d[jj];
+    std::string var_name = var->var_name;
+    std::string location;
+    error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, var_name, "location", location);
 
     // begin HACK edge vs contact
     if (location == "edge" || location == "contact")
@@ -1395,45 +1471,7 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
     }
     else
     {
-        QMessageBox::warning(0, tr("draw_time_dependent_data"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
-    }
-}
-void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
-{
-    QString str = cb->itemText(item);
-    QVariant j = cb->itemData(item);
-    int jj = j.toInt();
-
-    //QMessageBox::information(0, "MapTimeManagerWindow::cb_clicked", QString("Selected: %1\nQMap value: %2").arg(str).arg(jj));
-
-    struct _variable * var = m_vars->variable[jj];
-    std::string var_name = var->var_name;
-    std::string location = var->location;
-
-    // begin HACK edge vs contact
-    if (location == "edge" || location == "contact")
-    {
-        var->draw = true;;
-        int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->set_current_step(i);
-        _MyCanvas->draw_all();
-    }
-    else if (location == "face")
-    {
-        var->draw = true;;
-        //int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->draw_all();
-    }
-    else if (location == "node")
-    {
-        var->draw = true;;
-        int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->set_current_step(i);
-        _MyCanvas->draw_all();
-    }
-    else
-    {
-        QMessageBox::warning(0, tr("draw_time_dependent_data_1d"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
+        QMessageBox::warning(0, tr("draw_time_dependent_data_2d"), QString("Variable \"%1\" location \"%2\"").arg(var_name.c_str()).arg(location.c_str()));
     }
 }
 
@@ -1545,14 +1583,14 @@ void MapTimeManagerWindow::spinbox_value_changed(int i_lay)
     QVariant j = m_cb_3d->currentData();
     int jj = j.toInt();
 
-    struct _variable * var = m_vars->variable[jj];
+    struct _variable_ugridapi* var = m_vars_2d[jj];
     if (var->nr_hydro_layers > 0)
     {
-        m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[i_lay - 1]));
     }
     if (var->nr_bed_layers > 0)
     {
-        m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("Bed layer: %1"));  // .arg(var->layer_center[i_lay - 1]));
     }
     return;
 }
@@ -1563,8 +1601,8 @@ void MapTimeManagerWindow::spinbox_vec_value_changed(int i_lay)
     QStringList slist = j.toStringList();
     int jj = slist[3].toInt();
 
-    struct _variable * var = m_vars->variable[jj];
-    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+    struct _variable_ugridapi* var = m_vars_2d[jj];
+    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[i_lay - 1]));
     return;
 }
 void MapTimeManagerWindow::clicked_current_view()
@@ -1574,8 +1612,8 @@ void MapTimeManagerWindow::clicked_current_view()
     {
         if (m_show_map_data_1d)
         {
-            struct _mesh1d* mesh1d = _ugrid_file->get_mesh1d();
-            struct _mapping* mapping = _ugrid_file->get_grid_mapping();
+            struct _mesh_1d mesh1d = m_ugrid_file->get_mesh_1d();
+            struct _mapping* mapping = m_ugrid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("1D - yyyy-MM-dd, HH:mm:ss");
             int time_indx = _q_times.indexOf(curr_date_time->dateTime());
@@ -1584,23 +1622,27 @@ void MapTimeManagerWindow::clicked_current_view()
 
             QVariant j = m_cb_1d->currentData();
             int jj = j.toInt();
-            struct _variable* var = m_vars->variable[jj];
+            struct _variable_ugridapi* var = m_vars_2d[jj];
 
             DataValuesProvider2D<double> var_time = var->data_2d;
-            double* z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
-            if (var->location == "edge")
+            double * z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
+
+            int error_code;
+            std::string location;
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, var->var_name, "location", location);
+            if (location == "edge")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d->edge[0]->x, mesh1d->edge[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d.edge_x, mesh1d.edge_y, mapping->epsg);
             }
-            else if (var->location == "node")
+            else if (location == "node")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d->node[0]->x, mesh1d->node[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d.node_x, mesh1d.node_y, mapping->epsg);
             }
         }
         else if (m_show_map_data_2d)
         {
-            struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
-            struct _mapping * mapping = _ugrid_file->get_grid_mapping();
+            struct _mesh_2d mesh2d = m_ugrid_file->get_mesh_2d();
+            struct _mapping * mapping = m_ugrid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("2D - yyyy-MM-dd, HH:mm:ss");
             int time_indx = _q_times.indexOf(curr_date_time->dateTime());
@@ -1609,22 +1651,26 @@ void MapTimeManagerWindow::clicked_current_view()
 
             QVariant j = m_cb_2d->currentData();
             int jj = j.toInt();
-            struct _variable * var = m_vars->variable[jj];
+            struct _variable_ugridapi * var = m_vars_2d[jj];
             //struct _edge * edges = mesh2d->edge[0];
 
             DataValuesProvider2D<double> var_time = var->data_2d;
             double * z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
-            if (var->location == "edge")
+
+            int error_code;
+            std::string location;
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, var->var_name, "location", location);
+            if (location == "edge")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->edge[0]->x, mesh2d->edge[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d.edge_x, mesh2d.edge_y, mapping->epsg);
             }
-            else if (var->location == "face")
+            else if (location == "face")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->face[0]->x, mesh2d->face[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d.face_x, mesh2d.face_y, mapping->epsg);
             }
-            else if (var->location == "node")
+            else if (location == "node")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->node[0]->x, mesh2d->node[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d.node_x, mesh2d.node_y, mapping->epsg);
             }
         }
     }
