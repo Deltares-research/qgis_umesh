@@ -2544,6 +2544,7 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable * va
             }
             else
             {
+                /*
                 QgsColorRampShader * shader = new QgsColorRampShader();
                 QgsGraduatedSymbolRenderer * myRend = new QgsGraduatedSymbolRenderer("Value");
                 myRend->updateSymbols(marker);
@@ -2551,6 +2552,7 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable * va
                 QStringList list = ramp->listSchemeNames();
                 myRend->setSourceColorRamp(ramp);
                 vl->setRenderer(myRend);
+                */
             }
             vl->blockSignals(false);
 
@@ -2905,7 +2907,7 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
                 simple_marker->setSize(4.0);
                 simple_marker->setColor(QColor(1, 1, 1));  // 0,0,0 could have a special meaning
                 simple_marker->setFillColor(QColor(255, 255, 255));
-                simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
+                simple_marker->setShape(Qgis::MarkerShape::Star);
                 marker->changeSymbolLayer(0, simple_marker);
             }
 
@@ -4200,7 +4202,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRID * ugrid_file, J
     simple_marker->setSize(4.0);
     simple_marker->setColor(QColor(255, 0, 0));
     simple_marker->setFillColor(QColor(255, 255, 255));
-    simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
+    simple_marker->setShape(Qgis::MarkerShape::Star);
 
     QgsSymbol * marker = new QgsMarkerSymbol();
     marker->changeSymbolLayer(0, simple_marker);
@@ -4324,7 +4326,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRID * ugrid_fi
         simple_marker->setSize(4.0);
         simple_marker->setColor(QColor(255, 0, 0));
         simple_marker->setFillColor(QColor(255, 255, 255));
-        simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
+        simple_marker->setShape(Qgis::MarkerShape::Star);
         simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Observation point rotation")));
 
         QgsSymbol * marker = new QgsMarkerSymbol();
@@ -4420,7 +4422,7 @@ void qgis_umesh::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READE
     simple_marker->setSize(2.4);
     simple_marker->setColor(QColor(255, 0, 0));
     simple_marker->setFillColor(QColor(255, 255, 255));
-    simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Circle);
+    simple_marker->setShape(Qgis::MarkerShape::Circle);
 
     QgsSymbol * marker = new QgsMarkerSymbol();
     marker->changeSymbolLayer(0, simple_marker);
@@ -4555,7 +4557,7 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_f
         simple_marker->setSize(2.5);
         simple_marker->setColor(QColor(1, 0, 0));
         simple_marker->setFillColor(QColor(255, 0, 255));
-        simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Hexagon);
+        simple_marker->setShape(Qgis::MarkerShape::Hexagon);
 
         QgsSymbol* marker = new QgsMarkerSymbol();
         marker->changeSymbolLayer(0, simple_marker);
@@ -5660,7 +5662,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             simple_marker->setSize(4.0);
             simple_marker->setColor(QColor(0, 204, 0));
             simple_marker->setFillColor(QColor(0, 204, 0));
-            simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Diamond);
+            simple_marker->setShape(Qgis::MarkerShape::Diamond);
 
             QgsSymbol * marker = new QgsMarkerSymbol();
             marker->changeSymbolLayer(0, simple_marker);
