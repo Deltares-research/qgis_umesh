@@ -189,5 +189,4 @@ public:
         MapPropertyWindow * m_map_property_window;
         AddCurrentViewWindow * m_cur_view;
 };
-
 #endif

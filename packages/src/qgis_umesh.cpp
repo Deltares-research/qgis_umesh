@@ -596,8 +596,8 @@ void qgis_umesh::experiment()
     // Experiment: Time dependent data in the cell_area layer, whta is the performance draw back when using layers of QGIS
     QMessageBox::information(0, "Information", QString("qgis_umesh::experiment()\nExperiment."));
 
-    DataValues2D dv_2d;
-    DataValuesProvider2D<double> dvp_2d;
+    int error_code;
+    DataValuesProvider2<double> dvp2_face;
 
     QgsMapLayer * layer = mQGisIface->activeLayer();
     QgsVectorLayer *vlayer = (QgsVectorLayer*)layer;
@@ -613,10 +613,10 @@ void qgis_umesh::experiment()
     if (layer->name().contains("cell_area"))
     {
         QMessageBox::information(0, "Information", QString("qgis_umesh::experiment()\nExperiment: %1").arg(layer_name));
-        dvp_2d = ugrid_file->get_variable_values(layer_name.toStdString(), dv_2d);
-        double* z_value = dvp_2d.GetValueAtIndex(0, 0);
+        error_code = ugrid_file->get_var(layer_name.toStdString(), dvp2_face);
+        double* z_value = dvp2_face.get_timestep(0, 0);
         int z_value_size;
-        z_value_size = dvp_2d.m_numXY;
+        //z_value_size = dvp2_face.m_numXY;
 
         QgsVectorDataProvider * dp_vl = vlayer->dataProvider();
 
@@ -1736,8 +1736,9 @@ HISCF * qgis_umesh::get_active_his_cf_file(QString layer_id)
 //
 void qgis_umesh::activate_layers()
 {
-    DataValues2D dv_2d;
-    DataValuesProvider2D<double> dvp_2d;
+    DataValuesProvider2<double> dvp2_edge;
+    DataValuesProvider2<double> dvp2_face;
+    DataValuesProvider2<double> dvp2_node;
 
     struct _network_1d network;
     struct _mesh_1d mesh_1d;
@@ -1955,10 +1956,10 @@ void qgis_umesh::activate_layers()
                             QString var_name = QString::fromStdString(vars[i]->var_name).trimmed();
                             if (location == "edge" && topology_dimension == 2 && var_type == NC_DOUBLE)
                             {
-                                dvp_2d = ugrid_file->get_variable_values(vars[i]->var_name, dv_2d);
-                                double * z_value = dvp_2d.GetValueAtIndex(0, 0);
+                                error_code = ugrid_file->get_var(vars[i]->var_name, dvp2_edge);
+                                double* z_value = dvp2_edge.get_timestep(vars[i]->var_name, 0);  // xy_space
                                 create_vector_layer_data_on_edges_template(fname, vars[i], &mesh_2d, z_value, mapping->epsg, subTreeGroup);
-                                //dv->delete_data(vars[i]->var_name);
+                                dvp2_edge.erase(vars[i]->var_name);
                             }
                             if (location == "edge" && topology_dimension == 2 && var_type == NC_INT)
                             {
@@ -1966,43 +1967,45 @@ void qgis_umesh::activate_layers()
                                 subTreeGroup->addGroup(name1);
                                 QgsLayerTreeGroup * sGroup = treeGroup->findGroup(name1);
 
-                                dvp_2d = ugrid_file->get_variable_values(vars[i]->var_name, dv_2d);
-                                double* z_value = dvp_2d.GetValueAtIndex(0, 0);
+                                error_code = ugrid_file->get_var(vars[i]->var_name, dvp2_edge);
+                                double* z_value = dvp2_edge.get_timestep(vars[i]->var_name, 0);  // xy_space
                                 create_vector_layer_edge_type(fname, vars[i], &mesh_2d, z_value, mapping->epsg, sGroup);
-                                //dv->delete_data(vars[i]->var_name);
+                                dvp2_edge.erase(vars[i]->var_name);
                             }
                             if (location == "face" && topology_dimension == 2 && var_type == NC_DOUBLE)
                             {
                                 if (vars[i]->sediment_index == -1)
                                 {
-                                    dvp_2d = ugrid_file->get_variable_values(vars[i]->var_name, vars[i]->sediment_index, dv_2d);
-                                    double* z_value = dvp_2d.GetValueAtIndex(0, 0);
+                                    error_code = ugrid_file->get_var(vars[i]->var_name, dvp2_face);
+                                    double* z_value = dvp2_face.get_timestep(vars[i]->var_name, 0);  // xy_space
                                     create_vector_layer_data_on_nodes(fname, vars[i], &mesh_2d.face_x, &mesh_2d.face_y, z_value, mapping->epsg, subTreeGroup);
-                                    //dv->delete_data(vars[i]->var_name);
+                                    dvp2_face.erase(vars[i]->var_name);
                                 }
                                 else
                                 {
                                     QgsLayerTreeGroup * Group = get_subgroup(subTreeGroup, QString("Sediment"));
 
-                                    dvp_2d = ugrid_file->get_variable_values(vars[i]->var_name, vars[i]->sediment_index, dv_2d);
-                                    double* z_value = dvp_2d.GetValueAtIndex(vars[i]->sediment_index, 0);
+                                    error_code = ugrid_file->get_var(vars[i]->var_name, dvp2_face);
+                                    double* z_value = dvp2_face.get_timestep(vars[i]->var_name, 0);  // xy_space
                                     create_vector_layer_data_on_nodes(fname, vars[i], &mesh_2d.face_x, &mesh_2d.face_y, z_value, mapping->epsg, Group);
                                     Group->setExpanded(false);
+                                    dvp2_face.erase(vars[i]->var_name);
                                 }
                             }
                             if (location == "node" && topology_dimension == 2 && var_type == NC_DOUBLE)
                             {
-                                dvp_2d = ugrid_file->get_variable_values(vars[i]->var_name, dv_2d);
-                                double* z_value = dvp_2d.GetValueAtIndex(0, 0);
+                                error_code = ugrid_file->get_var(vars[i]->var_name, dvp2_node);
+                                double* z_value = dvp2_node.get_timestep(vars[i]->var_name, 0);  // xy_space
                                 create_vector_layer_data_on_nodes(fname, vars[i], &mesh_2d.node_x, &mesh_2d.node_y, z_value, mapping->epsg, subTreeGroup);
+                                dvp2_node.erase(vars[i]->var_name);
                             }
                             else if (location == "node" && topology_dimension == 1 && var_type == NC_DOUBLE)
                             {
-                                dvp_2d = ugrid_file->get_variable_values(vars[i]->var_name, dv_2d);
-                                double* z_value = dvp_2d.GetValueAtIndex(0, 0);
+                                error_code = ugrid_file->get_var(vars[i]->var_name, dvp2_node);
+                                double* z_value = dvp2_node.get_timestep(vars[i]->var_name, 0);  // xy_space
                                 create_vector_layer_data_on_nodes(fname, vars[i], &mesh_1d.node_x, &mesh_1d.node_y, z_value, mapping->epsg, subTreeGroup);
+                                dvp2_node.erase(vars[i]->var_name);
                             }
-
                         }
                     }
                     //cb->blockSignals(false);
@@ -2620,6 +2623,7 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable_ugri
             }
             else
             {
+                /*
                 QgsColorRampShader * shader = new QgsColorRampShader();
                 QgsGraduatedSymbolRenderer * myRend = new QgsGraduatedSymbolRenderer("Value");
                 myRend->updateSymbols(marker);
@@ -2627,6 +2631,7 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable_ugri
                 QStringList list = ramp->listSchemeNames();
                 myRend->setSourceColorRamp(ramp);
                 vl->setRenderer(myRend);
+                */
             }
             vl->blockSignals(false);
 
@@ -3105,7 +3110,7 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
                 simple_marker->setSize(4.0);
                 simple_marker->setColor(QColor(1, 1, 1));  // 0,0,0 could have a special meaning
                 simple_marker->setFillColor(QColor(255, 255, 255));
-                simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
+                simple_marker->setShape(Qgis::MarkerShape::Star);
                 marker->changeSymbolLayer(0, simple_marker);
             }
 
@@ -4369,7 +4374,7 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRIDAPI_WRAPPER * ug
     simple_marker->setSize(4.0);
     simple_marker->setColor(QColor(255, 0, 0));
     simple_marker->setFillColor(QColor(255, 255, 255));
-    simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
+    simple_marker->setShape(Qgis::MarkerShape::Star);
 
     QgsSymbol * marker = new QgsMarkerSymbol();
     marker->changeSymbolLayer(0, simple_marker);
@@ -4492,7 +4497,7 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRIDAPI_WRAPPER
         simple_marker->setSize(4.0);
         simple_marker->setColor(QColor(255, 0, 0));
         simple_marker->setFillColor(QColor(255, 255, 255));
-        simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Star);
+        simple_marker->setShape(Qgis::MarkerShape::Star);
         simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Observation point rotation")));
 
         QgsSymbol * marker = new QgsMarkerSymbol();
@@ -4588,7 +4593,7 @@ void qgis_umesh::create_vector_layer_sample_point(UGRIDAPI_WRAPPER * ugrid_file,
     simple_marker->setSize(2.4);
     simple_marker->setColor(QColor(255, 0, 0));
     simple_marker->setFillColor(QColor(255, 255, 255));
-    simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Circle);
+    simple_marker->setShape(Qgis::MarkerShape::Circle);
 
     QgsSymbol * marker = new QgsMarkerSymbol();
     marker->changeSymbolLayer(0, simple_marker);
@@ -4721,7 +4726,7 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRIDAPI_WRAPP
         simple_marker->setSize(2.5);
         simple_marker->setColor(QColor(1, 0, 0));
         simple_marker->setFillColor(QColor(255, 0, 255));
-        simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Hexagon);
+        simple_marker->setShape(Qgis::MarkerShape::Hexagon);
 
         QgsSymbol* marker = new QgsMarkerSymbol();
         marker->changeSymbolLayer(0, simple_marker);
@@ -5823,7 +5828,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRIDAPI_WRAPPER * ugri
             simple_marker->setSize(4.0);
             simple_marker->setColor(QColor(0, 204, 0));
             simple_marker->setFillColor(QColor(0, 204, 0));
-            simple_marker->setShape(QgsSimpleMarkerSymbolLayerBase::Diamond);
+            simple_marker->setShape(Qgis::MarkerShape::Diamond);
 
             QgsSymbol * marker = new QgsMarkerSymbol();
             marker->changeSymbolLayer(0, simple_marker);
@@ -6650,37 +6655,38 @@ QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
     return (QgisPlugin*) p; // tweede na selectie in plugin manager
 }
 
-QGISEXTERN QString const& name()
+QGISEXTERN const QString* name()
 {
     //QgsMessageLog::logMessage("::name()", "QGIS umesh", Qgis::Info, true);
-    return qgis_umesh::s_name; // derde vanuit QGIS
+    return &qgis_umesh::s_name; // derde vanuit QGIS
 }
 
-QGISEXTERN QString const& category(void)
+QGISEXTERN const QString* category()
 {
     //QgsMessageLog::logMessage("::category()", "QGIS umesh", Qgis::Info, true);
-    return qgis_umesh::s_category; //
+    return &qgis_umesh::s_category; //
 }
 
-QGISEXTERN QString const& description()
+QGISEXTERN const QString* description()
 {
     //QgsMessageLog::logMessage("::description()", "QGIS umesh", Qgis::Info, true);
-    return qgis_umesh::s_description; // tweede vanuit QGIS
+    return &qgis_umesh::s_description; // tweede vanuit QGIS
 }
 
-QGISEXTERN QString const& version()
+QGISEXTERN const QString* version()
 {
     //QgsMessageLog::logMessage("::version()", "QGIS umesh", Qgis::Info, true);
-    return qgis_umesh::s_plugin_version;
+    return &qgis_umesh::s_plugin_version;
 }
 
-QGISEXTERN QString const& icon() // derde vanuit QGIS
+//QGISEXTERN QString const& icon() // derde vanuit QGIS
+QGISEXTERN const QString* icon()
 {
     //QgsMessageLog::logMessage("::icon()", "QGIS umesh", Qgis::Info, true);
-    //QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
-    //QString q_icon_file = program_files + QString("/deltares/qgis_umesh/icons/qgis_umesh.png");
-    QString q_icon_file = QStringLiteral("C:/Program Files/deltares/qgis_umesh/icons/qgis_umesh.png");
-    return q_icon_file;
+    QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
+    QString q_icon_file = program_files + QString("/deltares/qgis_umesh/icons/qgis_umesh.png");
+    q_icon_file = QStringLiteral("C:/Program Files/deltares/qgis_umesh/icons/qgis_umesh.png");
+    return &q_icon_file;
 }
 // Delete ourself
 QGISEXTERN void unload(QgisPlugin* the_qgis_umesh_pointer)

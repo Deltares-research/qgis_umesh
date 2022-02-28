@@ -272,6 +272,10 @@ private:
     bool m_vscale_determined;
     double m_vec_length;
     vector_quantity m_vector_draw;
+
+    std::vector<double> m_vertex_x;
+    std::vector<double> m_vertex_y;
+
 };
 
 #endif  /* _INC_MyCanvas */

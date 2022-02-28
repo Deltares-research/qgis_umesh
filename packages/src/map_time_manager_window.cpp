@@ -1089,7 +1089,7 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
     }
     else
     {
-        if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
+        //if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         //if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
@@ -1122,8 +1122,7 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
 
     if (!m_show_map_data_1d2d)
     {
-        QStringList coord;
-        coord << "";
+        QStringList coord{ "" };
         _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
         var->draw = false;
@@ -1131,8 +1130,8 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
     }
     else
     {
-        if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
-        if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
+        //if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
+        //if (m_show_check_2d != nullptr) { m_show_check_2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
@@ -1147,7 +1146,7 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
         int kk = k.toInt();
         m_vars_2d[kk]->draw = false;
     }
-    _MyCanvas->empty_caches();
+    _MyCanvas->empty_cache(CACHE_2D);
 
     QString str = m_cb_2d->itemText(item);
     QVariant j = m_cb_2d->itemData(item);
@@ -1164,7 +1163,6 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
     if (!m_show_map_data_2d)
     {
         QStringList coord{ "" };
-        //coord << "";
         _MyCanvas->set_coordinate_type(coord);
         _MyCanvas->set_variable(nullptr);
         var->draw = false;
@@ -1173,7 +1171,7 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
     else
     {
         //if (m_show_check_1d != nullptr) { m_show_check_1d->setChecked(false); }
-        if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
+        //if (m_show_check_1d2d != nullptr) { m_show_check_1d2d->setChecked(false); }
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
@@ -1608,6 +1606,9 @@ void MapTimeManagerWindow::spinbox_vec_value_changed(int i_lay)
 void MapTimeManagerWindow::clicked_current_view()
 {
     //QMessageBox::information(0, "Information", "MapPropertyWindow::current_view()");
+    DataValuesProvider2<double> dvp2;
+    int error_code;
+
     if (AddCurrentViewWindow::get_count() == 0)  // create a window if it is not already there.
     {
         if (m_show_map_data_1d)
@@ -1616,7 +1617,7 @@ void MapTimeManagerWindow::clicked_current_view()
             struct _mapping* mapping = m_ugrid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("1D - yyyy-MM-dd, HH:mm:ss");
-            int time_indx = _q_times.indexOf(curr_date_time->dateTime());
+            int time_index = _q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_1d->currentText();
             QString quantity = date_time + "; " + text;
 
@@ -1624,10 +1625,9 @@ void MapTimeManagerWindow::clicked_current_view()
             int jj = j.toInt();
             struct _variable_ugridapi* var = m_vars_2d[jj];
 
-            DataValuesProvider2D<double> var_time = var->data_2d;
-            double * z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
+            error_code = m_ugrid_file->get_var(var->var_name, dvp2);
+            double * z_value = dvp2.get_timestep(var->var_name, time_index);  // xy_space
 
-            int error_code;
             std::string location;
             error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, var->var_name, "location", location);
             if (location == "edge")
@@ -1645,7 +1645,7 @@ void MapTimeManagerWindow::clicked_current_view()
             struct _mapping * mapping = m_ugrid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("2D - yyyy-MM-dd, HH:mm:ss");
-            int time_indx = _q_times.indexOf(curr_date_time->dateTime());
+            int time_index = _q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_2d->currentText();
             QString quantity = date_time + "; " + text;
 
@@ -1654,8 +1654,8 @@ void MapTimeManagerWindow::clicked_current_view()
             struct _variable_ugridapi * var = m_vars_2d[jj];
             //struct _edge * edges = mesh2d->edge[0];
 
-            DataValuesProvider2D<double> var_time = var->data_2d;
-            double * z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
+            error_code = m_ugrid_file->get_var(var->var_name, dvp2);
+            double * z_value = dvp2.get_timestep(var->var_name, time_index);  // xy_space
 
             int error_code;
             std::string location;
