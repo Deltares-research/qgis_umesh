@@ -146,9 +146,6 @@ void MyCanvas::draw_data_at_face()
     double missing_value = std::numeric_limits<double>::quiet_NaN();
 
     std::vector<_variable_ugridapi*> vars = m_ugrid_file->get_variables();
-    DataValuesProvider2<double> dvp2_face;
-    DataValuesProvider3<double> dvp3_face;
-    DataValuesProvider4<double> dvp4_face;
 
     double * m_z_value;
 
@@ -260,9 +257,6 @@ void MyCanvas::draw_vector_arrow_at_face()
 {
     if (m_vector_draw != VECTOR_ARROW) { return; }
     if (m_ugrid_file == nullptr) { return; }
-
-    DataValuesProvider2<double> dvp2_face;
-    DataValuesProvider3<double> dvp3_face;
 
     struct _mesh_2d m2d_string = m_ugrid_file->get_mesh_2d();
     struct _mesh_2d mesh2d = m_ugrid_file->get_mesh_2d();
@@ -540,9 +534,6 @@ void MyCanvas::draw_vector_direction_at_face()
     if (m_vector_draw != VECTOR_DIRECTION) { return; }
     if (m_ugrid_file == nullptr) { return; }
 
-    DataValuesProvider2<double> dvp2_face;
-    DataValuesProvider3<double> dvp3_face;
-
     struct _mesh_2d mesh2d = m_ugrid_file->get_mesh_2d();
     if (mesh2d.name.size() != 0)
     {
@@ -665,9 +656,6 @@ void MyCanvas::draw_data_at_edge()  // data is drawn as dot
 {
     if (m_ugrid_file == nullptr) { return; }
 
-    DataValuesProvider2<double> dvp2_edge;
-    DataValuesProvider3<double> dvp3_edge;
-
     int error_code;
     int dimension_count;
     std::string tmp_value;
@@ -785,9 +773,6 @@ void MyCanvas::draw_data_at_edge()  // data is drawn as dot
 void MyCanvas::draw_line_at_edge()
 {
     if (m_ugrid_file == nullptr) { return; }
-
-    DataValuesProvider2<double> dvp2_edge;
-    DataValuesProvider3<double> dvp3_edge;
 
     int dimension_count;
     int error_code;
@@ -921,8 +906,6 @@ void MyCanvas::draw_line_at_edge()
 void MyCanvas::draw_data_along_edge()
 {
     if (m_ugrid_file == nullptr) { return; }
-
-    DataValuesProvider2<double> dvp2_node;
 
     int error_code;
     int dimension_count;

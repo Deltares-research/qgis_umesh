@@ -885,7 +885,7 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, int array_index, DataV
         return 0;
     }
 
-    START_TIMERN(read_variable);
+    START_TIMERN(read_variable_dvp2);
 #ifdef NATIVE_C
 #else
     m_pgBar->setValue(0);
@@ -974,7 +974,7 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, int array_index, DataV
     m_pgBar->setValue(1000);
     m_pgBar->hide();
 #endif
-    STOP_TIMER(read_variable);
+    STOP_TIMER(read_variable_dvp2);
     return error_code;
 }
 
@@ -1007,7 +1007,7 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider3<do
     {
         return 0;
     }
-    START_TIMERN(read_variable);
+    START_TIMERN(read_variable_dvp3);
 #ifdef NATIVE_C
 #else
     m_pgBar->show();
@@ -1097,6 +1097,7 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider3<do
         m_pgBar->hide();
 #endif
     }
+    STOP_TIMER(read_variable_dvp3);
     return error_code;
 }
 //------------------------------------------------------------------------------
@@ -1122,7 +1123,7 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider4<do
     {
         return 0;
     }
-    START_TIMERN(read_variable);
+    START_TIMERN(read_variable_dvp4);
 
 #ifdef NATIVE_C
 #else
@@ -1233,6 +1234,7 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider4<do
         m_pgBar->hide();
 #endif
     }
+    STOP_TIMER(read_variable_dvp4);
     return 0;  // if read, skip all remaining variables
 }
 //------------------------------------------------------------------------------

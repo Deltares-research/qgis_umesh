@@ -60,7 +60,6 @@ struct DataValuesProvider2
 
 private:
     std::map<std::string, std::vector<T>> m_data;
-    std::vector<T> m_array;
     int m_count_times = 0;
     int m_count_xy = 0;
 
@@ -148,18 +147,18 @@ struct DataValuesProvider4
     {
     }
 
-    int set_dimensions(int count_times, int count_layer, int numSed, int count_xy)
+    int set_dimensions(int count_times, int count_layer, int count_sed, int count_xy)
     {
         int status = 1;  // default error status
-        if (m_count_times == 0 && m_count_layer == 0 && m_count_xy == 0)
+        if (m_count_times == 0 && m_count_layer == 0 && m_count_sed == 0  && m_count_xy == 0)
         {
             m_count_times = count_times;
             m_count_layer = count_layer;
-            int m_numSed = 0;
+            m_count_sed = count_sed;
             m_count_xy = count_xy;
             status = 0;
         }
-        if (m_count_times == count_times && m_count_layer == count_layer && m_count_xy == count_xy)
+        if (m_count_times == count_times && m_count_layer == count_layer && m_count_sed == count_sed && m_count_xy == count_xy)
         {
             status = 0;
         }
@@ -199,7 +198,7 @@ private:
     std::map<std::string, std::vector<T>> m_data;
     int m_count_times = 0;
     int m_count_layer = 0;
-    int m_numSed = 0;
+    int m_count_sed = 0;
     int m_count_xy = 0;
 
     inline int GetIndex(int timeIndex, int layerIndex, int sedIndex, int xyIndex)

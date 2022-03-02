@@ -11,7 +11,7 @@
 #include <chrono>
 #include <iterator>
 
-#define DO_TIMING 1
+#define DO_TIMING 0
 #if DO_TIMING == 1
 #   define TOSTRING(x) #x
 #   define START_TIMER(x) tt = TestTimer::get_instance(); tt->start(TOSTRING(x), __FILE__, __FUNCTION__, __LINE__);

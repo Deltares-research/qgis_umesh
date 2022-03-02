@@ -276,6 +276,14 @@ private:
     std::vector<double> m_vertex_x;
     std::vector<double> m_vertex_y;
 
+    DataValuesProvider2<double> dvp2_edge;
+    DataValuesProvider3<double> dvp3_edge;
+
+    DataValuesProvider2<double> dvp2_face;
+    DataValuesProvider3<double> dvp3_face;
+    DataValuesProvider4<double> dvp4_face;
+
+    DataValuesProvider2<double> dvp2_node;
 };
 
 #endif  /* _INC_MyCanvas */
