@@ -284,6 +284,7 @@ void MyCanvas::draw_vector_arrow_at_face()
         if (!m_vscale_determined)
         {
             struct _variable_ugridapi* cell_area = m_ugrid_file->get_var_by_std_name(vars, mesh2d.name, "cell_area");
+            cell_area->read = false;
             error_code = ugridapi::ug_variable_count_dimensions(m_ugrid_file->m_ncid, cell_area->var_name, dimension_count);
 
             if (dimension_count == 0) { return; }
@@ -518,7 +519,6 @@ void MyCanvas::draw_vector_arrow_at_face()
             this->drawText(coord_x[0], coord_y[0] + (5 + th) * pix_dy, 0, 0, text.c_str());
 
             this->drawPolyline(coord_x, coord_y);
-
             this->finishDrawing();
         }
         //else if (m_coordinate_type[0] == "Spherical")
@@ -1064,16 +1064,19 @@ void MyCanvas::determine_min_max(double * z, int length, double * z_min, double 
 
 double MyCanvas::statistics_averaged_length_of_cell(struct _variable_ugridapi * var)
 {
+    int error_code;
     double avg_cell_area;
-   // double* area = var->data_2d.get(0, 0);
-    //int length = var->data_2d.m_numXY;
+
+    error_code = m_ugrid_file->get_var(var->var_name, dvp2_face);
+    double* area = dvp2_face.get_timestep(var->var_name, 0);  // xy_space
+    int length = dvp2_face.get_xy_count();
 
     avg_cell_area = 0.0;
-    // (int i = 0; i < length; i++)
+    for (int i = 0; i < length; i++)
     {
-        //avg_cell_area += area[i];
+        avg_cell_area += area[i];
     }
-    //avg_cell_area /= length;
+    avg_cell_area /= length;
     return std::sqrt(avg_cell_area);
 }
 //-----------------------------------------------------------------------------
