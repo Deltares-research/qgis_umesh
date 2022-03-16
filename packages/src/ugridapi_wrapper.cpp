@@ -441,6 +441,7 @@ long UGRIDAPI_WRAPPER::read_mesh_2d()
                 if (m_dim_names[i] == tmp_str)
                 {
                     m_mesh_2d.num_layers = m_map_dim[tmp_str];
+                    break;
                 }
             }
         }
@@ -452,6 +453,8 @@ long UGRIDAPI_WRAPPER::read_mesh_2d()
         m_mesh_2d.edge_node.resize(m_mesh_2d.num_edges * 2);
         m_mesh_2d.edge_length.resize(m_mesh_2d.num_edges);
         m_mesh_2d.face_node.resize(m_mesh_2d.num_faces * m_mesh_2d.num_face_nodes_max); // needed for drawing patches of a face
+
+        m_mesh_2d.layer_zs.resize(m_mesh_2d.num_layers);
 
         error_code = ug_mesh2d_get(m_ncid, 0, m_mesh_2d);
 

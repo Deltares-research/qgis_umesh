@@ -758,7 +758,7 @@ void MyCanvas::draw_data_at_edge()  // data is drawn as dot
                     edge_x.push_back(0.5 * (x1 + x2));
                     edge_y.push_back(0.5 * (y1 + y2));
                 }
-                this->startDrawing(CACHE_2D);
+                this->startDrawing(CACHE_1D2D);
             }
 
             double opacity = mCache_painter->opacity();
@@ -1028,38 +1028,20 @@ void MyCanvas::setUgridFile(UGRIDAPI_WRAPPER * ugrid_file)
 //-----------------------------------------------------------------------------
 void MyCanvas::determine_min_max(double * z, int length, double * z_min, double * z_max, vector<QColor> &rgb_color, double missing_value)
 {
-    if (m_property->get_dynamic_legend())
+    determine_min_max(z, length, z_min, z_max, missing_value);
+    for (int i = 0; i < length; i++)
     {
-        for (int i = 0; i < length; i++)
+        if (z[i] != missing_value)
         {
-            if (z[i] != missing_value)
-            {
-                *z_min = min(*z_min, z[i]);
-                *z_max = max(*z_max, z[i]);
-                rgb_color[i] = m_ramph->getRgbFromValue(z[i]);
-            }
-            else
-            {
-                rgb_color[i] = qRgba(255, 0, 0, 255);
-            }
+            rgb_color[i] = m_ramph->getRgbFromValue(z[i]);
         }
-        m_property->set_minimum(*z_min);
-        m_property->set_maximum(*z_max);
     }
-    else
-    {
-        *z_min = m_property->get_minimum();
-        *z_max = m_property->get_maximum();
-    }
-    m_ramph->setMinMax(*z_min, *z_max);
     m_ramph->update();
 }
 void MyCanvas::determine_min_max(double * z, int length, double * z_min, double * z_max, double missing_value)
 {
     if (m_property->get_dynamic_legend())
     {
-        *z_min = INFINITY;
-        *z_max = -INFINITY;
         for (int i = 0; i < length; i++)
         {
             if (z[i] != missing_value)

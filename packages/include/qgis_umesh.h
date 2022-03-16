@@ -28,6 +28,7 @@
 #include <QFileDialog>
 
 #include <qgsapplication.h>
+#include <qgscolorramp.h>
 #include <qgsgeometry.h>
 #include <qgslayertree.h>
 #include <qgslayertreegroup.h>
