@@ -16,8 +16,12 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QHBoxLayout>
 #include <QtGui/QPainter>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
 
 #include <iostream>
+#include <cmath>
 
 // -----------------------------------------------------------
 // QColorRampEditor ------------------------------------------
@@ -216,9 +220,19 @@ protected slots:
     // detect a mouse is released
     virtual void mouseDoubleClickEvent(QMouseEvent* e);
 
+    void clicked_ok();
+    void clicked_apply();
+    void clicked_cancel();
+
 protected:
     // the active slider
     int activeSlider_;
+
+    QWidget* m_change_ramp_value;
+    QLineEdit* m_line_edit;
+    QPushButton* m_pb_apply;
+    QPushButton* m_pb_ok;
+    QPushButton* m_pb_cancel;
 };
 
 class QSliderTextWidget : public QWidget
