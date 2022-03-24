@@ -403,6 +403,7 @@ void QColorRampEditor::mousePressEvent(QMouseEvent* e)
                 sl->show();
                 std::sort(sliders_.begin(), sliders_.end(), QColorRampEditor::SliderSort);
                 updateRamp();
+                rampChanged();  // Direct na toevoegen van indicator bijwerken van kleuren
             }
         }
         else
@@ -417,6 +418,7 @@ void QColorRampEditor::mousePressEvent(QMouseEvent* e)
                 sl->show();
                 std::sort(sliders_.begin(), sliders_.end(), QColorRampEditor::SliderSort);
                 updateRamp();
+                rampChanged();  // Direct na toevoegen van indicator bijwerken van kleuren
             }
         }
     }
@@ -426,7 +428,6 @@ void QColorRampEditor::updateRamp()
 {
     rampwid_->update();
     if (textwid_->isVisible()) textwid_->update();
-    //emit rampChanged();
 }
 // -----------------------------------------------------------
 void QColorRampEditor::msg()
@@ -529,7 +530,7 @@ void QSlidersWidget::mouseMoveEvent(QMouseEvent* e)
             rampeditor_->removeSliderPointer(activeSlider_);
             activeSlider_ = -1;
             rampeditor_->updateRamp();
-            emit rampeditor_->rampChanged();
+            //janm emit rampeditor_->rampChanged();
         }
         else
         {
@@ -541,6 +542,7 @@ void QSlidersWidget::mouseMoveEvent(QMouseEvent* e)
             rampeditor_->updateValue(rampeditor_->sliders_[activeSlider_], activeSlider_);
             std::sort(rampeditor_->sliders_.begin(), rampeditor_->sliders_.end(), QColorRampEditor::SliderSort);
             if (rampeditor_->slideUpdate_) rampeditor_->updateRamp();
+            //janm emit rampeditor_->rampChanged(); Deze vertraagd het verplaatsen van de indicatoren
         }
         update();
     }
@@ -550,10 +552,61 @@ void QSlidersWidget::mouseReleaseEvent(QMouseEvent* e)
 {
     if (e->button() == Qt::LeftButton)
     {
-        //int pos = e->pos().x();
         activeSlider_ = -1;
         rampeditor_->updateRamp();
-        emit rampeditor_->rampChanged();
+        emit rampeditor_->rampChanged();  // Nodig om bij loslaten linker button de kleuren aan te passen
+    }
+    else if (e->button() == Qt::RightButton)
+
+
+    {
+        if (rampeditor_->sliders_.size() < 2) return;
+        bool found = false;
+        for (int i = 1; i < rampeditor_->sliders_.size() - 1; i++)
+        {
+            QRect srec = rampeditor_->sliders_[i]->geometry();
+            if (srec.contains(e->pos(), true))
+            {
+                activeSlider_ = i;
+                found = true;
+                break;
+            }
+        }
+        if (!found) { return; }
+        QGradientStops ramp_stops = rampeditor_->getRamp();
+
+        m_change_ramp_value = new QWidget();
+        m_change_ramp_value->setWindowTitle("Janm");
+
+        QVBoxLayout* vl= new QVBoxLayout();
+        QHBoxLayout* hl_edit = new QHBoxLayout();
+        QLabel* label = new QLabel();
+        label->setText("Value");
+        hl_edit->addWidget(label);
+
+        m_line_edit = new QLineEdit();
+        QString text = QString("%1").arg(ramp_stops[activeSlider_].first);
+        m_line_edit->setText(text);
+        hl_edit->addWidget(m_line_edit);
+
+        vl->addLayout(hl_edit);
+        QHBoxLayout* hl_pb = new QHBoxLayout();
+        m_pb_apply = new QPushButton("Apply");
+        m_pb_ok = new QPushButton("OK");
+        m_pb_cancel = new QPushButton("Cancel");
+        hl_pb->addStretch();
+        //hl_pb->addWidget(m_pb_apply);
+        hl_pb->addWidget(m_pb_ok);
+        hl_pb->addWidget(m_pb_cancel);
+        vl->addLayout(hl_pb);
+        m_change_ramp_value->setLayout(vl);
+
+        m_change_ramp_value->show();
+
+        connect(m_pb_apply, &QPushButton::clicked, this, &QSlidersWidget::clicked_apply);
+        connect(m_pb_ok, &QPushButton::clicked, this, &QSlidersWidget::clicked_ok);
+        connect(m_pb_cancel, &QPushButton::clicked, this, &QSlidersWidget::clicked_cancel);
+
     }
 }
 // -----------------------------------------------------------
@@ -582,13 +635,40 @@ void QSlidersWidget::mouseDoubleClickEvent(QMouseEvent* e)
                     rampeditor_->sliders_[index]->setColor(rampeditor_->chooser_->selectedColor());
                     rampeditor_->norm_ramp[index].second = rampeditor_->chooser_->selectedColor();
                     rampeditor_->updateRamp();
-                    rampeditor_->rampChanged();
+                    emit rampeditor_->rampChanged();
                 }
             }
         }
     }
 }
+void QSlidersWidget::clicked_apply()
+{
+    QRect crec = contentsRect();
 
+    double val = m_line_edit->text().toDouble();
+    rampeditor_->sliders_[activeSlider_]->val = val;
+
+    double alpha = (val - rampeditor_->mi_) / (rampeditor_->ma_ - rampeditor_->mi_);
+    rampeditor_->sliders_[activeSlider_]->move(crec.x() + double(crec.width()) * alpha, 0);
+    rampeditor_->ramp[activeSlider_].first = val;
+    rampeditor_->norm_ramp[activeSlider_].first = alpha;
+    qSort(rampeditor_->sliders_.begin(), rampeditor_->sliders_.end(), QColorRampEditor::SliderSort);
+    rampeditor_->updateRamp();
+
+    //janm emit rampeditor_->rampChanged();
+    return;
+}
+void QSlidersWidget::clicked_ok()
+{
+    this->clicked_apply();
+    m_change_ramp_value->close();
+    return;
+}
+void QSlidersWidget::clicked_cancel()
+{
+    m_change_ramp_value->close();
+    return;
+}
 
 // -----------------------------------------------------------
 // QColorRampEditorSlider ------------------------------------

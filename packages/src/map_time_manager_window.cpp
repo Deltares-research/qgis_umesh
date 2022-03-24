@@ -62,17 +62,26 @@ void MapTimeManagerWindow::ramp_changed()
 void MapTimeManagerWindow::contextMenu(const QPoint & point)
 {
     Q_UNUSED(point);
-    //QMessageBox::information(0, "Information", "MapTimeManagerWindow::contextMenu()");
-    if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
+    QRect crec = m_ramph->geometry();
+    QPoint p1 = m_ramph->parentWidget()->mapFromGlobal(QCursor::pos());
+    if (crec.contains(p1)) // test mouse is in ramp
     {
-        m_map_property_window = new MapPropertyWindow(_MyCanvas);
+        // the mouse release event will be catched by the QCOlorRampEditor
     }
-    m_map_property_window->set_dynamic_limits_enabled(true);
-    if (m_vector_draw == VECTOR_DIRECTION)
-    {
-        // set ramp limits en/disabled
-        m_map_property_window->set_dynamic_limits_enabled(false);
+    else
+    {  // not in ramp
+        if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
+        {
+            m_map_property_window = new MapPropertyWindow(_MyCanvas);
+        }
+        m_map_property_window->set_dynamic_limits_enabled(true);
+        if (m_vector_draw == VECTOR_DIRECTION)
+        {
+            // set ramp limits en/disabled
+            m_map_property_window->set_dynamic_limits_enabled(false);
+        }
     }
+
 }
 //
 //-----------------------------------------------------------------------------
