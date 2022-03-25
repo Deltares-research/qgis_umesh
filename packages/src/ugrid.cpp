@@ -2479,7 +2479,10 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
                 status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, mesh2d_edge_nodes);
 
                 // get the branch length
-                m_mesh2d->edge[nr_mesh2d - 1]->edge_length = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
+                if (m_mesh2d_strings[nr_mesh2d - 1]->edge_length.size() != 0)
+                {
+                    m_mesh2d->edge[nr_mesh2d - 1]->edge_length = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
+                }
 
                 status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
                 if (status == NC_NOERR)
