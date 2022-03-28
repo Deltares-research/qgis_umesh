@@ -40,6 +40,7 @@
 \endfoot 
 \bottomline 
 \endlastfoot 
+0.15.00  &  - Set support point value(s) of colorramp in \window{Map Output Animation} window.  \\
 0.14.00  &  - Improved performance, no debug information anymore in release mode  \\
 0.13.00  &  - Showing 1D and 2D results at the same time if they are in one map-file.  \\
 		 &  - Drawing 1D2D contact mesh \\
@@ -105,6 +106,16 @@ After selecting \menu{Output\menuarrow Show map output} the window \window{Map O
     \caption{\window{Map Output Animation} window for scalars and vector.}
 	% file used for this picture: agulhas_map.nc
 \end{figure}
+
+After pressing the right mouse button in this window, the window \window{Map Output Settings} will appear (see  \autoref{sec:map_output_settings} and \autoref{fig:map_output_settings}).
+
+After pressing the right mouse button on a square of the colorramp support point the window \window{Set Colorramp Value} appear. 
+With this window you are able to change the value of the colorramp support points (see \autoref{fig:set_colorramp_value.p}).
+\begin{figure}[H]
+	\centering    
+	\includegraphics[width=0.80\textwidth]{pictures/set_colorramp_value.png}
+	\caption{Window \window{Set Colorramp Value}\label{fig:currentviewlayerpanel}}
+\end{figure}
 %------------------------------------------------------------------------------
 \subparagraph*{Add current view to QGIS layer panel}
 \Note This button is only enabled for scalar quantities.
@@ -129,7 +140,7 @@ Select from the menubar of the \plotcfts program menu option \menu{Help \menuarr
     \caption{Main window of the \plotcfts program.\label{fig:plotcfts_main}}
 \end{figure}
 %--------------------------------------------------------------------------------
-\subsection{Settings}
+\subsection{Map output settings\label{sec:map_output_settings}}
 Settings for the presentation of scalars and vectors.
 \begin{figure}[H]
     \centering    

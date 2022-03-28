@@ -575,8 +575,8 @@ void QSlidersWidget::mouseReleaseEvent(QMouseEvent* e)
         QGradientStops ramp_stops = rampeditor_->getRamp();
 
         m_change_ramp_value = new QWidget();
-        m_change_ramp_value->setWindowTitle("Janm");
-
+        m_change_ramp_value->setWindowTitle("Set colorramp value");
+        m_change_ramp_value->setWindowFlags(Qt::SubWindow);
         QVBoxLayout* vl= new QVBoxLayout();
         QHBoxLayout* hl_edit = new QHBoxLayout();
         QLabel* label = new QLabel();
@@ -599,6 +599,8 @@ void QSlidersWidget::mouseReleaseEvent(QMouseEvent* e)
         hl_pb->addWidget(m_pb_cancel);
         vl->addLayout(hl_pb);
         m_change_ramp_value->setLayout(vl);
+
+        m_change_ramp_value->setGeometry(QCursor::pos().x()+20, QCursor::pos().y() - 150, 250, 50);
 
         m_change_ramp_value->show();
 
