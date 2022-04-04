@@ -36,6 +36,7 @@ struct _observation {
 
 struct _location {
     QString name;  // needed QString due to using the QTextCode
+    QVector<QString> time;  // straight from the netCDF file
     std::vector<double> x;
     std::vector<double> y;
 };
@@ -48,8 +49,10 @@ struct _location_type {
     long ndim;
     std::vector<int> node_count;
     std::vector<_location> location;
-    std::string x_location_name;
-    std::string y_location_name;
+    std::string x_location_string;
+    std::string y_location_string;
+    std::string x_geom_location_string;
+    std::string y_geom_location_string;
 };
 
 class HISCF

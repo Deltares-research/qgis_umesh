@@ -2887,8 +2887,8 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name,
             QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
             if (layer_name == QString("Mesh2D edges"))
             {
-                line_marker->setWidth(0.25);
-                line_marker->setColor(QColor(0, 170, 255));
+                line_marker->setWidth(0.05);
+                line_marker->setColor(QColor(0, 0, 1));
             }
             else if (layer_name == QString("Mesh contact edges"))
             {
@@ -3059,6 +3059,7 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
             lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
+            QVector<QVariant> attribute;
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
             vl->blockSignals(true);
@@ -3069,27 +3070,21 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
             vl->updatedFields();
 
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(obs_points->location.size());
             int nsig = long(log10(obs_points->location.size())) + 1;
             for (int j = 0; j < obs_points->location.size(); j++)
             {
-                //QMessageBox::warning(0, tr("Warning"), tr("Count: %1, %5\nCoord: (%2,%3)\nName : %4\nLong name: %5").arg(ntw_nodes->nodes[i]->count).arg(ntw_nodes->nodes[i]->x[j]).arg(ntw_nodes->nodes[i]->y[j]).arg(ntw_nodes->nodes[i]->id[j]).arg(ntw_nodes->nodes[i]->name[j]));
-
-                QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(obs_points->location[j].x[0], obs_points->location[j].y[0]));
+                attribute.clear();
                 QgsFeature MyFeature;
+                QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(obs_points->location[j].x[0], obs_points->location[j].y[0]));
                 MyFeature.setGeometry(MyPoints);
-
                 MyFeature.initAttributes(nr_attrib_fields);
-                int k = -1;
                 if (obs_points->location[j].name != nullptr)
                 {
-                    k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString(obs_points->location[j].name).trimmed()));
+                    attribute.append(QString("%1").arg(QString(obs_points->location[j].name).trimmed()));
                 }
-                k++;
-                MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                k++;
-                MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
+                attribute.append(QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                attribute.append(QString("1:%1").arg(j + 1));
+                MyFeature.setAttributes(attribute);
                 MyFeatures.append(MyFeature);
             }
             dp_vl->addFeatures(MyFeatures);

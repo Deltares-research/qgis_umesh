@@ -307,8 +307,8 @@ long HISCF::read_locations()
                         loc.name = janm;
                         loc_type[i_par_loc]->location.push_back(loc);
                     }
-                    loc_type[i_par_loc]->x_location_name = std::string("---");
-                    loc_type[i_par_loc]->y_location_name = std::string("---");
+                    loc_type[i_par_loc]->x_geom_location_string = std::string("---");
+                    loc_type[i_par_loc]->y_geom_location_string = std::string("---");
                     free(location_strings);
                 }
                 else if (nc_type == NC_CHAR)
@@ -325,8 +325,8 @@ long HISCF::read_locations()
                         loc.name = janm;
                         loc_type[i_par_loc]->location.push_back(loc);
                     }
-                    loc_type[i_par_loc]->x_location_name = std::string("---");
-                    loc_type[i_par_loc]->y_location_name = std::string("---");
+                    loc_type[i_par_loc]->x_geom_location_string = std::string("---");
+                    loc_type[i_par_loc]->y_geom_location_string = std::string("---");
                     free(janm);
                     free(location_chars);
                 }
@@ -442,14 +442,27 @@ long HISCF::read_parameters()
                             status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
                             if (att_value == "projection_x_coordinate" || att_value == "longitude")
                             {
-                                loc_type[j]->x_location_name = token_geom[i];
+                                loc_type[j]->x_geom_location_string = token_geom[i];
                             }
                             if (att_value == "projection_y_coordinate" || att_value == "latitude")
                             {
-                                loc_type[j]->y_location_name = token_geom[i];
+                                loc_type[j]->y_geom_location_string = token_geom[i];
                             }
                         }
-
+                        for (int i = 0; i < token.size(); i++)  // tokens from the coordinates attribute of a quantity (i.e. water level)
+                        {
+                            int var_id = -1;
+                            status = nc_inq_varid(this->m_ncid, token[i].c_str(), &var_id);
+                            status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
+                            if (att_value == "projection_x_coordinate" || att_value == "longitude")
+                            {
+                                loc_type[j]->x_location_string = token[i];
+                            }
+                            if (att_value == "projection_y_coordinate" || att_value == "latitude")
+                            {
+                                loc_type[j]->y_location_string = token[i];
+                            }
+                        }
                     }
                     else if (att_value == "line")
                     {
@@ -467,19 +480,19 @@ long HISCF::read_parameters()
                         }
                         //
                         status = get_attribute(this->m_ncid, i_geom_id, "node_coordinates", &coord_geom);
-                        token = tokenize(coord_geom, ' ');
-                        for (int i = 0; i < token.size(); i++)  // var_x, var_y
+                        std::vector<std::string> token_geom = tokenize(coord_geom, ' ');
+                        for (int i = 0; i < token_geom.size(); i++)  // var_x, var_y
                         {
                             int var_id = -1;
-                            status = nc_inq_varid(this->m_ncid, token[i].c_str(), &var_id);
+                            status = nc_inq_varid(this->m_ncid, token_geom[i].c_str(), &var_id);
                             status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
                             if (att_value == "projection_x_coordinate" || att_value == "longitude")
                             {
-                                loc_type[j]->x_location_name = token[i];
+                                loc_type[j]->x_location_string = token_geom[i];
                             }
                             if (att_value == "projection_y_coordinate" || att_value == "latitude")
                             {
-                                loc_type[j]->y_location_name = token[i];
+                                loc_type[j]->y_location_string = token_geom[i];
                             }
                         }
 
@@ -549,11 +562,11 @@ long HISCF::read_parameters()
                                     // just check the first one, other locations should have the x,y-coordinate name
                                     if (att_value == "projection_x_coordinate" || att_value == "longitude")
                                     {
-                                        loc_type[j]->x_location_name = token[i];
+                                        loc_type[j]->x_location_string = token[i];
                                     }
                                     if (att_value == "projection_y_coordinate" || att_value == "latitude")
                                     {
-                                        loc_type[j]->y_location_name = token[i];
+                                        loc_type[j]->y_location_string = token[i];
                                     }
                                 }
                             }
@@ -570,7 +583,7 @@ long HISCF::read_parameters()
     int var_id;
     for (int j = 0; j < loc_type.size(); j++)
     {
-        status = nc_inq_varid(this->m_ncid, loc_type[j]->x_location_name.c_str(), &var_id);
+        status = nc_inq_varid(this->m_ncid, loc_type[j]->x_location_string.c_str(), &var_id);
         if (status == NC_NOERR) { status = nc_inq_varndims(this->m_ncid, var_id, &ndims); }
         if (status == NC_NOERR && loc_type[j]->type == OBS_POINT)
         {
@@ -580,7 +593,7 @@ long HISCF::read_parameters()
             {
                 loc_type[j]->location[n].x.push_back(*(values_c + n));
             }
-            status = nc_inq_varid(this->m_ncid, loc_type[j]->y_location_name.c_str(), &var_id);
+            status = nc_inq_varid(this->m_ncid, loc_type[j]->y_location_string.c_str(), &var_id);
             status = nc_get_var_double(this->m_ncid, var_id, values_c);
             for (int n = 0; n < loc_type[j]->location.size(); n++)
             {
@@ -611,7 +624,7 @@ long HISCF::read_parameters()
                 }
                 k_start += loc_type[j]->node_count[i];
             }
-            status = nc_inq_varid(this->m_ncid, loc_type[j]->y_location_name.c_str(), &var_id);
+            status = nc_inq_varid(this->m_ncid, loc_type[j]->y_location_string.c_str(), &var_id);
             status = nc_get_var_double(this->m_ncid, var_id, values_c);
             k_start = 0;
             for (int i = 0; i < loc_type[j]->location.size(); i++)
