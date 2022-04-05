@@ -382,6 +382,33 @@ long HISCF::read_parameters()
     var_name_c[0] = '\0';
 
     status = nc_inq(this->m_ncid, &ndims, &nvars, &natts, &nunlimited);
+
+    // look for reference date
+    std::string time_unit_string;
+    std::string time_std_name;
+    int time_var = -1;
+    QStringList date_time;
+
+    for (long i_var = 0; i_var < nvars; i_var++)
+    {
+        int error_code = get_attribute(m_ncid, i_var, "units", &time_unit_string);
+        if (error_code == 0 && time_unit_string.find("since") != -1)
+        {
+            QString units = QString::fromStdString(time_unit_string).replace("T", " ");  // "seconds since 1970-01-01T00:00:00" changed into "seconds since 1970-01-01 00:00:00"
+            date_time = units.split(" ");
+            if (date_time.at(1).toUtf8() == "since")
+            {
+                time_var = i_var;
+            }
+            error_code = get_attribute(m_ncid, i_var, "standard_name", &time_std_name);
+            if (error_code == 0 && time_std_name.find("time") != -1)
+            {
+                time_var = i_var;
+                break;
+            }
+        }
+    }
+
     for (long i_var = 0; i_var < nvars; i_var++)
     {
         long * par_dim_ids;  // parameter dimensions
@@ -580,6 +607,29 @@ long HISCF::read_parameters()
     free(var_name_c); var_name_c = NULL;
 
     // fill the location x- and y-coordinate arrays
+    // time_var contains the time-variable
+    QDate date = QDate::fromString(date_time.at(2), "yyyy-MM-dd");
+    QTime time = QTime::fromString(date_time.at(3), "hh:mm:ss");
+    QDateTime RefDate(date, time, Qt::UTC);
+
+    std::vector<int> time_dim_id;
+    int* dim_ids = (int*)malloc(sizeof(int) * ndims);
+
+    size_t time_dim_size;
+    QVector<QDateTime> qdt_times;
+    std::vector<double> times;
+    status = nc_inq_vardimid(m_ncid, time_var, dim_ids);
+    status = nc_inq_dim(m_ncid, dim_ids[0], NULL, &time_dim_size);
+
+    times.resize(time_dim_size);
+    status = nc_get_var(m_ncid, time_var, times.data());  // times are is seconds
+    // Convert seconds to date-time representation
+    status = seconds_to_datetime(RefDate, times, &qdt_times);
+
+    QString janm;
+    janm = qdt_times[1].toString("yyyy-MM-dd hh:mm:ss");
+
+    // fill the location x- and y-coordinate arrays
     int var_id;
     for (int j = 0; j < loc_type.size(); j++)
     {
@@ -587,17 +637,52 @@ long HISCF::read_parameters()
         if (status == NC_NOERR) { status = nc_inq_varndims(this->m_ncid, var_id, &ndims); }
         if (status == NC_NOERR && loc_type[j]->type == OBS_POINT)
         {
-            double * values_c = (double *)malloc(sizeof(double)*loc_type[j]->location.size());
+            size_t mem_length = 1;
+            int* sn_dims = (int*)malloc(sizeof(long) * ndims);
+            status = nc_inq_vardimid(m_ncid, var_id, (int*)sn_dims);
+            for (long k = 0; k < ndims; k++)
+            {
+                status = nc_inq_dim(this->m_ncid, sn_dims[k], nullptr, &length);
+                mem_length = mem_length * length;
+            }
+            size_t time_dim = 0;
+            status = nc_inq_dim(this->m_ncid, sn_dims[0], nullptr, &time_dim);  // TODO: Assumed to be the time dimension
+            int n_stations = mem_length / time_dim;
+
+            double* values_c = (double*)malloc(sizeof(double) * mem_length);
             status = nc_get_var_double(this->m_ncid, var_id, values_c);
             for (int n = 0; n < loc_type[j]->location.size(); n++)
             {
-                loc_type[j]->location[n].x.push_back(*(values_c + n));
+                loc_type[j]->location[n].moving = FALSE;
+                if (loc_type[j]->node_count[n] != NC_FILL_INT)
+                {
+                    loc_type[j]->location[n].x.push_back(*(values_c + n));
+                }
+                else
+                {
+                    loc_type[j]->location[n].moving = TRUE;
+                    for (int t = 0; t < time_dim; t++)
+                    {
+                        loc_type[j]->location[n].time.push_back(QStringLiteral("%1").arg(qdt_times[t].toString("yyyy-MM-dd hh:mm:ss")));
+                        loc_type[j]->location[n].x.push_back(*(values_c + n + t * n_stations));
+                    }
+                }
             }
             status = nc_inq_varid(this->m_ncid, loc_type[j]->y_location_string.c_str(), &var_id);
             status = nc_get_var_double(this->m_ncid, var_id, values_c);
             for (int n = 0; n < loc_type[j]->location.size(); n++)
             {
-                loc_type[j]->location[n].y.push_back(*(values_c + n));
+                if (loc_type[j]->node_count[n] != NC_FILL_INT)
+                {
+                    loc_type[j]->location[n].y.push_back(*(values_c + n));
+                }
+                else
+                {
+                    for (int t = 0; t < time_dim; t++)
+                    {
+                        loc_type[j]->location[n].y.push_back(*(values_c + n + t * n_stations));
+                    }
+                }
             }
             free(values_c);
             values_c = NULL;
@@ -935,4 +1020,29 @@ std::vector<std::string> HISCF::tokenize(const std::string & str, size_t count)
         offset += size;
     }
     return tokens;
+}
+int  HISCF::seconds_to_datetime(QDateTime RefDate, std::vector<double>  times, QVector<QDateTime> * qdt_times)
+{
+    int status = -1;
+
+    double dt = 0.0;
+    if (times.size() >= 2)
+    {
+        dt = times.at(1) - times.at(0);
+    }
+    for (int j = 0; j < times.size(); j++)
+    {
+        {
+            if (dt < 1.0)
+            {
+                qdt_times->append(RefDate.addMSecs(1000. * times.at(j)));  // milli seconds as smallest time unit
+            }
+            else
+            {
+                qdt_times->append(RefDate.addSecs(times.at(j)));  // seconds as smallest time unit
+            }
+        }
+    }
+    status = 0;
+    return status;
 }

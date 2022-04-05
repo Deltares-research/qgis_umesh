@@ -2094,21 +2094,22 @@ void qgis_umesh::activate_observation_layers()
                     if (obs_type[i]->type == OBS_POINT)
                     {
                         create_vector_layer_observation_point(fname, QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
+                        create_vector_layer_observation_point_moving(fname, QString(obs_type[i]->location_long_name) + " (Moving)", obs_type[i], mapping->epsg, treeGroup);
                     }
-                    else if (obs_type[i]->type == OBS_POLYLINE)
+                    if (obs_type[i]->type == OBS_POLYLINE)
                     {
                         create_vector_layer_observation_polyline(fname, QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
                     }
-                    else
+                    if (obs_type[i]->type != OBS_POINT && obs_type[i]->type != OBS_POLYLINE)
                     {
-                        QMessageBox::information(0, QString("Information"), QString("Only \'point\' and \'line\' are supported as observation location."));
+                        QString msg("Only \'point\' and \'line\' are supported as observation location.");
+                        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
                     }
                 }
                 pgbar_value += 10;
                 this->pgBar->setValue(pgbar_value);
             }
         }
-
     }
     else
     {
@@ -3073,6 +3074,9 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
             int nsig = long(log10(obs_points->location.size())) + 1;
             for (int j = 0; j < obs_points->location.size(); j++)
             {
+                if (obs_points->location[j].moving) {
+                    continue;
+                }
                 attribute.clear();
                 QgsFeature MyFeature;
                 QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(obs_points->location[j].x[0], obs_points->location[j].y[0]));
@@ -3121,6 +3125,116 @@ void qgis_umesh::create_vector_layer_observation_point(QString fname, QString la
                                                                           // todo: Probeersel symbology adjustements
         }
         STOP_TIMER(create_vector_layer_observation_point);
+    }
+}
+void qgis_umesh::create_vector_layer_observation_point_moving(QString fname, QString layer_name, _location_type* obs_points, long epsg_code, QgsLayerTreeGroup* treeGroup)
+{
+    if (obs_points != NULL && obs_points->type == OBS_POINT)
+    {
+        bool moving = FALSE;
+        for (int j = 0; j < obs_points->location.size(); j++)
+        {
+            if (obs_points->location[j].moving) {
+                moving = TRUE;
+            }
+        }
+        if (!moving) {
+            return;  // there are no moving observation points
+        }
+
+        START_TIMERN(create_vector_layer_observation_point_moving);
+        QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
+        bool layer_found = false;
+        for (int i = 0; i < tmp_layers.length(); i++)
+        {
+            //QMessageBox::warning(0, tr("Message: create_vector_layer_nodes"), QString(tr("Layers in group by name: ")) + tmp_layers[i]->name() + QString(" Look for: ") + layer_name);
+            if (layer_name == tmp_layers[i]->name())
+            {
+                layer_found = true;
+            }
+        }
+
+        if (!layer_found)
+        {
+            QgsVectorLayer * vl;
+            QgsVectorDataProvider * dp_vl;
+            QList <QgsField> lMyAttribField;
+
+            int nr_attrib_fields = 0;
+            if (obs_points->location_long_name != nullptr)
+            {
+                for (size_t i = 0; i < obs_points->location[0].x.size(); ++i)
+                {
+                    lMyAttribField << QgsField(obs_points->location_long_name, QVariant::String);
+                    nr_attrib_fields++;
+
+                    lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
+                    nr_attrib_fields++;
+                    lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
+                    nr_attrib_fields++;
+                }
+            }
+
+            QVector<QVariant> attribute;
+            QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
+            vl = new QgsVectorLayer(uri, layer_name, "memory");
+            vl->blockSignals(true);
+            vl->startEditing();
+            dp_vl = vl->dataProvider();
+            dp_vl->addAttributes(lMyAttribField);
+            //dp_vl->createSpatialIndex();
+            vl->updatedFields();
+
+            QgsFeatureList MyFeatures;
+            int nsig = long(log10(obs_points->location.size())) + 1;
+            for (int j = 0; j < obs_points->location.size(); j++)
+            {
+                if (!obs_points->location[j].moving) {
+                    continue;
+                }
+                for (int k = 0; k < obs_points->location[j].x.size(); ++k)
+                {
+                    attribute.clear();
+                    QgsFeature MyFeature;
+                    QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(obs_points->location[j].x[k], obs_points->location[j].y[k]));
+                    MyFeature.setGeometry(MyPoints);
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    if (obs_points->location[j].name != nullptr)
+                    {
+                        QString time = obs_points->location[j].time[k].trimmed();
+                        QString text = QString("%1: %2").arg(QString(obs_points->location[j].name).trimmed()).arg(time);
+                        attribute.append(text);
+                        attribute.append(QString("0:%1(%2)").arg(j).arg(k));  // arg(j, nsig, 10, QLatin1Char('0')));
+                        attribute.append(QString("1:%1(%2)").arg(j + 1).arg(k+1));
+                    }
+                    MyFeature.setAttributes(attribute);
+                    MyFeatures.append(MyFeature);
+                }
+            }
+            dp_vl->addFeatures(MyFeatures);
+            vl->commitChanges();
+            vl->setTitle(layer_name + ": " + fname);
+
+            QgsSymbol * marker = new QgsMarkerSymbol();
+            QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
+            simple_marker->setSize(4.0);
+            simple_marker->setColor(QColor(1, 1, 1));  // 0,0,0 could have a special meaning
+            simple_marker->setFillColor(QColor(0, 219, 255));
+            simple_marker->setShape(Qgis::MarkerShape::Star);
+            marker->changeSymbolLayer(0, simple_marker);
+
+            //set up a renderer for the layer
+            QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
+            vl->setRenderer(mypRenderer);
+            vl->blockSignals(false);
+
+            add_layer_to_group(vl, treeGroup);
+            connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
+                                                                          //QgsCoordinateReferenceSystem crs = vl->crs();
+                                                                          //QMessageBox::information(0, tr("Message: create_vector_layer_geometry"), QString("CRS layer: %1").arg(crs.authid()));
+                                                                          // todo: Probeersel symbology adjustements
+        }
+        STOP_TIMER(create_vector_layer_observation_point_moving);
     }
 }
 void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString layer_name, _location_type * obs_points, long epsg_code, QgsLayerTreeGroup * treeGroup)

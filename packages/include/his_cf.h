@@ -35,6 +35,7 @@ struct _observation {
 };
 
 struct _location {
+    bool moving;
     QString name;  // needed QString due to using the QTextCode
     QVector<QString> time;  // straight from the netCDF file
     std::vector<double> x;
@@ -124,6 +125,8 @@ private:
     struct _mapping * m_mapping = NULL;
     std::size_t name_len;
     std::vector<std::string> obs_names;
+
+   int seconds_to_datetime(QDateTime RefDate, std::vector<double> times, QVector<QDateTime>* qdt_times);
 };
 
 #endif  // HISCF_H

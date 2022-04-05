@@ -122,7 +122,8 @@ class qgis_umesh
 
         void create_vector_layer_geometry(QString, QString, struct _network_1d*, long, QgsLayerTreeGroup*);
         //void create_vector_layer_geometry(QString, QString, struct _ntw_geom*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_observation_point(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_point(QString, QString, _location_type*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_observation_point_moving(QString, QString, _location_type*, long, QgsLayerTreeGroup*);
         void create_vector_layer_observation_polyline(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
 
         // Reading input files (ie JSON format)
