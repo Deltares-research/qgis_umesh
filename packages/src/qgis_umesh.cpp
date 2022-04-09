@@ -2244,7 +2244,6 @@ void qgis_umesh::create_vector_layer_point_nodes(QString fname, QString layer_na
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(node_x->size());
 
             // int nsig = long( log10(nodes->count) ) + 1;
             START_TIMER(create_vector_layer_nodes_add_features);
@@ -2367,9 +2366,8 @@ void qgis_umesh::create_vector_layer_data_on_edges_template(QString fname, _vari
             vl->updatedFields();
 
             QVector<QgsPointXY> point;
-            QgsMultiPolylineXY lines;
+            QgsPolylineXY lines;
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(mesh->num_edges);
 
             for (int j = 0; j < mesh->num_edges; ++j)
             {
@@ -2387,7 +2385,7 @@ void qgis_umesh::create_vector_layer_data_on_edges_template(QString fname, _vari
                 lines.append(point);
 
                 QgsFeature MyFeature;
-                MyFeature.setGeometry(QgsGeometry::fromMultiPolylineXY(lines));
+                MyFeature.setGeometry(QgsGeometry::fromPolylineXY(lines));
 
                 MyFeature.initAttributes(nr_attrib_fields);
                 MyFeature.setAttribute(0, z_value[j]);
@@ -2471,7 +2469,6 @@ void qgis_umesh::create_vector_layer_edge_type(QString fname, _variable_ugridapi
                 QVector<QgsPointXY> point;
                 QgsMultiPolylineXY lines;
                 QgsFeatureList MyFeatures;
-                MyFeatures.reserve(mesh->num_edges);
 
                 for (int j = 0; j < mesh->num_edges; ++j)
                 {
@@ -2596,7 +2593,6 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable_ugri
             vl->updatedFields();
 
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(node_x->size());
             for (int j = 0; j < node_x->size(); ++j)
             {
                 QgsFeature MyFeature;
@@ -2708,7 +2704,6 @@ void qgis_umesh::create_vector_layer_geometry(QString fname, QString layer_name,
                 QgsFeatureList MyFeatures;
                 for (int edge = 0; edge < network->num_edges; edge++)
                 {
-                    MyFeatures.reserve(network->node_count[edge]);
                     if (edge > 0) { start_address += network->node_count[edge - 1]; }
                     int nsig = long(log10(network->geometry_nodes_x.size())) + 1;
                     lines.clear();
@@ -2815,7 +2810,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name,
             lMyAttribField << QgsField("Edge Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
-            QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
+            QString uri = QString("LineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
             vl->blockSignals(true);
             vl->startEditing();
@@ -2824,11 +2819,9 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name,
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            QgsMultiLineString * polylines = new QgsMultiLineString();
             QVector<QgsPointXY> point;
-            QgsMultiPolylineXY lines;
+            QgsPolylineXY lines;
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(edge_length->size());
 
             int nsig = long(log10(edge_length->size())) + 1;
             bool msg_given = false;
@@ -2845,7 +2838,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name,
                 lines.append(point);
 
                 QgsFeature MyFeature;
-                MyFeature.setGeometry(QgsGeometry::fromMultiPolylineXY(lines));
+                MyFeature.setGeometry(QgsGeometry::fromPolylineXY(lines));
 
                 MyFeature.initAttributes(nr_attrib_fields);
                 int k = -1;
@@ -2966,7 +2959,6 @@ void qgis_umesh::create_vector_layer_edges_contacts(QString fname, QString layer
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(edge_node->size()/2);
 
             int nsig = long(log10(edge_id->size())) + 1;
             bool msg_given = false;
@@ -3283,7 +3275,6 @@ void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString
             QVector<QgsPointXY> point;
             QgsPolylineXY line;
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(obs_points->location.size());
 
             for (int i = 0; i < obs_points->location.size(); i++)
             {
@@ -4456,7 +4447,6 @@ void qgis_umesh::create_vector_layer_crs_observation_point(UGRIDAPI_WRAPPER * ug
     dp_vl->addAttributes(lMyAttribField);
     vl->updatedFields();
     QgsFeatureList MyFeatures;
-    MyFeatures.reserve(obs_name.size());
 
     for (int j = 0; j < obs_name.size(); j++)
     {
@@ -4575,7 +4565,6 @@ void qgis_umesh::create_vector_layer_chainage_observation_point(UGRIDAPI_WRAPPER
         //dp_vl->createSpatialIndex();
         vl->updatedFields();
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(obs_name.size());
 
         double xp;
         double yp;
@@ -4676,7 +4665,6 @@ void qgis_umesh::create_vector_layer_sample_point(UGRIDAPI_WRAPPER * ugrid_file,
     dp_vl->addAttributes(lMyAttribField);
     vl->updatedFields();
     QgsFeatureList MyFeatures;
-    MyFeatures.reserve(z_value.size());
     for (int j = 0; j < z_value.size(); j++)
     {
         QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(x[j], y[j]));
@@ -4804,7 +4792,6 @@ void qgis_umesh::create_vector_layer_1D_observation_cross_section(UGRIDAPI_WRAPP
         //dp_vl->createSpatialIndex();
         vl->updatedFields();
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(names.size());
 
         double xp;
         double yp;
@@ -4913,7 +4900,6 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRIDAPI_WRAPP
         }
 
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(poly_lines.size());
         for (int ii = 0; ii < poly_lines.size(); ii++)
         {
             point.clear();
@@ -5074,7 +5060,6 @@ void qgis_umesh::create_vector_layer_structure(UGRIDAPI_WRAPPER * ugrid_file, JS
         QVector<QgsPointXY> point;
         QgsMultiPolylineXY lines;
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(fname.size());
 
         std::vector<std::string> line_name;
         std::vector<std::vector<std::vector<double>>> poly_lines;
@@ -5257,7 +5242,6 @@ void qgis_umesh::create_vector_layer_drypoints(UGRIDAPI_WRAPPER * ugrid_file, JS
         }
 
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(poly_lines.size());
         for (int ii = 0; ii < poly_lines.size(); ii++)
         {
             point.clear();
