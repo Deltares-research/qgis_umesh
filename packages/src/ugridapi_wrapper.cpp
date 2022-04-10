@@ -434,16 +434,14 @@ long UGRIDAPI_WRAPPER::read_mesh_2d()
         {
             // try reading again num_layers
             std::string tmp_str;
+            int dim_id;
+            size_t length;
             error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "layer_dimension", tmp_str);
-            //error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "interface_dimension", tmp_str);
-            for (int i = 0; i < m_dim_names.size(); ++i)
-            {
-                if (m_dim_names[i] == tmp_str)
-                {
-                    m_mesh_2d.num_layers = m_map_dim[tmp_str];
-                    break;
-                }
-            }
+            error_code = nc_inq_dimid(m_ncid, tmp_str.c_str(), &dim_id);
+            error_code = nc_inq_dimlen(m_ncid, dim_id, &length);
+            m_mesh_2d.num_layers = (int) length;
+
+            //error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "interface_dimension", tmp_str);  // niet nodig, wegens interfaces = lagen + 1
         }
 
         m_mesh_2d.node_x.resize(m_mesh_2d.num_nodes);
@@ -485,7 +483,7 @@ long UGRIDAPI_WRAPPER::read_mesh_2d()
         {
             for (int i = 0; i < m_mesh_2d.num_edges; ++i)
             {
-                m_mesh_2d.edge_length[i] = 0.0;;
+                m_mesh_2d.edge_length[i] = 0.0;
             }
         }
     }
@@ -989,15 +987,13 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider3<do
     fprintf(stderr, "UGRID::get_variable_3d_values()\n");
 #endif    
     int error_code;
-    int i_var;
-    double* read_c;
+    int i_var{ -1 };
     std::vector<double> data_vector;
     std::vector<int> dimension_value;
     std::vector<std::string> dimension_name;
 
     error_code = ugridapi::ug_variable_get_data_dimensions(m_ncid, var_name, dimension_name, dimension_value);
 
-    error_code = nc_inq_varid(m_ncid, var_name.c_str(), &i_var);
     for (int i = 0; i < m_vars.size(); ++i)
     {
         if (var_name == m_vars[i]->var_name)
@@ -1005,7 +1001,7 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider3<do
             i_var = i;
             break;
         }
-        }
+    }
     if (m_vars[i_var]->read)  // are the z_values already read
     {
         return 0;
@@ -1037,16 +1033,17 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider3<do
         bool swap_loops = false;
         // Todo: HACK assumed is that the time is the first dimension
         // Todo: HACK just the variables at the layers, interfaces are skipped
-        if (m_map_dim_name["zs_dim_layer"] == dimension_name[2] ||
-            m_map_dim_name["zs_dim_interface"] == dimension_name[2] ||
-            m_map_dim_name["zs_dim_bed_layer"] == dimension_name[2])
+        if (dimension_name[2] == "n_sigma_layers" ||
+            dimension_name[2] == "n_sigma_interface_layers" ||
+            dimension_name[2] == "n_dim_bed_layer")
         {
             // loop over layers and nodes should be swapped
             swap_loops = true;
         }
+        std::vector<double> values;
         if (true)
         {
-            double * values_c = (double*)malloc(sizeof(double) * total_dimension);
+            values.resize(total_dimension);
             if (swap_loops)
             {
                 for (int t = 0; t < time_dim; t++)
@@ -1057,7 +1054,7 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider3<do
                         {
                             int k_target = t * xy_dim * layer_dim + xy * layer_dim + l;
                             int k_source = t * xy_dim * layer_dim + l * xy_dim + xy;
-                            values_c[k_target] = read_c[k_source];
+                            values[k_target] = data_vector[k_source];
 
                             double fraction = 100. + 900. * double(k_target) / double(total_dimension);
 #ifdef NATIVE_C
@@ -1070,18 +1067,17 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider3<do
                 int tmp_dim = layer_dim;
                 layer_dim = xy_dim;
                 xy_dim = tmp_dim;
-                free(read_c);
             }
             else
             {
-                memcpy(values_c, read_c, total_dimension * sizeof(double));
+                memcpy(values.data(), data_vector.data(), total_dimension * sizeof(double));
             }
         }
         dvp.set_dimensions(time_dim, layer_dim, xy_dim);
 
         for (int j = 0; j < dimension_name.size(); j++)
         {
-            if (m_map_dim_name["z_sigma_interface"] == m_mesh_vars[i_var]->dim_names[j])
+            if (m_map_dim_name["z_sigma_interface"] == dimension_name[j])
             {
 #ifdef NATIVE_C
                 fprintf(stderr, "    3D data on interfaces not yet supported.\n");
@@ -1092,7 +1088,7 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider3<do
             }
 
         }
-        error_code = dvp.set_data(var_name, data_vector);
+        error_code = dvp.set_data(var_name, values);
         m_vars[i_var]->read = true;
 #ifdef NATIVE_C
 #else

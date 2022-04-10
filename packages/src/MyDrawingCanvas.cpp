@@ -689,13 +689,14 @@ void MyCanvas::draw_data_at_edge()  // data is drawn as dot
             else if (dimension_count == 3) // 3D: time, layer, nodes
             {
                 error_code = m_ugrid_file->get_var(var_name, dvp3_edge);
-                if (m_bed_layer > 0)
-                {
-                    m_z_value = dvp3_edge.get_timestep(var_name, m_current_step, m_bed_layer - 1);
-                }
+                m_hydro_layer = 1;
                 if (m_hydro_layer > 0)
                 {
                     m_z_value = dvp3_edge.get_timestep(var_name, m_current_step, m_hydro_layer - 1);
+                }
+                if (m_bed_layer > 0)
+                {
+                    m_z_value = dvp3_edge.get_timestep(var_name, m_current_step, m_bed_layer - 1);
                 }
             }
             else
