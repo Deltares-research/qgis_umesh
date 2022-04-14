@@ -201,9 +201,9 @@ private:
     int m_count_sed = 0;
     int m_count_xy = 0;
 
-    inline int GetIndex(int timeIndex, int layerIndex, int sedIndex, int xyIndex)
+    inline int get_index(int timeIndex, int layerIndex, int sedIndex, int xyIndex)
     {
-        int index = m_count_xy * m_count_layer * m_numSed * timeIndex + m_count_xy * m_numSed * layerIndex + m_count_xy * sedIndex + xyIndex;
+        int index = m_count_xy * m_count_layer * m_count_sed * timeIndex + m_count_xy * m_count_sed * layerIndex + m_count_xy * sedIndex + xyIndex;
         return index;
     }
 };

@@ -433,15 +433,35 @@ long UGRIDAPI_WRAPPER::read_mesh_2d()
         if (m_mesh_2d.num_layers == 0)
         {
             // try reading again num_layers
-            std::string tmp_str;
+            std::string layer_dim_str;
+            std::string interface_dim_str;
             int dim_id;
             size_t length;
-            error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "layer_dimension", tmp_str);
-            error_code = nc_inq_dimid(m_ncid, tmp_str.c_str(), &dim_id);
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "layer_dimension", layer_dim_str);
+            error_code = nc_inq_dimid(m_ncid, layer_dim_str.c_str(), &dim_id);
             error_code = nc_inq_dimlen(m_ncid, dim_id, &length);
             m_mesh_2d.num_layers = (int) length;
 
-            //error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "interface_dimension", tmp_str);  // niet nodig, wegens interfaces = lagen + 1
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "interface_dimension", interface_dim_str);
+            // look for variable with just dimension layer_dim_str.c_str()
+            std::vector<std::string> var_names;
+            error_code = ugridapi::ug_variable_get_all_names(m_ncid, var_names);
+            for (int i = 0; i < var_names.size(); ++i)
+            {
+                std::vector<int> dimension_value;
+                std::vector<std::string> dimension_name;
+                error_code = ugridapi::ug_variable_get_data_dimensions(m_ncid, var_names[i], dimension_name, dimension_value);
+                if (dimension_name.size() == 1 && dimension_name[0] == layer_dim_str)
+                {
+                    m_mesh_2d.layer_zs.resize(m_mesh_2d.num_layers);
+                    error_code = ugridapi::ug_variable_get_data_double(m_ncid, var_names[i], m_mesh_2d.layer_zs);
+                }
+                if (dimension_name.size() == 1 && dimension_name[0] == interface_dim_str)
+                {
+                    m_mesh_2d.interface_zs.resize(m_mesh_2d.num_layers+1);
+                    error_code = ugridapi::ug_variable_get_data_double(m_ncid, var_names[i], m_mesh_2d.interface_zs);
+                }
+            }
         }
 
         m_mesh_2d.node_x.resize(m_mesh_2d.num_nodes);
@@ -538,12 +558,10 @@ long UGRIDAPI_WRAPPER::read_mesh_contacts()
 
 
             for (int i = 0; i < m_mesh_contacts.num_contacts; ++i)
-                {
-                {
-                    m_mesh_contacts.edges[2 * i] -= start_from;
-                    m_mesh_contacts.edges[2 * i + 1] -= start_to;
-                    }
-                }
+            {
+                m_mesh_contacts.edges[2 * i] -= start_from;
+                m_mesh_contacts.edges[2 * i + 1] -= start_to;
+            }
         }
     }
     return status;
@@ -643,7 +661,7 @@ long UGRIDAPI_WRAPPER::read_variables_2d()
             {
                 // skippinig the time-axis: double time(time):
             }
-            else if (dimension_name.size() >= 2)  // time, xy-xyspace
+            else if (dimension_name.size() == 2)  // time, xy-xyspace
             {
                 for (int j = 0; j < dimension_name.size(); ++j)
                 {
@@ -653,6 +671,39 @@ long UGRIDAPI_WRAPPER::read_variables_2d()
                         break;
                     }
                 }
+            }
+            else if (dimension_name.size() == 3)  // time, xy-xyspace
+            {
+                for (int j = 0; j < dimension_name.size(); ++j)
+                {
+                    if (QString::fromStdString(dimension_name.at(j)) == time_series[0].dim_name)
+                    {
+                        m_vars_2d.back()->time_series = true;
+                    }
+                    if (m_mesh_2d.num_layers > 0)
+                    {
+                        std::string layer_dim;
+                        std::string interface_dim;
+                        error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "layer_dimension", layer_dim);
+                        error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "interface_dimension", interface_dim);
+                        if (QString::fromStdString(dimension_name.at(j)).contains(QString::fromStdString(layer_dim)))
+                        {
+                            m_vars_2d.back()->nr_hydro_layers = m_mesh_2d.num_layers;
+                            m_vars_2d.back()->layer_center = m_mesh_2d.layer_zs;
+                        }
+                        if (QString::fromStdString(dimension_name.at(j)).contains(QString::fromStdString(interface_dim)))
+                        {
+                            m_vars_2d.back()->nr_hydro_layers = m_mesh_2d.num_layers + 1;
+                            m_vars_2d.back()->layer_center = m_mesh_2d.interface_zs;
+                        }
+                    }
+                }
+
+            }
+            else
+            {
+                QString msg = QString("Variables with 4 or more dimensions not yet supported.");
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
             }
     }
 #ifdef NATIVE_C
@@ -1033,9 +1084,15 @@ int UGRIDAPI_WRAPPER::get_var(const std::string var_name, DataValuesProvider3<do
         bool swap_loops = false;
         // Todo: HACK assumed is that the time is the first dimension
         // Todo: HACK just the variables at the layers, interfaces are skipped
-        if (dimension_name[2] == "n_sigma_layers" ||
-            dimension_name[2] == "n_sigma_interface_layers" ||
-            dimension_name[2] == "n_dim_bed_layer")
+        std::string layer_dim_str;
+        std::string interface_dim_str;
+        std::string bed_dim_str;
+        error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "layer_dimension", layer_dim_str);
+        error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "interface_dimension", interface_dim_str);
+
+        if (dimension_name[2] == layer_dim_str ||
+            dimension_name[2] == interface_dim_str ||
+            dimension_name[2] == bed_dim_str)
         {
             // loop over layers and nodes should be swapped
             swap_loops = true;

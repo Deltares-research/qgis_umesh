@@ -683,7 +683,7 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             {
                 m_layerLabelPrefix = new QLabel(tr("Layer"));
                 m_layerLabelSuffix = new QLabel(tr("[0,0]"));
-                m_layerLabelSuffix->setText(tr("z/sigma: %1"));  //.arg(var->layer_center[var->nr_hydro_layers - 1]));
+                m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_hydro_layers - 1]));
                 m_sb_hydro_layer = spinbox_layer(var->nr_hydro_layers);
                 connect(m_sb_hydro_layer, SIGNAL(valueChanged(int)), this, SLOT(spinbox_value_changed(int)));
 
@@ -764,7 +764,7 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
         struct _variable_ugridapi * var = m_vars_2d[strings[3].toInt()];
         m_layerLabelPrefix_vec = new QLabel(tr("Layer"));
         m_layerLabelSuffix_vec = new QLabel(tr("[0,0]"));
-        m_layerLabelSuffix_vec->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[var->nr_hydro_layers - 1]));
+        m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_hydro_layers - 1]));
         m_sb_hydro_layer_vec = spinbox_layer(var->nr_hydro_layers);
         connect(m_sb_hydro_layer_vec, SIGNAL(valueChanged(int)), this, SLOT(spinbox_vec_value_changed(int)));
 
@@ -1217,7 +1217,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
             m_sb_hydro_layer->setValue(var->nr_hydro_layers);
         }
         int i_lay = m_sb_hydro_layer->value();
-        m_layerLabelSuffix->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
     }
 
     if (var->nr_bed_layers > 0)
@@ -1306,7 +1306,7 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
         m_sb_hydro_layer_vec->setValue(var->nr_hydro_layers);
     }
     int i_lay = m_sb_hydro_layer_vec->value();
-    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[i_lay - 1]));
+    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
 
     _MyCanvas->reset_min_max();
     if (!m_show_map_vector_3d)
@@ -1593,7 +1593,7 @@ void MapTimeManagerWindow::spinbox_value_changed(int i_lay)
     struct _variable_ugridapi* var = m_vars_2d[jj];
     if (var->nr_hydro_layers > 0)
     {
-        m_layerLabelSuffix->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
     }
     if (var->nr_bed_layers > 0)
     {
@@ -1609,7 +1609,7 @@ void MapTimeManagerWindow::spinbox_vec_value_changed(int i_lay)
     int jj = slist[3].toInt();
 
     struct _variable_ugridapi* var = m_vars_2d[jj];
-    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1"));  // .arg(var->layer_center[i_lay - 1]));
+    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
     return;
 }
 void MapTimeManagerWindow::clicked_current_view()

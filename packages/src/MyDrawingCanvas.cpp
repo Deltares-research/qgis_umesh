@@ -162,6 +162,7 @@ void MyCanvas::draw_data_at_face()
             {
                 missing_value = std::stod(tmp_value);
             }
+            missing_value = mesh2d.double_fill_value;
 
             if (dimension_count == 2) // 2D: time, xy_space
             {
@@ -170,29 +171,29 @@ void MyCanvas::draw_data_at_face()
             }
             else if (dimension_count == 3) // 3D: time, layer, xy_space
             {
-                //error_code = m_ugrid_file->get_var(var_name, dvp3_face);
+                error_code = m_ugrid_file->get_var(var_name, dvp3_face);
                 if (vars[ivar]->sediment_index != -1)
                 {
-                    //m_z_value = dvp3_face.get_timestep(var_name, m_current_step, vars[ivar]->sediment_index, 0);
+                    m_z_value = dvp3_face.get_timestep(var_name, m_current_step, vars[ivar]->sediment_index);
                 }
                 else
                 {
                     if (m_hydro_layer > 0)
                     {
-                        //m_z_value = dvp3_face.get_timestep(var_name, m_current_step, m_hydro_layer - 1);
+                        m_z_value = dvp3_face.get_timestep(var_name, m_current_step, m_hydro_layer - 1);
                     }
                     if (m_bed_layer > 0)
                     {
-                        //m_z_value = dvp3_face.get_timestep(var_name, m_current_step, m_bed_layer - 1);
+                        m_z_value = dvp3_face.get_timestep(var_name, m_current_step, m_bed_layer - 1);
                     }
                 }
             }
             else if (dimension_count == 4) // 4D: time, layer, sediment, xy_space
             {
-                //error_code = m_ugrid_file->get_var(var_name, dvp4_face);
+                error_code = m_ugrid_file->get_var(var_name, dvp4_face);
                 if (vars[ivar]->sediment_index != -1)
                 {
-                    //m_z_value = dvp4_face.get_timestep(var_name, m_current_step, m_bed_layer-1, vars[ivar]->sediment_index);
+                    m_z_value = dvp4_face.get_timestep(var_name, m_current_step, m_bed_layer-1, vars[ivar]->sediment_index);
                 }
             }
             else
@@ -333,6 +334,7 @@ void MyCanvas::draw_vector_arrow_at_face()
                     error_code = ugridapi::ug_variable_count_dimensions(m_ugrid_file->m_ncid, vars[i]->var_name, dimension_count);
                     error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "fill_value", tmp_value);
                     if (tmp_value.size() != 0) { missing_value = std::stod(tmp_value); }
+                    missing_value = mesh2d.double_fill_value;
                 }
             }
             if (dimension_count == 2) // 2D: time, nodes
@@ -551,6 +553,7 @@ void MyCanvas::draw_vector_direction_at_face()
                 error_code = ugridapi::ug_variable_count_dimensions(m_ugrid_file->m_ncid, vars[i]->var_name, dimension_count);
                 error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "fill_value", tmp_value);
                 if (tmp_value.size() != 0) { missing_value = std::stod(tmp_value); }
+                missing_value = mesh2d.double_fill_value;
             }
         }
         if (dimension_count == 2) // 2D: time, nodes
@@ -637,6 +640,7 @@ void MyCanvas::draw_dot_at_node()
             double missing_value = std::numeric_limits<double>::quiet_NaN();
             error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, var_name, "fill_value", tmp_value);
             if (tmp_value.size() != 0) { missing_value = std::stod(tmp_value); }
+            missing_value = mesh1d.double_fill_value;
 
             m_rgb_color.resize(mesh1d.num_nodes);
             determine_min_max(m_z_value, mesh1d.num_nodes, &m_z_min, &m_z_max, m_rgb_color, missing_value);
@@ -669,11 +673,6 @@ void MyCanvas::draw_data_at_edge()  // data is drawn as dot
         error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "location", location);
         if (vars[i]->draw && location == "edge")
         {
-            error_code = ugridapi::ug_variable_count_dimensions(m_ugrid_file->m_ncid, vars[i]->var_name, dimension_count);
-            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "fill_value", tmp_value);
-            if (tmp_value.size() != 0) { missing_value = std::stod(tmp_value); }
-            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "mesh", mesh);
-
             double x1, y1, x2, y2;
             vector<double> edge_x;
             vector<double> edge_y;
@@ -681,6 +680,13 @@ void MyCanvas::draw_data_at_edge()  // data is drawn as dot
             struct _mesh_1d mesh1d = m_ugrid_file->get_mesh_1d();
             struct _mesh_2d mesh2d = m_ugrid_file->get_mesh_2d();
             struct _contacts mesh1d2d = m_ugrid_file->get_mesh_contacts();
+
+            error_code = ugridapi::ug_variable_count_dimensions(m_ugrid_file->m_ncid, vars[i]->var_name, dimension_count);
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "fill_value", tmp_value);
+            if (tmp_value.size() != 0) { missing_value = std::stod(tmp_value); }
+            missing_value = mesh2d.double_fill_value;
+            error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "mesh", mesh);
+
             if (dimension_count == 2) // 2D: time, nodes
             {
                 error_code = m_ugrid_file->get_var(var_name, dvp2_edge);
@@ -781,6 +787,9 @@ void MyCanvas::draw_line_at_edge()
     std::string mesh;
     std::string tmp_value;
     double missing_value = std::numeric_limits<double>::quiet_NaN();
+    struct _mesh_1d m1d = m_ugrid_file->get_mesh_1d();
+    struct _mesh_2d m2d = m_ugrid_file->get_mesh_2d();
+    struct _contacts m1d2d = m_ugrid_file->get_mesh_contacts();
 
     std::vector<_variable_ugridapi*> vars = m_ugrid_file->get_variables();
     for (int i = 0; i < vars.size(); ++i)
@@ -789,6 +798,7 @@ void MyCanvas::draw_line_at_edge()
         error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "location", location);
         error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "fill_value", tmp_value);
         if (tmp_value.size() != 0) { missing_value = std::stod(tmp_value); }
+        missing_value = m2d.double_fill_value;
         error_code = ugridapi::ug_variable_get_attribute_value(m_ugrid_file->m_ncid, vars[i]->var_name, "mesh", mesh);
 
         // begin HACK edge vs contact
@@ -797,6 +807,7 @@ void MyCanvas::draw_line_at_edge()
             vector<double> edge_x(2);
             vector<double> edge_y(2);
             int length = 0;
+
             string var_name = vars[i]->var_name;
             if (dimension_count == 2) // 2D: time, nodes
             {
@@ -836,7 +847,6 @@ void MyCanvas::draw_line_at_edge()
 
             std::vector<int> edges;
             struct _mesh_1d mesh1d;
-            struct _mesh_1d m1d = m_ugrid_file->get_mesh_1d();
             if (mesh == m1d.name)
             {
                 mesh1d = m_ugrid_file->get_mesh_1d();
@@ -844,7 +854,6 @@ void MyCanvas::draw_line_at_edge()
             }
 
             struct _mesh_2d mesh2d;
-            struct _mesh_2d m2d = m_ugrid_file->get_mesh_2d();
             if (mesh == m2d.name)
             {
                 mesh2d = m_ugrid_file->get_mesh_2d();
@@ -852,7 +861,6 @@ void MyCanvas::draw_line_at_edge()
             }
 
             struct _contacts mesh1d2d;
-            struct _contacts m1d2d = m_ugrid_file->get_mesh_contacts();
             if(mesh == m1d2d.mesh_to_name)
             {
                 mesh1d2d = m_ugrid_file->get_mesh_contacts();
