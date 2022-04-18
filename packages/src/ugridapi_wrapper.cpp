@@ -433,16 +433,19 @@ long UGRIDAPI_WRAPPER::read_mesh_2d()
         if (m_mesh_2d.num_layers == 0)
         {
             // try reading again num_layers
-            std::string layer_dim_str;
-            std::string interface_dim_str;
+            std::string layer_dim_str{ "" };
+            std::string interface_dim_str{ "" };
             int dim_id;
             size_t length;
             error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "layer_dimension", layer_dim_str);
             error_code = nc_inq_dimid(m_ncid, layer_dim_str.c_str(), &dim_id);
-            error_code = nc_inq_dimlen(m_ncid, dim_id, &length);
-            m_mesh_2d.num_layers = (int) length;
+            if (error_code == 0)
+            {
+                error_code = nc_inq_dimlen(m_ncid, dim_id, &length);
+                m_mesh_2d.num_layers = (int)length;
+                error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "interface_dimension", interface_dim_str);
+            }
 
-            error_code = ugridapi::ug_variable_get_attribute_value(m_ncid, m_mesh_2d.name, "interface_dimension", interface_dim_str);
             // look for variable with just dimension layer_dim_str.c_str()
             std::vector<std::string> var_names;
             error_code = ugridapi::ug_variable_get_all_names(m_ncid, var_names);
