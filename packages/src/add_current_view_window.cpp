@@ -173,9 +173,9 @@ void AddCurrentViewWindow::create_vector_layer()
             k++;
             MyFeature.setAttribute(k, m_z_value[j]);
             k++;
-            MyFeature.setAttribute(k, QString("0:%1").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+            MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
-            MyFeature.setAttribute(k, QString("1:%1").arg(j + 1));
+            MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
 
             dp_vl->addFeature(MyFeature);
         }
