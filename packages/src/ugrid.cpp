@@ -1999,9 +1999,9 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
         status = get_attribute(this->m_ncid, i_var, const_cast<char*>("topology_dimension"), &topology_dimension);
         if (topology_dimension == 1)  // it is one dimensional
         {
-            std::string coordinate_space;
-            status = get_attribute(this->m_ncid, i_var, "coordinate_space", &coordinate_space);
-            if (status == NC_ENOTATT)  // attribute "coordinate_space" not found, so it is a geometry
+            std::string edge_geometry;
+            status = get_attribute(this->m_ncid, i_var, "edge_geometry", &edge_geometry);  // required for when it is a network
+            if (status == NC_NOERR)  // attribute "edge_geometry" found, so it is a geometry
             {
                 nr_ntw += 1;
                 if (nr_ntw == 1)
@@ -2212,7 +2212,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
             else
                 ///////////////////////////////////////////////////////////////////////////////////////////
             {
-                // it is a 1 dimensional mesh because it contains a coordinate space
+                // it is a 1 dimensional mesh because it does not contain edge_geometry
 #ifdef NATIVE_C
                 fprintf(stderr, "Start of reading 1D Mesh\n");
 #else
