@@ -399,6 +399,7 @@ void QColorRampEditor::mousePressEvent(QMouseEvent* e)
                         break;
                     }
                 }
+                // janm TODO: show edit table for colorramp values (nomalized and exact, but not the colors)
                 sl->show();
                 std::sort(sliders_.begin(), sliders_.end(), QColorRampEditor::SliderSort);
                 updateRamp();
