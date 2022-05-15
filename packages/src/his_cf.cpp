@@ -401,7 +401,7 @@ long HISCF::read_parameters()
                 time_var = i_var;
             }
             error_code = get_attribute(m_ncid, i_var, "standard_name", &time_std_name);
-            if (error_code == 0 && time_std_name.find("time") != -1)
+            if (error_code == 0 && time_std_name == "time")
             {
                 time_var = i_var;
                 break;
