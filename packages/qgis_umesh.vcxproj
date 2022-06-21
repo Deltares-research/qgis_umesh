@@ -129,6 +129,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
     </CustomBuild>
     <ClInclude Include="include\perf_timer.h" />
+    <ClInclude Include="include\qgis_umesh_version.h" />
     <ClInclude Include="include\ugrid.h" />
   </ItemGroup>
   <ItemGroup>

@@ -35,19 +35,9 @@
 # define strdup _strdup
 #endif
 
-#if defined(WIN32)
-static char qgis_umesh_version[] = {qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build" (Win32)"};
-static char qgis_umesh_version_id[] = {"@(#)Deltares, "qgis_umesh_program" Version "qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build" (Win32), "__DATE__", "__TIME__""};
-#elif defined(WIN64)
-static char qgis_umesh_version[] = { qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build " (Win64)" };
-static char qgis_umesh_version_id[] = {"@(#)Deltares, " qgis_umesh_program " Version " qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build " (Win64), " __DATE__ ", " __TIME__ "" };
-#elif defined(LINUX64)
-static char qgis_umesh_version[] = {qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build" (Linux64)"};
-static char qgis_umesh_version_id[] = {"@(#)Deltares, "qgis_umesh_program" Version "qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build" (Linux64), "__DATE__", "__TIME__""};
-#else
-static char qgis_umesh_version[] = {qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build" (Unknown)"};
-static char qgis_umesh_version_id[] = {"@(#)Deltares, "qgis_umesh_program" Version "qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build" (Unknown), "__DATE__", "__TIME__""};
-#endif
+static char qgis_umesh_version[] = { qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build " (" qgis_umesh_arch ")" };
+static char qgis_umesh_version_id[] = {"@(#)Deltares, " qgis_umesh_program " Version " qgis_umesh_major "." qgis_umesh_minor "." qgis_umesh_revision "." qgis_umesh_build " (" qgis_umesh_arch "), " __DATE__ ", " __TIME__ "" };
+
 static char qgis_umesh_company_name[] = {"Deltares"};
 static char qgis_umesh_program_name[] = { qgis_umesh_program };
 

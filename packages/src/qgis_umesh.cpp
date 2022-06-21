@@ -9,17 +9,13 @@
 #  define strdup _strdup
 #endif
 
-#define PROGRAM "QGIS_UMESH"
-#define QGIS_UMESH_VERSION "0.00.01"
-#define COMPANY "Deltares"
-#define ARCH "Win64"
 #define EXPERIMENT 1
 
-/* static */ const QString qgis_umesh::s_ident = QObject::tr("@(#)" COMPANY ", " PROGRAM ", " QGIS_UMESH_VERSION ", " ARCH", " __DATE__", " __TIME__);
-/* static */ const QString qgis_umesh::s_name = QObject::tr("" COMPANY ", " PROGRAM " Development");
+/* static */ const QString qgis_umesh::s_ident = QObject::tr("@(#)" qgis_umesh_company ", " qgis_umesh_program ", " qgis_umesh_version_number ", " qgis_umesh_arch", " __DATE__", " __TIME__);
+/* static */ const QString qgis_umesh::s_name = QObject::tr("" qgis_umesh_company ", " qgis_umesh_program " Development");
 /* static */ const QString qgis_umesh::s_description = QObject::tr("Plugin to read 1D and 2D unstructured meshes, UGRID-format (" __DATE__", " __TIME__")");
 /* static */ const QString qgis_umesh::s_category = QObject::tr("Plugins");
-/* static */ const QString qgis_umesh::s_plugin_version = QObject::tr(QGIS_UMESH_VERSION);
+/* static */ const QString qgis_umesh::s_plugin_version = QObject::tr(qgis_umesh_version_number);
 
 /* static */ const QgisPlugin::PluginType qgis_umesh::s_plugin_type = QgisPlugin::UI;
 /* static */ const QString* s_plugin_icon;
