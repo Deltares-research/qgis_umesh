@@ -519,6 +519,8 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d(QString text)
         {
             QMap<QString, int> map;
             QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
+            QString unit = QString::fromStdString(m_vars->variable[i]->units).trimmed();
+            name = name + " [" + unit + "]";
             map[name] = i;
             QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
             if (mesh_var_name == text)
@@ -546,6 +548,8 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
         {
             QMap<QString, int> map;
             QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
+            QString unit = QString::fromStdString(m_vars->variable[i]->units).trimmed();
+            name = name + " [" + unit + "]";
             map[name] = i;
             QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
             if (mesh_var_name == text)
@@ -578,6 +582,8 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
         {
             QMap<QString, int> map;
             QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
+            QString unit = QString::fromStdString(m_vars->variable[i]->units).trimmed();
+            name = name + " [" + unit + "]";
             map[name] = i;
             QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
             if (m_vars->variable[i]->dims.size() == 2)  // Todo: HACK: assumed time, xy-space
