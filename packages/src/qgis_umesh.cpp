@@ -2186,7 +2186,7 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
             lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
-            QVector<QVariant> attribute;
+            QVector<QVariant> attribute(nr_attrib_fields);
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
             vl->blockSignals(true);
@@ -2199,31 +2199,35 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
             QgsFeature MyFeature;
             QgsGeometry MyPoints;
             // int nsig = long( log10(nodes->count) ) + 1;
-            START_TIMER(create_vector_layer_nodes_add_features);
+            //START_TIMER(create_vector_layer_nodes_add_features);
             for (int j = 0; j < nodes->count; j++)
             {
-                attribute.clear();
+                int k = -1;
                 MyPoints = QgsGeometry::fromPointXY(QgsPointXY(nodes->x[j], nodes->y[j]));
                 MyFeature.setGeometry(MyPoints);
 
                 MyFeature.initAttributes(nr_attrib_fields);
                 if (nodes->name.size() != 0)
                 {
-                    attribute.append(QString("%1").arg(QString::fromStdString(nodes->name[j]).trimmed()));
+                    ++k;
+                    attribute[k] = QString("%1").arg(QString::fromStdString(nodes->name[j]).trimmed());
                 }
                 if (nodes->long_name.size() != 0)
                 {
-                    attribute.append(QString("%1").arg(QString::fromStdString(nodes->long_name[j]).trimmed()));
+                    ++k;
+                    attribute[k] = QString("%1").arg(QString::fromStdString(nodes->long_name[j]).trimmed());
                 }
-                attribute.append(QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                attribute.append(QString("%1:1").arg(j + 1));
+                ++k;
+                attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
+                ++k;
+                attribute[k] = QString("%1:1").arg(j + 1);
                 MyFeature.setAttributes(attribute);
                 MyFeature.setValid(true);
                 MyFeatures.append(MyFeature);
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
-            STOP_TIMER(create_vector_layer_nodes_add_features);
+            //STOP_TIMER(create_vector_layer_nodes_add_features);
 
             vl->setTitle(layer_name + ": " + fname);
 
@@ -2308,14 +2312,13 @@ void qgis_umesh::create_vector_layer_data_on_edges(QString fname, _variable * va
             dp_vl->addAttributes(lMyAttribField);
             vl->updatedFields();
 
-            QVector<QgsPointXY> point;
-            QgsMultiPolylineXY lines;
+            QVector<QgsPointXY> point(2);
+            QgsPolylineXY line;
             QgsFeatureList MyFeatures;
             MyFeatures.reserve(edges->count);
 
             for (int j = 0; j < edges->count; j++)
             {
-                lines.clear();
                 point.clear();
                 int p1 = edges->edge_nodes[j][0];
                 int p2 = edges->edge_nodes[j][1];
@@ -2323,13 +2326,13 @@ void qgis_umesh::create_vector_layer_data_on_edges(QString fname, _variable * va
                 double y1 = nodes->y[p1];
                 double x2 = nodes->x[p2];
                 double y2 = nodes->y[p2];
-                point.append(QgsPointXY(x1, y1));
-                point.append(QgsPointXY(x2, y2));
+                point[0] = QgsPointXY(x1, y1);
+                point[1] = QgsPointXY(x2, y2);
                 //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5).").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
-                lines.append(point);
+                line = point;
 
                 QgsFeature MyFeature;
-                MyFeature.setGeometry(QgsGeometry::fromMultiPolylineXY(lines));
+                MyFeature.setGeometry(QgsGeometry::fromPolylineXY(line));
 
                 MyFeature.initAttributes(nr_attrib_fields);
                 MyFeature.setAttribute(0, z_value[j]);
@@ -2722,7 +2725,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             lMyAttribField << QgsField("Edge Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
-            QVector<QVariant> attribute;
+            QVector<QVariant> attribute(nr_attrib_fields);
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
             vl->blockSignals(true);
@@ -2733,30 +2736,27 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
             vl->updatedFields();
 
             QgsMultiLineString * polylines = new QgsMultiLineString();
-            QVector<QgsPointXY> point;
-            QgsMultiPolylineXY lines;
+            QVector<QgsPointXY> point(2);
+            QgsPolylineXY line;
             QgsFeatureList MyFeatures;
             QgsFeature MyFeature;
 
             int nsig = long(log10(edges->count)) + 1;
             bool msg_given = false;
-            START_TIMER(create_vector_layer_edges_add_features);
+            //START_TIMER(create_vector_layer_edges_add_features);
             for (int j = 0; j < edges->count; j++)
             {
-                lines.clear();
-                point.clear();
-                attribute.clear();
-                point.append(QgsPointXY(nodes->x[edges->edge_nodes[j][0]], nodes->y[edges->edge_nodes[j][0]]));
-                point.append(QgsPointXY(nodes->x[edges->edge_nodes[j][1]], nodes->y[edges->edge_nodes[j][1]]));
-                //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5).").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
-                lines.append(point);
+                point[0] = QgsPointXY(nodes->x[edges->edge_nodes[j][0]], nodes->y[edges->edge_nodes[j][0]]);
+                point[1] = QgsPointXY(nodes->x[edges->edge_nodes[j][1]], nodes->y[edges->edge_nodes[j][1]]);
+                line = point;
 
-                MyFeature.setGeometry(QgsGeometry::fromMultiPolylineXY(lines));
+                MyFeature.setGeometry(QgsGeometry::fromPolylineXY(line));
 
                 int k = -1;
                 if (edges->edge_length.size() > 0)
                 {
-                    attribute.append(edges->edge_length[j]);
+                    ++k;
+                    attribute[k] = edges->edge_length[j];
                     if (edges->edge_length[j] < 0)
                     {
                         if (!msg_given)
@@ -2769,21 +2769,25 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
                 }
                 if (edges->name.size() > 0)
                 {
-                    attribute.append(QString("%1").arg(QString::fromStdString(edges->name[j]).trimmed()));
+                    ++k;
+                    attribute[k] = QString("%1").arg(QString::fromStdString(edges->name[j]).trimmed());
                 }
                 if (edges->long_name.size() > 0)
                 {
-                    attribute.append(QString("%1").arg(QString::fromStdString(edges->long_name[j]).trimmed()));
+                    ++k;
+                    attribute[k] = QString("%1").arg(QString::fromStdString(edges->long_name[j]).trimmed());
                 }
-                attribute.append(QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                attribute.append(QString("%1:1").arg(j + 1));
+                ++k;
+                attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
+                ++k;
+                attribute[k] = QString("%1:1").arg(j + 1);
                 MyFeature.setAttributes(attribute);
                 MyFeature.setValid(true);
                 MyFeatures.append(MyFeature);
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
-            STOP_TIMER(create_vector_layer_edges_add_features);
+            //STOP_TIMER(create_vector_layer_edges_add_features);
             vl->setTitle(layer_name + ": " + fname);
 
             QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();

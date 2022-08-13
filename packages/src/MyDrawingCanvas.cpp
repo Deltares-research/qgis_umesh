@@ -5,6 +5,7 @@
 #include "MyDrawingCanvas.h"
 #include "map_time_manager_window.h"
 #include "color_ramp.h"
+#include "perf_timer.h"
 
 #define GUI_EXPORT __declspec(dllimport)
 #include "qgsmapcanvas.h"
