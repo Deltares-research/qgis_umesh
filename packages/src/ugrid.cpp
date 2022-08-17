@@ -3071,7 +3071,15 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
     }
 
     status = get_attribute(this->m_ncid, i_var, "layer_dimension", &mesh2d_strings->layer_dimension);
-    if (status == NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "interface_dimension", &mesh2d_strings->layer_interface_dimension); }
+    if (status == NC_NOERR)
+    {
+        m_map_dim_name["zs_dim_layer"] = mesh2d_strings->layer_dimension;
+        status = get_attribute(this->m_ncid, i_var, "interface_dimension", &mesh2d_strings->layer_interface_dimension);
+        if (status == NC_NOERR)
+        {
+            m_map_dim_name["zs_dim_interface"] = mesh2d_strings->layer_interface_dimension;
+        }
+    }
     if (status != NC_NOERR)
     {
         mesh2d_strings->layer_dimension = "";
