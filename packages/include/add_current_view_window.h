@@ -39,7 +39,7 @@ public:
     static int object_count;
 
     AddCurrentViewWindow();  // Constructor
-    AddCurrentViewWindow(QgisInterface *, QString, QString, double *, std::vector<double>, std::vector<double>, long);  // Constructor
+    AddCurrentViewWindow(QgisInterface *, QString, QString, double *, std::vector<double>, std::vector<double>, long, double);  // Constructor
     ~AddCurrentViewWindow();  // Destructor
     static AddCurrentViewWindow * getInstance()
     {
@@ -74,5 +74,6 @@ private:
     std::vector<double> m_y;
     long m_epsg;
     int m_cur_view;
+    double m_missing_value;
 };
 #endif

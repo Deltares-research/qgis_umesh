@@ -6,7 +6,7 @@ AddCurrentViewWindow::AddCurrentViewWindow() : QWidget()
 {
     object_count = 1;
 }
-AddCurrentViewWindow::AddCurrentViewWindow(QgisInterface * QGisIface, QString label, QString quantity, double * z_value, std::vector<double> x, std::vector<double> y, long epsg) : QWidget()
+AddCurrentViewWindow::AddCurrentViewWindow(QgisInterface * QGisIface, QString label, QString quantity, double * z_value, std::vector<double> x, std::vector<double> y, long epsg, double missing_value) : QWidget()
 {
     //QMessageBox::information(0, "Information", "AddCurrentViewWindow::AddCurrentViewWindow()");
     object_count = 1;
@@ -17,6 +17,7 @@ AddCurrentViewWindow::AddCurrentViewWindow(QgisInterface * QGisIface, QString la
     m_x = x;
     m_y = y;
     m_epsg = epsg;
+    m_missing_value = missing_value;
     // quantity; time; layer: flow element center velocity magnitude; 2020-07-07 12:00:00; z/sigma = -2.5
     create_window();
 }
@@ -159,7 +160,10 @@ void AddCurrentViewWindow::create_vector_layer()
 
         for (int j = 0; j < m_x.size(); j++)
         {
-            //QMessageBox::warning(0, tr("Warning"), tr("Count: %1, %5\nCoord: (%2,%3)\nName : %4\nLong name: %5").arg(ntw_nodes->nodes[i]->count).arg(ntw_nodes->nodes[i]->x[j]).arg(ntw_nodes->nodes[i]->y[j]).arg(ntw_nodes->nodes[i]->id[j]).arg(ntw_nodes->nodes[i]->name[j]));
+            if (m_z_value[j] == m_missing_value)
+            {
+                continue;
+            }
 
             QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(m_x[j], m_y[j]));
             QgsFeature MyFeature;
@@ -177,6 +181,7 @@ void AddCurrentViewWindow::create_vector_layer()
             dp_vl->addFeature(MyFeature);
         }
         vl->commitChanges();
+        vl->setTitle(field_name);
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setStrokeStyle(Qt::NoPen);

@@ -801,39 +801,53 @@ long UGRID::read_variables()
                     {
                         if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_layer"])
                         {
-                            int nr_lay = m_map_dim[m_map_dim_name["zs_dim_layer"]];
-                            m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_lay;
+                            int nr_layers = m_map_dim[m_map_dim_name["zs_dim_layer"]];
+                            m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_layers;
 
                             std::string name = m_map_dim_name["zs_name_layer"];
                             int ii;
                             status = nc_inq_varid(m_ncid, name.c_str(), &ii);
-                            double * values_c = (double *)malloc(sizeof(double) * nr_lay);
-                            status = nc_get_var_double(this->m_ncid, ii, values_c);
-                            std::vector<double> values;
-                            values.reserve(nr_lay);
-                            for (int j = 0; j < nr_lay; j++)
+                            if (status == NC_NOERR)
                             {
-                                values.push_back(*(values_c + j));
+                                double * values_c = (double *)malloc(sizeof(double) * nr_layers);
+                                status = nc_get_var_double(this->m_ncid, ii, values_c);
+                                std::vector<double> values;
+                                values.reserve(nr_layers);
+                                for (int j = 0; j < nr_layers; j++)
+                                {
+                                    values.push_back(*(values_c + j));
+                                }
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                             }
-                            m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
+                            else
+                            {
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center.resize(nr_layers, std::numeric_limits<double>::quiet_NaN());
+                            }
                         }
                         else if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_interface"])
                         {
-                            int nr_lay = m_map_dim[m_map_dim_name["zs_dim_interface"]];
-                            m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_lay;
+                            int nr_layers = m_map_dim[m_map_dim_name["zs_dim_interface"]];
+                            m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_layers;
 
                             std::string name = m_map_dim_name["zs_name_interface"];
                             int ii;
                             status = nc_inq_varid(m_ncid, name.c_str(), &ii);
-                            double * values_c = (double *)malloc(sizeof(double) * nr_lay);
-                            status = nc_get_var_double(this->m_ncid, ii, values_c);
-                            std::vector<double> values;
-                            values.reserve(nr_lay);
-                            for (int j = 0; j < nr_lay; j++)
+                            if (status == NC_NOERR)
                             {
-                                values.push_back(*(values_c + j));
+                                double* values_c = (double*)malloc(sizeof(double) * nr_layers);
+                                status = nc_get_var_double(this->m_ncid, ii, values_c);
+                                std::vector<double> values;
+                                values.reserve(nr_layers);
+                                for (int j = 0; j < nr_layers; j++)
+                                {
+                                    values.push_back(*(values_c + j));
+                                }
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                             }
-                            m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
+                            else
+                            {
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center.resize(nr_layers, std::numeric_limits<double>::quiet_NaN());
+                            }
                         } 
                         else if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
                         {

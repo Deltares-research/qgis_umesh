@@ -193,9 +193,9 @@ public:
     void draw_vector_arrow_at_face();
     void draw_vector_direction_at_face();
 
-    double * z_value;
-    double * u_value;
-    double * v_value;
+    double * z_value = nullptr;
+    double * u_value = nullptr;
+    double * v_value = nullptr;
     double m_z_min;
     double m_z_max;
     QColorRampEditor * m_ramph;

@@ -225,6 +225,11 @@ void MyCanvas::draw_data_at_face()
             {
                 QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 4).").arg(var_name.c_str()));
             }
+            if (z_value == nullptr)
+            {
+                return;
+            }
+
             double missing_value = var->fill_value;
             m_rgb_color.resize(mesh2d->face_nodes.size());
             determine_min_max(z_value, mesh2d->face_nodes.size(), &m_z_min, &m_z_max, missing_value);
@@ -249,21 +254,24 @@ void MyCanvas::draw_data_at_face()
                 vertex_x.clear();
                 vertex_y.clear();
                 bool in_view = false;
-                for (int j = 0; j < mesh2d->face_nodes[i].size(); j++)
+                if (z_value[i] != missing_value)
                 {
-                    int p1 = mesh2d->face_nodes[i][j];
-                    if ( p1 > -1)
+                    for (int j = 0; j < mesh2d->face_nodes[i].size(); j++)
                     {
-                        vertex_x.push_back(mesh2d->node[0]->x[p1]);
-                        vertex_y.push_back(mesh2d->node[0]->y[p1]);
-                        if (mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
-                            mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY())
+                        int p1 = mesh2d->face_nodes[i][j];
+                        if (p1 > -1)
                         {
-                            in_view = true; // point in visible area, do not skip thi polygon
+                            vertex_x.push_back(mesh2d->node[0]->x[p1]);
+                            vertex_y.push_back(mesh2d->node[0]->y[p1]);
+                            if (mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                                mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY())
+                            {
+                                in_view = true; // point in visible area, do not skip thi polygon
+                            }
                         }
                     }
                 }
-                if (in_view && z_value[i] != missing_value)
+                if (in_view)
                 {
                     QColor col = m_ramph->getRgbFromValue(z_value[i]);
                     double alpha = min(col.alphaF(), m_property->get_opacity());
@@ -388,6 +396,10 @@ void MyCanvas::draw_vector_arrow_at_face()
             else
             {
                 QMessageBox::information(0, "MapTimeManagerWindow::draw_time_dependent_vector", QString("Layer velocities not yet implemented"));
+            }
+            if (u_value == nullptr || v_value == nullptr)
+            {
+                return;
             }
             this->startDrawing(CACHE_VEC_2D);
             //rgb_color.resize(u_value.size());
@@ -599,6 +611,11 @@ void MyCanvas::draw_vector_direction_at_face()
                 v_value = std_v_vec_at_face_3d.GetValueAtIndex(_current_step, m_hydro_layer - 1, 0);
             }
         }
+        if (u_value == nullptr || v_value == nullptr)
+        {
+            return;
+        }
+
         vector<double> vec_z(mesh2d->face_nodes.size(), 0.0); // will contain the direction
         m_rgb_color.resize(mesh2d->face_nodes.size());
 
@@ -702,6 +719,10 @@ void MyCanvas::draw_dot_at_edge()
         {
             QMessageBox::information(0, tr("MyCanvas::draw_dot_at_edge()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
         }
+        if (z_value == nullptr)
+        {
+            return;
+        }
 
         double missing_value = _variable->fill_value;
         m_rgb_color.resize(edges->count);
@@ -776,7 +797,7 @@ void MyCanvas::draw_line_at_edge()
             {
                 QMessageBox::information(0, tr("MyCanvas::draw_dot_at_edge()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 3).").arg(var_name.c_str()));
             }
-            if (length == 0)
+            if (z_value == nullptr)
             {
                 return;
             }

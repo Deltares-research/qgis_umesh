@@ -167,7 +167,6 @@ public:
         QLabel * m_layerLabelPrefix_vec;
         QLabel * m_layerLabelSuffix;
         QLabel * m_layerLabelSuffix_vec;
-        QSpinBox * m_sb_layer;
         QSpinBox * m_sb_hydro_layer_vec;
         QSpinBox * m_sb_hydro_layer;
         QSpinBox * m_sb_bed_layer_vec;

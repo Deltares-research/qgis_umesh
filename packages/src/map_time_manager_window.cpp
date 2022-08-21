@@ -1475,7 +1475,8 @@ void MapTimeManagerWindow::show_hide_map_data_1d()
     else if (m_show_check_1d->checkState() == Qt::Unchecked)
     {
         m_show_map_data_1d = false;
-        if (m_show_check_2d == nullptr || m_show_check_2d->checkState() == Qt::Unchecked)
+        if (m_show_check_2d == nullptr || m_show_check_2d->checkState() == Qt::Unchecked ||
+            m_show_check_3d == nullptr || m_show_check_3d->checkState() == Qt::Unchecked)
         {
             m_pb_cur_view->setEnabled(false);
         }
@@ -1510,7 +1511,8 @@ void MapTimeManagerWindow::show_hide_map_data_2d()
     else if (m_show_check_2d->checkState() == Qt::Unchecked)
     {
         m_show_map_data_2d = false;
-        if (m_show_check_1d == nullptr || m_show_check_1d->checkState() == Qt::Unchecked)
+        if (m_show_check_1d == nullptr || m_show_check_1d->checkState() == Qt::Unchecked ||
+            m_show_check_3d == nullptr || m_show_check_3d->checkState() == Qt::Unchecked)
         {
             m_pb_cur_view->setEnabled(false);
         }
@@ -1523,10 +1525,16 @@ void MapTimeManagerWindow::show_hide_map_data_3d()
     if (m_show_check_3d->checkState() == Qt::Checked)
     {
         m_show_map_data_3d = true;
+        m_pb_cur_view->setEnabled(true);
     }
     else if (m_show_check_3d->checkState() == Qt::Unchecked)
     {
         m_show_map_data_3d = false;
+        if (m_show_check_1d == nullptr || m_show_check_1d->checkState() == Qt::Unchecked ||
+            m_show_check_2d == nullptr || m_show_check_2d->checkState() == Qt::Unchecked)
+        {
+            m_pb_cur_view->setEnabled(false);
+        }
     }
     cb_clicked_3d(m_cb_3d->currentIndex());
 }
@@ -1595,7 +1603,7 @@ void MapTimeManagerWindow::clicked_current_view()
             QString date_time = curr_date_time->dateTime().toString("1D - yyyy-MM-dd, HH:mm:ss");
             int time_indx = _q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_1d->currentText();
-            QString quantity = date_time + "; " + text;
+            QString quantity = text + "; 1D " + date_time;
 
             QVariant j = m_cb_1d->currentData();
             int jj = j.toInt();
@@ -1605,11 +1613,11 @@ void MapTimeManagerWindow::clicked_current_view()
             double* z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
             if (var->location == "edge")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d->edge[0]->x, mesh1d->edge[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d->edge[0]->x, mesh1d->edge[0]->y, mapping->epsg, var->fill_value);
             }
             else if (var->location == "node")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d->node[0]->x, mesh1d->node[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh1d->node[0]->x, mesh1d->node[0]->y, mapping->epsg, var->fill_value);
             }
         }
         else if (m_show_map_data_2d)
@@ -1620,7 +1628,7 @@ void MapTimeManagerWindow::clicked_current_view()
             QString date_time = curr_date_time->dateTime().toString("2D - yyyy-MM-dd, HH:mm:ss");
             int time_indx = _q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_2d->currentText();
-            QString quantity = date_time + "; " + text;
+            QString quantity = text + "; 2D " + date_time;
 
             QVariant j = m_cb_2d->currentData();
             int jj = j.toInt();
@@ -1631,15 +1639,44 @@ void MapTimeManagerWindow::clicked_current_view()
             double * z_value = var_time.GetValueAtIndex(time_indx, 0);  // xy_space
             if (var->location == "edge")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->edge[0]->x, mesh2d->edge[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->edge[0]->x, mesh2d->edge[0]->y, mapping->epsg, var->fill_value);
             }
             else if (var->location == "face")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->face[0]->x, mesh2d->face[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->face[0]->x, mesh2d->face[0]->y, mapping->epsg, var->fill_value);
             }
             else if (var->location == "node")
             {
-                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->node[0]->x, mesh2d->node[0]->y, mapping->epsg);
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->node[0]->x, mesh2d->node[0]->y, mapping->epsg, var->fill_value);
+            }
+        }
+        else if (m_show_map_data_3d)
+        {
+            struct _mesh2d* mesh2d = _ugrid_file->get_mesh2d();
+            struct _mapping* mapping = _ugrid_file->get_grid_mapping();
+
+            QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
+            int time_indx = _q_times.indexOf(curr_date_time->dateTime());
+            QString text = m_cb_3d->currentText();
+
+            QVariant j = m_cb_3d->currentData();
+            int jj = j.toInt();
+            struct _variable* var = m_vars->variable[jj];
+            int layer_indx = m_sb_hydro_layer->value();
+            QString quantity = text + "; 3D(" + QString::number(layer_indx) + ") " +  date_time ;
+            DataValuesProvider3D<double> var_time = var->data_3d;
+            double* z_value = var_time.GetValueAtIndex(time_indx, layer_indx-1, 0);  // xy_space
+            if (var->location == "edge")
+            {
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->edge[0]->x, mesh2d->edge[0]->y, mapping->epsg, var->fill_value);
+            }
+            else if (var->location == "face")
+            {
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->face[0]->x, mesh2d->face[0]->y, mapping->epsg, var->fill_value);
+            }
+            else if (var->location == "node")
+            {
+                m_cur_view = new AddCurrentViewWindow(m_QGisIface, date_time, quantity, z_value, mesh2d->node[0]->x, mesh2d->node[0]->y, mapping->epsg, var->fill_value);
             }
         }
     }
