@@ -2181,9 +2181,9 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
                 lMyAttribField << QgsField("Node long name", QVariant::String);
                 nr_attrib_fields++;
             }
-            lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
+            lMyAttribField << QgsField("Node Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
+            lMyAttribField << QgsField("Node Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QVector<QVariant> attribute(nr_attrib_fields);
