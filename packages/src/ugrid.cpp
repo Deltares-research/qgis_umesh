@@ -306,6 +306,7 @@ long UGRID::read_mesh()
 #ifndef NATIVE_C
     m_pgBar->setValue(600);
 #endif
+    status = determine_mesh1d_edge_length(m_mesh1d, m_ntw_edges);
     status = create_mesh1d_nodes(m_mesh1d, m_ntw_edges, m_ntw_geom);
 
     if (m_mesh_contact != NULL)
@@ -2373,33 +2374,6 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
                             m_mesh1d->edge[nr_mesh1d - 1]->edge_branch[i] -= start_index;
                         }
                     }
-                    // determine the edge length between the nodes (by definition >= 0)
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_length = std::vector<double>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
-                    for (int j = 0; j < m_mesh1d->edge[nr_mesh1d - 1]->count; j++)
-                    {
-                        int j_branch = m_mesh1d->edge[nr_mesh1d - 1]->edge_branch[j];
-                        int p1 = m_mesh1d->edge[0]->edge_nodes[j][0];
-                        int p2 = m_mesh1d->edge[0]->edge_nodes[j][1];
-                        if (m_mesh1d->node[0]->branch[p1] == m_mesh1d->node[0]->branch[p2])
-                        {
-                            m_mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = m_mesh1d->node[0]->chainage[p2] - m_mesh1d->node[0]->chainage[p1];
-                        }
-                        else if (m_mesh1d->node[0]->branch[p1] == j_branch)
-                        {
-                            // p1 on branch, p2 not on branch, so it is the last edge on a branch
-                            m_mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = m_ntw_edges->edge[0]->edge_length[j_branch] - m_mesh1d->node[0]->chainage[p1];
-                        }
-                        else if (m_mesh1d->node[0]->branch[p2] == j_branch)
-                        {
-                            // p1 not on branch, p2 on branch, so it is the first edge on a branch
-                            m_mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = m_mesh1d->node[0]->chainage[p2];
-                        }
-                        else
-                        {
-                            // branch length is equal long to the geometry branch length
-                            m_mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = m_ntw_edges->edge[0]->edge_length[j_branch];
-                        }
-                    }
                 }
                 else
                 {
@@ -3130,6 +3104,41 @@ int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_
     return status;
 }
 
+int UGRID::determine_mesh1d_edge_length(struct _mesh1d* mesh1d, struct _ntw_edges* ntw_edges)
+{
+    if (mesh1d == nullptr || ntw_edges == nullptr)
+    {
+        return 0;  // there is no 1D mesh or network
+    }
+    // determine the edge length between the nodes (by definition >= 0)
+    int nr_mesh1d = 1;  // HACK: there is just one mesh1d allowed
+    mesh1d->edge[nr_mesh1d - 1]->edge_length = std::vector<double>(mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
+    for (int j = 0; j < mesh1d->edge[nr_mesh1d - 1]->count; j++)
+    {
+        int j_branch = mesh1d->edge[nr_mesh1d - 1]->edge_branch[j];
+        int p1 = mesh1d->edge[0]->edge_nodes[j][0];
+        int p2 = mesh1d->edge[0]->edge_nodes[j][1];
+        if (mesh1d->node[0]->branch[p1] == mesh1d->node[0]->branch[p2])
+        {
+            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = mesh1d->node[0]->chainage[p2] - mesh1d->node[0]->chainage[p1];
+        }
+        else if (mesh1d->node[0]->branch[p1] == j_branch)
+        {
+            // p1 on branch, p2 not on branch, so it is the last edge on a branch
+            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = ntw_edges->edge[0]->edge_length[j_branch] - mesh1d->node[0]->chainage[p1];
+        }
+        else if (mesh1d->node[0]->branch[p2] == j_branch)
+        {
+            // p1 not on branch, p2 on branch, so it is the first edge on a branch
+            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = mesh1d->node[0]->chainage[p2];
+        }
+        else
+        {
+            // branch length is equal long to the geometry branch length
+            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = ntw_edges->edge[0]->edge_length[j_branch];
+        }
+    }
+}
 int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_edges, struct _ntw_geom * ntw_geom)
 {
     // determine the (x, y) location of the mesh1d node along the geometry of the network
