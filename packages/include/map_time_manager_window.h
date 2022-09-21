@@ -101,8 +101,8 @@ public:
 
     private:
         QgisInterface * m_QGisIface; // Pointer to the QGIS interface object
-        UGRID * _ugrid_file;
-        MyCanvas * _MyCanvas;
+        UGRID * m_ugrid_file;
+        MyCanvas * m_MyCanvas;
         void create_window();
         QGridLayout * create_date_time_layout();
         QHBoxLayout * create_push_buttons_layout_animation();
@@ -145,8 +145,8 @@ public:
         MyQDateTimeEdit * last_date_time;
 
         int nr_times;
-        QVector<QDateTime> _q_times;
-        int _current_step;
+        QVector<QDateTime> m_q_times;
+        int m_current_step;
         QSlider * m_slider;
         bool stop_time_loop;
         int first_date_time_indx;

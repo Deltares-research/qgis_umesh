@@ -34,6 +34,7 @@ EditObsPoints::~EditObsPoints()
 void EditObsPoints::closeEvent(QCloseEvent * ce)
 {
     //QMessageBox::information(0, "Information", "EditObsPoints::~closeEvent()");
+    Q_UNUSED(ce);
     this->object_count--;
     m_QGisIface->mapCanvas()->unsetMapTool(m_MyCanvas);
     m_MyCanvas->set_variable(nullptr);
@@ -94,11 +95,11 @@ void EditObsPoints::create_window()
     this->setWidget(wid);
     return;
 }
-void EditObsPoints::cb_clicked(int)
+void EditObsPoints::cb_clicked(int a)
 {
-    int a = 1;;
+    Q_UNUSED(a);
 }
 void EditObsPoints::MyMouseReleaseEvent(QgsMapMouseEvent * me)
 {
-    double length = 0.0;
+    Q_UNUSED(me);
 }

@@ -257,13 +257,13 @@ private:
     void InitDrawEachCaches(void);
     void DrawEachCaches(void);
 
-    UGRID * _ugrid_file;
-    struct _variable * _variable;
+    UGRID * m_ugrid_file;
+    struct _variable * m_variable;
     struct _mesh_variable * m_variables;
     QStringList m_coordinate_type;
     int m_bed_layer;
     int m_hydro_layer;
-    int _current_step;
+    int m_current_step;
     std::vector<long> dims;
     std::vector<double> mesh1d_x;
     std::vector<double> mesh1d_y;

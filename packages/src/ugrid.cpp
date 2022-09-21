@@ -1145,7 +1145,7 @@ struct _ntw_geom * UGRID::get_network_geometry()
     return this->m_ntw_geom;
 }
 //------------------------------------------------------------------------------
-struct _mesh1d * UGRID::get_mesh1d()
+struct _mesh1d * UGRID::get_mesh_1d()
 {
 #ifdef NATIVE_C
     fprintf(stderr, "UGRID::get_mesh1d()\n");
@@ -1153,7 +1153,7 @@ struct _mesh1d * UGRID::get_mesh1d()
     return m_mesh1d;
 }
 //------------------------------------------------------------------------------
-struct _mesh2d * UGRID::get_mesh2d()
+struct _mesh2d * UGRID::get_mesh_2d()
 {
 #ifdef NATIVE_C
     fprintf(stderr, "UGRID::get_mesh2d()\n");
@@ -1481,7 +1481,7 @@ DataValuesProvider4D<double> UGRID::get_variable_4d_values(const std::string var
 #else
                 m_pgBar->setValue(100);
 #endif
-                struct _mesh2d * m2d = this->get_mesh2d();
+                struct _mesh2d * m2d = this->get_mesh_2d();
 
                 std::vector<long> dims(4);  // required order of dimensions: time, nbedlayers, nsedtot, nFaces
                 bool correct_order = true;

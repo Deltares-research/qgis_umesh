@@ -382,8 +382,8 @@ public:
     struct _ntw_nodes * get_connection_nodes();
     struct _ntw_edges * get_network_edges();
     struct _ntw_geom * get_network_geometry();
-    struct _mesh1d * get_mesh1d();
-    struct _mesh2d * get_mesh2d();
+    struct _mesh1d * get_mesh_1d();
+    struct _mesh2d * get_mesh_2d();
     struct _mapping * get_grid_mapping();
 
     long set_grid_mapping_epsg(long, std::string);

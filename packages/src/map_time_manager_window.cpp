@@ -16,14 +16,14 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_ramph_vec_dir = nullptr;
     m_map_property_window = nullptr;
     m_cur_view = nullptr;
-    _ugrid_file = ugrid_file;
-    _MyCanvas = MyCanvas;
-    _MyCanvas->setUgridFile(_ugrid_file);
-    _q_times = _ugrid_file->get_qdt_times();
-    m_vars = _ugrid_file->get_variables();  // before create window
+    m_ugrid_file = ugrid_file;
+    m_MyCanvas = MyCanvas;
+    m_MyCanvas->setUgridFile(m_ugrid_file);
+    m_q_times = m_ugrid_file->get_qdt_times();
+    m_vars = m_ugrid_file->get_variables();  // before create window
     create_window(); //QMessageBox::information(0, "Information", "DockWindow::DockWindow()");
-    _MyCanvas->empty_caches();
-    _current_step = 0;
+    m_MyCanvas->empty_caches();
+    m_current_step = 0;
 
     m_show_map_data_1d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d
     m_show_map_data_1d2d = false;  // releated to checkbox MapTimeManagerWindow::show_parameter_1d2d
@@ -53,7 +53,7 @@ void MapTimeManagerWindow::MyMouseReleaseEvent(QMouseEvent* e)
 void MapTimeManagerWindow::ramp_changed()
 {
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::ramp_changed()");
-    _MyCanvas->draw_all();
+    m_MyCanvas->draw_all();
 }
 
 void MapTimeManagerWindow::contextMenu(const QPoint & point)
@@ -69,7 +69,7 @@ void MapTimeManagerWindow::contextMenu(const QPoint & point)
     {  // not in ramp
         if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
         {
-            m_map_property_window = new MapPropertyWindow(_MyCanvas);
+            m_map_property_window = new MapPropertyWindow(m_MyCanvas);
         }
         m_map_property_window->set_dynamic_limits_enabled(true);
         if (m_vector_draw == VECTOR_DIRECTION)
@@ -91,9 +91,9 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
     stop_time_loop = true;
     QStringList coord;
     coord << "";
-    _MyCanvas->set_coordinate_type(coord);
-    _MyCanvas->set_determine_grid_size(true);
-    _MyCanvas->empty_caches();
+    m_MyCanvas->set_coordinate_type(coord);
+    m_MyCanvas->set_determine_grid_size(true);
+    m_MyCanvas->empty_caches();
     for (int i = 0; i < m_vars->nr_vars; ++i)
     {
         m_vars->variable[i]->draw = false;
@@ -184,8 +184,8 @@ void MapTimeManagerWindow::create_window()
 }
 QGridLayout * MapTimeManagerWindow::create_date_time_layout()
 {
-    _q_times = _ugrid_file->get_qdt_times();
-    nr_times = _q_times.size();
+    m_q_times = m_ugrid_file->get_qdt_times();
+    nr_times = m_q_times.size();
     first_date_time_indx = 0;
     last_date_time_indx = nr_times - 1;
 
@@ -194,27 +194,27 @@ QGridLayout * MapTimeManagerWindow::create_date_time_layout()
     QLabel * lbl_curr_time = new QLabel(QString("Current time (presented)"));
     QLabel * lbl_stop_time = new QLabel(QString("Last time of animation"));
 
-    first_date_time = new MyQDateTimeEdit(_q_times, 0);
-    curr_date_time = new MyQDateTimeEdit(_q_times, 0);
-    last_date_time = new MyQDateTimeEdit(_q_times, _q_times.size()-1);
+    first_date_time = new MyQDateTimeEdit(m_q_times, 0);
+    curr_date_time = new MyQDateTimeEdit(m_q_times, 0);
+    last_date_time = new MyQDateTimeEdit(m_q_times, m_q_times.size()-1);
     QString format_date_time = QString("yyyy-MM-dd HH:mm:ss");
 
     // TODO set minimum and maximum within range first datetime and last datetime
     first_date_time->setTimeSpec(Qt::UTC);
     first_date_time->setToolTip(QString("Time frame UTC"));
-    first_date_time->setDateTime(_q_times[0]);
+    first_date_time->setDateTime(m_q_times[0]);
     first_date_time->setDisplayFormat(format_date_time);
     first_date_time->setWrapping(true);
     
     curr_date_time->setTimeSpec(Qt::UTC);
     curr_date_time->setToolTip(QString("Time frame UTC"));
-    curr_date_time->setDateTime(_q_times[0]);
+    curr_date_time->setDateTime(m_q_times[0]);
     curr_date_time->setDisplayFormat(format_date_time);
     curr_date_time->setWrapping(true);
     
     last_date_time->setTimeSpec(Qt::UTC);
     last_date_time->setToolTip(QString("Time frame UTC"));
-    last_date_time->setDateTime(_q_times[_q_times.size() - 1]);
+    last_date_time->setDateTime(m_q_times[m_q_times.size() - 1]);
     last_date_time->setDisplayFormat(format_date_time);
     last_date_time->setWrapping(true);
 
@@ -331,7 +331,7 @@ QColorRampEditor * MapTimeManagerWindow::create_color_ramp(vector_quantity vecto
         ramph->setRamp(initramp);
         ramph->setFixedHeight(40);  // bar breedte 40 - text(= 16) - indicator
 
-        _MyCanvas->setColorRamp(ramph);
+        m_MyCanvas->setColorRamp(ramph);
     }
     else if (vector_draw == VECTOR_DIRECTION)
     {
@@ -351,7 +351,7 @@ QColorRampEditor * MapTimeManagerWindow::create_color_ramp(vector_quantity vecto
         ramph->setFixedHeight(40);  // bar breedte 40 - text(= 16) - indicator
         ramph->setMinMax(-180.0, 180.0);
 
-        _MyCanvas->setColorRampVector(ramph);
+        m_MyCanvas->setColorRampVector(ramph);
     }
 
     return ramph;
@@ -636,8 +636,8 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
 
     int status = 1;
     int row = 0;
-    struct _mesh1d_string ** m1d = _ugrid_file->get_mesh1d_string();
-    if (_ugrid_file->get_mesh1d_string() != nullptr)
+    struct _mesh1d_string ** m1d = m_ugrid_file->get_mesh1d_string();
+    if (m_ugrid_file->get_mesh1d_string() != nullptr)
     {
         m_show_check_1d = check_parameter_1d();
         hl->addWidget(m_show_check_1d, row, 0);
@@ -646,8 +646,8 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
         hl->addWidget(m_cb_1d, row, 1);
     }
 
-    struct _mesh_contact_string ** m1d2d = _ugrid_file->get_mesh_contact_string();
-    if (_ugrid_file->get_mesh_contact_string() != nullptr)
+    struct _mesh_contact_string ** m1d2d = m_ugrid_file->get_mesh_contact_string();
+    if (m_ugrid_file->get_mesh_contact_string() != nullptr)
     {
         row += 1;
         m_show_check_1d2d = check_parameter_1d2d();
@@ -657,8 +657,8 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
         hl->addWidget(m_cb_1d2d, row, 1);
     }
 
-    struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
-    if (_ugrid_file->get_mesh2d_string() != nullptr)
+    struct _mesh2d_string ** m2d = m_ugrid_file->get_mesh2d_string();
+    if (m_ugrid_file->get_mesh2d_string() != nullptr)
     {
         QString txt = QString::fromStdString(m2d[0]->var_name);
         m_cb_2d = new QComboBox();
@@ -733,7 +733,7 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
     int status = 1;
     int row = -1;
 
-    struct _mesh2d_string ** m2d = _ugrid_file->get_mesh2d_string();
+    struct _mesh2d_string ** m2d = m_ugrid_file->get_mesh2d_string();
     if (m2d == nullptr) { return nullptr; }
 
     m_cb_vec_2d = new QComboBox();
@@ -797,14 +797,10 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
     int vec_spherical_component_2dh = 0;
     int vec_cartesian_component = 0;
     int vec_spherical_component = 0;
-    QStringList cart_2dh;
-    QStringList cart_layer;
-    QStringList spher_2dh;
-    QStringList spher_layer;
-    cart_2dh << "" << "" << "" << "";  // JanM: Is there no smarter way to generate a list of 4 items
-    cart_layer << "" << "" << "" << "";
-    spher_2dh << "" << "" << "" << "";
-    spher_layer << "" << "" << "" << "";
+    QStringList cart_2dh{ "","","","" };
+    QStringList cart_layer{ "","","","" };
+    QStringList spher_2dh{ "","","","" };
+    QStringList spher_layer{ "","","","" };
 
     cb_vec_2d->setMinimumSize(100, 22);
     cb_vec_3d->setMinimumSize(100, 22);
@@ -911,8 +907,8 @@ void MapTimeManagerWindow::start_reverse()
 {
     //QMessageBox::warning(0, tr("Message"), QString("start_reverse pressed"));
     stop_time_loop = false;
-    _current_step = _q_times.indexOf(curr_date_time->dateTime());
-    for (int i = _current_step ; i >= first_date_time_indx; i--)
+    m_current_step = m_q_times.indexOf(curr_date_time->dateTime());
+    for (int i = m_current_step ; i >= first_date_time_indx; i--)
     {
         one_step_backward();
         QApplication::processEvents();
@@ -923,7 +919,7 @@ void MapTimeManagerWindow::start_reverse()
         double msec = 1000.*m_property->get_refresh_time();
         _sleep(msec);
     }
-    if (_current_step <= first_date_time_indx)
+    if (m_current_step <= first_date_time_indx)
     {
         pb_pauze->setChecked(true);
     }
@@ -938,8 +934,8 @@ void MapTimeManagerWindow::start_forward()
 {
     //QMessageBox::warning(0, tr("Message"), QString("start_forward pressed"));
     stop_time_loop = false;
-    _current_step = _q_times.indexOf(curr_date_time->dateTime());
-    for (int i = _current_step; i < _q_times.size(); i++)
+    m_current_step = m_q_times.indexOf(curr_date_time->dateTime());
+    for (int i = m_current_step; i < m_q_times.size(); i++)
     {
         one_step_forward();
         QApplication::processEvents();
@@ -950,7 +946,7 @@ void MapTimeManagerWindow::start_forward()
         double msec = 1000.*m_property->get_refresh_time();
         _sleep(msec);
     }
-    if (_current_step >= last_date_time_indx)
+    if (m_current_step >= last_date_time_indx)
     {
         pb_pauze->setChecked(true);
     }
@@ -958,58 +954,58 @@ void MapTimeManagerWindow::start_forward()
 void MapTimeManagerWindow::goto_begin()
 {
     //QMessageBox::warning(0, tr("Message"), QString("Goto_begin pressed"));
-    curr_date_time->setDateTime(_q_times[first_date_time_indx]);
+    curr_date_time->setDateTime(m_q_times[first_date_time_indx]);
     curr_date_time->setAnsatz(first_date_time_indx, first_date_time_indx);
     m_slider->setValue(first_date_time_indx);
 
-    _MyCanvas->set_current_step(first_date_time_indx);
-    //_MyCanvas->draw_all();
+    m_MyCanvas->set_current_step(first_date_time_indx);
+    //m_MyCanvas->draw_all();
 }
 void MapTimeManagerWindow::one_step_backward()
 {
     //QMessageBox::warning(0, tr("Message"), QString("One_step_backward pressed"));
-    _current_step = _q_times.indexOf(curr_date_time->dateTime());
-    _current_step = std::max(first_date_time_indx, std::min(--_current_step, last_date_time_indx));
-    curr_date_time->setDateTime(_q_times[_current_step]);
-    curr_date_time->setAnsatz(_current_step, _current_step);
-    m_slider->setValue(_current_step);
-    if (_current_step == first_date_time_indx) { stop_time_loop = true; }
+    m_current_step = m_q_times.indexOf(curr_date_time->dateTime());
+    m_current_step = std::max(first_date_time_indx, std::min(--m_current_step, last_date_time_indx));
+    curr_date_time->setDateTime(m_q_times[m_current_step]);
+    curr_date_time->setAnsatz(m_current_step, m_current_step);
+    m_slider->setValue(m_current_step);
+    if (m_current_step == first_date_time_indx) { stop_time_loop = true; }
 
-    _MyCanvas->set_current_step(_current_step);
-    //_MyCanvas->draw_all();
+    m_MyCanvas->set_current_step(m_current_step);
+    //m_MyCanvas->draw_all();
 }
 void MapTimeManagerWindow::one_step_forward()
 {
     //QMessageBox::warning(0, tr("Message"), QString("One_step_forward pressed"));
-    _current_step = _q_times.indexOf(curr_date_time->dateTime());
-    _current_step = std::max(first_date_time_indx, std::min(++_current_step, last_date_time_indx));
-    curr_date_time->setDateTime(_q_times[_current_step]);
-    curr_date_time->setAnsatz(_current_step, _current_step);
-    m_slider->setValue(_current_step);
-    if (_current_step == last_date_time_indx) { stop_time_loop = true; }
+    m_current_step = m_q_times.indexOf(curr_date_time->dateTime());
+    m_current_step = std::max(first_date_time_indx, std::min(++m_current_step, last_date_time_indx));
+    curr_date_time->setDateTime(m_q_times[m_current_step]);
+    curr_date_time->setAnsatz(m_current_step, m_current_step);
+    m_slider->setValue(m_current_step);
+    if (m_current_step == last_date_time_indx) { stop_time_loop = true; }
 
-    _MyCanvas->set_current_step(_current_step);
-    //_MyCanvas->draw_all();
+    m_MyCanvas->set_current_step(m_current_step);
+    //m_MyCanvas->draw_all();
 }
 void MapTimeManagerWindow::goto_end()
 {
     //QMessageBox::warning(0, tr("Message"), QString("Goto_end pressed"));
-    curr_date_time->setDateTime(_q_times[last_date_time_indx]);
+    curr_date_time->setDateTime(m_q_times[last_date_time_indx]);
     curr_date_time->setAnsatz(last_date_time_indx, last_date_time_indx);
     m_slider->setValue(last_date_time_indx);
 
-    _MyCanvas->set_current_step(last_date_time_indx);
-    //_MyCanvas->draw_all();
+    m_MyCanvas->set_current_step(last_date_time_indx);
+    //m_MyCanvas->draw_all();
 }
 
 void MapTimeManagerWindow::first_date_time_changed(const QDateTime & date_time)
 {
-    if (!_q_times.contains(date_time))
+    if (!m_q_times.contains(date_time))
     {
         int i;
         for (i = 0; i < last_date_time_indx + 1; i++)
         {
-            if (date_time < _q_times[i])
+            if (date_time < m_q_times[i])
             {
                 break;
             }
@@ -1020,17 +1016,17 @@ void MapTimeManagerWindow::first_date_time_changed(const QDateTime & date_time)
     else
     {
         first_date_time->setStyleSheet("");
-        first_date_time_indx = _q_times.indexOf(date_time);
+        first_date_time_indx = m_q_times.indexOf(date_time);
     }
 }
 void MapTimeManagerWindow::curr_date_time_changed(const QDateTime & date_time)
 {
-    if (!_q_times.contains(date_time))
+    if (!m_q_times.contains(date_time))
     {
         int i;
         for (i = first_date_time_indx; i < last_date_time_indx + 1; i++)
         {
-            if (date_time < _q_times[i])
+            if (date_time < m_q_times[i])
             {
                 break;
             }
@@ -1041,18 +1037,18 @@ void MapTimeManagerWindow::curr_date_time_changed(const QDateTime & date_time)
     else
     {
         curr_date_time->setStyleSheet("");
-        int i = _q_times.indexOf(date_time);
+        int i = m_q_times.indexOf(date_time);
         curr_date_time->setAnsatz(i, i);
     }
 }
 void MapTimeManagerWindow::last_date_time_changed(const QDateTime & date_time)
 {
-    if (!_q_times.contains(date_time))
+    if (!m_q_times.contains(date_time))
     {
         int i;
-        for (i = first_date_time_indx; i < _q_times.size(); i++)
+        for (i = first_date_time_indx; i < m_q_times.size(); i++)
         {
-            if (date_time < _q_times[i])
+            if (date_time < m_q_times[i])
             {
                 break;
             }
@@ -1063,7 +1059,7 @@ void MapTimeManagerWindow::last_date_time_changed(const QDateTime & date_time)
     else
     {
         last_date_time->setStyleSheet("");
-        last_date_time_indx = _q_times.indexOf(date_time);
+        last_date_time_indx = m_q_times.indexOf(date_time);
     }
 }
 
@@ -1076,15 +1072,15 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
-    _MyCanvas->empty_cache(CACHE_1D);
+    m_MyCanvas->empty_cache(CACHE_1D);
 
     QString str = m_cb_1d->itemText(item);
     QVariant j = m_cb_1d->itemData(item);
     int jj = j.toInt();
     struct _variable* var = m_vars->variable[jj];
 
-    _MyCanvas->reset_min_max();
-    _MyCanvas->set_draw_vector(VECTOR_NONE);
+    m_MyCanvas->reset_min_max();
+    m_MyCanvas->set_draw_vector(VECTOR_NONE);
     if (m_map_property_window != nullptr)
     {
         m_map_property_window->set_dynamic_limits_enabled(true);
@@ -1094,7 +1090,7 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
     {
         QStringList coord;
         coord << "";
-        _MyCanvas->set_coordinate_type(coord);
+        m_MyCanvas->set_coordinate_type(coord);
         var->draw = false;
         return;
     }
@@ -1118,15 +1114,15 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
-    _MyCanvas->empty_cache(CACHE_1D2D);
+    m_MyCanvas->empty_cache(CACHE_1D2D);
 
     QString str = m_cb_1d2d->itemText(item);
     QVariant j = m_cb_1d2d->itemData(item);
     int jj = j.toInt();
     struct _variable* var = m_vars->variable[jj];
 
-    _MyCanvas->reset_min_max();
-    _MyCanvas->set_draw_vector(VECTOR_NONE);
+    m_MyCanvas->reset_min_max();
+    m_MyCanvas->set_draw_vector(VECTOR_NONE);
     if (m_map_property_window != nullptr)
     {
         m_map_property_window->set_dynamic_limits_enabled(true);
@@ -1136,8 +1132,8 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
     {
         QStringList coord;
         coord << "";
-        _MyCanvas->set_coordinate_type(coord);
-        _MyCanvas->set_variable(nullptr);
+        m_MyCanvas->set_coordinate_type(coord);
+        m_MyCanvas->set_variable(nullptr);
         var->draw = false;
         return;
     }
@@ -1160,15 +1156,15 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
-    _MyCanvas->empty_caches();
+    m_MyCanvas->empty_caches();
 
     QString str = m_cb_2d->itemText(item);
     QVariant j = m_cb_2d->itemData(item);
     int jj = j.toInt();
     struct _variable* var = m_vars->variable[jj];
 
-    _MyCanvas->reset_min_max();
-    _MyCanvas->set_draw_vector(VECTOR_NONE);
+    m_MyCanvas->reset_min_max();
+    m_MyCanvas->set_draw_vector(VECTOR_NONE);
     if (m_map_property_window != nullptr)
     {
         m_map_property_window->set_dynamic_limits_enabled(true);
@@ -1178,8 +1174,8 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
     {
         QStringList coord;
         coord << "";
-        _MyCanvas->set_coordinate_type(coord);
-        _MyCanvas->set_variable(nullptr);
+        m_MyCanvas->set_coordinate_type(coord);
+        m_MyCanvas->set_variable(nullptr);
         var->draw = false;
         return;
     }
@@ -1202,9 +1198,9 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
-    _MyCanvas->empty_caches();
+    m_MyCanvas->empty_caches();
 
-    _MyCanvas->set_draw_vector(VECTOR_NONE);
+    m_MyCanvas->set_draw_vector(VECTOR_NONE);
     if (m_map_property_window != nullptr)
     {
         m_map_property_window->set_dynamic_limits_enabled(true);
@@ -1238,13 +1234,13 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
         m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[i_lay - 1]));
     }
     
-    _MyCanvas->reset_min_max();
+    m_MyCanvas->reset_min_max();
     if (!m_show_map_data_3d)
     {
         QStringList coord;
         coord << "";
-        _MyCanvas->set_coordinate_type(coord);
-        _MyCanvas->set_variable(nullptr);
+        m_MyCanvas->set_coordinate_type(coord);
+        m_MyCanvas->set_variable(nullptr);
         return;
     }
     else
@@ -1266,9 +1262,9 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
-    _MyCanvas->empty_caches();
+    m_MyCanvas->empty_caches();
 
-    _MyCanvas->reset_min_max();
+    m_MyCanvas->reset_min_max();
     if (m_map_property_window != nullptr)
     {
         m_map_property_window->set_dynamic_limits_enabled(true);
@@ -1277,8 +1273,8 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
     {
         QStringList coord;
         coord << "";
-        _MyCanvas->set_coordinate_type(coord);
-        _MyCanvas->set_variable(nullptr);
+        m_MyCanvas->set_coordinate_type(coord);
+        m_MyCanvas->set_variable(nullptr);
         return;
     }
     else
@@ -1300,7 +1296,7 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
         struct _variable* var = m_vars->variable[kk];
         var->draw = false;
     }
-    _MyCanvas->empty_caches();
+    m_MyCanvas->empty_caches();
 
     QString str = m_cb_vec_3d->itemText(item);
     QVariant j = m_cb_vec_3d->itemData(item);
@@ -1317,13 +1313,13 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
     int i_lay = m_sb_hydro_layer_vec->value();
     m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
 
-    _MyCanvas->reset_min_max();
+    m_MyCanvas->reset_min_max();
     if (!m_show_map_vector_3d)
     {
         QStringList coord;
         coord << "";
-        _MyCanvas->set_coordinate_type(coord);
-        _MyCanvas->set_variable(nullptr);
+        m_MyCanvas->set_coordinate_type(coord);
+        m_MyCanvas->set_variable(nullptr);
         return;
     }
     else
@@ -1342,17 +1338,17 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
     QString str = cb->itemText(item);
     QVariant j = cb->itemData(item);
     QStringList coord = j.toStringList();
-    int i = _q_times.indexOf(curr_date_time->dateTime());
+    int i = m_q_times.indexOf(curr_date_time->dateTime());
 
-    _MyCanvas->set_current_step(i);
-    _MyCanvas->set_determine_grid_size(true);
-    _MyCanvas->set_variables(m_vars);
-    _MyCanvas->set_coordinate_type(coord);
+    m_MyCanvas->set_current_step(i);
+    m_MyCanvas->set_determine_grid_size(true);
+    m_MyCanvas->set_variables(m_vars);
+    m_MyCanvas->set_coordinate_type(coord);
 
     if (!str.contains("Depth Averaged"))
     {
         if (m_sb_hydro_layer_vec != nullptr) {
-            _MyCanvas->set_hydro_layer(m_sb_hydro_layer_vec->value());
+            m_MyCanvas->set_hydro_layer(m_sb_hydro_layer_vec->value());
         }
     }
     if (!str.contains("velocity vector direction"))
@@ -1367,7 +1363,7 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
             m_map_property_window->set_dynamic_limits_enabled(false);
         }
     }
-    _MyCanvas->set_draw_vector(m_vector_draw);
+    m_MyCanvas->set_draw_vector(m_vector_draw);
 }
 void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
 {
@@ -1385,28 +1381,28 @@ void MapTimeManagerWindow::draw_time_dependent_data(QComboBox * cb, int item)
     if (location == "edge" || location == "contact")
     {
         var->draw = true;
-        int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->set_current_step(i);
-        _MyCanvas->draw_all();
+        int i = m_q_times.indexOf(curr_date_time->dateTime());
+        m_MyCanvas->set_current_step(i);
+        m_MyCanvas->draw_all();
     }
     else if (location == "face")  // || location == "volume")  // volume at same location as face, because of topview in a GIS system
     {
         var->draw = true;
         if (m_sb_hydro_layer != nullptr) {
-            _MyCanvas->set_hydro_layer(m_sb_hydro_layer->value());
+            m_MyCanvas->set_hydro_layer(m_sb_hydro_layer->value());
         }
         if (m_sb_bed_layer != nullptr) {
-            _MyCanvas->set_bed_layer(m_sb_bed_layer->value());
+            m_MyCanvas->set_bed_layer(m_sb_bed_layer->value());
         }
-        //int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->draw_all();
+        //int i = m_q_times.indexOf(curr_date_time->dateTime());
+        m_MyCanvas->draw_all();
     }
     else if (location == "node")
     {
         var->draw = true;
-        int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->set_current_step(i);
-        _MyCanvas->draw_all();
+        int i = m_q_times.indexOf(curr_date_time->dateTime());
+        m_MyCanvas->set_current_step(i);
+        m_MyCanvas->draw_all();
     }
     else
     {
@@ -1429,22 +1425,22 @@ void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
     if (location == "edge" || location == "contact")
     {
         var->draw = true;;
-        int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->set_current_step(i);
-        _MyCanvas->draw_all();
+        int i = m_q_times.indexOf(curr_date_time->dateTime());
+        m_MyCanvas->set_current_step(i);
+        m_MyCanvas->draw_all();
     }
     else if (location == "face")
     {
         var->draw = true;;
-        //int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->draw_all();
+        //int i = m_q_times.indexOf(curr_date_time->dateTime());
+        m_MyCanvas->draw_all();
     }
     else if (location == "node")
     {
         var->draw = true;;
-        int i = _q_times.indexOf(curr_date_time->dateTime());
-        _MyCanvas->set_current_step(i);
-        _MyCanvas->draw_all();
+        int i = m_q_times.indexOf(curr_date_time->dateTime());
+        m_MyCanvas->set_current_step(i);
+        m_MyCanvas->draw_all();
     }
     else
     {
@@ -1454,15 +1450,15 @@ void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
 
 void MapTimeManagerWindow::setValue(int i)
 {
-    curr_date_time->setDateTime(_q_times[i]);
+    curr_date_time->setDateTime(m_q_times[i]);
     curr_date_time->setAnsatz(i,i);
 
-    _MyCanvas->set_current_step(i);
-    _MyCanvas->draw_all();
+    m_MyCanvas->set_current_step(i);
+    m_MyCanvas->draw_all();
 }
 void MapTimeManagerWindow::setSliderValue(QDateTime date_time)
 {
-    int i = _q_times.indexOf(date_time);
+    int i = m_q_times.indexOf(date_time);
     m_slider->setValue(i);
 }
 void MapTimeManagerWindow::show_hide_map_data_1d()
@@ -1597,11 +1593,11 @@ void MapTimeManagerWindow::clicked_current_view()
     {
         if (m_show_map_data_1d)
         {
-            struct _mesh1d* mesh1d = _ugrid_file->get_mesh1d();
-            struct _mapping* mapping = _ugrid_file->get_grid_mapping();
+            struct _mesh1d* mesh1d = m_ugrid_file->get_mesh_1d();
+            struct _mapping* mapping = m_ugrid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("1D - yyyy-MM-dd, HH:mm:ss");
-            int time_indx = _q_times.indexOf(curr_date_time->dateTime());
+            int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_1d->currentText();
             QString quantity = text + "; 1D " + date_time;
 
@@ -1622,11 +1618,11 @@ void MapTimeManagerWindow::clicked_current_view()
         }
         else if (m_show_map_data_2d)
         {
-            struct _mesh2d * mesh2d = _ugrid_file->get_mesh2d();
-            struct _mapping * mapping = _ugrid_file->get_grid_mapping();
+            struct _mesh2d * mesh2d = m_ugrid_file->get_mesh_2d();
+            struct _mapping * mapping = m_ugrid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("2D - yyyy-MM-dd, HH:mm:ss");
-            int time_indx = _q_times.indexOf(curr_date_time->dateTime());
+            int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_2d->currentText();
             QString quantity = text + "; 2D " + date_time;
 
@@ -1652,11 +1648,11 @@ void MapTimeManagerWindow::clicked_current_view()
         }
         else if (m_show_map_data_3d)
         {
-            struct _mesh2d* mesh2d = _ugrid_file->get_mesh2d();
-            struct _mapping* mapping = _ugrid_file->get_grid_mapping();
+            struct _mesh2d* mesh2d = m_ugrid_file->get_mesh_2d();
+            struct _mapping* mapping = m_ugrid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
-            int time_indx = _q_times.indexOf(curr_date_time->dateTime());
+            int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_3d->currentText();
 
             QVariant j = m_cb_3d->currentData();

@@ -107,6 +107,9 @@ void AddCurrentViewWindow::clicked(QModelIndex indx)
 {
     int selRow = indx.row();
     int selCol = indx.column();
+    Q_UNUSED(selRow);
+    Q_UNUSED(selCol);
+
 }
 void AddCurrentViewWindow::clicked_add()
 {

@@ -367,6 +367,7 @@ void QColorRampEditor::setSliderColor(int index, QColor col)
 // -----------------------------------------------------------
 void QColorRampEditor::resizeEvent (QResizeEvent* e)
 {
+    Q_UNUSED(e);
     for (int i=0; i<sliders_.size(); i++)
     {
         QColorRampEditorSlider* sl = sliders_[i];
@@ -698,6 +699,7 @@ QColor QColorRampEditorSlider::getColor()
 // -----------------------------------------------------------
 void QColorRampEditorSlider::paintEvent(QPaintEvent* e)
 {
+    Q_UNUSED(e);
     QPainter painter(this);
     painter.setPen(Qt::black);
     painter.setBrush(color_);
