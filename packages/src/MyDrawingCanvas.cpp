@@ -52,7 +52,7 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     mMapCanvasItem = QGisIface->mapCanvas();
     drawing = true;
     m_ugrid_file = nullptr;
-    _variable = nullptr;
+    m_variable = nullptr;
     m_bed_layer = 0;
     m_hydro_layer = 0;
     m_current_step = 0;
@@ -133,17 +133,17 @@ void MyCanvas::draw_all()
 void MyCanvas::draw_dot_at_face()
 {
     return;  // Todo:
-    if (_variable != nullptr && m_ugrid_file != nullptr && _variable->location == "face")
+    if (m_variable != nullptr && m_ugrid_file != nullptr && m_variable->location == "face")
     {
 #if DO_TIMING == 1
         auto start = std::chrono::steady_clock::now();
 #endif
-        string var_name = _variable->var_name;
+        string var_name = m_variable->var_name;
         struct _mesh2d * mesh2d = m_ugrid_file->get_mesh_2d();
         DataValuesProvider2D<double> std_data_at_face = m_ugrid_file->get_variable_values(var_name);
         z_value = std_data_at_face.GetValueAtIndex(m_current_step, 0);
 
-        double missing_value = _variable->fill_value;
+        double missing_value = m_variable->fill_value;
         m_rgb_color.resize(mesh2d->face[0]->x.size());
         determine_min_max(z_value, mesh2d->face[0]->x.size(), &m_z_min, &m_z_max, m_rgb_color, missing_value);
 
@@ -662,9 +662,9 @@ void MyCanvas::draw_vector_direction_at_face()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_node()
 {
-    if (_variable != nullptr && m_ugrid_file != nullptr && _variable->location == "node")
+    if (m_variable != nullptr && m_ugrid_file != nullptr && m_variable->location == "node")
     {
-        string var_name = _variable->var_name;
+        string var_name = m_variable->var_name;
         struct _mesh1d * mesh1d = m_ugrid_file->get_mesh_1d();
 
         DataValuesProvider2D<double> std_data_at_node = m_ugrid_file->get_variable_values(var_name);
@@ -674,7 +674,7 @@ void MyCanvas::draw_dot_at_node()
         }
         z_value = std_data_at_node.GetValueAtIndex(m_current_step, 0);
 
-        double missing_value = _variable->fill_value;
+        double missing_value = m_variable->fill_value;
         m_rgb_color.resize(mesh1d->node[0]->x.size());
         determine_min_max(z_value, mesh1d->node[0]->x.size(), &m_z_min, &m_z_max, m_rgb_color, missing_value);
 
@@ -690,20 +690,20 @@ void MyCanvas::draw_dot_at_node()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_edge()
 {
-    if (_variable != nullptr && m_ugrid_file != nullptr && _variable->location == "edge")
+    if (m_variable != nullptr && m_ugrid_file != nullptr && m_variable->location == "edge")
     {
         double x1, y1, x2, y2;
         vector<double> edge_x;
         vector<double> edge_y;
-        string var_name = _variable->var_name;
+        string var_name = m_variable->var_name;
         struct _mesh1d * mesh1d = m_ugrid_file->get_mesh_1d();
         struct _edge * edges = mesh1d->edge[0];
-        if (_variable->dims.size() == 2) // 2D: time, nodes
+        if (m_variable->dims.size() == 2) // 2D: time, nodes
         {
             DataValuesProvider2D<double>std_dot_at_edge = m_ugrid_file->get_variable_values(var_name);
             z_value = std_dot_at_edge.GetValueAtIndex(m_current_step, 0);
         }
-        else if (_variable->dims.size() == 3) // 3D: time, layer, nodes
+        else if (m_variable->dims.size() == 3) // 3D: time, layer, nodes
         {
             DataValuesProvider3D<double> std_dot_at_edge_3d = m_ugrid_file->get_variable_3d_values(var_name);
             if (m_bed_layer > 0)
@@ -724,7 +724,7 @@ void MyCanvas::draw_dot_at_edge()
             return;
         }
 
-        double missing_value = _variable->fill_value;
+        double missing_value = m_variable->fill_value;
         m_rgb_color.resize(edges->count);
         determine_min_max(z_value, edges->count, &m_z_min, &m_z_max, m_rgb_color, missing_value);
 
@@ -968,7 +968,7 @@ void MyCanvas::set_current_step(int current_step)
 //-----------------------------------------------------------------------------
 void MyCanvas::set_variable(struct _variable * variable)
 {
-    _variable = variable;
+    m_variable = variable;
     this->reset_min_max();
 }
 //-----------------------------------------------------------------------------

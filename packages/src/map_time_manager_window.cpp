@@ -1573,6 +1573,8 @@ void MapTimeManagerWindow::spinbox_value_changed(int i_lay)
     {
         m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[i_lay - 1]));
     }
+    m_show_check_3d->setChecked(false);
+
     return;
 }
 void MapTimeManagerWindow::spinbox_vec_value_changed(int i_lay)
