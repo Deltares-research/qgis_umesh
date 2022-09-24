@@ -1598,7 +1598,7 @@ void MapTimeManagerWindow::clicked_current_view()
             struct _mesh1d* mesh1d = m_ugrid_file->get_mesh_1d();
             struct _mapping* mapping = m_ugrid_file->get_grid_mapping();
 
-            QString date_time = curr_date_time->dateTime().toString("1D - yyyy-MM-dd, HH:mm:ss");
+            QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_1d->currentText();
             QString quantity = text + "; 1D " + date_time;
@@ -1623,7 +1623,7 @@ void MapTimeManagerWindow::clicked_current_view()
             struct _mesh2d * mesh2d = m_ugrid_file->get_mesh_2d();
             struct _mapping * mapping = m_ugrid_file->get_grid_mapping();
 
-            QString date_time = curr_date_time->dateTime().toString("2D - yyyy-MM-dd, HH:mm:ss");
+            QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_2d->currentText();
             QString quantity = text + "; 2D " + date_time;
