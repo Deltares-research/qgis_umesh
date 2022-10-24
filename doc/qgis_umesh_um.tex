@@ -1,5 +1,7 @@
 \documentclass{deltares_memo}
 \usepackage{CJKutf8}
+\usepackage{gitinfo2}
+
 \newcommand{\menuarrow}{$\rightarrow$}
 \newcommand{\plotcfts}{PlotCFTS\xspace}
 \newcommand{\dflowfm}{D-Flow FM\xspace}
@@ -18,8 +20,20 @@
 \memoEmail{jan.mooiman@deltares nl}
 \memoSubject{Manual to plot result files of \dflowfm in QGIS 3.26 (map- and history-files)}
 \memoCopy{}
-
+%
 \deltarestitle
+
+%
+\execute{git log >introduction.tex}
+%
+{{\footnotesize
+{\textbf{Version control information}}\newline
+\begin{tabular}{@{}p{12,5mm}@{}p{0mm}p{\textwidth-27mm-24pt}}
+    \textbf{Location} & \textbf{:} & \gitBranch \\
+    \textbf{Revision} & \textbf{:} & \gitHash
+\end{tabular}
+}}
+
 
 \tableofcontents
 
