@@ -55,7 +55,6 @@ Probably not needed
 ##Note (QGIS 3.18.01 and higher)
 When compiling the source code I had to adjusted the file qgsdistancearea.h.
 An extra define of M_PI_2 is added at line 215
-
 #ifndef M_PI_2
 #define M_PI_2 1.57079632679489661923
 #endif
