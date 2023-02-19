@@ -170,7 +170,7 @@ public:
     void setFullExtend(double minX, double maxX, double minY, double maxY);
     void zoomToExtend(double minX, double maxX, double minY, double maxY);
 
-    void setUgridFile(UGRID *);
+    void set_grid_file(GRID *);
     void reset_min_max();
     void set_variable(struct _variable *);
     void set_variables(struct _mesh_variable * variables);
@@ -189,6 +189,7 @@ public:
     void draw_dot_at_node();
     void draw_data_along_edge();
     void draw_data_at_face();
+    void draw_data_at_node();   // isofill of the control volume around node
     void draw_line_at_edge();
     void draw_vector_arrow_at_face();
     void draw_vector_direction_at_face();
@@ -257,7 +258,7 @@ private:
     void InitDrawEachCaches(void);
     void DrawEachCaches(void);
 
-    UGRID * m_ugrid_file;
+    GRID * m_grid_file;
     struct _variable * m_variable;
     struct _mesh_variable * m_variables;
     QStringList m_coordinate_type;

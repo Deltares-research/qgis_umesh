@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClCompile Include="generated\moc_add_current_view_window.cpp" />
     <ClCompile Include="generated\moc_edit_observation_points_window.cpp" />
-    <ClCompile Include="generated\moc_map_property.cpp" />
     <ClCompile Include="generated\moc_map_property_window.cpp" />
     <ClCompile Include="generated\moc_map_time_manager_window.cpp" />
     <ClCompile Include="generated\moc_MyDrawingCanvas.cpp" />
@@ -23,6 +22,7 @@
     <ClCompile Include="generated\moc_qgis_umesh.cpp" />
     <ClCompile Include="src\add_current_view_window.cpp" />
     <ClCompile Include="src\edit_observation_points_window.cpp" />
+    <ClCompile Include="src\grid.cpp" />
     <ClCompile Include="src\his_cf.cpp" />
     <ClCompile Include="src\map_property.cpp" />
     <ClCompile Include="src\map_property_window.cpp" />
@@ -35,6 +35,7 @@
     <ClCompile Include="src\qgis_umesh.cpp" />
     <ClCompile Include="src\qgis_umesh_version.cpp" />
     <ClCompile Include="src\read_json.cpp" />
+    <ClCompile Include="src\sgrid.cpp" />
     <ClCompile Include="src\ugrid.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -84,14 +85,16 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
     </CustomBuild>
-    <CustomBuild Include="include\map_property.h">
+    <ClInclude Include="include\grid.h" />
+    <ClInclude Include="include\sgrid.h" />
+    <ClInclude Include="include\map_property.h">
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
-    </CustomBuild>
+    </ClInclude>
     <CustomBuild Include="include\map_property_window.h">
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
@@ -241,7 +244,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include\google;c:\OSGeo4W\apps\qgis\include;$(QT5DIR64OSGEO)\include;$(QT5DIR64OSGEO)\include\ActiveQt\;$(QT5DIR64OSGEO)\include\Qt\;$(QT5DIR64OSGEO)\include\QtCore\;$(QT5DIR64OSGEO)\include\QtGui\;$(QT5DIR64OSGEO)\include\QtSvg\;$(QT5DIR64OSGEO)\include\QtWidgets\;$(QT5DIR64OSGEO)\include\QtXml\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;CORE_EXPORT=;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -264,7 +267,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <AdditionalLibraryDirectories>c:\OSGeo4W\apps\Qt5\lib;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>

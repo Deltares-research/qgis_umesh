@@ -5,7 +5,7 @@
 int MapTimeManagerWindow::object_count = 0;
 MapProperty * MapProperty::obj;  // Initialize static member of class MapProperty (Singleton)
 
-MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ugrid_file, MyCanvas * MyCanvas) : QDockWidget()
+MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, GRID * grid_file, MyCanvas * MyCanvas) : QDockWidget()
 {
     object_count = 1;
     m_QGisIface = QGisIface;
@@ -16,11 +16,11 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_ramph_vec_dir = nullptr;
     m_map_property_window = nullptr;
     m_cur_view = nullptr;
-    m_ugrid_file = ugrid_file;
+    m_grid_file = grid_file;
     m_MyCanvas = MyCanvas;
-    m_MyCanvas->setUgridFile(m_ugrid_file);
-    m_q_times = m_ugrid_file->get_qdt_times();
-    m_vars = m_ugrid_file->get_variables();  // before create window
+    m_MyCanvas->set_grid_file(m_grid_file);
+    m_q_times = m_grid_file->get_qdt_times();
+    m_vars = m_grid_file->get_variables();  // before create window
     create_window(); //QMessageBox::information(0, "Information", "DockWindow::DockWindow()");
     m_MyCanvas->empty_caches();
     m_current_step = 0;
@@ -184,7 +184,7 @@ void MapTimeManagerWindow::create_window()
 }
 QGridLayout * MapTimeManagerWindow::create_date_time_layout()
 {
-    m_q_times = m_ugrid_file->get_qdt_times();
+    m_q_times = m_grid_file->get_qdt_times();
     nr_times = m_q_times.size();
     first_date_time_indx = 0;
     last_date_time_indx = nr_times - 1;
@@ -636,8 +636,8 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
 
     int status = 1;
     int row = 0;
-    struct _mesh1d_string ** m1d = m_ugrid_file->get_mesh1d_string();
-    if (m_ugrid_file->get_mesh1d_string() != nullptr)
+    struct _mesh1d_string ** m1d = m_grid_file->get_mesh1d_string();
+    if (m_grid_file->get_mesh1d_string() != nullptr)
     {
         m_show_check_1d = check_parameter_1d();
         hl->addWidget(m_show_check_1d, row, 0);
@@ -646,8 +646,8 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
         hl->addWidget(m_cb_1d, row, 1);
     }
 
-    struct _mesh_contact_string ** m1d2d = m_ugrid_file->get_mesh_contact_string();
-    if (m_ugrid_file->get_mesh_contact_string() != nullptr)
+    struct _mesh_contact_string ** m1d2d = m_grid_file->get_mesh_contact_string();
+    if (m_grid_file->get_mesh_contact_string() != nullptr)
     {
         row += 1;
         m_show_check_1d2d = check_parameter_1d2d();
@@ -657,8 +657,8 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
         hl->addWidget(m_cb_1d2d, row, 1);
     }
 
-    struct _mesh2d_string ** m2d = m_ugrid_file->get_mesh2d_string();
-    if (m_ugrid_file->get_mesh2d_string() != nullptr)
+    struct _mesh2d_string ** m2d = m_grid_file->get_mesh2d_string();
+    if (m_grid_file->get_mesh2d_string() != nullptr)
     {
         QString txt = QString::fromStdString(m2d[0]->var_name);
         m_cb_2d = new QComboBox();
@@ -733,7 +733,7 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
     int status = 1;
     int row = -1;
 
-    struct _mesh2d_string ** m2d = m_ugrid_file->get_mesh2d_string();
+    struct _mesh2d_string ** m2d = m_grid_file->get_mesh2d_string();
     if (m2d == nullptr) { return nullptr; }
 
     m_cb_vec_2d = new QComboBox();
@@ -1595,8 +1595,8 @@ void MapTimeManagerWindow::clicked_current_view()
     {
         if (m_show_map_data_1d)
         {
-            struct _mesh1d* mesh1d = m_ugrid_file->get_mesh_1d();
-            struct _mapping* mapping = m_ugrid_file->get_grid_mapping();
+            struct _mesh1d* mesh1d = m_grid_file->get_mesh_1d();
+            struct _mapping* mapping = m_grid_file->get_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
@@ -1620,8 +1620,8 @@ void MapTimeManagerWindow::clicked_current_view()
         }
         else if (m_show_map_data_2d)
         {
-            struct _mesh2d * mesh2d = m_ugrid_file->get_mesh_2d();
-            struct _mapping * mapping = m_ugrid_file->get_grid_mapping();
+            struct _mesh2d * mesh2d = m_grid_file->get_mesh_2d();
+            struct _mapping * mapping = m_grid_file->get_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
@@ -1650,8 +1650,8 @@ void MapTimeManagerWindow::clicked_current_view()
         }
         else if (m_show_map_data_3d)
         {
-            struct _mesh2d* mesh2d = m_ugrid_file->get_mesh_2d();
-            struct _mapping* mapping = m_ugrid_file->get_grid_mapping();
+            struct _mesh2d* mesh2d = m_grid_file->get_mesh_2d();
+            struct _mapping* mapping = m_grid_file->get_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());

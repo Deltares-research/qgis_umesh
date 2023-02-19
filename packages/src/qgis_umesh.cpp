@@ -126,7 +126,7 @@ void qgis_umesh::CrsChanged()
                 //QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Selected group: %1\nNew CRS: %2\nPrev. CRS: %3\nScreen CRS: %4").arg(selNode->name()).arg(new_crs.authid()).arg(m_crs.authid()).arg(s_crs.authid()));
                 //QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Layer[0] name: %1.").arg(layer[0]->layer()->name()));
                 // Change coordinates to new_crs, by overwriting the mapping->epsg and mapping->epsg_code
-                UGRID * ugrid_file = get_active_ugrid_file(layer[0]->layer()->id());
+                GRID * ugrid_file = get_active_grid_file(layer[0]->layer()->id());
                 if (ugrid_file != nullptr)
                 {
                     QString epsg_code = new_crs.authid();
@@ -366,8 +366,8 @@ void qgis_umesh::set_enabled()
         open_action_mdu->setEnabled(true);
 
         inspectAction->setEnabled(false);
-        UGRID * ugrid_file = get_active_ugrid_file("");
-        if (ugrid_file != nullptr)
+        GRID * grid_file = get_active_grid_file("");
+        if (grid_file != nullptr)
         {
             inspectAction->setEnabled(true);
         }
@@ -405,7 +405,7 @@ QIcon qgis_umesh::get_icon_file(QDir home_dir, QString file)
 //
 //-----------------------------------------------------------------------------
 //
-void qgis_umesh::show_map_output(UGRID * ugrid_file)
+void qgis_umesh::show_map_output(GRID * grid_file)
 {
     //QMessageBox::information(0, "Information", QString("qgis_umesh::show_map_output()\nTime manager: %1.").arg(MapTimeManagerWindow::get_count()));
 
@@ -414,31 +414,13 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
     struct _global_attributes * globals;
     bool conventions_found = false;
 
-    if (ugrid_file != nullptr)
+    if (grid_file != nullptr)
     {
-        globals = ugrid_file->get_global_attributes();
-        nr_times = ugrid_file->get_count_times();
+        nr_times = grid_file->get_count_times();
     }
     else
     {
-        QMessageBox::warning(0, "Fatal error", QString("qgis_umesh::show_map_output().\nVariable ugrid_file is a nullptr."));
-        return;
-    }
-    for (int i = 0; i < globals->count; i++)
-    {
-        if (globals->attribute[i]->name == "Conventions")
-        {
-            conventions_found = true;
-            if (globals->attribute[i]->cvalue.find("UGRID-1.") == std::string::npos)
-            {
-                QMessageBox::information(0, "Information", QString("Time manager will not start because this file is not UGRID-1.* compliant.\nThis file has file format: %1.").arg(globals->attribute[i]->cvalue.c_str()));
-                return;
-            }
-        }
-    }
-    if (!conventions_found)
-    {
-        QMessageBox::information(0, "Information", QString("Time manager will not start because there is no Conventions attribute in the file."));
+        QMessageBox::warning(0, "Fatal error", QString("qgis_umesh::show_map_output().\nVariable grid_file is a nullptr."));
         return;
     }
 
@@ -455,7 +437,7 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
                 QMessageBox::information(0, "Message", QString("Screen CRS \"%1\" not equal to layer CRS: \"%2\"\nPlease set first the screen CRS equal to the layer CRS.").arg(s_crs.authid()).arg(new_crs.authid()));
             }
             //active_layer->setDataSource()
-            mtm_widget = new MapTimeManagerWindow(mQGisIface, ugrid_file, mMyCanvas);
+            mtm_widget = new MapTimeManagerWindow(mQGisIface, grid_file, mMyCanvas);
             mtm_widget->setContextMenuPolicy(Qt::CustomContextMenu);
             mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, mtm_widget);
             QObject::connect(mtm_widget, &MapTimeManagerWindow::customContextMenuRequested, mtm_widget, &MapTimeManagerWindow::contextMenu);
@@ -463,7 +445,7 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
     }
     else
     {
-        QString fname = ugrid_file->get_filename().canonicalFilePath();
+        QString fname = grid_file->get_filename().canonicalFilePath();
         QMessageBox::information(0, tr("Message"), QString("No time-series available in file:\n%1.").arg(fname));
     }
 }
@@ -473,8 +455,8 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
 void qgis_umesh::edit_1d_obs_points()
 {
     //QMessageBox::information(0, "Information", QString("qgis_umesh::edit_1d_obs_points()."));
-    UGRID * ugrid_file = get_active_ugrid_file("");
-    if (ugrid_file == nullptr)
+    GRID * grid_file = get_active_grid_file("");
+    if (grid_file == nullptr)
     {
         QMessageBox::information(0, "Information", QString("qgis_umesh::edit_1d_obs_points()\nSelect first a layer of a UGRID file."));
         return;
@@ -577,7 +559,7 @@ void qgis_umesh::edit_1d_obs_points()
         if (EditObsPoints::get_count() == 0)  // create a docked window if it is not already there.
         {
             if (!geom_ok) { geom_layer = nullptr; }
-            editObs_widget = new EditObsPoints(obs_layer, geom_layer, ugrid_file, mQGisIface);
+            editObs_widget = new EditObsPoints(obs_layer, geom_layer, grid_file, mQGisIface);
             mQGisIface->addDockWidget(Qt::LeftDockWidgetArea, editObs_widget);
         }
     }
@@ -593,11 +575,12 @@ void qgis_umesh::experiment()
     QgsVectorLayer *vlayer = (QgsVectorLayer*)layer;
     //QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>(layer);
     QString layer_name("mesh2d_s1");
-    UGRID * ugrid_file = m_ugrid_file[_fil_index];
+    GRID* grid_file = m_grid_file[_fil_index];
+    UGRID* ugrid_file = m_ugrid_file[_fil_index];
     struct _mapping * mapping;
     struct _mesh2d * mesh2d;
 
-    mapping = ugrid_file->get_grid_mapping();
+    mapping = grid_file->get_mapping();
     mesh2d = ugrid_file->get_mesh_2d();
 
     if (layer->name().contains("cell_area"))
@@ -814,50 +797,29 @@ void qgis_umesh::openFile(QFileInfo ncfile)
     {
         m_working_dir = ncfile.absolutePath().toUtf8();
     }
-    char * fname_c = strdup(ncfile.absoluteFilePath().toUtf8());
-    int status = nc_open(fname_c, NC_NOWRITE, &ncid);
-    (void)nc_close(ncid);
-    free(fname_c); fname_c = nullptr;
-    if (status != NC_NOERR)
+
+    long stat;
+    GRID* grid_file = new GRID();
+    stat = grid_file->open(ncfile, this->pgBar);
+    if (stat != 0)
     {
         QMessageBox::warning(0, tr("Warning"), tr("Cannot open netCDF file:\n%1\nThis file is not supported by this QGIS plugin.").arg(ncfile.absoluteFilePath()));
         STOP_TIMER(open_file);
         return;
     }
-    _fil_index++;
-    m_ugrid_file.push_back(new UGRID(ncfile, this->pgBar));
-    UGRID * ugrid_file = new UGRID(ncfile, this->pgBar);
-    //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1.").arg(ncfile.absoluteFilePath()));
-    ugrid_file->read();
-    m_ugrid_file[_fil_index] = ugrid_file;
-    // check on UGRID file; that is an item in teh conventions attribute
-    bool conventions_found = false;
-    struct _global_attributes * globals = ugrid_file->get_global_attributes();
-    for (int i = 0; i < globals->count; i++)
-    {
-        if (globals->attribute[i]->name == "Conventions")
-        {
-            conventions_found = true;
-            if (globals->attribute[i]->cvalue.find("UGRID-1.") == std::string::npos)
-            {
-                QString fname = ugrid_file->get_filename().fileName();
-                QString msg = QString("File \"%1\" is not UGRID-1.* compliant.\nThe file has Conventions attribute: \"%2\".").arg(fname).arg(globals->attribute[i]->cvalue.c_str());
-                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
-                STOP_TIMER(open_file);
-                return;
-            }
-        }
-    }
-    if (!conventions_found)
-    {
-        QString fname = ugrid_file->get_filename().fileName();
-        QString msg = QString(tr("No \"Conventions\" attribute found in file: \"%1\"").arg(fname));
-        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
-        STOP_TIMER(open_file);
-        return;
-    }
-    STOP_TIMER(open_file);
+    m_grid_file.push_back(grid_file);
+    grid_file = m_grid_file.back();
 
+    SGRID* sgrid_file;
+    UGRID* ugrid_file;
+
+    ncid = grid_file->get_ncid();
+    m_ugrid_file.push_back(new UGRID(ncfile, ncid, this->pgBar));
+    _fil_index = m_ugrid_file.size() - 1;
+    ugrid_file = m_ugrid_file.back();
+    stat = grid_file->read();
+//    stat = ugrid_file->read();
+    STOP_TIMER(open_file);
     START_TIMER(activate_layers);
     activate_layers();
     STOP_TIMER(activate_layers);
@@ -938,7 +900,7 @@ void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
     fname = nullptr;
     _his_cf_fil_index++;
     m_his_cf_file.push_back(new HISCF(ncfile, this->pgBar));
-    HISCF * _his_cf_file = m_his_cf_file[_his_cf_fil_index];
+    HISCF * _his_cf_file = m_his_cf_file.back();
     //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1.").arg(ncfile.absoluteFilePath()));
     _his_cf_file->read();
     activate_observation_layers();
@@ -1065,6 +1027,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = obser_file.toStdString();
                 JSON_READER * pt_obs = new JSON_READER(fname);
+                GRID* grid_file = m_grid_file[_fil_index];
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1072,7 +1035,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                mapping = grid_file->get_mapping();
                 create_vector_layer_observation_point(ugrid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1099,14 +1062,15 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = extold_file.toStdString();
                 JSON_READER * pt_extold_file = new JSON_READER(fname);
-                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                GRID* grid_file = m_grid_file[_fil_index];
+                UGRID* ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
                     return;
                 }
                 struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                mapping = grid_file->get_mapping();
                 create_vector_layer_1D_external_forcing(ugrid_file, pt_extold_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1133,14 +1097,15 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = ext_file.toStdString();
                 JSON_READER * pt_ext_file = new JSON_READER(fname);
-                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                GRID* grid_file = m_grid_file[_fil_index];
+                UGRID* ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
                     return;
                 }
-                struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                struct _mapping* mapping;
+                mapping = grid_file->get_mapping();
                 create_vector_layer_1D_external_forcing(ugrid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1166,14 +1131,15 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = struct_file.toStdString();
                 JSON_READER * pt_struct_file = new JSON_READER(fname);
-                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                GRID* grid_file = m_grid_file[_fil_index];
+                UGRID* ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
                     return;
                 }
-                struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                struct _mapping* mapping;
+                mapping = grid_file->get_mapping();
                 create_vector_layer_structure(ugrid_file, pt_struct_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1199,14 +1165,15 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = drypoints_file.toStdString();
                 JSON_READER * pt_file = new JSON_READER(fname);
-                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                GRID* grid_file = m_grid_file[_fil_index];
+                UGRID* ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
                     return;
                 }
-                struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                struct _mapping* mapping;
+                mapping = grid_file->get_mapping();
                 create_vector_layer_drypoints(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1232,14 +1199,15 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = abs_fname.toStdString();
                 JSON_READER * pt_profloc = new JSON_READER(fname);
-                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                GRID* grid_file = m_grid_file[_fil_index];
+                UGRID* ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
                     return;
                 }
-                struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                struct _mapping* mapping;
+                mapping = grid_file->get_mapping();
                 create_vector_layer_sample_point(ugrid_file, pt_profloc, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1265,14 +1233,15 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = obs_cross_file.toStdString();
                 JSON_READER * pt_obs_cross_file = new JSON_READER(fname);
-                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                GRID* grid_file = m_grid_file[_fil_index];
+                UGRID* ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
                     return;
                 }
-                struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                struct _mapping* mapping;
+                mapping = grid_file->get_mapping();
                 create_vector_layer_observation_cross_section(ugrid_file, pt_obs_cross_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1298,14 +1267,15 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = thin_dam_file.toStdString();
                 JSON_READER * pt_thin_dam_file = new JSON_READER(fname);
-                UGRID * ugrid_file = m_ugrid_file[_fil_index];
+                GRID* grid_file = m_grid_file[_fil_index];
+                UGRID* ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
                     return;
                 }
-                struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                struct _mapping* mapping;
+                mapping = grid_file->get_mapping();
                 create_vector_layer_thin_dams(ugrid_file, pt_thin_dam_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1331,14 +1301,15 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = fix_weir_file.toStdString();
                 JSON_READER * pt_file = new JSON_READER(fname);
+                GRID* grid_file = m_grid_file[_fil_index];
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
                     return;
                 }
-                struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                struct _mapping* mapping;
+                mapping = grid_file->get_mapping();
                 create_vector_layer_fixed_weir(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1364,14 +1335,15 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = full_file_name.toStdString();
                 JSON_READER * pt_file = new JSON_READER(fname);
+                GRID* grid_file = m_grid_file[_fil_index];
                 UGRID * ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(ugrid_file->get_filename().fileName()));
                     return;
                 }
-                struct _mapping * mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                struct _mapping* mapping;
+                mapping = grid_file->get_mapping();
                 create_vector_layer_1D_cross_section(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1397,6 +1369,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
             {
                 fname = full_file_name.toStdString();
                 JSON_READER* pt_file = new JSON_READER(fname);
+                GRID* grid_file = m_grid_file[_fil_index];
                 UGRID* ugrid_file = m_ugrid_file[_fil_index];
                 if (ugrid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
                 {
@@ -1404,7 +1377,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = ugrid_file->get_grid_mapping();
+                mapping = grid_file->get_mapping();
                 create_vector_layer_1D_retention(ugrid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1551,16 +1524,17 @@ void qgis_umesh::open_file_obs_point_json(QFileInfo jsonfile)
     treeGroup = get_subgroup(treeRoot, QString("Location point"));
 
     std::vector<std::string> token = tokenize(pt_file->get_filename(), '/');
-    UGRID * ugrid_file = new UGRID(QFileInfo(QString::fromStdString(token[token.size()-1])), nullptr);
-    create_vector_layer_observation_point(ugrid_file, pt_file, epsg, treeGroup);  // i.e. a JSON file
+    UGRID* ugrid_file = new UGRID();
+    long status = ugrid_file->open(QFileInfo(QString::fromStdString(token[token.size()-1])), nullptr);
+    if (status == 0) { create_vector_layer_observation_point(ugrid_file, pt_file, epsg, treeGroup); }  // i.e. a JSON file
 }
 //
 //-----------------------------------------------------------------------------
 //
 void qgis_umesh::set_show_map_output()
 {
-    UGRID * ugrid_file = get_active_ugrid_file("");
-    if (ugrid_file != nullptr) { show_map_output(ugrid_file); }
+    GRID * grid_file = get_active_grid_file("");
+    if (grid_file != nullptr) { show_map_output(grid_file); }
 }
 //
 //-----------------------------------------------------------------------------
@@ -1606,7 +1580,7 @@ void qgis_umesh::start_plotcfts()
 //
 //-----------------------------------------------------------------------------
 //
-UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
+GRID * qgis_umesh::get_active_grid_file(QString layer_id)
 {
     // Function to find the filename belonging by the highlighted layer,
     // or to which group belongs the highligthed layer,
@@ -1614,7 +1588,7 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
     QList <QgsLayerTreeGroup *> groups = treeRoot->findGroups();
     QgsMapLayer * active_layer = NULL;
-    UGRID * ugrid_file = nullptr;
+    GRID * grid_file = nullptr;
 
     if (layer_id == "")
     {
@@ -1643,9 +1617,9 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
                         {
                             //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2.").arg(myGroup->name()).arg(active_layer->name()));
                             // get the full file name
-                            if (myGroups[i]->name().contains(m_ugrid_file[j]->get_filename().fileName()))
+                            if (myGroups[i]->name().contains(m_grid_file[j]->get_filename().fileName()))
                             {
-                                ugrid_file = m_ugrid_file[j];
+                                grid_file = m_grid_file[j];
                             }
                         }
                     }
@@ -1653,11 +1627,7 @@ UGRID * qgis_umesh::get_active_ugrid_file(QString layer_id)
             }
         }
     }
-    //else
-    //{
-    //    QMessageBox::information(0, "Information", QString("No layer selected, determination of output files is not possible."));
-    //}
-    return ugrid_file;
+    return grid_file;
 }
 //-----------------------------------------------------------------------------
 //
@@ -1770,9 +1740,10 @@ void qgis_umesh::activate_layers()
 
         if (_fil_index != -1)
         {
+            GRID* grid_file = m_grid_file[_fil_index];
             UGRID * ugrid_file = m_ugrid_file[_fil_index];
-            struct _mapping * mapping;
-            mapping = ugrid_file->get_grid_mapping();
+            struct _mapping* mapping;
+            mapping = grid_file->get_mapping();
             QString fname = ugrid_file->get_filename().canonicalFilePath();
             if (mapping->epsg == 0)
             {
@@ -1784,15 +1755,15 @@ void qgis_umesh::activate_layers()
                 QString epsg_code = _crs.authid();
                 QStringList parts = epsg_code.split(':');
                 long epsg = parts.at(1).toInt();
-                ugrid_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
+                grid_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
             }
-            fname = ugrid_file->get_filename().fileName();  // just the filename
+            fname = grid_file->get_filename().fileName();  // just the filename
 
             int pgbar_value = 500;  // start of pgbar counter
 
                                     // Mesh 1D edges and mesh 1D nodes
 
-            mesh_1d = ugrid_file->get_mesh_1d();
+            mesh_1d = grid_file->get_mesh_1d();
             //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes."));
             if (mesh_1d != nullptr)
             {
@@ -1814,9 +1785,9 @@ void qgis_umesh::activate_layers()
             }
 
             // Mesh1D Topology Edges between connection nodes, Network Connection node, Network geometry
-            ntw_nodes = ugrid_file->get_connection_nodes();
-            ntw_edges = ugrid_file->get_network_edges();
-            ntw_geom = ugrid_file->get_network_geometry();
+            ntw_nodes = grid_file->get_connection_nodes();
+            ntw_edges = grid_file->get_network_edges();
+            ntw_geom = grid_file->get_network_geometry();
 
             if (ntw_nodes != nullptr)
             {
@@ -1848,7 +1819,7 @@ void qgis_umesh::activate_layers()
 
             // Mesh 2D edges and Mesh 2D nodes
 
-            mesh_2d = ugrid_file->get_mesh_2d();
+            mesh_2d = grid_file->get_mesh_2d();
             if (mesh_2d != nullptr)
             {
                 //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes."));
@@ -1878,7 +1849,7 @@ void qgis_umesh::activate_layers()
             //
             // get the time independent variables and list them in the layer-panel as treegroup
             //
-            struct _mesh_variable * var = ugrid_file->get_variables();
+            struct _mesh_variable * var = grid_file->get_variables();
 
             bool time_independent_data = false;
             if (mesh_2d != nullptr && var != nullptr)
@@ -1971,6 +1942,121 @@ void qgis_umesh::activate_layers()
 //
 //-----------------------------------------------------------------------------
 //
+void qgis_umesh::activate_slayers()
+{
+    struct _smesh2d* mesh_2d;
+
+    if (_fil_index == -1)
+    {
+        return;
+    }
+
+    QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
+
+    if (mainAction->isChecked())
+    {
+        QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
+        for (int i = 0; i < groups.length(); i++)
+        {
+            //QMessageBox::warning(0, "Message", QString("_fil_index: %1+1.").arg(_fil_index+1));
+            for (int j = 0; j < _fil_index + 1; j++)
+            {
+                QgsLayerTreeGroup* myGroup = treeRoot->findGroup(QString("SGRID Mesh - %1").arg(j + 1));
+                if (myGroup != nullptr)
+                {
+                    myGroup->setItemVisibilityChecked(true);
+                }
+            }
+        }
+
+        QgsLayerTreeGroup* treeGroup = treeRoot->findGroup(QString("SGRID - %1").arg(m_sgrid_file[_fil_index]->get_filename().fileName()));
+        if (treeGroup == nullptr)
+        {
+            QString fname = m_sgrid_file[_fil_index]->get_filename().fileName();
+            QString name = QString("SGRID - %1").arg(fname);
+            treeGroup = treeRoot->insertGroup(_fil_index, name);  // set this group on top if _fil_index == 0
+            treeGroup->setExpanded(true);  // true is the default
+            treeGroup->setItemVisibilityChecked(true);
+            treeGroup->setItemVisibilityCheckedRecursive(true);
+        }
+
+        if (_fil_index != -1)
+        {
+            GRID* grid_file = m_grid_file[_fil_index];
+            SGRID* sgrid_file = m_sgrid_file[_fil_index];
+            struct _mapping* mapping;
+            mapping = grid_file->get_mapping();
+            QString fname = sgrid_file->get_filename().canonicalFilePath();
+            if (mapping->epsg == 0)
+            {
+                QString msg = QString("%1\nThe CRS code on file \'%2\' is not known.\nThe CRS code is set to the same CRS code as the presentation map (see lower right corner).\nPlease change the CRS code after loading the file, if necessary.").arg(sgrid_file->get_filename().fileName()).arg(fname);
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+
+                // get the crs of the presentation (lower right corner of the qgis main-window)
+                QgsCoordinateReferenceSystem _crs = QgsProject::instance()->crs();
+                QString epsg_code = _crs.authid();
+                QStringList parts = epsg_code.split(':');
+                long epsg = parts.at(1).toInt();
+                sgrid_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
+            }
+            fname = sgrid_file->get_filename().fileName();  // just the filename
+
+            int pgbar_value = 500;  // start of pgbar counter
+
+                                    // Mesh 1D edges and mesh 1D nodes
+
+
+            // Mesh 2D edges and Mesh 2D nodes
+
+            mesh_2d = sgrid_file->get_smesh_2d();
+            if (mesh_2d != nullptr)
+            {
+                create_vector_layer_nodes(fname, QString("Mesh2D nodes"), (_feature *)mesh_2d->node[0], mapping->epsg, treeGroup);
+                pgbar_value += 10;
+                this->pgBar->setValue(pgbar_value);
+            }
+            pgbar_value = 600;  // start of pgbar counter
+
+            this->pgBar->setValue(pgbar_value);
+
+            //
+            // get the time independent variables and list them in the layer-panel as treegroup
+            //
+            struct _smesh_variable* var = sgrid_file->get_variables();
+
+            bool time_independent_data = false;
+            if (mesh_2d != nullptr && var != nullptr)
+            {
+                for (int i = 0; i < var->nr_vars; i++)
+                {
+                    if (!var->svariable[i]->time_series)
+                    {
+                        time_independent_data = true;
+                        break;
+                    }
+                }
+                if (time_independent_data)
+                {
+                    QString msg = QString("Time independent not yet supported.");
+                    QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+                }
+            }  // end mesh_2d != nullptr
+        }
+    }
+    else
+    {
+        QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
+        for (int i = 0; i < groups.length(); i++)
+        {
+            QString name = groups[i]->name();
+            QgsLayerTreeGroup* myGroup = treeRoot->findGroup(name);
+            myGroup->setItemVisibilityChecked(false);
+        }
+    }
+}
+//
+//-----------------------------------------------------------------------------
+//
 void qgis_umesh::activate_observation_layers()
 {
     std::vector<_location_type *> obs_type;
@@ -2008,7 +2094,7 @@ void qgis_umesh::activate_observation_layers()
         if (_his_cf_fil_index != -1)
         {
             HISCF * _his_cf_file = m_his_cf_file[_his_cf_fil_index];
-            struct _mapping * mapping;
+            struct _mapping* mapping;
             mapping = _his_cf_file->get_grid_mapping();
             if (mapping->epsg == 0)
             {
@@ -2198,7 +2284,7 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
             QgsGeometry MyPoints;
             // int nsig = long( log10(nodes->count) ) + 1;
             //START_TIMER(create_vector_layer_nodes_add_features);
-            for (int j = 0; j < nodes->count; j++)
+            for (int j = 0; j < nodes->x.size(); j++)
             {
                 int k = -1;
                 MyPoints = QgsGeometry::fromPointXY(QgsPointXY(nodes->x[j], nodes->y[j]));
@@ -6325,7 +6411,7 @@ QgsLayerTreeGroup * qgis_umesh::get_subgroup(QgsLayerTreeGroup * treeGroup, QStr
     return subTreeGroup;
 }
 
-//
+//------------------------------------------------------------------------------
 std::vector<std::string> qgis_umesh::tokenize(const std::string& s, char c) {
     auto end = s.cend();
     auto start = end;

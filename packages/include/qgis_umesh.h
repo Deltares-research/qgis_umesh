@@ -59,7 +59,9 @@
 #include "MyEditTool.h"
 #include "MyDrawingCanvas.h"
 #include "netcdf.h"
+#include "grid.h"
 #include "ugrid.h"
+#include "sgrid.h"
 #include "his_cf.h"
 #include "json_reader.h"
 #include "edit_observation_points_window.h"
@@ -128,7 +130,7 @@ class qgis_umesh
 
         QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
         void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
-        void show_map_output(UGRID *);
+        void show_map_output(GRID *);
         void edit_1d_obs_points();
         void experiment();
 
@@ -147,10 +149,11 @@ class qgis_umesh
         void set_enabled();
         void about();
         void activate_layers();
+        void activate_slayers();
         void activate_observation_layers();
         void ShowUserManual();
 
-        UGRID * get_active_ugrid_file(QString);
+        GRID * get_active_grid_file(QString);
         HISCF * get_active_his_cf_file(QString);
         void set_show_map_output();
         void start_plotcfts();
@@ -218,11 +221,14 @@ class qgis_umesh
         char * actionIcon_c = (char *)malloc(PATH_LENGTH * sizeof(char *));
 
         int _fil_index;
-        std::vector<UGRID *> m_ugrid_file;
+        std::vector<GRID*> m_grid_file;
+        std::vector<UGRID*> m_ugrid_file;
+        std::vector<SGRID*> m_sgrid_file;
         int _his_cf_fil_index;
         std::vector<HISCF *> m_his_cf_file;
         int _mdu_fil_index;
         std::vector<JSON_READER *> m_mdu_files;
+        struct _global_attributes* m_global_attributes;
 
         QgsCoordinateReferenceSystem m_crs;
 };

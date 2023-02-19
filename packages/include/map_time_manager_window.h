@@ -55,7 +55,7 @@ public:
     static int object_count;
 
     public:
-        MapTimeManagerWindow(QgisInterface *, UGRID *, MyCanvas *);
+        MapTimeManagerWindow(QgisInterface *, GRID *, MyCanvas *);
         ~MapTimeManagerWindow();
         static int get_count();
 
@@ -101,7 +101,7 @@ public:
 
     private:
         QgisInterface * m_QGisIface; // Pointer to the QGIS interface object
-        UGRID * m_ugrid_file;
+        GRID * m_grid_file;
         MyCanvas * m_MyCanvas;
         void create_window();
         QGridLayout * create_date_time_layout();
