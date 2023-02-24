@@ -421,7 +421,7 @@ long HISCF::read_parameters()
                     if (att_value == "point")
                     {
                         timeseries_geom_found[j] = true;
-                        loc_type[j]->type = OBS_POINT;
+                        loc_type[j]->type = OBSERVATION_TYPE::OBS_POINT;
                         // point location, observation points
                         status = get_attribute(this->m_ncid, i_geom_id, "node_count", &att_value);
                         status = get_dimension_var(this->m_ncid, att_value, &geom_node_count);
@@ -454,7 +454,7 @@ long HISCF::read_parameters()
                     else if (att_value == "line")
                     {
                         timeseries_geom_found[j] = true;
-                        loc_type[j]->type = OBS_POLYLINE;
+                        loc_type[j]->type = OBSERVATION_TYPE::OBS_POLYLINE;
                         // line location, cross sections
                         status = get_attribute(this->m_ncid, i_geom_id, "node_count", &att_value);
                         status = get_dimension_var(this->m_ncid, att_value, &geom_node_count);
@@ -515,9 +515,9 @@ long HISCF::read_parameters()
                     // only variables with the attribute "coordinates" are treated
                     bool found = false;
                     loc_type[j]->node_count.clear();
-                    if (token.size() == 1 && loc_type[j]->type == OBS_NONE && loc_type[j]->location_var_name == token[0])  // assume it is the cross_section
+                    if (token.size() == 1 && loc_type[j]->type == OBSERVATION_TYPE::OBS_NONE && loc_type[j]->location_var_name == token[0])  // assume it is the cross_section
                     {
-                        loc_type[j]->type = OBS_POLYLINE;
+                        loc_type[j]->type = OBSERVATION_TYPE::OBS_POLYLINE;
                         token.resize(3);
                         token[2] = token[0];
                         token[0] = "cross_section_x_coordinate";
@@ -533,8 +533,8 @@ long HISCF::read_parameters()
                         if (!found && std::string(loc_type[j]->location_var_name) == token[i_token])
                         {
                             found = true;
-                            if (loc_type[j]->type == OBS_NONE) { 
-                                loc_type[j]->type = OBS_POINT; 
+                            if (loc_type[j]->type == OBSERVATION_TYPE::OBS_NONE) {
+                                loc_type[j]->type = OBSERVATION_TYPE::OBS_POINT;
                                 loc_type[j]->node_count.push_back(1);
                             }
                             // location_var_name is one of the tokens
@@ -572,7 +572,7 @@ long HISCF::read_parameters()
     {
         status = nc_inq_varid(this->m_ncid, loc_type[j]->x_location_name.c_str(), &var_id);
         if (status == NC_NOERR) { status = nc_inq_varndims(this->m_ncid, var_id, &ndims); }
-        if (status == NC_NOERR && loc_type[j]->type == OBS_POINT)
+        if (status == NC_NOERR && loc_type[j]->type == OBSERVATION_TYPE::OBS_POINT)
         {
             double * values_c = (double *)malloc(sizeof(double)*loc_type[j]->location.size());
             status = nc_get_var_double(this->m_ncid, var_id, values_c);
@@ -589,7 +589,7 @@ long HISCF::read_parameters()
             free(values_c);
             values_c = NULL;
         }
-        else if (status == NC_NOERR && loc_type[j]->type == OBS_POLYLINE)
+        else if (status == NC_NOERR && loc_type[j]->type == OBSERVATION_TYPE::OBS_POLYLINE)
         {
             long * dims = (long *)malloc(sizeof(long)*ndims);
             status = nc_inq_vardimid(this->m_ncid, var_id, (int*)dims);

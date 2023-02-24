@@ -35,8 +35,6 @@
     <ClCompile Include="src\qgis_umesh.cpp" />
     <ClCompile Include="src\qgis_umesh_version.cpp" />
     <ClCompile Include="src\read_json.cpp" />
-    <ClCompile Include="src\sgrid.cpp" />
-    <ClCompile Include="src\ugrid.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="include\qgis_umesh.h">
@@ -86,7 +84,6 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
     </CustomBuild>
     <ClInclude Include="include\grid.h" />
-    <ClInclude Include="include\sgrid.h" />
     <ClInclude Include="include\map_property.h">
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
@@ -133,7 +130,6 @@
     </CustomBuild>
     <ClInclude Include="include\perf_timer.h" />
     <ClInclude Include="include\qgis_umesh_version.h" />
-    <ClInclude Include="include\ugrid.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\version_number.ini" />
@@ -195,7 +191,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include\;c:\OSGeo4W\apps\qgis\include;$(QT5DIR64OSGEO)\include;$(QT5DIR64OSGEO)\include\ActiveQt\;$(QT5DIR64OSGEO)\include\Qt\;$(QT5DIR64OSGEO)\include\QtCore\;$(QT5DIR64OSGEO)\include\QtGui\;$(QT5DIR64OSGEO)\include\QtSvg\;$(QT5DIR64OSGEO)\include\QtWidgets\;$(QT5DIR64OSGEO)\include\QtXml\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;QT_DLL;QT_THREAD_SUPPORT;CORE_EXPORT=;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -204,7 +200,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <AssemblerListingLocation>.\Release/</AssemblerListingLocation>
       <ObjectFileName>.\Release/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release/</ProgramDataBaseFileName>
-      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -223,7 +219,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>c:\OSGeo4W\apps\qgis\plugins\$(ProjectName).pdb</ProgramDatabaseFile>
     </Link>
     <Bscmake>

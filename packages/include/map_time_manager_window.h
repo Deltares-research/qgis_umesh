@@ -33,7 +33,6 @@
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
 
-#include "ugrid.h"
 #include "MyDrawingCanvas.h"
 #include "my_date_time_edit.h"
 #include "QColorRampEditor.h"

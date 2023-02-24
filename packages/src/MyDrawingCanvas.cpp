@@ -224,7 +224,7 @@ void MyCanvas::draw_data_at_face()
             }
             else
             {
-                QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 4).").arg(var_name.c_str()));
+            QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 4).").arg(var_name.c_str()));
             }
             if (z_value == nullptr)
             {
@@ -320,7 +320,7 @@ void MyCanvas::draw_data_at_node()
 
             double missing_value = var->fill_value;
             m_rgb_color.resize(mesh2d->node[0]->x.size());
-            determine_min_max(z_value, mesh2d->node[0]->x.size(), &m_z_min, &m_z_max, missing_value);
+            determine_min_max(z_value, mesh2d->node[0]->y.size(), &m_z_min, &m_z_max, missing_value);
 
 #if DO_TIMING == 1
             auto end = std::chrono::steady_clock::now();

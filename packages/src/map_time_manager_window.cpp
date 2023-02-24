@@ -568,7 +568,7 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
 int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboBox * cb_2d, QComboBox * cb_3d)
 {
     cb_2d->setMinimumSize(100, 22);
-    cb_3d->setMinimumSize(100, 22);
+    cb_3d->setMinimumSize(100, 22); 
 
     cb_2d->blockSignals(true);
     cb_3d->blockSignals(true);

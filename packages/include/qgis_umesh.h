@@ -60,8 +60,6 @@
 #include "MyDrawingCanvas.h"
 #include "netcdf.h"
 #include "grid.h"
-#include "ugrid.h"
-#include "sgrid.h"
 #include "his_cf.h"
 #include "json_reader.h"
 #include "edit_observation_points_window.h"
@@ -107,21 +105,21 @@ class qgis_umesh
         void create_vector_layer_observation_polyline(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
 
         // Reading input files (ie JSON format)
-        void create_vector_layer_1D_external_forcing(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_structure(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_chainage_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_crs_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_fixed_weir(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_thin_dams(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_1D_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_2D_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_structure(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_drypoints(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_1D_cross_section(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_retention(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_sample_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_external_forcing(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_structure(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_chainage_observation_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_crs_observation_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_fixed_weir(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_thin_dams(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_cross_section(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_1D_observation_cross_section(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_2D_observation_cross_section(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_structure(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_drypoints(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_1D_cross_section(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_retention(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_sample_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
 
         void create_vector_layer_1D2D_link(JSON_READER *, long);
         long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, std::string, double, double *, double *, double *);
@@ -149,7 +147,6 @@ class qgis_umesh
         void set_enabled();
         void about();
         void activate_layers();
-        void activate_slayers();
         void activate_observation_layers();
         void ShowUserManual();
 
@@ -222,8 +219,6 @@ class qgis_umesh
 
         int _fil_index;
         std::vector<GRID*> m_grid_file;
-        std::vector<UGRID*> m_ugrid_file;
-        std::vector<SGRID*> m_sgrid_file;
         int _his_cf_fil_index;
         std::vector<HISCF *> m_his_cf_file;
         int _mdu_fil_index;

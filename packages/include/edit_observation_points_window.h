@@ -32,7 +32,6 @@
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
 
-#include "ugrid.h"
 #include "MyDrawingCanvas.h"
 
 class EditObsPoints

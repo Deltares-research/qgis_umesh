@@ -28,41 +28,8 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-struct _mesh1d {
-    long nr_mesh1d;
-    struct _feature ** node;
-    struct _edge ** edge;
-};
 
-struct _mesh_contact {
-    long nr_mesh_contact;
-    std::string mesh_a;  // long_name of the first mesh
-    std::string mesh_b;  // long_name of the second mesh
-    std::string location_a;
-    std::string location_b;
-    struct _feature ** node;
-    struct _edge ** edge;
-};
 ////////////////////////////////////////////////////////////////////////////////
-struct _ntw_geom {
-    size_t nr_ntw;
-    struct _geom ** geom;
-};
-struct _geom {
-    size_t count;
-    struct _feature ** nodes;
-    std::vector<std::string> name;
-    std::vector<std::string> long_name;
-};
-
-struct _ntw_edges {
-    size_t nr_ntw;
-    struct _edge ** edge;
-};
-struct _ntw_nodes {
-    size_t nr_ntw;
-    struct _feature ** node;
-};
 
 struct _faces {
     size_t count;

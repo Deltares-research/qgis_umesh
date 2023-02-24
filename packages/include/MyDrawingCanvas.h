@@ -273,6 +273,8 @@ private:
     bool m_vscale_determined;
     double m_vec_length;
     vector_quantity m_vector_draw;
+
+    bool m_permuted;
 };
 
 #endif  /* _INC_MyCanvas */
