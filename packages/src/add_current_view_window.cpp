@@ -38,6 +38,8 @@ int AddCurrentViewWindow::get_count()
 }
 void AddCurrentViewWindow::create_window()
 {
+    QStringList layer_name = m_quantity.split(";");
+
     wid = new QWidget();
     wid->setWindowTitle(QString("Add current view to QGIS layer panel"));
     wid->setMinimumWidth(700);
@@ -49,8 +51,8 @@ void AddCurrentViewWindow::create_window()
     long rows = 1;
     long cols = 2;
     table_model = new QStandardItemModel(rows, cols, this);
-    table_model->setHeaderData(0, Qt::Horizontal, tr("Layer name"));
-    table_model->setHeaderData(1, Qt::Horizontal, tr("Quantity"));
+    table_model->setHeaderData(0, Qt::Horizontal, tr("Group name"));
+    table_model->setHeaderData(1, Qt::Horizontal, tr("Layer name"));
 
     table->setModel(table_model);
     selectionModel = new QItemSelectionModel(this->table_model);
@@ -77,12 +79,12 @@ void AddCurrentViewWindow::create_window()
 
     QStandardItem * itm1 = new QStandardItem();
     itm1->setEditable(true);
-    itm1->setText(m_label);
+    itm1->setText(layer_name[0]);
     table_model->setItem(0, 0, itm1);
 
     QStandardItem * itm2 = new QStandardItem();
     itm2->setEditable(false);
-    itm2->setText(m_quantity);
+    itm2->setText(layer_name[1]);
     table_model->setItem(0, 1, itm2);
 
     vl_main->addWidget(table);
@@ -125,8 +127,10 @@ void AddCurrentViewWindow::create_vector_layer()
 {
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
     QgsLayerTreeGroup * treeGroup;
-    treeGroup = get_subgroup(treeRoot, QString("Current view"));
+    QStringList SubGroup = m_quantity.split(";");
+    treeGroup = get_subgroup(treeRoot, SubGroup[0]);
     QString layer_name = table_model->index(0, 0).data().toString();
+    //QString layer_name = SubGroup[1];
 
     QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
     bool layer_found = false;
@@ -189,7 +193,7 @@ void AddCurrentViewWindow::create_vector_layer()
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setStrokeStyle(Qt::NoPen);
 
-        QgsSymbol * marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+        QgsSymbol * marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
         marker->changeSymbolLayer(0, simple_marker);
         //set up a renderer for the layer
         QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);

@@ -597,7 +597,9 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
             {
                 if (mesh_var_name == text)
                 {
-                    if (m_vars->variable[i]->sediment_index != -1)
+                    
+                    if (m_vars->variable[i]->sediment_index != -1 ||
+                        m_grid_file->get_file_type() == FTYPE::SGRID)
                     {
                         cb_2d->addItem(name, map[name]);
                     }

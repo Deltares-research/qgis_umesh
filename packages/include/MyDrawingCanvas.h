@@ -8,7 +8,7 @@
 #include <math.h>       /* sqrt */
 
 #include "AbstractCanvas.h"
-#include "ugrid.h"
+#include "grid.h"
 #include "QColorRampEditor.h"
 #include "map_property.h"
 
