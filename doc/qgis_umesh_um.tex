@@ -23,17 +23,15 @@
 %
 \deltarestitle
 
-%
-\execute{git log >introduction.tex}
-%
-{{\footnotesize
-{\textbf{Version control information}}\newline
-\begin{tabular}{@{}p{12,5mm}@{}p{0mm}p{\textwidth-27mm-24pt}}
-    \textbf{Location} & \textbf{:} & \gitBranch \\
-    \textbf{Revision} & \textbf{:} & \gitHash
+{{
+\setgitdirectory{../.git}\vspace{-\baselineskip}
+\subsection*{Version control information}
+\begin{tabular}{@{}p{35.0mm}@{}p{0mm}p{\textwidth-27mm-24pt}}
+    \textbf{Git repository} & \textbf{:} & \url{\gitrepository} \\
+    \textbf{Git branch} & \textbf{:} & \gitbranch \\
+    \textbf{Git revision (short)} & \textbf{:} & \githash
 \end{tabular}
 }}
-
 
 \tableofcontents
 
@@ -54,6 +52,7 @@
 \endfoot
 \bottomline
 \endlastfoot
+0.20.00  &  - Name of the 'Current View' in the layer panel changed to 'Variable' name. \\
 0.19.00  &  - Using the spinbox for layers will invalidate (uncheck) the view of a layer.\\
 0.18.00  &  - Determine the mesh 1D edge length after all variables are read.  Other wise sometime a crash will appear.\\
 0.17.00  &  - Transfer 3D layer data to QGIS vector layer.  \\
