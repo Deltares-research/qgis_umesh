@@ -2261,7 +2261,7 @@ void qgis_umesh::create_vector_layer_nodes(QString fname, QString layer_name, st
                     simple_marker->setFillColor(QColor(0, 0, 1));  // mesh node point
                 }
 
-                QgsSymbol * marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+                QgsSymbol * marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
                 marker->changeSymbolLayer(0, simple_marker);
 
                 //set up a renderer for the layer
@@ -2345,7 +2345,7 @@ void qgis_umesh::create_vector_layer_data_on_edges(QString fname, _variable * va
             line_marker->setWidth(0.5);
             line_marker->setColor(QColor(200, 2000, 200));
 
-            QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
             symbol->changeSymbolLayer(0, line_marker);
 
             //set up a renderer for the layer
@@ -2438,7 +2438,7 @@ void qgis_umesh::create_vector_layer_edge_type(QString fname, _variable * var, s
                         line_marker->setColor(QColor(50, 50, 50));
                     }
 
-                    QgsSymbol* symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+                    QgsSymbol* symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
                     symbol->changeSymbolLayer(0, line_marker);
 
                     //set up a renderer for the layer
@@ -2515,7 +2515,7 @@ void qgis_umesh::create_vector_layer_data_on_nodes(QString fname, _variable * va
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
             simple_marker->setStrokeStyle(Qt::NoPen);
 
-            QgsSymbol * marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol * marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
             //set up a renderer for the layer
             if (true)
@@ -2651,7 +2651,7 @@ void qgis_umesh::create_vector_layer_geometry(QString fname, QString layer_name,
                 line_marker->setWidth(0.5);
                 line_marker->setColor(QColor(0, 0, 255));
 
-                QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+                QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
                 symbol->changeSymbolLayer(0, line_marker);
 
                 //set up a renderer for the layer
@@ -2781,7 +2781,7 @@ void qgis_umesh::create_vector_layer_edges(QString fname, QString layer_name, st
                 line_marker->setColor(QColor(255, 153, 204));
             }
 
-            QgsSymbol* symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            QgsSymbol* symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
             symbol->changeSymbolLayer(0, line_marker);
 
             //set up a renderer for the layer
@@ -2990,7 +2990,7 @@ void qgis_umesh::create_vector_layer_observation_polyline(QString fname, QString
                 line_marker->setColor(QColor(255, 0, 255));
             }
 
-            QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
             symbol->changeSymbolLayer(0, line_marker);
 
             //set up a renderer for the layer
@@ -3148,7 +3148,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Bridge location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -3234,7 +3234,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Bridge pillar location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -3346,7 +3346,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Compound structure location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -3432,7 +3432,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Culvert location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -3522,7 +3522,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Extra resistance location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -3608,7 +3608,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("General structure location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -3693,7 +3693,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Inverted siphon location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -3779,7 +3779,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("River weir location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -3865,7 +3865,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Pump location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -3951,7 +3951,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("River weir location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -4041,7 +4041,7 @@ void qgis_umesh::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READE
             simple_marker->setSize(5.0);
             simple_marker->setDataDefinedProperties(QgsPropertyCollection(QString("Weir location")));
 
-            QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+            QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
             marker->changeSymbolLayer(0, simple_marker);
 
             //set up a renderer for the layer
@@ -4692,7 +4692,7 @@ void qgis_umesh::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_f
         line_marker->setWidth(0.75);
         line_marker->setColor(QColor(255, 0, 255));
 
-        QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+        QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
         symbol->changeSymbolLayer(0, line_marker);
 
         //set up a renderer for the layer
@@ -4873,7 +4873,7 @@ void qgis_umesh::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER *
         line_marker->setWidth(0.75);
         line_marker->setColor(QColor(255, 0, 0));
 
-        QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+        QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
         symbol->changeSymbolLayer(0, line_marker);
 
         //set up a renderer for the layer
@@ -4974,7 +4974,7 @@ void qgis_umesh::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER *
         line_marker->setWidth(0.75);
         line_marker->setColor(QColor(1, 1, 1));  // black
 
-        QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+        QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
         symbol->changeSymbolLayer(0, line_marker);
 
         //set up a renderer for the layer
@@ -5137,7 +5137,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 simple_marker->setStrokeStyle(Qt::NoPen);
                 simple_marker->setColor(QColor(255, 165, 0));  //  orange
 
-                QgsSymbol* marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+                QgsSymbol* marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
                 marker->changeSymbolLayer(0, simple_marker);
                 QgsSingleSymbolRenderer* myPointRenderer = new QgsSingleSymbolRenderer(marker);
                 vl_points->setRenderer(myPointRenderer);
@@ -5153,7 +5153,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
                 line_marker->setWidth(0.75);
                 line_marker->setColor(QColor(255, 165, 0));  //  orange
 
-                QgsSymbol* symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+                QgsSymbol* symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
                 symbol->changeSymbolLayer(0, line_marker);
                 QgsSingleSymbolRenderer* myLineRenderer = new QgsSingleSymbolRenderer(symbol);
                 vl_lines->setRenderer(myLineRenderer);
@@ -5276,7 +5276,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             line_marker->setWidth(0.75);
             line_marker->setColor(QColor(0, 204, 0));
 
-            QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
             symbol->changeSymbolLayer(0, line_marker);
 
             //set up a renderer for the layer
@@ -5395,7 +5395,7 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSO
             line_marker->setWidth(0.75);
             line_marker->setColor(QColor(0, 200, 255));
 
-            QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
             symbol->changeSymbolLayer(0, line_marker);
 
             //set up a renderer for the layer
@@ -5719,7 +5719,7 @@ void qgis_umesh::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER *
         line_marker->setWidth(0.75);
         line_marker->setColor(QColor(1, 1, 1));  // black
 
-        QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+        QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
         symbol->changeSymbolLayer(0, line_marker);
 
         //set up a renderer for the layer
@@ -5817,7 +5817,7 @@ void qgis_umesh::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER 
         line_marker->setWidth(0.75);
         line_marker->setColor(QColor(128, 0, 128));
 
-        QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+        QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
         symbol->changeSymbolLayer(0, line_marker);
 
         //set up a renderer for the layer
@@ -6178,7 +6178,7 @@ void qgis_umesh::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long eps
             line_marker->setWidth(0.25);
             line_marker->setColor(QColor(0, 0, 255));
 
-            QgsSymbol * symbol = QgsSymbol::defaultSymbol(QgsWkbTypes::GeometryType::LineGeometry);
+            QgsSymbol * symbol = QgsSymbol::defaultSymbol(Qgis::GeometryType::Line);
             symbol->changeSymbolLayer(0, line_marker);
 
             //set up a renderer for the layer

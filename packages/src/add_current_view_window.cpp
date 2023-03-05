@@ -192,7 +192,7 @@ void AddCurrentViewWindow::create_vector_layer()
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setStrokeStyle(Qt::NoPen);
 
-        QgsSymbol * marker = QgsSymbol::defaultSymbol(QgsWkbTypes::PointGeometry);
+        QgsSymbol * marker = QgsSymbol::defaultSymbol(Qgis::GeometryType::Point);
         marker->changeSymbolLayer(0, simple_marker);
         //set up a renderer for the layer
         QgsSingleSymbolRenderer *mypRenderer = new QgsSingleSymbolRenderer(marker);
