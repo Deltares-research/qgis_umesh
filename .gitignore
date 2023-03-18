@@ -28,3 +28,8 @@ packages/x64/Release/qgis_umesh.tlog/link.read.1.tlog
 packages/x64/Release/qgis_umesh.tlog/link.write.1.tlog
 packages/x64/Release/qgis_umesh.tlog/qgis_umesh.lastbuildstate
 packages/x64/Release/qgis_umesh.tlog/qgis_umesh.write.1u.tlog
+.vs/
+packages/Release/
+packages/x64/
+bin/x64/Release/qgis_umesh.lib
+packages/qgis_umesh.vcxproj.user
