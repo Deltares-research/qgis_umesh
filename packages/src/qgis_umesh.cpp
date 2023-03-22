@@ -579,7 +579,7 @@ void qgis_umesh::experiment()
     struct _mapping * mapping;
     struct _mesh2d * mesh2d;
 
-    mapping = grid_file->get_mapping();
+    mapping = grid_file->get_grid_mapping();
     mesh2d = grid_file->get_mesh_2d();
 
     if (layer->name().contains("cell_area"))
@@ -1026,7 +1026,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping * mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_observation_point(grid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1060,7 +1060,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping * mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_1D_external_forcing(grid_file, pt_extold_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1094,7 +1094,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_1D_external_forcing(grid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1127,7 +1127,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_structure(grid_file, pt_struct_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1160,7 +1160,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_drypoints(grid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1193,7 +1193,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_sample_point(grid_file, pt_profloc, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1226,7 +1226,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_observation_cross_section(grid_file, pt_obs_cross_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1259,7 +1259,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_thin_dams(grid_file, pt_thin_dam_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1292,7 +1292,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_fixed_weir(grid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1325,7 +1325,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_1D_cross_section(grid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1358,7 +1358,7 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
                     return;
                 }
                 struct _mapping* mapping;
-                mapping = grid_file->get_mapping();
+                mapping = grid_file->get_grid_mapping();
                 create_vector_layer_1D_retention(grid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
             }
         }
@@ -1722,8 +1722,7 @@ void qgis_umesh::activate_layers()
         if (_fil_index != -1)
         {
             GRID* grid_file = m_grid_file[_fil_index];
-            struct _mapping* mapping;
-            mapping = grid_file->get_mapping();
+            struct _mapping* mapping = grid_file->get_grid_mapping();
             QString fname = grid_file->get_filename().canonicalFilePath();
             if (mapping->epsg == 0)
             {
@@ -3249,17 +3248,13 @@ void qgis_umesh::create_vector_layer_1D_structure(GRID * ugrid_file, JSON_READER
             json_key = "data.structure.structureids";
             status = prop_tree->get(json_key, structure_ids);
             int i_cmp_struct = -1;
-            int cnt;
+            int cnt =0 ;
             for (int j = 0; j < id.size(); j++)
             {
                 if (structure_type[j] == "compound")
                 {
                     i_cmp_struct += 1;
-                    if (i_cmp_struct == 0)
-                    {
-                        cnt = 0;
-                    }
-                    else
+                    if (i_cmp_struct >= 0)
                     {
                         cnt += atoi(numstructures[i_cmp_struct-1].c_str());
                     }

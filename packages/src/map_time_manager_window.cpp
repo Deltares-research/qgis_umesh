@@ -599,7 +599,7 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
                 {
                     
                     if (m_vars->variable[i]->sediment_index != -1 ||
-                        m_grid_file->get_file_type() == FTYPE::SGRID)
+                        m_grid_file->get_file_type() == FILE_TYPE::KISS)
                     {
                         cb_2d->addItem(name, map[name]);
                     }
@@ -1598,7 +1598,7 @@ void MapTimeManagerWindow::clicked_current_view()
         if (m_show_map_data_1d)
         {
             struct _mesh1d* mesh1d = m_grid_file->get_mesh_1d();
-            struct _mapping* mapping = m_grid_file->get_mapping();
+            struct _mapping* mapping = m_grid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
@@ -1623,7 +1623,7 @@ void MapTimeManagerWindow::clicked_current_view()
         else if (m_show_map_data_2d)
         {
             struct _mesh2d * mesh2d = m_grid_file->get_mesh_2d();
-            struct _mapping * mapping = m_grid_file->get_mapping();
+            struct _mapping * mapping = m_grid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
@@ -1653,7 +1653,7 @@ void MapTimeManagerWindow::clicked_current_view()
         else if (m_show_map_data_3d)
         {
             struct _mesh2d* mesh2d = m_grid_file->get_mesh_2d();
-            struct _mapping* mapping = m_grid_file->get_mapping();
+            struct _mapping* mapping = m_grid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
