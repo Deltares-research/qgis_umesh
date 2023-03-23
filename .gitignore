@@ -30,3 +30,7 @@ packages/x64/Release/qgis_umesh.tlog/qgis_umesh.lastbuildstate
 packages/x64/Release/qgis_umesh.tlog/qgis_umesh.write.1u.tlog
 .vs/qgis_umesh/v16/ipch/AutoPCH/2bd11402083e2bdc/ADD_CURRENT_VIEW_WINDOW.ipch
 packages/x64/Release/qgis_umesh.vcxproj.FileListAbsolute.txt
+bin/
+packages/Release/
+packages/x64/
+.vs/
