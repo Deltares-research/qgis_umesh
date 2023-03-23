@@ -601,106 +601,6 @@ long GRID::read_sgrid_mesh()
     status = determine_mesh1d_edge_length(m_mesh1d, m_ntw_edges);
     status = create_mesh1d_nodes(m_mesh1d, m_ntw_edges, m_ntw_geom);
 
-    if (m_mesh_contact != nullptr)
-    {
-        // create the mesh contact edges
-        // llog first for the meshes (ie the var_names) and contact points
-        std::string mesh_a;
-        std::string mesh_b;
-        std::string location_a;
-        std::string location_b;
-        int topology_a;
-        int topology_b;
-
-        int i = 0;
-        for (int i_var = 0; i_var < nvars; i_var++)
-        {
-            status = nc_inq_varname(this->m_ncid, i_var, var_name_c);
-            std::string var_name(var_name_c);
-            if (var_name == m_mesh_contact->mesh_a)
-            {
-                mesh_a = m_mesh_contact->mesh_a;
-                location_a = m_mesh_contact->location_a;
-                status = get_attribute(this->m_ncid, i_var, const_cast<char*>("topology_dimension"), &topology_a);
-                i++;
-            }
-            if (var_name == m_mesh_contact->mesh_b)
-            {
-                mesh_b = m_mesh_contact->mesh_b;
-                location_b = m_mesh_contact->location_b;
-                status = get_attribute(this->m_ncid, i_var, const_cast<char*>("topology_dimension"), &topology_b);
-                i++;
-            }
-            if (i == 2)
-            {
-                break;
-            }
-        }
-        // looking for mesh_a
-
-        m_mesh_contact->node[0]->x = std::vector<double>(m_mesh_contact->node[m_nr_mesh_contacts - 1]->count);
-        m_mesh_contact->node[0]->y = std::vector<double>(m_mesh_contact->node[m_nr_mesh_contacts - 1]->count);
-
-        for (int j = 0; j < m_mesh_contact->edge[0]->count; j++)
-        {
-            if (topology_a == 1)
-            {
-                int p1 = m_mesh_contact->edge[0]->edge_nodes[j][0];
-                if (location_a == "node")
-                {
-                    m_mesh_contact->node[0]->x[2 * j] = m_mesh1d->node[0]->x[p1];
-                    m_mesh_contact->node[0]->y[2 * j] = m_mesh1d->node[0]->y[p1];
-                }
-            }
-            else if (topology_a == 2)
-            {
-                int p1 = m_mesh_contact->edge[0]->edge_nodes[j][0];
-                if (location_a == "node")
-                {
-                    m_mesh_contact->node[0]->x[2 * j] = m_mesh2d->node[0]->x[p1];
-                    m_mesh_contact->node[0]->y[2 * j] = m_mesh2d->node[0]->y[p1];
-                }
-                if (location_a == "face")
-                {
-                    m_mesh_contact->node[0]->x[2 * j] = m_mesh2d->face[0]->x[p1];
-                    m_mesh_contact->node[0]->y[2 * j] = m_mesh2d->face[0]->y[p1];
-                }
-            }
-            m_mesh_contact->edge[0]->edge_nodes[j][0] = 2 * j;
-        }
-        // looking for mesh_b
-        for (int j = 0; j < m_mesh_contact->edge[0]->count; j++)
-        {
-            if (topology_b == 1)
-            {
-                int p1 = m_mesh_contact->edge[0]->edge_nodes[j][1];
-                if (location_b == "node")
-                {
-                    m_mesh_contact->node[0]->x[2 * j + 1] = m_mesh1d->node[0]->x[p1];
-                    m_mesh_contact->node[0]->y[2 * j + 1] = m_mesh1d->node[0]->y[p1];
-                }
-            }
-            if (topology_b == 2)
-            {
-                int p1 = m_mesh_contact->edge[0]->edge_nodes[j][1];
-                if (location_b == "node")
-                {
-                    m_mesh_contact->node[0]->x[2 * j + 1] = m_mesh2d->node[0]->x[p1];
-                    m_mesh_contact->node[0]->y[2 * j + 1] = m_mesh2d->node[0]->y[p1];
-                }
-                else if (location_b == "face")
-                {
-                    m_mesh_contact->node[0]->x[2 * j + 1] = m_mesh2d->face[0]->x[p1];
-                    m_mesh_contact->node[0]->y[2 * j + 1] = m_mesh2d->face[0]->y[p1];
-                }
-            }
-            m_mesh_contact->edge[0]->edge_nodes[j][1] = 2 * j + 1;
-        }
-        length = m_mesh_contact->node[0]->name.size();
-        length += m_mesh_contact->node[0]->long_name.size();
-        length += m_mesh_contact->edge[0]->name.size();
-        length += m_mesh_contact->edge[0]->long_name.size();
-    }
     //status = create_mesh_contacts(mesh_a, location_a, mesh_b, location_b);
 
 #ifndef NATIVE_C
@@ -1405,9 +1305,492 @@ long GRID::read_ugrid_variables()
 //------------------------------------------------------------------------------
 long GRID::read_sgrid_variables()
 {
-    long status = 1;
-    return status;
+    // read the attributes of the variable  and the dimensions
+#ifdef NATIVE_C
+    fprintf(stderr, "GRID::read_variables()\n");
+#endif    
+    int ndims, nvars, natts, nunlimited;
+    int status;
+    struct _variable* var;
+    var = NULL;
+#ifndef NATIVE_C
+    m_pgBar->setValue(800);
+#endif
+    m_nr_mesh_var = 0;
+
+    std::string tmp_string;
+    char* var_name_c = (char*)malloc(sizeof(char) * (NC_MAX_NAME + 1));
+    status = nc_inq(this->m_ncid, &ndims, &nvars, &natts, &nunlimited);
+
+    for (int i_var = 0; i_var < nvars; i_var++)
+    {
+        nc_type nc_type;
+        nc_inq_varndims(this->m_ncid, i_var, &ndims);
+        int* var_dimids = NULL;
+        if (ndims > 0) {
+            var_dimids = (int*)malloc(sizeof(int) * ndims);
+        }
+        status = nc_inq_var(this->m_ncid, i_var, var_name_c, &nc_type, &ndims, var_dimids, &natts);
+        std::string var_name(var_name_c);
+        status = get_attribute(this->m_ncid, i_var, "grid", &tmp_string);  // statement, to detect if this is a variable on a structured grid
+        if (status == NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "location", &tmp_string); } // each variable does have a location
+        if (status == NC_NOERR)
+        {
+            // This variable is defined on a mesh and has a dimension
+            m_nr_mesh_var += 1;
+            if (m_nr_mesh_var == 1)
+            {
+                m_mesh_vars = new _mesh_variable();
+                m_mesh_vars->variable = (struct _variable**)malloc(sizeof(struct _variable*));
+            }
+            else
+            {
+                m_mesh_vars->variable = (struct _variable**)realloc(m_mesh_vars->variable, sizeof(struct _variable*) * m_nr_mesh_var);
+            }
+            m_mesh_vars->variable[m_nr_mesh_var - 1] = new _variable();
+            m_mesh_vars->nr_vars = m_nr_mesh_var;
+
+            m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name = var_name;
+            m_mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = nc_type;
+            m_mesh_vars->variable[m_nr_mesh_var - 1]->read = false;
+            status = get_attribute(this->m_ncid, i_var, "location", &m_mesh_vars->variable[m_nr_mesh_var - 1]->location);
+            status = get_attribute(this->m_ncid, i_var, "grid", &m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh);
+            status = get_attribute(this->m_ncid, i_var, "coordinates", &m_mesh_vars->variable[m_nr_mesh_var - 1]->coordinates);
+            status = get_attribute(this->m_ncid, i_var, "cell_methods", &m_mesh_vars->variable[m_nr_mesh_var - 1]->cell_methods);
+            status = get_attribute(this->m_ncid, i_var, "standard_name", &m_mesh_vars->variable[m_nr_mesh_var - 1]->standard_name);
+            status = get_attribute(this->m_ncid, i_var, "long_name", &m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name);
+            if (status != NC_NOERR || m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name.size() <= 1)
+            {
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = m_mesh_vars->variable[m_nr_mesh_var - 1]->standard_name;
+                if (m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name.size() <= 1)
+                {
+                    m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name;
+                }
+            }
+            status = get_attribute(this->m_ncid, i_var, "units", &m_mesh_vars->variable[m_nr_mesh_var - 1]->units);
+            status = get_attribute(this->m_ncid, i_var, "grid_mapping", &m_mesh_vars->variable[m_nr_mesh_var - 1]->grid_mapping);
+            status = get_attribute(this->m_ncid, i_var, const_cast<char*>("_FillValue"), &m_mesh_vars->variable[m_nr_mesh_var - 1]->fill_value);
+            if (status != NC_NOERR)
+            {
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->fill_value = std::numeric_limits<double>::quiet_NaN();
+            }
+            status = get_attribute(this->m_ncid, i_var, "comment", &m_mesh_vars->variable[m_nr_mesh_var - 1]->comment);  // UGRID
+            status = get_attribute(this->m_ncid, i_var, "description", &m_mesh_vars->variable[m_nr_mesh_var - 1]->description);  // SGRID
+
+            // variable with flag_values and flag_meanings
+            std::string flag_meanings;
+            status = get_attribute(this->m_ncid, i_var, "flag_meanings", &flag_meanings);
+            if (status == NC_NOERR)
+            {
+                size_t length;
+                status = nc_inq_attlen(this->m_ncid, i_var, "flag_values", &length);
+                int* flag_values_c = (int*)malloc(sizeof(int) * length);
+                status = get_attribute(this->m_ncid, i_var, const_cast<char*>("flag_values"), flag_values_c);
+                for (int j = 0; j < length; ++j)
+                {
+                    m_mesh_vars->variable[m_nr_mesh_var - 1]->flag_values.push_back(flag_values_c[j]);
+                }
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->flag_meanings = tokenize(flag_meanings, ' ');
+            }
+
+            m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
+            m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = false;
+            for (int j = 0; j < ndims; j++)
+            {
+                status = nc_inq_dimname(this->m_ncid, var_dimids[j], var_name_c);
+
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // Todo: HACK typecast: size_t -> long
+                if (time_series[0].nr_times != 0 && QString::fromStdString(m_dim_names[var_dimids[j]]) == time_series[0].dim_name)
+                {
+                    m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
+                }
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names.push_back(m_dim_names[var_dimids[j]]);
+            }
+
+            int topo_dim;
+            int mesh_id;
+            status = nc_inq_varid(this->m_ncid, m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh.c_str(), &mesh_id);
+            status = get_attribute(this->m_ncid, mesh_id, const_cast<char*>("topology_dimension"), &topo_dim);
+            m_mesh_vars->variable[m_nr_mesh_var - 1]->topology_dimension = topo_dim;
+            if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 1)
+            {
+                // nothing to do
+            }
+            if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 2 ||
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 3 && m_ftype == FILE_TYPE::SGRID)
+            {
+                bool contains_time_dimension = false;
+                for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
+                {
+                    // check if one of the dimension is the time dimension
+                    if (QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
+                    {
+                        contains_time_dimension = true;
+                        break;
+                    }
+                }
+                if (contains_time_dimension)
+                {
+                    // nothing special: 2D (time, xy-space)
+                }
+                else
+                {
+                    // special: 2D (nSedTot, xy-space)
+                    for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
+                    {
+                        if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == "nSedTot")  // todo: hard coded sediment dimension
+                        {
+                            std::vector<std::string> sed_name = get_string_var(this->m_ncid, "sedfrac_name");
+                            int nr_sedtot = m_mesh_vars->variable[m_nr_mesh_var - 1]->dims[i];
+                            for (int j = 0; j < nr_sedtot; j++)
+                            {
+                                if (j > 0)
+                                {
+                                    m_nr_mesh_var += 1;
+                                    m_mesh_vars->variable = (struct _variable**)realloc(m_mesh_vars->variable, sizeof(struct _variable*) * m_nr_mesh_var);
+                                    m_mesh_vars->variable[m_nr_mesh_var - 1] = new _variable();
+                                    m_mesh_vars->nr_vars = m_nr_mesh_var;
+                                }
+                                std::stringstream ss;
+                                std::streamsize nsig = int(log10(nr_sedtot)) + 1;
+                                ss << std::setfill('0') << std::setw(nsig) << j + 1;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = false;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->mesh;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->location = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->location;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->var_name;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->coordinates = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->coordinates;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->topology_dimension = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->topology_dimension;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->nc_type;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
+                                std::string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
+                            }
+                        }
+                    }
+                }
+            }
+            else if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 3 )
+            {
+                bool contains_time_dimension = false;
+                for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
+                {
+                    // check if one of the dimension is the time dimension
+                    if (QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
+                    {
+                        contains_time_dimension = true;
+                        break;
+                    }
+                }
+                if (contains_time_dimension)
+                {
+                    for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
+                    {
+                        if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_layer"])
+                        {
+                            int nr_layers = m_map_dim[m_map_dim_name["zs_dim_layer"]];
+                            m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_layers;
+
+                            std::string name = m_map_dim_name["zs_name_layer"];
+                            int ii;
+                            status = nc_inq_varid(m_ncid, name.c_str(), &ii);
+                            if (status == NC_NOERR)
+                            {
+                                double* values_c = (double*)malloc(sizeof(double) * nr_layers);
+                                status = nc_get_var_double(this->m_ncid, ii, values_c);
+                                std::vector<double> values;
+                                values.reserve(nr_layers);
+                                for (int j = 0; j < nr_layers; j++)
+                                {
+                                    values.push_back(*(values_c + j));
+                                }
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
+                            }
+                            else
+                            {
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center.resize(nr_layers, std::numeric_limits<double>::quiet_NaN());
+                            }
+                        }
+                        else if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_interface"])
+                        {
+                            int nr_layers = m_map_dim[m_map_dim_name["zs_dim_interface"]];
+                            m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_layers;
+
+                            std::string name = m_map_dim_name["zs_name_interface"];
+                            int ii;
+                            status = nc_inq_varid(m_ncid, name.c_str(), &ii);
+                            if (status == NC_NOERR)
+                            {
+                                double* values_c = (double*)malloc(sizeof(double) * nr_layers);
+                                status = nc_get_var_double(this->m_ncid, ii, values_c);
+                                std::vector<double> values;
+                                values.reserve(nr_layers);
+                                for (int j = 0; j < nr_layers; j++)
+                                {
+                                    values.push_back(*(values_c + j));
+                                }
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
+                            }
+                            else
+                            {
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center.resize(nr_layers, std::numeric_limits<double>::quiet_NaN());
+                            }
+                        }
+                        else if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
+                        {
+                            int nr_layers = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
+                            m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
+
+                            std::string name = m_map_dim_name["zs_name_bed_layer"];
+                            std::vector<double> values;
+                            values.reserve(nr_layers);
+                            for (int j = 0; j < nr_layers; j++)
+                            {
+                                values.push_back(j + 1);
+                            }
+                            m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
+                        }
+                        else if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == "nSedTot")  // todo: hard coded sediment dimension
+                        {
+                            // because it is not a 3D dimesional data set no layer information, just time, space and constituent:
+                            // generate new variables for each dimesnion which s not the time and space dimension
+                            // in this example it nSedTot extra variables
+                            // - time
+                            // - sediment dimension
+                            // - space dimension
+
+                            std::vector<std::string> sed_name = get_string_var(this->m_ncid, "sedfrac_name");
+                            int nr_sedtot = m_mesh_vars->variable[m_nr_mesh_var - 1]->dims[i];
+                            for (int j = 0; j < nr_sedtot; j++)
+                            {
+                                if (j > 0)
+                                {
+                                    m_nr_mesh_var += 1;
+                                    m_mesh_vars->variable = (struct _variable**)realloc(m_mesh_vars->variable, sizeof(struct _variable*) * m_nr_mesh_var);
+                                    m_mesh_vars->variable[m_nr_mesh_var - 1] = new _variable();
+                                    m_mesh_vars->nr_vars = m_nr_mesh_var;
+                                }
+                                std::stringstream ss;
+                                std::streamsize nsig = int(log10(nr_sedtot)) + 1;
+                                ss << std::setfill('0') << std::setw(nsig) << j + 1;
+                                std::string name_sed = "Sediment " + ss.str();
+                                // reduce dimension (from 3 to 2)
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->mesh;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->location = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->location;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->var_name;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->coordinates = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->coordinates;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->topology_dimension = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->topology_dimension;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->nc_type;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->dims = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dims;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dim_names;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
+                                std::string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
+
+                                if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
+                                {
+                                    int nr_layers = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
+                                    m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
+
+                                    std::string name = m_map_dim_name["zs_name_bed_layer"];
+                                    std::vector<double> values;
+                                    values.reserve(nr_layers);
+                                    for (int jj = 0; jj < nr_layers; jj++)
+                                    {
+                                        values.push_back(jj + 1);
+                                    }
+                                    m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
+                                }
+                            }
+                        }
+                        else if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == "nSedSus")  // todo: hard coded sediment dimension
+                        {
+                            // because it is not a 3D dimesional data set no layer information, just time, space and constituent:
+                            // generate new variables for each dimesnion which s not the time and space dimension
+                            // in this example it nSedTot extra variables
+                            // - time
+                            // - sediment dimension
+                            // - space dimension
+
+                            std::vector<std::string> sed_name;
+                            int nr_sedtot = m_mesh_vars->variable[m_nr_mesh_var - 1]->dims[i];
+                            for (int j = 0; j < nr_sedtot; j++)
+                            {
+                                std::stringstream ss;
+                                std::streamsize nsig = int(log10(nr_sedtot)) + 1;
+                                ss << std::setfill('0') << std::setw(nsig) << j + 1;
+                                std::string janm = "Sediment " + ss.str();
+                                sed_name.push_back(janm);
+                            }
+                            for (int j = 0; j < nr_sedtot; j++)
+                            {
+                                if (j > 0)
+                                {
+                                    m_nr_mesh_var += 1;
+                                    m_mesh_vars->variable = (struct _variable**)realloc(m_mesh_vars->variable, sizeof(struct _variable*) * m_nr_mesh_var);
+                                    m_mesh_vars->variable[m_nr_mesh_var - 1] = new _variable();
+                                    m_mesh_vars->nr_vars = m_nr_mesh_var;
+                                }
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->mesh;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->location = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->location;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->var_name;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->coordinates = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->coordinates;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->topology_dimension = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->topology_dimension;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->nc_type;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->dims = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dims;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dim_names;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
+                                std::string janm = var_name + "- " + sed_name[j] + " - " + "nSedSus";
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
+
+                                if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == m_map_dim_name["zs_dim_bed_layer"])
+                                {
+                                    int nr_layers = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
+                                    m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
+
+                                    std::string name = m_map_dim_name["zs_name_bed_layer"];
+                                    std::vector<double> values;
+                                    values.reserve(nr_layers);
+                                    for (int jj = 0; jj < nr_layers; jj++)
+                                    {
+                                        values.push_back(jj + 1);
+                                    }
+                                    m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 4)
+            {
+                // 4D variable:
+                // - time
+                // - sediment dimension
+                // - xy-space dimension
+                // - z-space (nbedlayers)
+                QString qname = QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name);
+                QString msg = QString("Variable \'%1\' does have 4 dimensions, still under construction.").arg(qname);
+#ifdef NATIVE_C
+#else
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+#endif
+                bool contains_time_dimension = false;
+                for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
+                {
+                    // check if one of the dimension is the time dimension
+                    if (QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
+                    {
+                        contains_time_dimension = true;
+                        break;
+                    }
+                }
+                if (contains_time_dimension)
+                {
+                    int nr_sedtot = -1;
+                    int nr_layers = -1;
+                    for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
+                    {
+                        if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == "nSedTot")
+                        {
+                            nr_sedtot = m_mesh_vars->variable[m_nr_mesh_var - 1]->dims[i];
+                        }
+                        if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == "nBedLayers")
+                        {
+                            nr_layers = m_mesh_vars->variable[m_nr_mesh_var - 1]->dims[i];
+                        }
+                    }
+                    for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
+                    {
+                        if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i] == "nSedTot")  // todo: hard coded sediment dimension
+                        {
+                            std::vector<std::string> sed_name = get_string_var(this->m_ncid, "sedfrac_name");
+                            for (int j = 0; j < nr_sedtot; j++)
+                            {
+                                if (j > 0)
+                                {
+                                    m_nr_mesh_var += 1;
+                                    m_mesh_vars->variable = (struct _variable**)realloc(m_mesh_vars->variable, sizeof(struct _variable*) * m_nr_mesh_var);
+                                    m_mesh_vars->variable[m_nr_mesh_var - 1] = new _variable();
+                                    m_mesh_vars->nr_vars = m_nr_mesh_var;
+                                }
+                                std::stringstream ss;
+                                std::streamsize nsig = int(log10(nr_sedtot)) + 1;
+                                ss << std::setfill('0') << std::setw(nsig) << j + 1;
+                                std::string name_sed = "Sediment " + ss.str();
+                                // reduce dimension (from 3 to 2)
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->draw = false;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->mesh;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->location = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->location;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->var_name;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->coordinates = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->coordinates;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->topology_dimension = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->topology_dimension;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->nc_type;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->dims = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dims;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names = m_mesh_vars->variable[m_nr_mesh_var - 1 - j]->dim_names;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->sediment_index = j;
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_bed_layers = nr_layers;
+                                std::string janm = var_name + "- " + sed_name[j] + " - " + "nSedTot";
+                                m_mesh_vars->variable[m_nr_mesh_var - 1]->long_name = strdup(janm.c_str());
+
+                                for (int ii = 0; ii < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); ii++)
+                                {
+                                    if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[ii] == m_map_dim_name["zs_dim_bed_layer"])
+                                    {
+                                        std::string name = m_map_dim_name["zs_name_bed_layer"];
+                                        std::vector<double> values;
+                                        values.reserve(nr_layers);
+                                        for (int jj = 0; jj < nr_layers; jj++)
+                                        {
+                                            values.push_back(jj + 1);
+                                        }
+                                        m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
+            /*
+            int nr_mesh2d = 1;
+            if (var_name == mesh2d_strings[nr_mesh2d - 1]->x_bound_edge_name)
+            {
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->location = "edge_boundary";
+            }
+            if (var_name == mesh2d_strings[nr_mesh2d - 1]->y_bound_edge_name)
+            {
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->location = "edge_boundary";
+            }
+            if (var_name == mesh2d_strings[nr_mesh2d - 1]->x_bound_face_name)
+            {
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->location = "face_boundary";
+            }
+            if (var_name == mesh2d_strings[nr_mesh2d - 1]->y_bound_face_name)
+            {
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->location = "face_boundary";
+            }
+            */
+        }
+    }
+
+    free(var_name_c);
+    var_name_c = nullptr;
+#ifndef NATIVE_C
+    m_pgBar->setValue(900);
+#endif
+
+    return (long)status;
 }
+
 //------------------------------------------------------------------------------
 long GRID::read_kiss_variables()
 {
@@ -1575,12 +1958,17 @@ DataValuesProvider2D<double> GRID::get_variable_values(const std::string var_nam
                     DataValuesProvider2D<double> DataValuesProvider2D(values_c, time_dim, xy_dim);
                     m_mesh_vars->variable[i_var]->data_2d = DataValuesProvider2D;
                 }
-                else if (m_mesh_vars->variable[i]->dims.size() == 2)
+                else if (m_mesh_vars->variable[i]->dims.size() == 2 ||
+                    m_mesh_vars->variable[i]->dims.size() == 3 && m_ftype == FILE_TYPE::SGRID)
                 {
                     if (m_mesh_vars->variable[i]->time_series)
                     {
                         long time_dim = m_mesh_vars->variable[i]->dims[0];  // TODO: Assumed to be the time dimension
                         long xy_dim = m_mesh_vars->variable[i]->dims[1];  // TODO: Assumed to be the 2DH space dimension
+                        if (m_mesh_vars->variable[i]->dims.size() == 3 && m_ftype == FILE_TYPE::SGRID)
+                        {
+                            xy_dim = m_mesh_vars->variable[i]->dims[1] * m_mesh_vars->variable[i]->dims[2];
+                        }
                         DataValuesProvider2D<double> DataValuesProvider2D(values_c, time_dim, xy_dim);
                         m_mesh_vars->variable[i_var]->data_2d = DataValuesProvider2D;
                     }
@@ -3323,6 +3711,31 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             }
 
             /* Read the nodes indices for each face */
+            /* Determine, because they are not on the file */
+            status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name.c_str(), &var_id);
+            status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
+            dimids = (int*)malloc(sizeof(int) * ndims);
+            status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
+
+            int m_max = m_dimids[dimids[0]] + 1;  // HACK: 1 more node the face, only true for structured grids
+            int n_max = m_dimids[dimids[1]] + 1;  // HACK: 1 more node the face, only true for structured grids
+
+            std::vector<int> value;
+            int kk = -1;
+            for (int m = 0; m < m_dimids[dimids[0]]; m++)  // faces x-direction
+            {
+                for (int n = 0; n < m_dimids[dimids[1]]; n++)  // faces y-direction
+                {
+                    value.push_back(m * n_max + n);
+                    value.push_back((m+1) * n_max + n);
+                    value.push_back((m+1) * n_max + n + 1);
+                    value.push_back(m * n_max + n + 1);
+
+                    m_mesh2d->face_nodes.push_back(value);
+                    value.clear();
+                }
+            }
+
 
             // Do not name the mesh2d nodes, because the 2D mesh can be very large
             length = m_mesh2d->node[nr_mesh2d - 1]->name.size();

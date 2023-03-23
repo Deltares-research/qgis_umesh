@@ -296,7 +296,7 @@ void MyCanvas::draw_data_at_face()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_data_at_node()
 {
-    // isofill of the control volume around node
+    // isofill of the control volume around node (Element based Finte Volume Method)
     if (m_grid_file == nullptr) { return; }
 
     struct _mesh_variable* vars = m_grid_file->get_variables();

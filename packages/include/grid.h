@@ -154,6 +154,7 @@ public:
     std::string units;
     std::string grid_mapping;
     std::string comment;
+    std::string description;
     std::vector<int> flag_values;
     std::vector<std::string> flag_meanings;
     //
