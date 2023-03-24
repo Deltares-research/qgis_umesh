@@ -191,8 +191,9 @@ public:
     void draw_data_at_face();
     void draw_data_at_node();   // isofill of the control volume around node
     void draw_line_at_edge();
-    void draw_vector_arrow_at_face();
+    void draw_vector_arrow();
     void draw_vector_direction_at_face();
+    void draw_vector_direction_at_node();
 
     double * z_value = nullptr;
     double * u_value = nullptr;

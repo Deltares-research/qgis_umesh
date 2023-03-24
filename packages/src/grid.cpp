@@ -1976,6 +1976,21 @@ DataValuesProvider2D<double> GRID::get_variable_values(const std::string var_nam
                     {
                         // not a time series, one dimesion should be the xy-space
                         // but the other dimension is a list of array quantities (ex. type of sediments)
+                        if (m_mesh_vars->variable[i]->location == "node" && m_ftype == FILE_TYPE::SGRID)
+                        {
+                            long xy_dim = m_mesh_vars->variable[i]->dims[0] * m_mesh_vars->variable[i]->dims[1];
+                            if (m_mesh2d->node[0]->x.size() == xy_dim)
+                            {
+                                long time_dim = 1;
+                                if (array_index != -1)
+                                {
+                                    time_dim = array_index + 1;
+                                }
+                                    
+                                DataValuesProvider2D<double> DataValuesProvider2D(values_c, time_dim, xy_dim);
+                                m_mesh_vars->variable[i_var]->data_2d = DataValuesProvider2D;
+                            }
+                        }
                         if (m_mesh_vars->variable[i]->location == "face")
                         {
                             for (int j = 0; j < m_mesh_vars->variable[i]->dims.size(); j++)
@@ -3626,13 +3641,50 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             }
             m_mesh2d->nr_mesh2d = nr_mesh2d;
 
-    #ifdef NATIVE_C
+#ifdef NATIVE_C
             fprintf(stderr, "    Variables with \'mesh_topology\' attribute: %s\n", var_name.c_str());
-    #endif
+#endif
 
             //get edge nodes, optional required
             int* dimids;
             int start_index;
+
+            status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
+            status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
+            dimids = (int*)malloc(sizeof(int) * ndims);
+            status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
+            int imax_node = m_dimids[dimids[0]];
+            int jmax_node = m_dimids[dimids[1]];
+
+            m_mesh2d->edge[nr_mesh2d - 1]->count = imax_node * (jmax_node - 1) + jmax_node * (imax_node - 1);
+            mesh2d_edge_nodes = (int*)malloc(sizeof(int) * m_mesh2d->edge[nr_mesh2d - 1]->count * _two);
+            m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes = (int**)malloc(sizeof(int*) * m_mesh2d->edge[nr_mesh2d - 1]->count);
+            for (int i = 0; i < m_mesh2d->edge[nr_mesh2d - 1]->count; i++)
+            {
+                m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i] = mesh2d_edge_nodes + _two * i;
+            }
+            // vertical edges
+            int k = -1;
+            for (int i = 0; i <imax_node; ++i)
+            {
+                for (int j = 0; j < jmax_node-1; ++j)
+                {
+                    k += 1;
+                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[k][0] = i * jmax_node + j;
+                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[k][1] = i * jmax_node + j + 1;
+                }
+            }
+            //horizontal edges
+            for (int j = 0; j < jmax_node; ++j)
+            {
+                for (int i = 0; i < imax_node - 1; ++i)
+                {
+                    k += 1;
+                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[k][0] = i * jmax_node + j;
+                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[k][1] = (i + 1) * jmax_node + j;
+                }
+            }
+
 
             /* Read the data (x, y)-coordinate of each node */
             status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);

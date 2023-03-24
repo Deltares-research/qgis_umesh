@@ -822,7 +822,8 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
             }
             map[std_name] = i;
             QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
-            if (m_vars->variable[i]->dims.size() == 2)  // Todo: HACK: assumed time, xy-space
+            if (m_vars->variable[i]->dims.size() == 2 ||
+                m_vars->variable[i]->dims.size() == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID)  // Todo: HACK: assumed time, xy-space
             {
                 if (mesh_var_name == text)
                 {
