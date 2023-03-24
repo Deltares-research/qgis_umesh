@@ -825,7 +825,6 @@ void MyCanvas::draw_vector_direction_at_face()
 
         vector<double> vec_z(mesh2d->face_nodes.size(), 0.0); // will contain the direction
         m_rgb_color.resize(mesh2d->face_nodes.size());
-
         m_ramph_vec_dir->update();
 
         this->startDrawing(CACHE_2D);
@@ -891,206 +890,183 @@ void MyCanvas::draw_vector_direction_at_node()
                 missing_value = vars->variable[i]->fill_value;
                 i_var = i;
             }
-            var = vars->variable[i_var];
-            if (!var->draw && var->location != "node") { return; }
+        }
+        var = vars->variable[i_var];
+        if (!var->draw && var->location != "node") { return; }
 
-            if (dimens == 2 ||
+        if (dimens == 2 ||
             dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID) // 2D: time, nodes (= imax*jmax)
+        {
+            DataValuesProvider2D<double>std_u_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
+            u_value = std_u_vec_at_face.GetValueAtIndex(m_current_step, 0);
+            DataValuesProvider2D<double>std_v_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[2].toStdString());
+            v_value = std_v_vec_at_face.GetValueAtIndex(m_current_step, 0);
+        }
+        else if (dimens == 3) // 3D: time, layer, nodes
+        {
+            if (m_hydro_layer > 0)
             {
-                DataValuesProvider2D<double>std_u_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
-                u_value = std_u_vec_at_face.GetValueAtIndex(m_current_step, 0);
-                DataValuesProvider2D<double>std_v_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[2].toStdString());
-                v_value = std_v_vec_at_face.GetValueAtIndex(m_current_step, 0);
+                DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
+                u_value = std_u_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
+                DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
+                v_value = std_v_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
             }
-            else if (dimens == 3) // 3D: time, layer, nodes
-            {
-                if (m_hydro_layer > 0)
-                {
-                    DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
-                    u_value = std_u_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
-                    DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
-                    v_value = std_v_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
-                }
-            }
-            if (u_value == nullptr || v_value == nullptr)
-            {
-                return;
-            }
+        }
+        if (u_value == nullptr || v_value == nullptr)
+        {
+            return;
+        }
 
 #if DO_TIMING == 1
-            auto start = std::chrono::steady_clock::now();
+        auto start = std::chrono::steady_clock::now();
 #endif
-            vector<double> vec_z(mesh2d->face_nodes.size(), 0.0); // will contain the direction
-            string var_name = var->var_name;
-            DataValuesProvider2D<double> std_data_at_node = m_grid_file->get_variable_values(var_name);
-            if (std_data_at_node.m_numXY == 0)
+        m_rgb_color.resize(mesh2d->face_nodes.size());
+        m_ramph_vec_dir->update();  
+
+        this->startDrawing(CACHE_2D);
+        mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
+        double opacity = mCache_painter->opacity();
+        mCache_painter->setOpacity(m_property->get_opacity());
+        int nr_nodes_per_max_quad = 4;
+        vector<double> vertex_x(nr_nodes_per_max_quad);
+        vector<double> vertex_y(nr_nodes_per_max_quad);
+        this->setPointSize(13);
+        double direction = 0.0;
+        double alpha;
+        QColor col;
+        for (int i = 0; i < mesh2d->face_nodes.size(); i++)
+        {
+            bool in_view = false;
+            if (u_value[i] == missing_value) { continue; }  // *u_value[i] = 0.0;
+            if (v_value[i] == missing_value) { continue; }  // *v_value[i] = 0.0;
+            vertex_x.clear();
+            vertex_y.clear();
+
+            int p0, p1, p2, p3;
+            p0 = mesh2d->face_nodes[i][0];
+            p1 = mesh2d->face_nodes[i][1];
+            p2 = mesh2d->face_nodes[i][2];
+            p3 = mesh2d->face_nodes[i][3];
+            in_view = false;
+            if (mesh2d->node[0]->x[p0] > getMinVisibleX() && mesh2d->node[0]->x[p0] < getMaxVisibleX() &&
+                mesh2d->node[0]->y[p0] > getMinVisibleY() && mesh2d->node[0]->y[p0] < getMaxVisibleY() ||
+                mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY() ||
+                mesh2d->node[0]->x[p2] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                mesh2d->node[0]->y[p2] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY() ||
+                mesh2d->node[0]->x[p3] > getMinVisibleX() && mesh2d->node[0]->x[p3] < getMaxVisibleX() &&
+                mesh2d->node[0]->y[p3] > getMinVisibleY() && mesh2d->node[0]->y[p3] < getMaxVisibleY())
             {
-                return;
+                in_view = true; // whole face is inview, todo: could be tested on subcontrol volumes
             }
-            z_value = std_data_at_node.GetValueAtIndex(m_current_step, 0);
 
-            double missing_value = var->fill_value;
-            m_rgb_color.resize(mesh2d->node[0]->x.size());
-            determine_min_max(z_value, mesh2d->node[0]->y.size(), &m_z_min, &m_z_max, missing_value);
-
-#if DO_TIMING == 1
-            auto end = std::chrono::steady_clock::now();
-            std::chrono::duration<double> elapse_time = end - start;
-            QString msg = QString(tr("Timing reading data at node: %2 [sec]").arg(elapse_time.count()));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-
-            start = std::chrono::steady_clock::now();
-#endif        
-
-            this->startDrawing(CACHE_2D);
-            mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
-            double opacity = mCache_painter->opacity();
-            mCache_painter->setOpacity(m_property->get_opacity());
-            int nr_nodes_per_max_quad = 4;
-            vector<double> vertex_x(nr_nodes_per_max_quad);
-            vector<double> vertex_y(nr_nodes_per_max_quad);
-            this->setPointSize(13);
-            double direction = 0.0;
-            double alpha;
-            QColor col;
-            for (int i = 0; i < mesh2d->face_nodes.size(); i++)
+            if (in_view)
             {
-                bool in_view = false;
-                if (u_value[i] == missing_value) { continue; }  // *u_value[i] = 0.0;
-                if (v_value[i] == missing_value) { continue; }  // *v_value[i] = 0.0;
+                double edge_x_01 = 0.5 * (mesh2d->node[0]->x[p0] + mesh2d->node[0]->x[p1]);
+                double edge_y_01 = 0.5 * (mesh2d->node[0]->y[p0] + mesh2d->node[0]->y[p1]);
+                double edge_x_12 = 0.5 * (mesh2d->node[0]->x[p1] + mesh2d->node[0]->x[p2]);
+                double edge_y_12 = 0.5 * (mesh2d->node[0]->y[p1] + mesh2d->node[0]->y[p2]);
+                double edge_x_23 = 0.5 * (mesh2d->node[0]->x[p2] + mesh2d->node[0]->x[p3]);
+                double edge_y_23 = 0.5 * (mesh2d->node[0]->y[p2] + mesh2d->node[0]->y[p3]);
+                double edge_x_31 = 0.5 * (mesh2d->node[0]->x[p3] + mesh2d->node[0]->x[p0]);
+                double edge_y_31 = 0.5 * (mesh2d->node[0]->y[p3] + mesh2d->node[0]->y[p0]);
+                double centre_x = 0.;
+                double centre_y = 0.;
+                for (int j = 0; j < nr_nodes_per_max_quad; j++)
+                {
+                    p0 = mesh2d->face_nodes[i][j];
+                    centre_x += mesh2d->node[0]->x[p0];
+                    centre_y += mesh2d->node[0]->y[p0];
+                }
+                centre_x /= nr_nodes_per_max_quad;
+                centre_y /= nr_nodes_per_max_quad;
+
+                // determine the polygons [p, edge, centre, edge]
                 vertex_x.clear();
                 vertex_y.clear();
-
-                int p0, p1, p2, p3;
                 p0 = mesh2d->face_nodes[i][0];
-                p1 = mesh2d->face_nodes[i][1];
-                p2 = mesh2d->face_nodes[i][2];
-                p3 = mesh2d->face_nodes[i][3];
-                in_view = false;
-                if (mesh2d->node[0]->x[p0] > getMinVisibleX() && mesh2d->node[0]->x[p0] < getMaxVisibleX() &&
-                    mesh2d->node[0]->y[p0] > getMinVisibleY() && mesh2d->node[0]->y[p0] < getMaxVisibleY() ||
-                    mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
-                    mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY() ||
-                    mesh2d->node[0]->x[p2] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
-                    mesh2d->node[0]->y[p2] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY() ||
-                    mesh2d->node[0]->x[p3] > getMinVisibleX() && mesh2d->node[0]->x[p3] < getMaxVisibleX() &&
-                    mesh2d->node[0]->y[p3] > getMinVisibleY() && mesh2d->node[0]->y[p3] < getMaxVisibleY())
-                {
-                    in_view = true; // whole face is inview, todo: could be tested on subcontrol volumes
-                }
-
-                if (in_view)
-                {
-                    double edge_x_01 = 0.5 * (mesh2d->node[0]->x[p0] + mesh2d->node[0]->x[p1]);
-                    double edge_y_01 = 0.5 * (mesh2d->node[0]->y[p0] + mesh2d->node[0]->y[p1]);
-                    double edge_x_12 = 0.5 * (mesh2d->node[0]->x[p1] + mesh2d->node[0]->x[p2]);
-                    double edge_y_12 = 0.5 * (mesh2d->node[0]->y[p1] + mesh2d->node[0]->y[p2]);
-                    double edge_x_23 = 0.5 * (mesh2d->node[0]->x[p2] + mesh2d->node[0]->x[p3]);
-                    double edge_y_23 = 0.5 * (mesh2d->node[0]->y[p2] + mesh2d->node[0]->y[p3]);
-                    double edge_x_31 = 0.5 * (mesh2d->node[0]->x[p3] + mesh2d->node[0]->x[p0]);
-                    double edge_y_31 = 0.5 * (mesh2d->node[0]->y[p3] + mesh2d->node[0]->y[p0]);
-                    double centre_x = 0.;
-                    double centre_y = 0.;
-                    for (int j = 0; j < nr_nodes_per_max_quad; j++)
-                    {
-                        p0 = mesh2d->face_nodes[i][j];
-                        centre_x += mesh2d->node[0]->x[p0];
-                        centre_y += mesh2d->node[0]->y[p0];
-                    }
-                    centre_x /= nr_nodes_per_max_quad;
-                    centre_y /= nr_nodes_per_max_quad;
-
-                    // determine the polygons [p, edge, centre, edge]
-                    vertex_x.clear();
-                    vertex_y.clear();
-                    p0 = mesh2d->face_nodes[i][0];
-                    vertex_x.push_back(mesh2d->node[0]->x[p0]);
-                    vertex_y.push_back(mesh2d->node[0]->y[p0]);
-                    vertex_x.push_back(edge_x_01);
-                    vertex_y.push_back(edge_y_01);
-                    vertex_x.push_back(centre_x);
-                    vertex_y.push_back(centre_y);
-                    vertex_x.push_back(edge_x_31);
-                    vertex_y.push_back(edge_y_31);
-                    // draw polygon
-                    direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                    col = m_ramph->getRgbFromValue(direction);
-                    alpha = min(col.alphaF(), m_property->get_opacity());
-                    mCache_painter->setOpacity(alpha);
-                    this->setFillColor(col);
-                    this->drawPolygon(vertex_x, vertex_y);
+                vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                vertex_x.push_back(edge_x_01);
+                vertex_y.push_back(edge_y_01);
+                vertex_x.push_back(centre_x);
+                vertex_y.push_back(centre_y);
+                vertex_x.push_back(edge_x_31);
+                vertex_y.push_back(edge_y_31);
+                // draw polygon
+                direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
+                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
+                this->drawPolygon(vertex_x, vertex_y);
 
 
-                    // determine the polygons [p, edge, centre, edge]
-                    vertex_x.clear();
-                    vertex_y.clear();
-                    p0 = mesh2d->face_nodes[i][1];
-                    vertex_x.push_back(mesh2d->node[0]->x[p0]);
-                    vertex_y.push_back(mesh2d->node[0]->y[p0]);
-                    vertex_x.push_back(edge_x_12);
-                    vertex_y.push_back(edge_y_12);
-                    vertex_x.push_back(centre_x);
-                    vertex_y.push_back(centre_y);
-                    vertex_x.push_back(edge_x_01);
-                    vertex_y.push_back(edge_y_01);
-                    // draw polygon
-                    direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                    col = m_ramph->getRgbFromValue(direction);
-                    alpha = min(col.alphaF(), m_property->get_opacity());
-                    mCache_painter->setOpacity(alpha);
-                    this->setFillColor(col);
-                    this->drawPolygon(vertex_x, vertex_y);
+                // determine the polygons [p, edge, centre, edge]
+                vertex_x.clear();
+                vertex_y.clear();
+                p0 = mesh2d->face_nodes[i][1];
+                vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                vertex_x.push_back(edge_x_12);
+                vertex_y.push_back(edge_y_12);
+                vertex_x.push_back(centre_x);
+                vertex_y.push_back(centre_y);
+                vertex_x.push_back(edge_x_01);
+                vertex_y.push_back(edge_y_01);
+                // draw polygon
+                direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
+                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
+                this->drawPolygon(vertex_x, vertex_y);
 
 
-                    // determine the polygons [p, edge, centre, edge]
-                    vertex_x.clear();
-                    vertex_y.clear();
-                    p0 = mesh2d->face_nodes[i][2];
-                    vertex_x.push_back(mesh2d->node[0]->x[p0]);
-                    vertex_y.push_back(mesh2d->node[0]->y[p0]);
-                    vertex_x.push_back(edge_x_23);
-                    vertex_y.push_back(edge_y_23);
-                    vertex_x.push_back(centre_x);
-                    vertex_y.push_back(centre_y);
-                    vertex_x.push_back(edge_x_12);
-                    vertex_y.push_back(edge_y_12);
-                    // draw polygon
-                    direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                    col = m_ramph->getRgbFromValue(direction);
-                    alpha = min(col.alphaF(), m_property->get_opacity());
-                    mCache_painter->setOpacity(alpha);
-                    this->setFillColor(col);
-                    this->drawPolygon(vertex_x, vertex_y);
+                // determine the polygons [p, edge, centre, edge]
+                vertex_x.clear();
+                vertex_y.clear();
+                p0 = mesh2d->face_nodes[i][2];
+                vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                vertex_x.push_back(edge_x_23);
+                vertex_y.push_back(edge_y_23);
+                vertex_x.push_back(centre_x);
+                vertex_y.push_back(centre_y);
+                vertex_x.push_back(edge_x_12);
+                vertex_y.push_back(edge_y_12);
+                // draw polygon
+                direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
+                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
+                this->drawPolygon(vertex_x, vertex_y);
 
 
-                    // determine the polygons [p, edge, centre, edge]
-                    vertex_x.clear();
-                    vertex_y.clear();
-                    p0 = mesh2d->face_nodes[i][3];
-                    vertex_x.push_back(mesh2d->node[0]->x[p0]);
-                    vertex_y.push_back(mesh2d->node[0]->y[p0]);
-                    vertex_x.push_back(edge_x_31);
-                    vertex_y.push_back(edge_y_31);
-                    vertex_x.push_back(centre_x);
-                    vertex_y.push_back(centre_y);
-                    vertex_x.push_back(edge_x_23);
-                    vertex_y.push_back(edge_y_23);
-                    // draw polygon
-                    direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                    col = m_ramph->getRgbFromValue(direction);
-                    alpha = min(col.alphaF(), m_property->get_opacity());
-                    mCache_painter->setOpacity(alpha);
-                    this->setFillColor(col);
-                    this->drawPolygon(vertex_x, vertex_y);
-                }
+                // determine the polygons [p, edge, centre, edge]
+                vertex_x.clear();
+                vertex_y.clear();
+                p0 = mesh2d->face_nodes[i][3];
+                vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                vertex_x.push_back(edge_x_31);
+                vertex_y.push_back(edge_y_31);
+                vertex_x.push_back(centre_x);
+                vertex_y.push_back(centre_y);
+                vertex_x.push_back(edge_x_23);
+                vertex_y.push_back(edge_y_23);
+                // draw polygon
+                direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
+                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
+                this->drawPolygon(vertex_x, vertex_y);
             }
-#if DO_TIMING == 1
-            end = std::chrono::steady_clock::now();
-            elapse_time = end - start;
-            msg = QString(tr("Timing drawing data at node: %2 [sec]\n").arg(elapse_time.count()));
-            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
-#endif
         }
+        mCache_painter->setOpacity(opacity);
+        this->finishDrawing();
     }
 }
 //-----------------------------------------------------------------------------
