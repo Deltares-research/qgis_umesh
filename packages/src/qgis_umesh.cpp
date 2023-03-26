@@ -13,7 +13,7 @@
 
 /* static */ const QString qgis_umesh::s_ident = QObject::tr("@(#)" qgis_umesh_company ", " qgis_umesh_program ", " qgis_umesh_version_number ", " qgis_umesh_arch", " __DATE__", " __TIME__);
 /* static */ const QString qgis_umesh::s_name = QObject::tr("" qgis_umesh_company ", " qgis_umesh_program " Development");
-/* static */ const QString qgis_umesh::s_description = QObject::tr("Plugin to read 1D and 2D unstructured meshes, UGRID-format (" __DATE__", " __TIME__")");
+/* static */ const QString qgis_umesh::s_description = QObject::tr("Plugin to read 1D2D3D (un)structured meshes; UGRID/SGRID-format (" __DATE__", " __TIME__")");
 /* static */ const QString qgis_umesh::s_category = QObject::tr("Plugins");
 /* static */ const QString qgis_umesh::s_plugin_version = QObject::tr(qgis_umesh_version_number);
 
@@ -56,7 +56,7 @@ void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, in
     Q_UNUSED(indexTo);
     QString name = node->name();  // contains the group name
     QList <QgsLayerTreeNode*> children =  node->children();
-    if (children.size() == 0 && (name.contains("UGRID - ") || name.contains("History -")))
+    if (children.size() == 0 && (name.contains("GRID - ") || name.contains("History -")))
     {
         if (indexFrom == 0)
         {
@@ -216,9 +216,9 @@ void qgis_umesh::initGui()
     connect(open_action_mdu, SIGNAL(triggered()), this, SLOT(open_file_mdu()));
 
     icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
-    open_action_map = new QAction(icon_open, tr("&Open UGRID ..."));
-    open_action_map->setToolTip(tr("Open UGRID 1D2D file"));
-    open_action_map->setStatusTip(tr("Open UGRID file containing 1D, 2D and/or 1D2D meshes"));
+    open_action_map = new QAction(icon_open, tr("&Open GRID ..."));
+    open_action_map->setToolTip(tr("Open SGRID 2D or UGRID 1D2D3D file"));
+    open_action_map->setStatusTip(tr("Open UGRID file containing 1D2D3D data or SGRID file containing 2D data"));
     open_action_map->setEnabled(true);
     connect(open_action_map, SIGNAL(triggered()), this, SLOT(openFile()));
 
@@ -458,16 +458,16 @@ void qgis_umesh::edit_1d_obs_points()
     GRID * grid_file = get_active_grid_file("");
     if (grid_file == nullptr)
     {
-        QMessageBox::information(0, "Information", QString("qgis_umesh::edit_1d_obs_points()\nSelect first a layer of a UGRID file."));
+        QMessageBox::information(0, "Information", QString("qgis_umesh::edit_1d_obs_points()\nSelect first a layer of a UGRID/SGRID file."));
         return;
     }
 
-    // get UGRID Mesh group
+    // get UGRID/SGRID Mesh group
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
-    QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID Mesh - %1").arg(_fil_index + 1));
+    QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("GRID Mesh - %1").arg(_fil_index + 1));
     if (myGroup == nullptr)
     {
-        QMessageBox::information(0, "Information", QString("Group layer with name \"UGRID Mesh - %1\" not found.").arg(_fil_index + 1));
+        QMessageBox::information(0, "Information", QString("Group layer with name \"GRID Mesh - %1\" not found.").arg(_fil_index + 1));
         return;
     }
 
@@ -479,7 +479,7 @@ void qgis_umesh::edit_1d_obs_points()
     QgsMapLayer * obs_layer;
     if (geom_layers.size() > 1 || obs_layers.size() > 1)
     {
-        QMessageBox::information(0, "Information", QString("Please load just one UGRID file."));
+        QMessageBox::information(0, "Information", QString("Please load just one GRID file."));
         return;
     }
     if (geom_layers.size() == 0 && obs_layers.size() == 1)
@@ -717,7 +717,7 @@ void qgis_umesh::about()
     qsource_url = new QString(source_url);
 
     msg_text = new QString("Deltares\n");
-    msg_text->append("Plot results on UGRID compliant meshes. 1D mesh with its geometry, 1D2D, 2D and 3D meshes.\n");
+    msg_text->append("Plot results on UGRID/SGRID compliant meshes. 1D mesh with its geometry, 1D2D, 2D and 3D meshes.\n");
     msg_text->append(qtext);
     msg_text->append("\nSource: ");
     msg_text->append(qsource_url);
@@ -739,17 +739,17 @@ void qgis_umesh::openFile()
     list->append(*str);
     str->clear();
 
-    str->append("UGRID map");
+    str->append("UGRID/SGRID map");
     str->append(" (*_map.nc)");
     list->append(*str);
     str->clear();
 
-    str->append("UGRID mesh");
+    str->append("UGRID/SGRID mesh");
     str->append(" (*_net.nc)");
     list->append(*str);
     str->clear();
 
-//    str->append("UGRID");
+//    str->append("UGRID/SGRID");
 //    str->append(" (*_clm.nc)");
 //    list->append(*str);
 //    str->clear();
@@ -758,7 +758,7 @@ void qgis_umesh::openFile()
     str->append(" (*.*)");
     list->append(*str);
 
-    fd->setWindowTitle("Open Unstructured grid file");
+    fd->setWindowTitle("Open (Un)structured grid file");
     fd->setNameFilters(*list);
     fd->selectNameFilter(list->at(0));
     fd->setFileMode(QFileDialog::ExistingFiles);  // Enable multiple file selection at once
@@ -979,12 +979,12 @@ void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
     else
     {
         QString qname = QString::fromStdString(pt_mdu->get_filename());
-        QString msg = QString(tr("No UGRID mesh file given.\nTag \"%2\" does not exist in file \"%1\".").arg(QString::fromStdString(json_key)).arg(qname));
+        QString msg = QString(tr("No UGRID/SGRID mesh file given.\nTag \"%2\" does not exist in file \"%1\".").arg(QString::fromStdString(json_key)).arg(qname));
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
         return;
     }
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
-    QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID - %1").arg(jsonfile.fileName()));
+    QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("GRID - %1").arg(jsonfile.fileName()));
     if (myGroup == nullptr)
     {
         QString name = QString("JSON - %1").arg(jsonfile.fileName());
@@ -1700,7 +1700,7 @@ void qgis_umesh::activate_layers()
             //QMessageBox::warning(0, "Message", QString("_fil_index: %1+1.").arg(_fil_index+1));
             for (int j = 0; j < _fil_index+1; j++)
             {
-                QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("UGRID Mesh - %1").arg(j + 1));
+                QgsLayerTreeGroup * myGroup = treeRoot->findGroup(QString("GRID Mesh - %1").arg(j + 1));
                 if (myGroup != nullptr)
                 {
                     myGroup->setItemVisibilityChecked(true);
@@ -1708,11 +1708,11 @@ void qgis_umesh::activate_layers()
             }
         }
 
-        QgsLayerTreeGroup * treeGroup = treeRoot->findGroup(QString("UGRID - %1").arg(m_grid_file[_fil_index]->get_filename().fileName()));
+        QgsLayerTreeGroup * treeGroup = treeRoot->findGroup(QString("GRID - %1").arg(m_grid_file[_fil_index]->get_filename().fileName()));
         if (treeGroup == nullptr)
         {
             QString fname = m_grid_file[_fil_index]->get_filename().fileName();
-            QString name = QString("UGRID - %1").arg(fname);
+            QString name = QString("GRID - %1").arg(fname);
             treeGroup = treeRoot->insertGroup(_fil_index, name);  // set this group on top if _fil_index == 0
             treeGroup->setExpanded(true);  // true is the default
             treeGroup->setItemVisibilityChecked(true);
@@ -2048,7 +2048,7 @@ void qgis_umesh::unload()
     {
         QgsLayerTreeGroup * janm = groups.at(i);
         QString str = janm->name();
-        if (str.contains("UGRID - ") ||
+        if (str.contains("GRID - ") ||
             str.contains("History -"))
         {
             janm->setExpanded(false);  // true is the default

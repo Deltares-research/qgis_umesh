@@ -2043,9 +2043,6 @@ DataValuesProvider3D<double> GRID::get_variable_3d_values(const std::string var_
     double* read_c;
     double* values_c;
     DataValuesProvider3D<double> data_pointer;
-#ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_variable_values()\n");
-#endif    
 
     for (int i = 0; i < m_mesh_vars->nr_vars; i++)
     {
@@ -2152,9 +2149,6 @@ DataValuesProvider4D<double> GRID::get_variable_4d_values(const std::string var_
     double* read_c;
     double* values_c;
     DataValuesProvider4D<double> data_pointer;
-#ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_variable_values()\n");
-#endif    
 
     for (int i = 0; i < m_mesh_vars->nr_vars; i++)
     {
@@ -3856,7 +3850,7 @@ int GRID::read_geometry_attributes(struct _geom_string* geom_strings, int i_var,
     {
 #ifdef NATIVE_C
 #else
-        QString msg = QString("UGRID::read_geometry_attributes\nFile does not contain the geometry coordinates attribute");
+        QString msg = QString("UGRID::read_geometry_attributes\nFile does not contain the geometry coordinates attribute.");
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
 #endif
         status = 1;
