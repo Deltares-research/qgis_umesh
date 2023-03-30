@@ -135,7 +135,8 @@ long GRID::read()
         status = this->read_ugrid_variables();
         STOP_TIMER(Read Read_ugrid_variables);
     }
-    if (m_ftype == FILE_TYPE::SGRID) 
+    if (m_ftype == FILE_TYPE::SGRID ||
+        m_ftype == FILE_TYPE::KISS)
     {
         START_TIMERN(Read_sgrid_mesh);
         status = this->read_sgrid_mesh();
@@ -148,20 +149,6 @@ long GRID::read()
         START_TIMER(Read_sgrid_variables);
         status = this->read_sgrid_variables();
         STOP_TIMER(Read_sgrid_variables);
-    }
-    if (m_ftype == FILE_TYPE::KISS)
-    {
-        START_TIMERN(Read_kiss_mesh);
-        status = this->read_kiss_mesh();
-        STOP_TIMER(Read_kiss_mesh);
-
-        START_TIMER(Read_times);
-        status = this->read_times();
-        STOP_TIMER(Read_times);
-
-        START_TIMER(Read_kiss_variables);
-        status = this->read_kiss_variables();
-        STOP_TIMER(Read_kiss_variables);
     }
     return status;
 }
@@ -535,6 +522,11 @@ long GRID::read_sgrid_mesh()
         {
             status = read_variables_with_cf_role(i_var, var_name, cf_role, ndims, var_dimids);
         }
+        else if (get_file_type() == FILE_TYPE::KISS)
+        {
+            // no grid-variable defined, so presume var_name="grid2d"and cf_role="grid_topology"
+            status = read_variables_with_cf_role(i_var, "grid2d", "grid_topology", ndims, var_dimids);
+        }
 
         status = get_attribute(this->m_ncid, i_var, "standard_name", &std_name);
         if (std_name == "ocean_sigma_coordinate")
@@ -663,8 +655,23 @@ long GRID::read_times()
         {
             units_c = (char *)malloc(sizeof(char) * (length + 1));
             units_c[length] = '\0';
-            status = nc_get_att(this->m_ncid, i_var, "units", units_c);
-            QString units = QString(units_c).replace("T", " ");  // "seconds since 1970-01-01T00:00:00" changed into "seconds since 1970-01-01 00:00:00"
+            std::string units_cpp;
+            units_cpp.resize(length);
+            status = nc_get_att(this->m_ncid, i_var, "units", units_cpp.data());
+            if (m_ftype == FILE_TYPE::KISS)
+            {
+                std::string std_name;
+                units_cpp.resize(NC_MAX_CHAR);
+                status = nc_inq_attlen(this->m_ncid, i_var, "standard_name", &length);
+                std_name.resize(length);
+                status = nc_get_att(this->m_ncid, i_var, "standard_name", std_name.data());
+                if (std_name == "time")
+                {
+                    units_cpp = "seconds since 2000-01-01 00:00:00";
+                }
+            }
+            QString units = QString::fromStdString(units_cpp);
+            units.replace("T", " ");  // "seconds since 1970-01-01T00:00:00" changed into "seconds since 1970-01-01 00:00:00"
             date_time = units.split(" ");
             if (date_time.count() >= 2)
             {
@@ -1334,6 +1341,10 @@ long GRID::read_sgrid_variables()
         std::string var_name(var_name_c);
         status = get_attribute(this->m_ncid, i_var, "grid", &tmp_string);  // statement, to detect if this is a variable on a structured grid
         if (status == NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "location", &tmp_string); } // each variable does have a location
+        if (status != NC_NOERR && m_ftype == FILE_TYPE::KISS) {
+            tmp_string = "node";
+            status = NC_NOERR;
+        }
         if (status == NC_NOERR)
         {
             // This variable is defined on a mesh and has a dimension
@@ -1354,7 +1365,17 @@ long GRID::read_sgrid_variables()
             m_mesh_vars->variable[m_nr_mesh_var - 1]->nc_type = nc_type;
             m_mesh_vars->variable[m_nr_mesh_var - 1]->read = false;
             status = get_attribute(this->m_ncid, i_var, "location", &m_mesh_vars->variable[m_nr_mesh_var - 1]->location);
+            if (status != NC_NOERR && m_ftype == FILE_TYPE::KISS)
+            {
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->location = "node";
+                status = NC_NOERR; 
+            }
             status = get_attribute(this->m_ncid, i_var, "grid", &m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh);
+            if (status != NC_NOERR && m_ftype == FILE_TYPE::KISS)
+            {
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->mesh = "grid2d";
+                status = NC_NOERR;
+            }
             status = get_attribute(this->m_ncid, i_var, "coordinates", &m_mesh_vars->variable[m_nr_mesh_var - 1]->coordinates);
             status = get_attribute(this->m_ncid, i_var, "cell_methods", &m_mesh_vars->variable[m_nr_mesh_var - 1]->cell_methods);
             status = get_attribute(this->m_ncid, i_var, "standard_name", &m_mesh_vars->variable[m_nr_mesh_var - 1]->standard_name);
@@ -1417,7 +1438,8 @@ long GRID::read_sgrid_variables()
                 // nothing to do
             }
             if (m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 2 ||
-                m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 3 && m_ftype == FILE_TYPE::SGRID)
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 3 && m_ftype == FILE_TYPE::SGRID ||
+                m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size() == 3 && m_ftype == FILE_TYPE::KISS)
             {
                 bool contains_time_dimension = false;
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
@@ -1959,13 +1981,15 @@ DataValuesProvider2D<double> GRID::get_variable_values(const std::string var_nam
                     m_mesh_vars->variable[i_var]->data_2d = DataValuesProvider2D;
                 }
                 else if (m_mesh_vars->variable[i]->dims.size() == 2 ||
-                    m_mesh_vars->variable[i]->dims.size() == 3 && m_ftype == FILE_TYPE::SGRID)
+                         m_mesh_vars->variable[i]->dims.size() == 3 && m_ftype == FILE_TYPE::SGRID ||
+                         m_mesh_vars->variable[i]->dims.size() == 3 && m_ftype == FILE_TYPE::KISS)
                 {
                     if (m_mesh_vars->variable[i]->time_series)
                     {
                         long time_dim = m_mesh_vars->variable[i]->dims[0];  // TODO: Assumed to be the time dimension
                         long xy_dim = m_mesh_vars->variable[i]->dims[1];  // TODO: Assumed to be the 2DH space dimension
-                        if (m_mesh_vars->variable[i]->dims.size() == 3 && m_ftype == FILE_TYPE::SGRID)
+                        if (m_mesh_vars->variable[i]->dims.size() == 3 && m_ftype == FILE_TYPE::SGRID ||
+                            m_mesh_vars->variable[i]->dims.size() == 3 && m_ftype == FILE_TYPE::KISS)
                         {
                             xy_dim = m_mesh_vars->variable[i]->dims[1] * m_mesh_vars->variable[i]->dims[2];
                         }
@@ -1976,7 +2000,8 @@ DataValuesProvider2D<double> GRID::get_variable_values(const std::string var_nam
                     {
                         // not a time series, one dimesion should be the xy-space
                         // but the other dimension is a list of array quantities (ex. type of sediments)
-                        if (m_mesh_vars->variable[i]->location == "node" && m_ftype == FILE_TYPE::SGRID)
+                        if (m_mesh_vars->variable[i]->location == "node" && m_ftype == FILE_TYPE::SGRID ||
+                            m_mesh_vars->variable[i]->location == "node" && m_ftype == FILE_TYPE::KISS)
                         {
                             long xy_dim = m_mesh_vars->variable[i]->dims[0] * m_mesh_vars->variable[i]->dims[1];
                             if (m_mesh2d->node[0]->x.size() == xy_dim)
@@ -3603,6 +3628,10 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
     {
         topology_dimension = 0;
         status = get_attribute(this->m_ncid, i_var, const_cast<char*>("topology_dimension"), &topology_dimension);
+        if (status != NC_NOERR && m_ftype == FILE_TYPE::KISS)
+        {
+            topology_dimension = 2;
+        }
         ///////////////////////////////////////////////////////////////////////////////////////////
         if (topology_dimension == 2)  // it is a unstructured mesh
         {
@@ -3617,7 +3646,11 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             m_mesh2d_strings[nr_mesh2d - 1] = new _mesh2d_string;
 
             status = read_mesh2d_attributes(m_mesh2d_strings[nr_mesh2d - 1], i_var, var_name, topology_dimension);
-
+            if (status != NC_NOERR && m_ftype == FILE_TYPE::KISS)
+            {
+                m_mesh2d_strings[nr_mesh2d - 1]->x_node_name = "x_coordinate";
+                m_mesh2d_strings[nr_mesh2d - 1]->y_node_name = "y_coordinate";
+            }
             if (nr_mesh2d == 1)
             {
                 m_mesh2d = new _mesh2d();
@@ -3648,7 +3681,19 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             dimids = (int*)malloc(sizeof(int) * ndims);
             status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
             int imax_node = m_dimids[dimids[0]];
-            int jmax_node = m_dimids[dimids[1]];
+            int jmax_node = 0;
+            if (m_ftype == FILE_TYPE::KISS)
+            {
+                status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_node_name.c_str(), &var_id);
+                status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
+                dimids = (int*)malloc(sizeof(int) * ndims);
+                status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
+                jmax_node = m_dimids[dimids[0]];
+            }
+            else
+            {
+                jmax_node = m_dimids[dimids[1]];
+            }
 
             m_mesh2d->edge[nr_mesh2d - 1]->count = imax_node * (jmax_node - 1) + jmax_node * (imax_node - 1);
             mesh2d_edge_nodes = (int*)malloc(sizeof(int) * m_mesh2d->edge[nr_mesh2d - 1]->count * _two);
@@ -3681,32 +3726,68 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
 
 
             /* Read the data (x, y)-coordinate of each node */
-            status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
-            status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
-            dimids = (int *)malloc(sizeof(int) * ndims);
-            status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
             size_t length = 1;
-            for (int i = 0; i < ndims; i++)
+            if (m_ftype == FILE_TYPE::KISS)
             {
-                length *= m_dimids[dimids[i]];
-            }
- 
-            m_mesh2d->node[nr_mesh2d - 1]->count = length;
-            m_mesh2d->node[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
-            m_mesh2d->node[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
-            status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-            if (att_value == "projection_x_coordinate" || att_value == "longitude")
-            {
-                status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->x.data());
-                status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_node_name.c_str(), &var_id);
-                status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->y.data());
+                length = imax_node * jmax_node;
+                std::vector<double> x_tmp(imax_node);
+                std::vector<double> y_tmp(jmax_node);
+                status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
+                status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
+                if (att_value == "projection_x_coordinate" || att_value == "longitude")
+                {
+                    status = nc_get_var_double(this->m_ncid, var_id, x_tmp.data());
+                    status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_node_name.c_str(), &var_id);
+                    status = nc_get_var_double(this->m_ncid, var_id, y_tmp.data());
+                }
+                else
+                {
+                    status = nc_get_var_double(this->m_ncid, var_id, y_tmp.data());
+                    status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_node_name.c_str(), &var_id);
+                    status = nc_get_var_double(this->m_ncid, var_id, x_tmp.data());
+                }
+                m_mesh2d->node[nr_mesh2d - 1]->count = length;
+                m_mesh2d->node[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
+                m_mesh2d->node[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
+                k = 0;
+                for (int i = 0; i < imax_node; ++i)
+                {
+                    for (int j = 0; j < jmax_node; ++j)
+                    {
+                        k = i * imax_node + j;
+                        m_mesh2d->node[nr_mesh2d - 1]->x[k] = x_tmp[i];
+                        m_mesh2d->node[nr_mesh2d - 1]->y[k] = y_tmp[j];
+                    }
+                }
             }
             else
             {
-                status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->y.data());
-                status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_node_name.c_str(), &var_id);
-                status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->x.data());
+                status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
+                status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
+                dimids = (int*)malloc(sizeof(int) * ndims);
+                status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
+                for (int i = 0; i < ndims; i++)
+                {
+                    length *= m_dimids[dimids[i]];
+                }
+                m_mesh2d->node[nr_mesh2d - 1]->count = length;
+                m_mesh2d->node[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
+                m_mesh2d->node[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
+                status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
+                if (att_value == "projection_x_coordinate" || att_value == "longitude")
+                {
+                    status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->x.data());
+                    status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_node_name.c_str(), &var_id);
+                    status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->y.data());
+                }
+                else
+                {
+                    status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->y.data());
+                    status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_node_name.c_str(), &var_id);
+                    status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->x.data());
+                }
             }
+
 
 
             /* Read the data (x, y)-coordinate of each edge */
@@ -3763,14 +3844,24 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             dimids = (int*)malloc(sizeof(int) * ndims);
             status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
 
-            int m_max = m_dimids[dimids[0]] + 1;  // HACK: 1 more node the face, only true for structured grids
-            int n_max = m_dimids[dimids[1]] + 1;  // HACK: 1 more node the face, only true for structured grids
+            int m_max;
+            int n_max;
+            if (m_ftype == FILE_TYPE::KISS)
+            {
+                m_max = imax_node;
+                n_max = jmax_node;
+            }
+            else
+            {
+                m_max = m_dimids[dimids[0]] + 1;  // HACK: 1 more node then faces, only true for structured grids
+                n_max = m_dimids[dimids[1]] + 1;  // HACK: 1 more node then faces, only true for structured grids
+            }
 
             std::vector<int> value;
             int kk = -1;
-            for (int m = 0; m < m_dimids[dimids[0]]; m++)  // faces x-direction
+            for (int m = 0; m < m_max-1; m++)  // faces x-direction
             {
-                for (int n = 0; n < m_dimids[dimids[1]]; n++)  // faces y-direction
+                for (int n = 0; n < n_max-1; n++)  // faces y-direction
                 {
                     value.push_back(m * n_max + n);
                     value.push_back((m+1) * n_max + n);

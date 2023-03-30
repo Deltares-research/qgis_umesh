@@ -515,11 +515,14 @@ void MyCanvas::draw_vector_arrow()
             struct _variable * cell_area = m_grid_file->get_var_by_std_name(vars, m2d_string[0]->var_name, "cell_area");
             if (cell_area == nullptr) 
             { 
-                QString msg = QString("Variable \'cell_area\' not found. Vectors can be plotted, because scaling is undefined.");
+                m_vec_length = 1.;
+                QString msg = QString("Variable \'cell_area\' not found. Vectors are scaled with a factor %1.").arg(m_vec_length);
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
-                return;
             }
-            m_vec_length = statistics_averaged_length_of_cell(cell_area);
+            else
+            {
+                m_vec_length = statistics_averaged_length_of_cell(cell_area);
+            }
 
             if (m_coordinate_type[0] == "Spherical")
             {
@@ -566,7 +569,8 @@ void MyCanvas::draw_vector_arrow()
                 }
             }
             if (dimens == 2  ||
-                dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID) // 2D: time, nodes (= imax*jamx)
+                dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
+                dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jamx)
             {
                 DataValuesProvider2D<double>std_u_vec_at_node = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
                 u_value = std_u_vec_at_node.GetValueAtIndex(m_current_step, 0);
@@ -801,7 +805,8 @@ void MyCanvas::draw_vector_direction_at_face()
         if (!var->draw && var->location != "face") { return; }
 
         if (dimens == 2 ||
-            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID) // 2D: time, nodes (= imax*jmax)
+            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
+            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jmax)
         {
             DataValuesProvider2D<double>std_u_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
             u_value = std_u_vec_at_face.GetValueAtIndex(m_current_step, 0);
@@ -895,7 +900,8 @@ void MyCanvas::draw_vector_direction_at_node()
         if (!var->draw && var->location != "node") { return; }
 
         if (dimens == 2 ||
-            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID) // 2D: time, nodes (= imax*jmax)
+            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
+            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jmax)
         {
             DataValuesProvider2D<double>std_u_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
             u_value = std_u_vec_at_face.GetValueAtIndex(m_current_step, 0);
