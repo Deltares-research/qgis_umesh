@@ -312,6 +312,7 @@ void MyCanvas::draw_data_at_node()
 #endif
             string var_name = var->var_name;
             struct _mesh2d* mesh2d = m_grid_file->get_mesh_2d();
+            if (mesh2d == nullptr) { return; }
             DataValuesProvider2D<double> std_data_at_node = m_grid_file->get_variable_values(var_name);
             if (std_data_at_node.m_numXY == 0)
             {

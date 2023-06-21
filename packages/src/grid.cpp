@@ -2847,15 +2847,12 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
 
         int start_index;
         status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
-        if (status == NC_NOERR)
+        if (status == NC_NOERR && start_index != 0)
         {
-            if (start_index != 0)
+            for (int i = 0; i < m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count; i++)
             {
-                for (int i = 0; i < m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count; i++)
-                {
-                    m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i][0] -= start_index;
-                    m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i][1] -= start_index;
-                }
+                m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i][0] -= start_index;
+                m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i][1] -= start_index;
             }
         }
 
@@ -2989,15 +2986,12 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
 
                 int start_index;
                 status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
-                if (status == NC_NOERR)
+                if (status == NC_NOERR && start_index != 0)
                 {
-                    if (start_index != 0)
+                    for (int i = 0; i < m_ntw_edges->edge[nr_ntw - 1]->count; i++)
                     {
-                        for (int i = 0; i < m_ntw_edges->edge[nr_ntw - 1]->count; i++)
-                        {
-                            m_ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][0] -= start_index;
-                            m_ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][1] -= start_index;
-                        }
+                        m_ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][0] -= start_index;
+                        m_ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][1] -= start_index;
                     }
                 }
 
@@ -3195,15 +3189,12 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                     status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, mesh1d_edge_nodes);
 
                     status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
-                    if (status == NC_NOERR)
+                    if (status == NC_NOERR && start_index != 0)
                     {
-                        if (start_index != 0)
+                        for (int i = 0; i < m_mesh1d->edge[nr_mesh1d - 1]->count; i++)
                         {
-                            for (int i = 0; i < m_mesh1d->edge[nr_mesh1d - 1]->count; i++)
-                            {
-                                m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][0] -= start_index;
-                                m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][1] -= start_index;
-                            }
+                            m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][0] -= start_index;
+                            m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][1] -= start_index;
                         }
                     }
                 }
@@ -3234,7 +3225,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                     status = nc_get_var_long(this->m_ncid, var_id, m_mesh1d->node[nr_mesh1d - 1]->branch.data());
 
                     status = nc_get_att_int(this->m_ncid, var_id, "start_index", &start_index);
-                    if (start_index != 0)
+                    if (status == 0 && start_index != 0)
                     {
                         for (int i = 0; i < m_mesh1d->node[nr_mesh1d - 1]->count; i++)
                         {
@@ -3267,7 +3258,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                     status = nc_get_var_long(this->m_ncid, var_id, m_mesh1d->edge[nr_mesh1d - 1]->edge_branch.data());
 
                     status = nc_get_att_int(this->m_ncid, var_id, "start_index", &start_index);
-                    if (start_index != 0)
+                    if (status == NC_NOERR && start_index != 0)
                     {
                         for (int i = 0; i < m_mesh1d->edge[nr_mesh1d - 1]->count; i++)
                         {
@@ -3373,15 +3364,12 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                 }
 
                 status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
-                if (status == NC_NOERR)
+                if (status == NC_NOERR && start_index != 0)
                 {
-                    if (start_index != 0)
+                    for (int i = 0; i < m_mesh2d->edge[nr_mesh2d - 1]->count; i++)
                     {
-                        for (int i = 0; i < m_mesh2d->edge[nr_mesh2d - 1]->count; i++)
-                        {
-                            m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] -= start_index;
-                            m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] -= start_index;
-                        }
+                        m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] -= start_index;
+                        m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] -= start_index;
                     }
                 }
                 free(dimids);
