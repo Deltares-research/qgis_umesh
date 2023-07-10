@@ -2,8 +2,6 @@
 #include "qgis_umesh.h"
 #include "perf_timer.h"
 
-#define GUI_EXPORT __declspec(dllimport)
-
 #if defined(WIN64)
 #  include <windows.h>
 #  define strdup _strdup
@@ -18,7 +16,7 @@
 /* static */ const QString qgis_umesh::s_plugin_version = QObject::tr(qgis_umesh_version_number);
 
 /* static */ const QgisPlugin::PluginType qgis_umesh::s_plugin_type = QgisPlugin::UI;
-/* static */ const QString* s_plugin_icon;
+/* static */ const QString qgis_umesh::s_plugin_icon = "C:/Program Files/deltares/qgis_umesh/icons/qgis_umesh.png";
 
 //
 //-----------------------------------------------------------------------------
@@ -6366,8 +6364,9 @@ QGISEXTERN const QString* icon()  // derde vanuit QGIS
     //QgsMessageLog::logMessage("::icon()", "QGIS umesh", Qgis::Info, true);
     //QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
     //QString q_icon_file = program_files + QString("/deltares/qgis_umesh/icons/qgis_umesh.png");
-    QString q_icon_file = QStringLiteral("C:/Program Files/deltares/qgis_umesh/icons/qgis_umesh.png");
-    return &q_icon_file;
+    //QString q_icon_file = ("C:/Program Files/deltares/qgis_umesh/icons/qgis_umesh.png");
+    //* static */ const QString qgis_umesh::s_plugin_icon = "C:/Program Files/deltares/qgis_umesh/icons/qgis_umesh.png";
+    return &qgis_umesh::s_plugin_icon;
 }
 // Delete ourself
 QGISEXTERN void unload(QgisPlugin* the_qgis_umesh_pointer)

@@ -3400,7 +3400,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             if (m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name != "")
             {
                 status = get_dimension_var(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name, &m_mesh2d->edge[nr_mesh2d - 1]->count);
-                if (m_mesh2d->edge[nr_mesh2d - 1]->count != 0)  // not required attribute
+                if (status == NC_NOERR)  // not required attribute
                 {
                     m_mesh2d->edge[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
                     m_mesh2d->edge[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
@@ -3451,7 +3451,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
 
                 status = get_dimension_var(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name, &m_mesh2d->face[nr_mesh2d - 1]->count);
 
-                if (m_mesh2d->face[nr_mesh2d - 1]->count != 0)  // not required attribute
+                if (status == NC_NOERR)  // not required attribute
                 {
                     m_mesh2d->face[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
                     m_mesh2d->face[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
@@ -4123,11 +4123,13 @@ int GRID::get_dimension(int ncid, char * dim_name, size_t * dim_length)
     int dimid;
     int status = -1;
 
-    *dim_length = 0;
     if (dim_name != NULL && strlen(dim_name) != 0)
     {
         status = nc_inq_dimid(ncid, dim_name, &dimid);
-        status = nc_inq_dimlen(ncid, dimid, dim_length);
+        if (status == NC_NOERR)
+        {
+            status = nc_inq_dimlen(ncid, dimid, dim_length);
+        }
     }
     return status;
 }
@@ -4137,11 +4139,13 @@ int GRID::get_dimension(int ncid, std::string dim_name, size_t * dim_length)
     int dimid;
     int status = -1;
 
-    *dim_length = 0;
     if (dim_name.size() != 0)
     {
         status = nc_inq_dimid(ncid, dim_name.c_str(), &dimid);
-        status = nc_inq_dimlen(ncid, dimid, dim_length);
+        if (status == NC_NOERR)
+        {
+            status = nc_inq_dimlen(ncid, dimid, dim_length);
+        }
     }
     return status;
 }
@@ -4151,18 +4155,21 @@ int GRID::get_dimension_var(int ncid, std::string var_name, size_t * dim_length)
     // get the total dimension length in bytes of the var_name variable
     int dimid;
     int status = -1;
-    *dim_length = 0;
 
     if (var_name.size() != 0)
     {
         int janm;
         status = nc_inq_varid(ncid, var_name.c_str(), &dimid);
-        status = nc_inq_vardimid(ncid, dimid, &janm);
-        char * tmp_value = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
-        status = nc_inq_dimname(ncid, janm, tmp_value);
-        status = get_dimension(ncid, tmp_value, dim_length);
-        free(tmp_value);
-        tmp_value = nullptr;
+        if (status == NC_NOERR)
+        {
+            *dim_length = 0;
+            status = nc_inq_vardimid(ncid, dimid, &janm);
+            char* tmp_value = (char*)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
+            status = nc_inq_dimname(ncid, janm, tmp_value);
+            status = get_dimension(ncid, tmp_value, dim_length);
+            free(tmp_value);
+            tmp_value = nullptr;
+        }
     }
     return status;
 }
