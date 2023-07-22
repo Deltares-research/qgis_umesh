@@ -7,7 +7,6 @@
 
 #include <assert.h>
 
-#define GUI_EXPORT __declspec(dllimport)
 #include "qgisinterface.h"
 #include "qgsmaptool.h"
 #include "qgsmaptoolemitpoint.h"

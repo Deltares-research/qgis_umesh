@@ -132,6 +132,8 @@
     <ClInclude Include="include\qgis_umesh_version.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="cpp.hint" />
     <None Include="include\version_number.ini" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

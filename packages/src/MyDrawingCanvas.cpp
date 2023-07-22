@@ -7,7 +7,6 @@
 #include "color_ramp.h"
 #include "perf_timer.h"
 
-#define GUI_EXPORT __declspec(dllimport)
 #include "qgsmapcanvas.h"
 #include "qgsmapcanvasmap.h"
 //#include "qgscursors.h"
@@ -16,7 +15,7 @@
 #include "qgscoordinatereferencesystem.h"
 #include "qgsmaptool.h"
 #include "qgspoint.h"
-#include "qgsapplication.h"
+//janm #include "qgsapplication.h"
 #include <qgsdistancearea.h>
 
 #if defined(WIN32) || defined(WIN64)
@@ -44,7 +43,7 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     QgsMapCanvasItem(QGisIface->mapCanvas()),
     printing(false)
     {
-    QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CrossHair));
+    //janm QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CrossHair));
     m_property = MapProperty::getInstance();
 
     mQGisIface = QGisIface;
@@ -77,25 +76,25 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     // Render events
     // This calls the renderer everytime the canvas has drawn itself
     //
-    connect(mMapCanvas, SIGNAL(renderComplete(QPainter *)), this, SLOT(renderCompletePlugin(QPainter *)));
+    QObject::connect(mMapCanvas, SIGNAL(renderComplete(QPainter *)), this, SLOT(renderCompletePlugin(QPainter *)));
     //
     // Key events
     //
-    connect(mMapCanvas, SIGNAL(keyPressed(QKeyEvent *)), this, SLOT(MyKeyPressEvent(QKeyEvent *)));
-    connect(mMapCanvas, SIGNAL(keyReleased(QKeyEvent *)), this, SLOT(MyKeyReleasedEvent(QKeyEvent *)));
+    QObject::connect(mMapCanvas, SIGNAL(keyPressed(QKeyEvent *)), this, SLOT(MyKeyPressEvent(QKeyEvent *)));
+    QObject::connect(mMapCanvas, SIGNAL(keyReleased(QKeyEvent *)), this, SLOT(MyKeyReleasedEvent(QKeyEvent *)));
     //
     // Mouse events
     //
     //connect(this, SIGNAL(MouseDoubleClickEvent(QMouseEvent *)), this, SLOT(MyMouseDoubleClickEvent(QMouseEvent *)));
     //connect(this, SIGNAL(MouseMoveEvent(QMouseEvent *)), this, SLOT(MyMouseMoveEvent(QMouseEvent *)));
     //connect(this, SIGNAL(MousePressEvent(QMouseEvent *)), this, SLOT(MyMousePressEvent(QMouseEvent *)));
-    connect(this, SIGNAL(MouseReleaseEvent(QMouseEvent *)), this, SLOT(MyMouseReleaseEvent(QMouseEvent *)));
-    connect(this, SIGNAL(WheelEvent(QWheelEvent *)), this, SLOT(MyWheelEvent(QWheelEvent *)));
+    QObject::connect(this, SIGNAL(MouseReleaseEvent(QMouseEvent *)), this, SLOT(MyMouseReleaseEvent(QMouseEvent *)));
+    QObject::connect(this, SIGNAL(WheelEvent(QWheelEvent *)), this, SLOT(MyWheelEvent(QWheelEvent *)));
     //connect(this, &QgsMapTool::wheelEvent, this, &MyCanvas::MyWheelEvent);
 
 
-    connect(m_ramph, SIGNAL(rampChanged()), this, SLOT(draw_all()));
-    connect(m_ramph_vec_dir, SIGNAL(rampChanged()), this, SLOT(draw_all()));
+    QObject::connect(m_ramph, SIGNAL(rampChanged()), this, SLOT(draw_all()));
+    QObject::connect(m_ramph_vec_dir, SIGNAL(rampChanged()), this, SLOT(draw_all()));
 
     if (DRAW_CACHES) {
         InitDrawEachCaches(); // debug utility
@@ -335,7 +334,6 @@ void MyCanvas::draw_data_at_node()
 
             this->startDrawing(CACHE_2D);
             mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
-            double opacity = mCache_painter->opacity();
             mCache_painter->setOpacity(m_property->get_opacity());
             int nr_nodes_per_max_quad = 4;
             vector<double> vertex_x(nr_nodes_per_max_quad);
@@ -346,7 +344,6 @@ void MyCanvas::draw_data_at_node()
                 vertex_x.clear();
                 vertex_y.clear();
                 bool in_view = false;
-                if (z_value[i] != missing_value);
                 int p0, p1, p2, p3;
 
                 p0 = mesh2d->face_nodes[i][0];
@@ -1569,8 +1566,8 @@ void MyCanvas::renderPlugin( QPainter * Painter )
 {
     // OK JanM QMessageBox::warning(0, "Message", QString(tr("MyCanvas::renderPlugin") ));
     // need width/height of paint device
-    int myWidth = Painter->device()->width();  //pixels
-    int myHeight = Painter->device()->height(); //pixels
+    //int myWidth = Painter->device()->width();  //pixels
+    //int myHeight = Painter->device()->height(); //pixels
     int width  = 500; //pixels
     int height = 250; //pixels
 
@@ -2088,7 +2085,7 @@ bool MyCanvas::isFontAvailable(const char* name)
 //
 int MyCanvas::getTextWidth(const char* name)
 {
-    int size = (mMapCanvas->fontMetrics()).width(name);
+    int size = (mMapCanvas->fontMetrics()).horizontalAdvance(name);
     return size;
 }
 //

@@ -129,7 +129,7 @@ void AddCurrentViewWindow::create_vector_layer()
     QgsLayerTreeGroup * treeGroup;
     QStringList SubGroup = m_quantity.split(";");
     treeGroup = get_subgroup(treeRoot, SubGroup[0]);
-    QString layer_name = table_model->index(0, 0).data().toString();
+    QString layer_name = table_model->index(0, 1).data().toString();
     //QString layer_name = SubGroup[1];
 
     QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();

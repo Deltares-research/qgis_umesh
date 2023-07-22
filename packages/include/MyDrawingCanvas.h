@@ -12,7 +12,6 @@
 #include "QColorRampEditor.h"
 #include "map_property.h"
 
-#define GUI_EXPORT __declspec(dllimport)
 #include "qgisinterface.h"
 #include "qgsmaptool.h"
 #include "qgsmaptoolemitpoint.h"
@@ -21,7 +20,7 @@
 #include "qgsmapcanvasitem.h"
 #include "qgsmapmouseevent.h"
 
-#include <qgsapplication.h>
+//janm  #include <qgsapplication.h>
 #include <qgsgeometry.h>
 #include <qgslayertree.h>
 #include <qgslayertreegroup.h>

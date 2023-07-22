@@ -26,7 +26,7 @@
 #include <QVBoxLayout>
 
 #include <qmath.h>
-#include <qgsapplication.h>
+//janm #include <qgsapplication.h>
 #include <qgisinterface.h>
 #include <qgisplugin.h>
 

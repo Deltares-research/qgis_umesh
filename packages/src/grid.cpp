@@ -3662,7 +3662,6 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
 
             //get edge nodes, optional required
             int* dimids;
-            int start_index;
 
             status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
             status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
@@ -3846,7 +3845,6 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             }
 
             std::vector<int> value;
-            int kk = -1;
             for (int m = 0; m < m_max-1; m++)  // faces x-direction
             {
                 for (int n = 0; n < n_max-1; n++)  // faces y-direction

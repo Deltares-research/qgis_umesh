@@ -5,7 +5,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "QObject"
 #include <iostream>
 
 #include <QAction>
@@ -16,6 +15,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QObject>
 #include <QProcessEnvironment>
 #include <QProgressBar>
 #include <QSizePolicy> 
@@ -27,7 +27,7 @@
 #include <QFileInfo>
 #include <QFileDialog>
 
-#include <qgsapplication.h>
+//jamm #include <qgsapplication.h>
 #include <qgsgeometry.h>
 #include <qgslayertree.h>
 #include <qgslayertreegroup.h>
@@ -85,7 +85,7 @@ class qgis_umesh
     Q_OBJECT
 
     public:
-        static const QString s_ident, s_name, s_description, s_category, s_version, s_icon, s_plugin_version;
+        static const QString s_ident, s_name, s_description, s_category, s_version, s_plugin_icon, s_plugin_version;
         static const QgisPlugin::PluginType s_plugin_type;
 
         qgis_umesh(QgisInterface* iface);

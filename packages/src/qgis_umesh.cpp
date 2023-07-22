@@ -410,7 +410,6 @@ void qgis_umesh::show_map_output(GRID * grid_file)
     // Check on at least UGRID-1.0 file formaat
     long nr_times = 0;
     struct _global_attributes * globals;
-    bool conventions_found = false;
 
     if (grid_file != nullptr)
     {
@@ -584,10 +583,7 @@ void qgis_umesh::experiment()
     {
         QMessageBox::information(0, "Information", QString("qgis_umesh::experiment()\nExperiment: %1").arg(layer_name));
         DataValuesProvider2D<double>std_data_at_face = grid_file->get_variable_values(layer_name.toStdString());
-        double * z_value = std_data_at_face.GetValueAtIndex(0, 0);
         int z_value_size = std_data_at_face.m_numXY;
-
-        QgsVectorDataProvider * dp_vl = vlayer->dataProvider();
 
         //dp_vl->capabilities();
         QgsFeatureIterator feats = vlayer->getFeatures();
@@ -789,7 +785,6 @@ void qgis_umesh::openFile()
 void qgis_umesh::openFile(QFileInfo ncfile)
 {
     START_TIMERN(open_file);
-    int ncid;
     if (m_working_dir.isEmpty())
     {
         m_working_dir = ncfile.absolutePath().toUtf8();
@@ -5273,7 +5268,6 @@ void qgis_umesh::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_
             vl->updatedFields();
 
             QFileInfo ug_file = grid_file->get_filename();
-            QgsMultiLineString * polylines = new QgsMultiLineString();
 
             std::vector<std::string> line_name;
             std::vector<std::vector<std::vector<double>>> poly_lines;
@@ -5622,7 +5616,6 @@ void qgis_umesh::create_vector_layer_thin_dams(GRID * grid_file, JSON_READER * p
         vl->updatedFields();
 
         QFileInfo ug_file = grid_file->get_filename();
-        QgsMultiLineString * polylines = new QgsMultiLineString();
 
         if (poly_lines.size() == 0)
         {
@@ -6087,7 +6080,6 @@ void qgis_umesh::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long eps
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            QgsMultiLineString * polylines = new QgsMultiLineString();
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
 

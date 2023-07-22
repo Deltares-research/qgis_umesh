@@ -150,5 +150,7 @@
     <None Include="include\version_number.ini">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="cpp.hint" />
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>
