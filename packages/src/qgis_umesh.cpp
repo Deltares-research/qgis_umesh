@@ -21,6 +21,9 @@
 //
 //-----------------------------------------------------------------------------
 //
+qgis_umesh::qgis_umesh()
+{
+}
 qgis_umesh::qgis_umesh(QgisInterface* iface):
     QgisPlugin(s_name, s_description, s_category, s_plugin_version, s_plugin_type),
     mQGisIface(iface)

@@ -117,6 +117,7 @@ void AddCurrentViewWindow::clicked_add()
 {
     //QMessageBox::information(0, "Information", "AddCurrentViewWindow::clicked_ok()");
     create_vector_layer();
+    this->close();
 }
 void AddCurrentViewWindow::clicked_close()
 {

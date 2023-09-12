@@ -4033,11 +4033,8 @@ int GRID::get_attribute(int ncid, int i_var, char * att_name, char ** att_value)
 
     status = nc_inq_attlen(ncid, i_var, att_name, &length);
     *att_value = (char *)malloc(sizeof(char) * (length + 1));
-    if (status != NC_NOERR)
-    {
-        *att_value = '\0';
-    }
-    else
+    *att_value[0] = '\0';
+    if (status == NC_NOERR)
     {
         status = nc_get_att(ncid, i_var, att_name, *att_value);
         att_value[0][length] = '\0';
