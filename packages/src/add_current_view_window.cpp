@@ -117,6 +117,7 @@ void AddCurrentViewWindow::clicked_add()
 {
     //QMessageBox::information(0, "Information", "AddCurrentViewWindow::clicked_ok()");
     create_vector_layer();
+    this->close();
 }
 void AddCurrentViewWindow::clicked_close()
 {
@@ -127,9 +128,10 @@ void AddCurrentViewWindow::create_vector_layer()
 {
     QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
     QgsLayerTreeGroup * treeGroup;
-    QString group_name = table_model->index(0, 0).data().toString();
-    treeGroup = get_subgroup(treeRoot, group_name);
+    QStringList SubGroup = m_quantity.split(";");
+    treeGroup = get_subgroup(treeRoot, SubGroup[0]);
     QString layer_name = table_model->index(0, 1).data().toString();
+    //QString layer_name = SubGroup[1];
 
     QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
     bool layer_found = false;

@@ -7,7 +7,6 @@
 #include "color_ramp.h"
 #include "perf_timer.h"
 
-#define GUI_EXPORT __declspec(dllimport)
 #include "qgsmapcanvas.h"
 #include "qgsmapcanvasmap.h"
 //#include "qgscursors.h"
@@ -16,7 +15,7 @@
 #include "qgscoordinatereferencesystem.h"
 #include "qgsmaptool.h"
 #include "qgspoint.h"
-#include "qgsapplication.h"
+//janm #include "qgsapplication.h"
 #include <qgsdistancearea.h>
 
 #if defined(WIN32) || defined(WIN64)
@@ -39,24 +38,19 @@ using namespace std;
 //MapProperty * MapProperty::obj;  // Initialize static member of class MapProperty (Singleton)
 //
 //
-MyCanvas::MyCanvas() :
-    QgsMapTool(nullptr),
-    QgsMapCanvasItem(nullptr)
-{
-}
 MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     QgsMapTool(QGisIface->mapCanvas()),
     QgsMapCanvasItem(QGisIface->mapCanvas()),
     printing(false)
     {
-    QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CrossHair));
+    //janm QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CrossHair));
     m_property = MapProperty::getInstance();
 
     mQGisIface = QGisIface;
     mMapCanvas = QGisIface->mapCanvas();
     mMapCanvasItem = QGisIface->mapCanvas();
     drawing = true;
-    m_ugrid_file = nullptr;
+    m_grid_file = nullptr;
     m_variable = nullptr;
     m_bed_layer = 0;
     m_hydro_layer = 0;
@@ -82,25 +76,25 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     // Render events
     // This calls the renderer everytime the canvas has drawn itself
     //
-    connect(mMapCanvas, SIGNAL(renderComplete(QPainter *)), this, SLOT(renderCompletePlugin(QPainter *)));
+    QObject::connect(mMapCanvas, SIGNAL(renderComplete(QPainter *)), this, SLOT(renderCompletePlugin(QPainter *)));
     //
     // Key events
     //
-    connect(mMapCanvas, SIGNAL(keyPressed(QKeyEvent *)), this, SLOT(MyKeyPressEvent(QKeyEvent *)));
-    connect(mMapCanvas, SIGNAL(keyReleased(QKeyEvent *)), this, SLOT(MyKeyReleasedEvent(QKeyEvent *)));
+    QObject::connect(mMapCanvas, SIGNAL(keyPressed(QKeyEvent *)), this, SLOT(MyKeyPressEvent(QKeyEvent *)));
+    QObject::connect(mMapCanvas, SIGNAL(keyReleased(QKeyEvent *)), this, SLOT(MyKeyReleasedEvent(QKeyEvent *)));
     //
     // Mouse events
     //
     //connect(this, SIGNAL(MouseDoubleClickEvent(QMouseEvent *)), this, SLOT(MyMouseDoubleClickEvent(QMouseEvent *)));
     //connect(this, SIGNAL(MouseMoveEvent(QMouseEvent *)), this, SLOT(MyMouseMoveEvent(QMouseEvent *)));
     //connect(this, SIGNAL(MousePressEvent(QMouseEvent *)), this, SLOT(MyMousePressEvent(QMouseEvent *)));
-    connect(this, SIGNAL(MouseReleaseEvent(QMouseEvent *)), this, SLOT(MyMouseReleaseEvent(QMouseEvent *)));
-    connect(this, SIGNAL(WheelEvent(QWheelEvent *)), this, SLOT(MyWheelEvent(QWheelEvent *)));
+    QObject::connect(this, SIGNAL(MouseReleaseEvent(QMouseEvent *)), this, SLOT(MyMouseReleaseEvent(QMouseEvent *)));
+    QObject::connect(this, SIGNAL(WheelEvent(QWheelEvent *)), this, SLOT(MyWheelEvent(QWheelEvent *)));
     //connect(this, &QgsMapTool::wheelEvent, this, &MyCanvas::MyWheelEvent);
 
 
-    connect(m_ramph, SIGNAL(rampChanged()), this, SLOT(draw_all()));
-    connect(m_ramph_vec_dir, SIGNAL(rampChanged()), this, SLOT(draw_all()));
+    QObject::connect(m_ramph, SIGNAL(rampChanged()), this, SLOT(draw_all()));
+    QObject::connect(m_ramph_vec_dir, SIGNAL(rampChanged()), this, SLOT(draw_all()));
 
     if (DRAW_CACHES) {
         InitDrawEachCaches(); // debug utility
@@ -125,27 +119,29 @@ void MyCanvas::draw_all()
 {
     //QMessageBox::information(0, "Message", "MyCanvas::draw_all");
     //draw_dot_at_edge();
-    draw_data_at_face();
+    draw_data_at_face();  // control volume is the face
+    draw_data_at_node();  // isofill of the control volume around node
     draw_dot_at_face();
     draw_dot_at_node();
     draw_data_along_edge();
     draw_line_at_edge();
-    draw_vector_arrow_at_face();
+    draw_vector_arrow();
     draw_vector_direction_at_face();
+    draw_vector_direction_at_node();
     this->finishDrawing();
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_face()
 {
     return;  // Todo:
-    if (m_variable != nullptr && m_ugrid_file != nullptr && m_variable->location == "face")
+    if (m_variable != nullptr && m_grid_file != nullptr && m_variable->location == "face")
     {
 #if DO_TIMING == 1
         auto start = std::chrono::steady_clock::now();
 #endif
         string var_name = m_variable->var_name;
-        struct _mesh2d * mesh2d = m_ugrid_file->get_mesh_2d();
-        DataValuesProvider2D<double> std_data_at_face = m_ugrid_file->get_variable_values(var_name);
+        struct _mesh2d * mesh2d = m_grid_file->get_mesh_2d();
+        DataValuesProvider2D<double> std_data_at_face = m_grid_file->get_variable_values(var_name);
         z_value = std_data_at_face.GetValueAtIndex(m_current_step, 0);
 
         double missing_value = m_variable->fill_value;
@@ -180,9 +176,9 @@ void MyCanvas::draw_dot_at_face()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_data_at_face()
 {
-    if (m_ugrid_file == nullptr) { return; }
+    if (m_grid_file == nullptr) { return; }
 
-    struct _mesh_variable* vars = m_ugrid_file->get_variables();
+    struct _mesh_variable* vars = m_grid_file->get_variables();
     struct _variable* var;
     for (int ivar = 0; ivar < vars->nr_vars; ++ivar)
     {
@@ -193,15 +189,15 @@ void MyCanvas::draw_data_at_face()
             auto start = std::chrono::steady_clock::now();
 #endif
             string var_name = var->var_name;
-            struct _mesh2d * mesh2d = m_ugrid_file->get_mesh_2d();
+            struct _mesh2d * mesh2d = m_grid_file->get_mesh_2d();
             if (var->dims.size() == 2) // 2D: time, xy_space
             {
-                DataValuesProvider2D<double> std_data_at_face = m_ugrid_file->get_variable_values(var_name);
+                DataValuesProvider2D<double> std_data_at_face = m_grid_file->get_variable_values(var_name);
                 z_value = std_data_at_face.GetValueAtIndex(m_current_step, 0);
             }
             else if (var->dims.size() == 3) // 3D: time, layer, xy_space
             {
-                DataValuesProvider3D<double> std_data_at_face_3d = m_ugrid_file->get_variable_3d_values(var_name);
+                DataValuesProvider3D<double> std_data_at_face_3d = m_grid_file->get_variable_3d_values(var_name);
                 if (var->sediment_index != -1)
                 {
                     z_value = std_data_at_face_3d.GetValueAtIndex(m_current_step, var->sediment_index, 0);
@@ -220,7 +216,7 @@ void MyCanvas::draw_data_at_face()
             }
             else if (var->dims.size() == 4) // 4D: time, layer, sediment, xy_space
             {
-                DataValuesProvider4D<double> std_data_at_face_4d = m_ugrid_file->get_variable_4d_values(var_name);
+                DataValuesProvider4D<double> std_data_at_face_4d = m_grid_file->get_variable_4d_values(var_name);
                 if (var->sediment_index != -1)
                 {
                     z_value = std_data_at_face_4d.GetValueAtIndex(m_current_step, m_bed_layer-1, var->sediment_index, 0);
@@ -228,7 +224,7 @@ void MyCanvas::draw_data_at_face()
             }
             else
             {
-                QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 4).").arg(var_name.c_str()));
+            QMessageBox::information(0, tr("MyCanvas::draw_data_at_face()"), QString("Program error on variable: \"%1\"\nUnsupported number of dimensions (i.e. > 4).").arg(var_name.c_str()));
             }
             if (z_value == nullptr)
             {
@@ -298,19 +294,200 @@ void MyCanvas::draw_data_at_face()
 
 }
 //-----------------------------------------------------------------------------
+void MyCanvas::draw_data_at_node()
+{
+    // isofill of the control volume around node (Element based Finite Volume Method)
+    if (m_grid_file == nullptr) { return; }
+
+    struct _mesh_variable* vars = m_grid_file->get_variables();
+    struct _variable* var;
+    for (int ivar = 0; ivar < vars->nr_vars; ++ivar)
+    {
+        var = vars->variable[ivar];
+        if (var->draw && var->location == "node")
+        {
+#if DO_TIMING == 1
+            auto start = std::chrono::steady_clock::now();
+#endif
+            string var_name = var->var_name;
+            struct _mesh2d* mesh2d = m_grid_file->get_mesh_2d();
+            if (mesh2d == nullptr) { return; }
+            DataValuesProvider2D<double> std_data_at_node = m_grid_file->get_variable_values(var_name);
+            if (std_data_at_node.m_numXY == 0)
+            {
+                return;
+            }
+            z_value = std_data_at_node.GetValueAtIndex(m_current_step, 0);
+
+            double missing_value = var->fill_value;
+            m_rgb_color.resize(mesh2d->node[0]->x.size());
+            determine_min_max(z_value, mesh2d->node[0]->y.size(), &m_z_min, &m_z_max, missing_value);
+
+#if DO_TIMING == 1
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double> elapse_time = end - start;
+            QString msg = QString(tr("Timing reading data at node: %2 [sec]").arg(elapse_time.count()));
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+
+            start = std::chrono::steady_clock::now();
+#endif        
+
+            this->startDrawing(CACHE_2D);
+            mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
+            mCache_painter->setOpacity(m_property->get_opacity());
+            int nr_nodes_per_max_quad = 4;
+            vector<double> vertex_x(nr_nodes_per_max_quad);
+            vector<double> vertex_y(nr_nodes_per_max_quad);
+            this->setPointSize(13);
+            for (int i = 0; i < mesh2d->face_nodes.size(); i++)
+            {
+                vertex_x.clear();
+                vertex_y.clear();
+                bool in_view = false;
+                int p0, p1, p2, p3;
+
+                p0 = mesh2d->face_nodes[i][0];
+                p1 = mesh2d->face_nodes[i][1];
+                p2 = mesh2d->face_nodes[i][2];
+                p3 = mesh2d->face_nodes[i][3];
+                in_view = false;
+                if (mesh2d->node[0]->x[p0] > getMinVisibleX() && mesh2d->node[0]->x[p0] < getMaxVisibleX() &&
+                    mesh2d->node[0]->y[p0] > getMinVisibleY() && mesh2d->node[0]->y[p0] < getMaxVisibleY() ||
+                    mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                    mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY() ||
+                    mesh2d->node[0]->x[p2] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                    mesh2d->node[0]->y[p2] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY() ||
+                    mesh2d->node[0]->x[p3] > getMinVisibleX() && mesh2d->node[0]->x[p3] < getMaxVisibleX() &&
+                    mesh2d->node[0]->y[p3] > getMinVisibleY() && mesh2d->node[0]->y[p3] < getMaxVisibleY() )
+                {
+                    in_view = true; // whole face is inview, todo: could be tested on subcontrol volumes
+                }
+
+                if (in_view)
+                {
+                    double edge_x_01 = 0.5 * (mesh2d->node[0]->x[p0] + mesh2d->node[0]->x[p1]);
+                    double edge_y_01 = 0.5 * (mesh2d->node[0]->y[p0] + mesh2d->node[0]->y[p1]);
+                    double edge_x_12 = 0.5 * (mesh2d->node[0]->x[p1] + mesh2d->node[0]->x[p2]);
+                    double edge_y_12 = 0.5 * (mesh2d->node[0]->y[p1] + mesh2d->node[0]->y[p2]);
+                    double edge_x_23 = 0.5 * (mesh2d->node[0]->x[p2] + mesh2d->node[0]->x[p3]);
+                    double edge_y_23 = 0.5 * (mesh2d->node[0]->y[p2] + mesh2d->node[0]->y[p3]);
+                    double edge_x_31 = 0.5 * (mesh2d->node[0]->x[p3] + mesh2d->node[0]->x[p0]);
+                    double edge_y_31 = 0.5 * (mesh2d->node[0]->y[p3] + mesh2d->node[0]->y[p0]);
+                    double centre_x = 0.;
+                    double centre_y = 0.;
+                    for (int j = 0; j < nr_nodes_per_max_quad; j++)
+                    {
+                        p0 = mesh2d->face_nodes[i][j];
+                        centre_x += mesh2d->node[0]->x[p0];
+                        centre_y += mesh2d->node[0]->y[p0];
+                    }
+                    centre_x /= nr_nodes_per_max_quad;
+                    centre_y /= nr_nodes_per_max_quad;
+
+                    // determine the polygons [p, edge, centre, edge]
+                    vertex_x.clear();
+                    vertex_y.clear();
+                    p0 = mesh2d->face_nodes[i][0];
+                    vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                    vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                    vertex_x.push_back(edge_x_01);
+                    vertex_y.push_back(edge_y_01);
+                    vertex_x.push_back(centre_x);
+                    vertex_y.push_back(centre_y);
+                    vertex_x.push_back(edge_x_31);
+                    vertex_y.push_back(edge_y_31);
+                    // draw polygon
+                    QColor col = m_ramph->getRgbFromValue(z_value[p0]);
+                    double alpha = min(col.alphaF(), m_property->get_opacity());
+                    mCache_painter->setOpacity(alpha);
+                    this->setFillColor(col);
+                    this->drawPolygon(vertex_x, vertex_y);
+
+
+                    // determine the polygons [p, edge, centre, edge]
+                    vertex_x.clear();
+                    vertex_y.clear();
+                    p0 = mesh2d->face_nodes[i][1];
+                    vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                    vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                    vertex_x.push_back(edge_x_12);
+                    vertex_y.push_back(edge_y_12);
+                    vertex_x.push_back(centre_x);
+                    vertex_y.push_back(centre_y);
+                    vertex_x.push_back(edge_x_01);
+                    vertex_y.push_back(edge_y_01);
+                    // draw polygon
+                    col = m_ramph->getRgbFromValue(z_value[p0]);
+                    alpha = min(col.alphaF(), m_property->get_opacity());
+                    mCache_painter->setOpacity(alpha);
+                    this->setFillColor(col);
+                    this->drawPolygon(vertex_x, vertex_y);
+
+
+                    // determine the polygons [p, edge, centre, edge]
+                    vertex_x.clear();
+                    vertex_y.clear();
+                    p0 = mesh2d->face_nodes[i][2];
+                    vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                    vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                    vertex_x.push_back(edge_x_23);
+                    vertex_y.push_back(edge_y_23);
+                    vertex_x.push_back(centre_x);
+                    vertex_y.push_back(centre_y);
+                    vertex_x.push_back(edge_x_12);
+                    vertex_y.push_back(edge_y_12);
+                    // draw polygon
+                    col = m_ramph->getRgbFromValue(z_value[p0]);
+                    alpha = min(col.alphaF(), m_property->get_opacity());
+                    mCache_painter->setOpacity(alpha);
+                    this->setFillColor(col);
+                    this->drawPolygon(vertex_x, vertex_y);
+
+
+                    // determine the polygons [p, edge, centre, edge]
+                    vertex_x.clear();
+                    vertex_y.clear();
+                    p0 = mesh2d->face_nodes[i][3];
+                    vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                    vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                    vertex_x.push_back(edge_x_31);
+                    vertex_y.push_back(edge_y_31);
+                    vertex_x.push_back(centre_x);
+                    vertex_y.push_back(centre_y);
+                    vertex_x.push_back(edge_x_23);
+                    vertex_y.push_back(edge_y_23);
+                    // draw polygon
+                    col = m_ramph->getRgbFromValue(z_value[p0]);
+                    alpha = min(col.alphaF(), m_property->get_opacity());
+                    mCache_painter->setOpacity(alpha);
+                    this->setFillColor(col);
+                    this->drawPolygon(vertex_x, vertex_y);
+                }
+            }
+#if DO_TIMING == 1
+            end = std::chrono::steady_clock::now();
+            elapse_time = end - start;
+            msg = QString(tr("Timing drawing data at node: %2 [sec]\n").arg(elapse_time.count()));
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+#endif
+        }
+    }
+}
+//-----------------------------------------------------------------------------
 void MyCanvas::set_draw_vector(vector_quantity vector_draw)
 {
     m_vector_draw = vector_draw;
-    draw_vector_arrow_at_face();
+    draw_vector_arrow();
     draw_vector_direction_at_face();
+    draw_vector_direction_at_node();
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::draw_vector_arrow_at_face()
+void MyCanvas::draw_vector_arrow()
 {
     if (m_vector_draw != VECTOR_ARROW) { return; }
-    if (m_ugrid_file == nullptr) { return; }
-    struct _mesh2d_string ** m2d_string = m_ugrid_file->get_mesh2d_string();
-    struct _mesh2d * mesh2d = m_ugrid_file->get_mesh_2d();
+    if (m_grid_file == nullptr) { return; }
+    struct _mesh2d_string ** m2d_string = m_grid_file->get_mesh2d_string();
+    struct _mesh2d * mesh2d = m_grid_file->get_mesh_2d();
     if (mesh2d != nullptr)
     {
         vector<double> coord_x(5);
@@ -330,12 +507,20 @@ void MyCanvas::draw_vector_arrow_at_face()
 
         mCache_painter->setOpacity(m_property->get_opacity());
         // get average cell size (ie sqrt(area))    
-        struct _mesh_variable * vars = m_ugrid_file->get_variables();
+        struct _mesh_variable * vars = m_grid_file->get_variables();
         if (!m_vscale_determined)
         {
-            struct _variable * cell_area = m_ugrid_file->get_var_by_std_name(vars, m2d_string[0]->var_name, "cell_area");
-            if (cell_area == nullptr) { return; }
-            m_vec_length = statistics_averaged_length_of_cell(cell_area);
+            struct _variable * cell_area = m_grid_file->get_var_by_std_name(vars, m2d_string[0]->var_name, "cell_area");
+            if (cell_area == nullptr) 
+            { 
+                m_vec_length = 1.;
+                QString msg = QString("Variable \'cell_area\' not found. Vectors are scaled with a factor %1.").arg(m_vec_length);
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+            }
+            else
+            {
+                m_vec_length = statistics_averaged_length_of_cell(cell_area);
+            }
 
             if (m_coordinate_type[0] == "Spherical")
             {
@@ -370,31 +555,35 @@ void MyCanvas::draw_vector_arrow_at_face()
         if (m_coordinate_type[0] == "Cartesian" || m_coordinate_type[0] == "Spherical")
         {
             // 
-            int nr_faces = 0;
-            for (int i = 0; i < vars->nr_vars; i++)
+            int numXY = 0;
+            int i_var = 0;
+            for (int i = 0; i < vars->nr_vars; ++i)
             {
                 if (vars->variable[i]->var_name == m_coordinate_type[1].toStdString())
                 {
                     dimens = vars->variable[i]->dims.size();
                     missing_value = vars->variable[i]->fill_value;
+                    i_var = i;
                 }
             }
-            if (dimens == 2) // 2D: time, nodes
+            if (dimens == 2  ||
+                dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
+                dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jamx)
             {
-                DataValuesProvider2D<double>std_u_vec_at_face = m_ugrid_file->get_variable_values(m_coordinate_type[1].toStdString());
-                u_value = std_u_vec_at_face.GetValueAtIndex(m_current_step, 0);
-                nr_faces = std_u_vec_at_face.m_numXY;
-                DataValuesProvider2D<double>std_v_vec_at_face = m_ugrid_file->get_variable_values(m_coordinate_type[2].toStdString());
-                v_value = std_v_vec_at_face.GetValueAtIndex(m_current_step, 0);
+                DataValuesProvider2D<double>std_u_vec_at_node = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
+                u_value = std_u_vec_at_node.GetValueAtIndex(m_current_step, 0);
+                numXY = std_u_vec_at_node.m_numXY;
+                DataValuesProvider2D<double>std_v_vec_at_node = m_grid_file->get_variable_values(m_coordinate_type[2].toStdString());
+                v_value = std_v_vec_at_node.GetValueAtIndex(m_current_step, 0);
             }
             else if (dimens == 3) // 3D: time, layer, nodes
             {
                 if (m_hydro_layer > 0)
                 {
-                    DataValuesProvider3D<double> std_u_vec_at_face_3d = m_ugrid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
-                    nr_faces = std_u_vec_at_face_3d.m_numXY;
+                    DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
+                    numXY = std_u_vec_at_face_3d.m_numXY;
                     u_value = std_u_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
-                    DataValuesProvider3D<double> std_v_vec_at_face_3d = m_ugrid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
+                    DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
                     v_value = std_v_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
                 }
             }
@@ -415,7 +604,7 @@ void MyCanvas::draw_vector_arrow_at_face()
             //this->setPointSize(3); 
             //this->setFillColor(qRgba(0, 0, 255, 255));  
             
-            for (int i = 0; i < nr_faces; i++)
+            for (int i = 0; i < numXY; i++)
             {
                 if (u_value[i] == missing_value) { continue; }  // *u_value[i] = 0.0;
                 if (v_value[i] == missing_value) { continue; }  // *v_value[i] = 0.0;
@@ -427,8 +616,16 @@ void MyCanvas::draw_vector_arrow_at_face()
                 coord_bx.assign(coord_bx.size(), 0.0);
                 coord_by.assign(coord_by.size(), 0.0);
 
-                coord_x.push_back(mesh2d->face[0]->x[i]);
-                coord_y.push_back(mesh2d->face[0]->y[i]);
+                if (vars->variable[i_var]->location == "node")
+                {
+                    coord_x.push_back(mesh2d->node[0]->x[i]);
+                    coord_y.push_back(mesh2d->node[0]->y[i]);
+                }
+                if (vars->variable[i_var]->location == "face")
+                {
+                    coord_x.push_back(mesh2d->face[0]->x[i]);
+                    coord_y.push_back(mesh2d->face[0]->y[i]);
+                }
 
                 vlen = sqrt(u_value[i] * u_value[i] + v_value[i] * v_value[i]);  // The "length" of the vector
                 beta = atan2(v_value[i], u_value[i]);
@@ -582,37 +779,45 @@ void MyCanvas::draw_vector_direction_at_face()
 {
     if (m_vector_draw != VECTOR_DIRECTION) { return; }
     // draw the vector direction in the range [0, 360) and with cyclic colorramp
-    if (m_ugrid_file == nullptr) { return; }
-    struct _mesh2d * mesh2d = m_ugrid_file->get_mesh_2d();
+    if (m_grid_file == nullptr) { return; }
+    struct _mesh2d * mesh2d = m_grid_file->get_mesh_2d();
     if (mesh2d != nullptr)
     {
         size_t dimens = 0;
         double missing_value = -INFINITY;
 
         if (m_coordinate_type.size() != 4) { return; }
-        struct _mesh_variable * vars = m_ugrid_file->get_variables();
+        struct _mesh_variable* vars = m_grid_file->get_variables();
+        struct _variable* var;
+        int i_var = 0;
         for (int i = 0; i < vars->nr_vars; i++)
         {
             if (vars->variable[i]->var_name == m_coordinate_type[1].toStdString())
             {
                 dimens = vars->variable[i]->dims.size();
                 missing_value = vars->variable[i]->fill_value;
+                i_var = i;
             }
         }
-        if (dimens == 2) // 2D: time, nodes
+        var = vars->variable[i_var];
+        if (!var->draw && var->location != "face") { return; }
+
+        if (dimens == 2 ||
+            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
+            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jmax)
         {
-            DataValuesProvider2D<double>std_u_vec_at_face = m_ugrid_file->get_variable_values(m_coordinate_type[1].toStdString());
+            DataValuesProvider2D<double>std_u_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
             u_value = std_u_vec_at_face.GetValueAtIndex(m_current_step, 0);
-            DataValuesProvider2D<double>std_v_vec_at_face = m_ugrid_file->get_variable_values(m_coordinate_type[2].toStdString());
+            DataValuesProvider2D<double>std_v_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[2].toStdString());
             v_value = std_v_vec_at_face.GetValueAtIndex(m_current_step, 0);
         }
         else if (dimens == 3) // 3D: time, layer, nodes
         {
             if (m_hydro_layer > 0)
             {
-                DataValuesProvider3D<double> std_u_vec_at_face_3d = m_ugrid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
+                DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
                 u_value = std_u_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
-                DataValuesProvider3D<double> std_v_vec_at_face_3d = m_ugrid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
+                DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
                 v_value = std_v_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
             }
         }
@@ -623,7 +828,6 @@ void MyCanvas::draw_vector_direction_at_face()
 
         vector<double> vec_z(mesh2d->face_nodes.size(), 0.0); // will contain the direction
         m_rgb_color.resize(mesh2d->face_nodes.size());
-
         m_ramph_vec_dir->update();
 
         this->startDrawing(CACHE_2D);
@@ -665,52 +869,260 @@ void MyCanvas::draw_vector_direction_at_face()
     }
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::draw_dot_at_node()
+void MyCanvas::draw_vector_direction_at_node()
 {
-    if (m_variable != nullptr && m_ugrid_file != nullptr && m_variable->location == "node")
+    // isofill of the control volume around node (Element based Finite Volume Method)
+    if (m_vector_draw != VECTOR_DIRECTION) { return; }
+    // draw the vector direction in the range [0, 360) and with cyclic colorramp
+    if (m_grid_file == nullptr) { return; }
+    struct _mesh2d* mesh2d = m_grid_file->get_mesh_2d();
+    if (mesh2d != nullptr)
     {
-        string var_name = m_variable->var_name;
-        struct _mesh1d * mesh1d = m_ugrid_file->get_mesh_1d();
+        size_t dimens = 0;
+        double missing_value = -INFINITY;
 
-        DataValuesProvider2D<double> std_data_at_node = m_ugrid_file->get_variable_values(var_name);
-        if (std_data_at_node.m_numXY == 0)
+        if (m_coordinate_type.size() != 4) { return; }
+        struct _mesh_variable* vars = m_grid_file->get_variables();
+        struct _variable* var;
+        int i_var = 0;
+        for (int i = 0; i < vars->nr_vars; ++i)
+        {
+            if (vars->variable[i]->var_name == m_coordinate_type[1].toStdString())
+            {
+                dimens = vars->variable[i]->dims.size();
+                missing_value = vars->variable[i]->fill_value;
+                i_var = i;
+            }
+        }
+        var = vars->variable[i_var];
+        if (!var->draw && var->location != "node") { return; }
+
+        if (dimens == 2 ||
+            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
+            dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jmax)
+        {
+            DataValuesProvider2D<double>std_u_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
+            u_value = std_u_vec_at_face.GetValueAtIndex(m_current_step, 0);
+            DataValuesProvider2D<double>std_v_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[2].toStdString());
+            v_value = std_v_vec_at_face.GetValueAtIndex(m_current_step, 0);
+        }
+        else if (dimens == 3) // 3D: time, layer, nodes
+        {
+            if (m_hydro_layer > 0)
+            {
+                DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
+                u_value = std_u_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
+                DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
+                v_value = std_v_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
+            }
+        }
+        if (u_value == nullptr || v_value == nullptr)
         {
             return;
         }
-        z_value = std_data_at_node.GetValueAtIndex(m_current_step, 0);
 
-        double missing_value = m_variable->fill_value;
-        m_rgb_color.resize(mesh1d->node[0]->x.size());
-        determine_min_max(z_value, mesh1d->node[0]->x.size(), &m_z_min, &m_z_max, m_rgb_color, missing_value);
+#if DO_TIMING == 1
+        auto start = std::chrono::steady_clock::now();
+#endif
+        m_rgb_color.resize(mesh2d->face_nodes.size());
+        m_ramph_vec_dir->update();  
 
-        this->startDrawing(CACHE_1D);
+        this->startDrawing(CACHE_2D);
+        mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
         double opacity = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
+        int nr_nodes_per_max_quad = 4;
+        vector<double> vertex_x(nr_nodes_per_max_quad);
+        vector<double> vertex_y(nr_nodes_per_max_quad);
         this->setPointSize(13);
-        this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
+        double direction = 0.0;
+        double alpha;
+        QColor col;
+        for (int i = 0; i < mesh2d->face_nodes.size(); i++)
+        {
+            bool in_view = false;
+            if (u_value[i] == missing_value) { continue; }  // *u_value[i] = 0.0;
+            if (v_value[i] == missing_value) { continue; }  // *v_value[i] = 0.0;
+            vertex_x.clear();
+            vertex_y.clear();
+
+            int p0, p1, p2, p3;
+            p0 = mesh2d->face_nodes[i][0];
+            p1 = mesh2d->face_nodes[i][1];
+            p2 = mesh2d->face_nodes[i][2];
+            p3 = mesh2d->face_nodes[i][3];
+            in_view = false;
+            if (mesh2d->node[0]->x[p0] > getMinVisibleX() && mesh2d->node[0]->x[p0] < getMaxVisibleX() &&
+                mesh2d->node[0]->y[p0] > getMinVisibleY() && mesh2d->node[0]->y[p0] < getMaxVisibleY() ||
+                mesh2d->node[0]->x[p1] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                mesh2d->node[0]->y[p1] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY() ||
+                mesh2d->node[0]->x[p2] > getMinVisibleX() && mesh2d->node[0]->x[p1] < getMaxVisibleX() &&
+                mesh2d->node[0]->y[p2] > getMinVisibleY() && mesh2d->node[0]->y[p1] < getMaxVisibleY() ||
+                mesh2d->node[0]->x[p3] > getMinVisibleX() && mesh2d->node[0]->x[p3] < getMaxVisibleX() &&
+                mesh2d->node[0]->y[p3] > getMinVisibleY() && mesh2d->node[0]->y[p3] < getMaxVisibleY())
+            {
+                in_view = true; // whole face is inview, todo: could be tested on subcontrol volumes
+            }
+
+            if (in_view)
+            {
+                double edge_x_01 = 0.5 * (mesh2d->node[0]->x[p0] + mesh2d->node[0]->x[p1]);
+                double edge_y_01 = 0.5 * (mesh2d->node[0]->y[p0] + mesh2d->node[0]->y[p1]);
+                double edge_x_12 = 0.5 * (mesh2d->node[0]->x[p1] + mesh2d->node[0]->x[p2]);
+                double edge_y_12 = 0.5 * (mesh2d->node[0]->y[p1] + mesh2d->node[0]->y[p2]);
+                double edge_x_23 = 0.5 * (mesh2d->node[0]->x[p2] + mesh2d->node[0]->x[p3]);
+                double edge_y_23 = 0.5 * (mesh2d->node[0]->y[p2] + mesh2d->node[0]->y[p3]);
+                double edge_x_31 = 0.5 * (mesh2d->node[0]->x[p3] + mesh2d->node[0]->x[p0]);
+                double edge_y_31 = 0.5 * (mesh2d->node[0]->y[p3] + mesh2d->node[0]->y[p0]);
+                double centre_x = 0.;
+                double centre_y = 0.;
+                for (int j = 0; j < nr_nodes_per_max_quad; j++)
+                {
+                    p0 = mesh2d->face_nodes[i][j];
+                    centre_x += mesh2d->node[0]->x[p0];
+                    centre_y += mesh2d->node[0]->y[p0];
+                }
+                centre_x /= nr_nodes_per_max_quad;
+                centre_y /= nr_nodes_per_max_quad;
+
+                // determine the polygons [p, edge, centre, edge]
+                vertex_x.clear();
+                vertex_y.clear();
+                p0 = mesh2d->face_nodes[i][0];
+                vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                vertex_x.push_back(edge_x_01);
+                vertex_y.push_back(edge_y_01);
+                vertex_x.push_back(centre_x);
+                vertex_y.push_back(centre_y);
+                vertex_x.push_back(edge_x_31);
+                vertex_y.push_back(edge_y_31);
+                // draw polygon
+                direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
+                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
+                this->drawPolygon(vertex_x, vertex_y);
+
+
+                // determine the polygons [p, edge, centre, edge]
+                vertex_x.clear();
+                vertex_y.clear();
+                p0 = mesh2d->face_nodes[i][1];
+                vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                vertex_x.push_back(edge_x_12);
+                vertex_y.push_back(edge_y_12);
+                vertex_x.push_back(centre_x);
+                vertex_y.push_back(centre_y);
+                vertex_x.push_back(edge_x_01);
+                vertex_y.push_back(edge_y_01);
+                // draw polygon
+                direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
+                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
+                this->drawPolygon(vertex_x, vertex_y);
+
+
+                // determine the polygons [p, edge, centre, edge]
+                vertex_x.clear();
+                vertex_y.clear();
+                p0 = mesh2d->face_nodes[i][2];
+                vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                vertex_x.push_back(edge_x_23);
+                vertex_y.push_back(edge_y_23);
+                vertex_x.push_back(centre_x);
+                vertex_y.push_back(centre_y);
+                vertex_x.push_back(edge_x_12);
+                vertex_y.push_back(edge_y_12);
+                // draw polygon
+                direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
+                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
+                this->drawPolygon(vertex_x, vertex_y);
+
+
+                // determine the polygons [p, edge, centre, edge]
+                vertex_x.clear();
+                vertex_y.clear();
+                p0 = mesh2d->face_nodes[i][3];
+                vertex_x.push_back(mesh2d->node[0]->x[p0]);
+                vertex_y.push_back(mesh2d->node[0]->y[p0]);
+                vertex_x.push_back(edge_x_31);
+                vertex_y.push_back(edge_y_31);
+                vertex_x.push_back(centre_x);
+                vertex_y.push_back(centre_y);
+                vertex_x.push_back(edge_x_23);
+                vertex_y.push_back(edge_y_23);
+                // draw polygon
+                direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
+                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
+                this->drawPolygon(vertex_x, vertex_y);
+            }
+        }
         mCache_painter->setOpacity(opacity);
         this->finishDrawing();
     }
 }
 //-----------------------------------------------------------------------------
+void MyCanvas::draw_dot_at_node()
+{
+    if (m_variable != nullptr && m_grid_file != nullptr && m_variable->location == "node")
+    {
+        string var_name = m_variable->var_name;
+
+        struct _mesh1d* mesh1d = m_grid_file->get_mesh_1d();
+        if (mesh1d != nullptr)
+        {
+            DataValuesProvider2D<double> std_data_at_node = m_grid_file->get_variable_values(var_name);
+            if (std_data_at_node.m_numXY == 0)
+            {
+                return;
+            }
+            z_value = std_data_at_node.GetValueAtIndex(m_current_step, 0);
+
+            double missing_value = m_variable->fill_value;
+            m_rgb_color.resize(mesh1d->node[0]->x.size());
+            determine_min_max(z_value, mesh1d->node[0]->x.size(), &m_z_min, &m_z_max, m_rgb_color, missing_value);
+
+            this->startDrawing(CACHE_1D);
+            double opacity = mCache_painter->opacity();
+            mCache_painter->setOpacity(m_property->get_opacity());
+            this->setPointSize(13);
+            this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
+            mCache_painter->setOpacity(opacity);
+            this->finishDrawing();
+        }
+    }
+}
+//-----------------------------------------------------------------------------
 void MyCanvas::draw_dot_at_edge()
 {
-    if (m_variable != nullptr && m_ugrid_file != nullptr && m_variable->location == "edge")
+    if (m_variable != nullptr && m_grid_file != nullptr && m_variable->location == "edge")
     {
         double x1, y1, x2, y2;
         vector<double> edge_x;
         vector<double> edge_y;
         string var_name = m_variable->var_name;
-        struct _mesh1d * mesh1d = m_ugrid_file->get_mesh_1d();
+        struct _mesh1d * mesh1d = m_grid_file->get_mesh_1d();
         struct _edge * edges = mesh1d->edge[0];
         if (m_variable->dims.size() == 2) // 2D: time, nodes
         {
-            DataValuesProvider2D<double>std_dot_at_edge = m_ugrid_file->get_variable_values(var_name);
+            DataValuesProvider2D<double>std_dot_at_edge = m_grid_file->get_variable_values(var_name);
             z_value = std_dot_at_edge.GetValueAtIndex(m_current_step, 0);
         }
         else if (m_variable->dims.size() == 3) // 3D: time, layer, nodes
         {
-            DataValuesProvider3D<double> std_dot_at_edge_3d = m_ugrid_file->get_variable_3d_values(var_name);
+            DataValuesProvider3D<double> std_dot_at_edge_3d = m_grid_file->get_variable_3d_values(var_name);
             if (m_bed_layer > 0)
             {
                 z_value = std_dot_at_edge_3d.GetValueAtIndex(m_current_step, m_bed_layer - 1, 0);
@@ -758,9 +1170,9 @@ void MyCanvas::draw_dot_at_edge()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_line_at_edge()
 {
-    if (m_ugrid_file == nullptr) { return; }
+    if (m_grid_file == nullptr) { return; }
 
-    struct _mesh_variable* vars = m_ugrid_file->get_variables();
+    struct _mesh_variable* vars = m_grid_file->get_variables();
     struct _variable* var;
     for (int i = 0; i < vars->nr_vars; ++i)
     {
@@ -774,13 +1186,13 @@ void MyCanvas::draw_line_at_edge()
             string var_name = var->var_name;
             if (var->dims.size() == 2) // 2D: time, nodes
             {
-                DataValuesProvider2D<double>std_dot_at_edge = m_ugrid_file->get_variable_values(var_name);
+                DataValuesProvider2D<double>std_dot_at_edge = m_grid_file->get_variable_values(var_name);
                 z_value = std_dot_at_edge.GetValueAtIndex(m_current_step, 0);
                 length = std_dot_at_edge.m_numXY;
             }
             else if (var->dims.size() == 3) // 3D: time, layer, nodes
             {
-                DataValuesProvider3D<double> std_dot_at_edge_3d = m_ugrid_file->get_variable_3d_values(var_name);
+                DataValuesProvider3D<double> std_dot_at_edge_3d = m_grid_file->get_variable_3d_values(var_name);
                 if (var->sediment_index != -1)
                 {
                     z_value = std_dot_at_edge_3d.GetValueAtIndex(m_current_step, var->sediment_index, 0);
@@ -811,26 +1223,26 @@ void MyCanvas::draw_line_at_edge()
 
             struct _edge * edges = nullptr;
             struct _mesh1d * mesh1d = nullptr;
-            struct _mesh1d_string ** m1d = m_ugrid_file->get_mesh1d_string();
+            struct _mesh1d_string ** m1d = m_grid_file->get_mesh1d_string();
             if (m1d != nullptr && var->mesh == m1d[0]->var_name)
             {
-                mesh1d = m_ugrid_file->get_mesh_1d();
+                mesh1d = m_grid_file->get_mesh_1d();
                 edges = mesh1d->edge[0];
             }
 
             struct _mesh2d * mesh2d = nullptr;
-            struct _mesh2d_string ** m2d = m_ugrid_file->get_mesh2d_string();
+            struct _mesh2d_string ** m2d = m_grid_file->get_mesh2d_string();
             if (m2d != nullptr && var->mesh == m2d[0]->var_name)
             {
-                mesh2d = m_ugrid_file->get_mesh_2d();
+                mesh2d = m_grid_file->get_mesh_2d();
                 edges = mesh2d->edge[0];
             }
 
             struct _mesh_contact * mesh1d2d = nullptr;
-            struct _mesh_contact_string ** m1d2d = m_ugrid_file->get_mesh_contact_string();
+            struct _mesh_contact_string ** m1d2d = m_grid_file->get_mesh_contact_string();
             if(m1d2d != nullptr && var->mesh == m1d2d[0]->mesh_contact)
             {
-                mesh1d2d = m_ugrid_file->get_mesh_contact();
+                mesh1d2d = m_grid_file->get_mesh_contact();
                 edges = mesh1d2d->edge[0];
             }
 
@@ -880,9 +1292,9 @@ void MyCanvas::draw_line_at_edge()
 //-----------------------------------------------------------------------------
 void MyCanvas::draw_data_along_edge()
 {
-    if (m_ugrid_file == nullptr) { return; }
+    if (m_grid_file == nullptr) { return; }
 
-    struct _mesh_variable* vars = m_ugrid_file->get_variables();
+    struct _mesh_variable* vars = m_grid_file->get_variables();
     struct _variable* var;
     for (int i = 0; i < vars->nr_vars; ++i)
     {
@@ -890,53 +1302,56 @@ void MyCanvas::draw_data_along_edge()
         if (var->draw && var->location == "node")
         {
             string var_name = var->var_name;
-            struct _mesh1d* mesh1d = m_ugrid_file->get_mesh_1d();
+            struct _mesh1d* mesh1d = m_grid_file->get_mesh_1d();
 
-            DataValuesProvider2D<double>std_data_at_node = m_ugrid_file->get_variable_values(var_name);
-            z_value = std_data_at_node.GetValueAtIndex(m_current_step, 0);
-            int length = std_data_at_node.m_numXY;
-
-            dims = var->dims;
-
-            struct _edge* edges = mesh1d->edge[0];
-            this->startDrawing(CACHE_1D);
-            double opacity = mCache_painter->opacity();
-            mCache_painter->setOpacity(m_property->get_opacity());
-            this->setPointSize(13);
-            vector<double> edge_x(2);
-            vector<double> edge_y(2);
-            vector<QColor> edge_color(2);
-
-            double missing_value = var->fill_value;
-            determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
-
-            if (true)  // boolean to draw gradient along line?
+            if (mesh1d != nullptr) 
             {
-                for (int j = 0; j < edges->count; j++)
-                {
-                    int p1 = edges->edge_nodes[j][0];
-                    int p2 = edges->edge_nodes[j][1];
-                    edge_x[0] = mesh1d->node[0]->x[p1];
-                    edge_y[0] = mesh1d->node[0]->y[p1];
-                    edge_x[1] = mesh1d->node[0]->x[p2];
-                    edge_y[1] = mesh1d->node[0]->y[p2];
+                DataValuesProvider2D<double>std_data_at_node = m_grid_file->get_variable_values(var_name);
+                z_value = std_data_at_node.GetValueAtIndex(m_current_step, 0);
+                int length = std_data_at_node.m_numXY;
 
-                    edge_color[0] = m_ramph->getRgbFromValue(z_value[p1]);
-                    edge_color[1] = m_ramph->getRgbFromValue(z_value[p2]);
+                dims = var->dims;
 
-                    this->drawLineGradient(edge_x, edge_y, edge_color);
-                }
-            }
-            if (false)  // boolean to draw multidot?
-            {
-                m_rgb_color.resize(length);
-                for (int j = 0; j < length; j++)
+                struct _edge* edges = mesh1d->edge[0];
+                this->startDrawing(CACHE_1D);
+                double opacity = mCache_painter->opacity();
+                mCache_painter->setOpacity(m_property->get_opacity());
+                this->setPointSize(13);
+                vector<double> edge_x(2);
+                vector<double> edge_y(2);
+                vector<QColor> edge_color(2);
+
+                double missing_value = var->fill_value;
+                determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
+
+                if (true)  // boolean to draw gradient along line?
                 {
-                    m_rgb_color[j] = m_ramph->getRgbFromValue(z_value[j]);
+                    for (int j = 0; j < edges->count; j++)
+                    {
+                        int p1 = edges->edge_nodes[j][0];
+                        int p2 = edges->edge_nodes[j][1];
+                        edge_x[0] = mesh1d->node[0]->x[p1];
+                        edge_y[0] = mesh1d->node[0]->y[p1];
+                        edge_x[1] = mesh1d->node[0]->x[p2];
+                        edge_y[1] = mesh1d->node[0]->y[p2];
+
+                        edge_color[0] = m_ramph->getRgbFromValue(z_value[p1]);
+                        edge_color[1] = m_ramph->getRgbFromValue(z_value[p2]);
+
+                        this->drawLineGradient(edge_x, edge_y, edge_color);
+                    }
                 }
-                this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
+                if (false)  // boolean to draw multidot?
+                {
+                    m_rgb_color.resize(length);
+                    for (int j = 0; j < length; j++)
+                    {
+                        m_rgb_color[j] = m_ramph->getRgbFromValue(z_value[j]);
+                    }
+                    this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
+                }
+                mCache_painter->setOpacity(opacity);
             }
-            mCache_painter->setOpacity(opacity);
         }
     }
 }
@@ -992,9 +1407,9 @@ void MyCanvas::set_hydro_layer(int i_layer)
     this->m_hydro_layer = i_layer;
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::setUgridFile(UGRID * ugrid_file)
+void MyCanvas::set_grid_file(GRID * grid_file)
 {
-    m_ugrid_file = ugrid_file;
+    m_grid_file = grid_file;
 }
 //-----------------------------------------------------------------------------
 void MyCanvas::determine_min_max(double * z, int length, double * z_min, double * z_max, vector<QColor> &rgb_color, double missing_value)
@@ -1151,8 +1566,8 @@ void MyCanvas::renderPlugin( QPainter * Painter )
 {
     // OK JanM QMessageBox::warning(0, "Message", QString(tr("MyCanvas::renderPlugin") ));
     // need width/height of paint device
-    int myWidth = Painter->device()->width();  //pixels
-    int myHeight = Painter->device()->height(); //pixels
+    //int myWidth = Painter->device()->width();  //pixels
+    //int myHeight = Painter->device()->height(); //pixels
     int width  = 500; //pixels
     int height = 250; //pixels
 
@@ -1183,12 +1598,14 @@ void MyCanvas::renderPlugin( QPainter * Painter )
     }
     //draw_dot_at_edge();
     draw_data_at_face();
+    draw_data_at_node();  // isofill of the control volume around node
     draw_dot_at_face();
     draw_dot_at_node();
     draw_data_along_edge();
     draw_line_at_edge();
-    draw_vector_arrow_at_face();
+    draw_vector_arrow();
     draw_vector_direction_at_face();
+    draw_vector_direction_at_node();
     this->finishDrawing();
 }
 //
@@ -1669,7 +2086,6 @@ bool MyCanvas::isFontAvailable(const char* name)
 int MyCanvas::getTextWidth(const char* name)
 {
     int size = (mMapCanvas->fontMetrics()).horizontalAdvance(name);
-
     return size;
 }
 //

@@ -5,7 +5,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "QObject"
 #include <iostream>
 
 #include <QAction>
@@ -16,6 +15,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QObject>
 #include <QProcessEnvironment>
 #include <QProgressBar>
 #include <QSizePolicy> 
@@ -27,7 +27,7 @@
 #include <QFileInfo>
 #include <QFileDialog>
 
-#include <qgsapplication.h>
+//jamm #include <qgsapplication.h>
 #include <qgsgeometry.h>
 #include <qgslayertree.h>
 #include <qgslayertreegroup.h>
@@ -59,7 +59,7 @@
 #include "MyEditTool.h"
 #include "MyDrawingCanvas.h"
 #include "netcdf.h"
-#include "ugrid.h"
+#include "grid.h"
 #include "his_cf.h"
 #include "json_reader.h"
 #include "edit_observation_points_window.h"
@@ -85,9 +85,10 @@ class qgis_umesh
     Q_OBJECT
 
     public:
-        static const QString s_ident, s_name, s_description, s_category, s_version, s_icon, s_plugin_version;
+        static const QString s_ident, s_name, s_description, s_category, s_version, s_plugin_icon, s_plugin_version;
         static const QgisPlugin::PluginType s_plugin_type;
 
+        qgis_umesh();
         qgis_umesh(QgisInterface* iface);
         ~qgis_umesh();
         void initGui();
@@ -105,21 +106,21 @@ class qgis_umesh
         void create_vector_layer_observation_polyline(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
 
         // Reading input files (ie JSON format)
-        void create_vector_layer_1D_external_forcing(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_structure(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_chainage_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_crs_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_fixed_weir(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_thin_dams(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_1D_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_2D_observation_cross_section(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_structure(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_drypoints(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_1D_cross_section(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_retention(UGRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_sample_point(UGRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_external_forcing(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_structure(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_chainage_observation_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_crs_observation_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_fixed_weir(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_thin_dams(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_observation_cross_section(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_1D_observation_cross_section(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_2D_observation_cross_section(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_structure(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_drypoints(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_1D_cross_section(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
+        void create_vector_layer_1D_retention(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
+        void create_vector_layer_sample_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
 
         void create_vector_layer_1D2D_link(JSON_READER *, long);
         long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, std::string, double, double *, double *, double *);
@@ -128,7 +129,7 @@ class qgis_umesh
 
         QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
         void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
-        void show_map_output(UGRID *);
+        void show_map_output(GRID *);
         void edit_1d_obs_points();
         void experiment();
 
@@ -150,7 +151,7 @@ class qgis_umesh
         void activate_observation_layers();
         void ShowUserManual();
 
-        UGRID * get_active_ugrid_file(QString);
+        GRID * get_active_grid_file(QString);
         HISCF * get_active_his_cf_file(QString);
         void set_show_map_output();
         void start_plotcfts();
@@ -218,11 +219,12 @@ class qgis_umesh
         char * actionIcon_c = (char *)malloc(PATH_LENGTH * sizeof(char *));
 
         int _fil_index;
-        std::vector<UGRID *> m_ugrid_file;
+        std::vector<GRID*> m_grid_file;
         int _his_cf_fil_index;
         std::vector<HISCF *> m_his_cf_file;
         int _mdu_fil_index;
         std::vector<JSON_READER *> m_mdu_files;
+        struct _global_attributes* m_global_attributes;
 
         QgsCoordinateReferenceSystem m_crs;
 };

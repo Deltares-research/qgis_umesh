@@ -24,9 +24,6 @@
     <ClCompile Include="src\MyEditTool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ugrid.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\qgis_umesh_version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -57,17 +54,11 @@
     <ClCompile Include="src\map_property.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="generated\moc_map_property.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\map_property_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="generated\moc_map_property_window.cpp">
       <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\his_cf.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\read_json.cpp">
       <Filter>Source Files</Filter>
@@ -85,6 +76,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\perf_timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\grid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,9 +101,6 @@
     <CustomBuild Include="include\my_date_time_edit.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="include\map_property.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="include\map_property_window.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
@@ -124,16 +115,10 @@
     <ClInclude Include="include\netcdf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\ugrid.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\AbstractCanvas.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\AbstractCanvasListener.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\his_cf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\data_struct.h">
@@ -146,6 +131,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\qgis_umesh_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\map_property.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

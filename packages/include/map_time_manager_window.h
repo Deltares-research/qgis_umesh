@@ -26,14 +26,13 @@
 #include <QVBoxLayout>
 
 #include <qmath.h>
-#include <qgsapplication.h>
+//janm #include <qgsapplication.h>
 #include <qgisinterface.h>
 #include <qgisplugin.h>
 
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
 
-#include "ugrid.h"
 #include "MyDrawingCanvas.h"
 #include "my_date_time_edit.h"
 #include "QColorRampEditor.h"
@@ -55,7 +54,7 @@ public:
     static int object_count;
 
     public:
-        MapTimeManagerWindow(QgisInterface *, UGRID *, MyCanvas *);
+        MapTimeManagerWindow(QgisInterface *, GRID *, MyCanvas *);
         ~MapTimeManagerWindow();
         static int get_count();
 
@@ -101,7 +100,7 @@ public:
 
     private:
         QgisInterface * m_QGisIface; // Pointer to the QGIS interface object
-        UGRID * m_ugrid_file;
+        GRID * m_grid_file;
         MyCanvas * m_MyCanvas;
         void create_window();
         QGridLayout * create_date_time_layout();

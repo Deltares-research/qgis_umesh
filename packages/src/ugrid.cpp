@@ -29,23 +29,24 @@
 #include "perf_timer.h"
 
 //------------------------------------------------------------------------------
-#ifdef NATIVE_C
-    UGRID::UGRID(char * filename)
-#else
-    UGRID::UGRID(QFileInfo filename, QProgressBar * pgBar)
-#endif
+UGRID::UGRID()
 {
-#ifdef NATIVE_C
-    this->fname = strdup(filename);  // filename without path, just the name
-    this->ugrid_file_name = strdup(filename);  // filename with complete path
-#else
-    this->fname = filename;  // filename without path, just the name
-    this->ugrid_file_name = filename.absoluteFilePath();  // filename with complete path
-    m_pgBar = pgBar;
-#endif
     m_nr_mesh_contacts = 0;
     _two = 2;
 }
+UGRID::UGRID(QFileInfo filename, int ncid, QProgressBar* pgBar)
+{
+    long ret_value = 1;
+    m_fname = filename;  // filename without path, just the name
+    m_ugrid_file_name = filename.absoluteFilePath();  // filename with complete path
+    m_ncid = ncid;
+    m_pgBar = pgBar;
+
+    m_nr_mesh_contacts = 0;
+    _two = 2;
+}
+
+
 //------------------------------------------------------------------------------
 UGRID::~UGRID()
 {
@@ -54,16 +55,9 @@ UGRID::~UGRID()
     free(this->ugrid_file_name);
 #endif    
     int status;
-    status = nc_close(this->m_ncid);
+    status = nc_close(m_ncid);
     if (status == NC_NOERR)
     {
-        // free the memory
-        for (long i = 0; i < global_attributes->count; i++)
-        {
-            //delete global_attributes->attribute[i];
-        }
-        free(global_attributes->attribute);
-        delete global_attributes;
         // free DataValueProvider2D3D
         for (int i = 0; i < m_nr_mesh_var; i++)
         {
@@ -75,30 +69,41 @@ UGRID::~UGRID()
     }
 }
 //------------------------------------------------------------------------------
-long UGRID::read()
+long UGRID::open(QFileInfo filename, QProgressBar* pgBar)
 {
-    int status = -1;
+    long ret_value = 1;
+    m_fname = filename;  // filename without path, just the name
+    m_ugrid_file_name = filename.absoluteFilePath();  // filename with complete path
+    m_pgBar = pgBar;
+
 #ifdef NATIVE_C
-    status = nc_open(this->ugrid_file_name, NC_NOWRITE, &this->m_ncid);
+    int status = nc_open(m_ugrid_file_name, NC_NOWRITE, &this->m_ncid);
     if (status != NC_NOERR)
     {
-        fprintf(stderr, "UGRID::read()\n    Failed to open file: %s\n", this->ugrid_file_name);
-        return status;
+        fprintf(stderr, "UGRID::read()\n    Failed to open file: %s\n", m_ugrid_file_name);
+        return ret_value;
     }
-    fprintf(stderr, "UGRID::read()\n    Opened: %s\n", this->ugrid_file_name);
-
+    fprintf(stderr, "UGRID::read()\n    Opened: %s\n", m_ugrid_file_name);
 #else
-    char * ug_fname = strdup(this->fname.absoluteFilePath().toUtf8());
-    status = nc_open(ug_fname, NC_NOWRITE, &this->m_ncid);
+    char* ug_fname = strdup(m_fname.absoluteFilePath().toUtf8());
+    int status = nc_open(ug_fname, NC_NOWRITE, &m_ncid);
     if (status != NC_NOERR)
     {
         QMessageBox::critical(0, QString("Error"), QString("UGRID::read()\n    Failed to open file: %1").arg(ug_fname));
-        return status;
+        return ret_value;
     }
     free(ug_fname);
     ug_fname = nullptr;
 #endif
     status = this->read_global_attributes();
+
+    ret_value = 0;
+    return ret_value;
+}
+//------------------------------------------------------------------------------
+long UGRID::read()
+{
+    int status = -1;
 
     START_TIMERN(Read mesh);
     status = this->read_mesh();
@@ -169,24 +174,34 @@ long UGRID::read_global_attributes()
     return status;
 }
 //------------------------------------------------------------------------------
-struct _global_attributes * UGRID::get_global_attributes()
+long UGRID::get_global_attribute_value(std::string att_name, std::string* att_value)
 {
-#ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_global_attributes()\n");
-#endif    
-    return this->global_attributes;
+    long status = 1;  // error by default
+    bool att_name_found = false;
+    for (int i = 0; i < global_attributes->count; i++)
+    {
+        if (att_name_found) { exit; }
+        if (global_attributes->attribute[i]->name == att_name)
+        {
+            att_name_found = true;
+            *att_value = global_attributes->attribute[i]->cvalue;
+            *att_value = std::string(global_attributes->attribute[i]->cvalue);
+            status = 0;
+        }
+    }
+    return status;
 }
 #ifdef NATIVE_C
 //------------------------------------------------------------------------------
 char * UGRID::get_filename()
 {
-    return this->ugrid_file_name;
+    return this->m_ugrid_file_name;
 }
 #else
 //------------------------------------------------------------------------------
 QFileInfo UGRID::get_filename()
 {
-    return this->ugrid_file_name;
+    return m_ugrid_file_name;
 }
 #endif
 //------------------------------------------------------------------------------
@@ -309,7 +324,7 @@ long UGRID::read_mesh()
     status = determine_mesh1d_edge_length(m_mesh1d, m_ntw_edges);
     status = create_mesh1d_nodes(m_mesh1d, m_ntw_edges, m_ntw_geom);
 
-    if (m_mesh_contact != NULL)
+    if (m_mesh_contact != nullptr)
     {
         // create the mesh contact edges
         // llog first for the meshes (ie the var_names) and contact points
@@ -601,22 +616,6 @@ long UGRID::read_times()
 #endif
 
     return (long)status;
-}
-//------------------------------------------------------------------------------
-long UGRID::get_count_times()
-{
-    size_t nr = time_series[0].nr_times;
-    return (long) nr;
-}
-//------------------------------------------------------------------------------
-std::vector<double> UGRID::get_times()
-{
-    return time_series[0].times;
-}
-//------------------------------------------------------------------------------
-QVector<QDateTime> UGRID::get_qdt_times()  // qdt: Qt Date Time
-{
-    return qdt_times;
 }
 //------------------------------------------------------------------------------
 long UGRID::read_variables()
@@ -1107,41 +1106,26 @@ long UGRID::read_variables()
 //------------------------------------------------------------------------------
 struct _mesh_variable * UGRID::get_variables()
 {
- #ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_variables()\n");
-#endif    
    return this->m_mesh_vars;
 }
 //------------------------------------------------------------------------------
 struct _mesh_contact * UGRID::get_mesh_contact()
 {
-#ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_contact_edges()\n");
-#endif    
     return this->m_mesh_contact;
 }
 //------------------------------------------------------------------------------
 struct _ntw_nodes * UGRID::get_connection_nodes()
 {
-#ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_connection_nodes()\n");
-#endif    
     return this->m_ntw_nodes;
 }
 //------------------------------------------------------------------------------
 struct _ntw_edges * UGRID::get_network_edges()
 {
-#ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_network_edges()\n");
-#endif    
     return this->m_ntw_edges;
 }
 //------------------------------------------------------------------------------
 struct _ntw_geom * UGRID::get_network_geometry()
 {
-#ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_network_geometry()\n");
-#endif    
     return this->m_ntw_geom;
 }
 //------------------------------------------------------------------------------
@@ -1334,249 +1318,6 @@ DataValuesProvider2D<double> UGRID::get_variable_values(const std::string var_na
     }
     return data_pointer;
 }
-//------------------------------------------------------------------------------
-DataValuesProvider3D<double> UGRID::get_variable_3d_values(const std::string var_name)
-// return: 3d dimensional value(time, layer, x)
-{
-    int var_id;
-    int status;
-    int i_var;
-    double * read_c;
-    double * values_c;
-    DataValuesProvider3D<double> data_pointer;
-#ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_variable_values()\n");
-#endif    
-
-    for (int i = 0; i < m_mesh_vars->nr_vars; i++)
-    {
-        if (var_name == m_mesh_vars->variable[i]->var_name)  //var_name is a three dimensio
-        {
-            i_var = i; 
-            if (!m_mesh_vars->variable[i]->read)  // are the z_values already read
-            {
-#ifdef NATIVE_C
-#else
-                m_pgBar->show();
-#endif
-                status = nc_inq_varid(this->m_ncid, var_name.c_str(), &var_id);
-                size_t length = 1;
-                for (int j = 0; j < m_mesh_vars->variable[i]->dims.size(); j++)
-                {
-                    length *= m_mesh_vars->variable[i]->dims[j];
-                }
-                read_c = (double *)malloc(sizeof(double) * length);
-                //boost::timer::cpu_timer timer;
-                status = nc_get_var_double(this->m_ncid, var_id, read_c);
-                //std::cout << timer.format() << '\n';
-#ifdef NATIVE_C
-#else
-                m_pgBar->setValue(100);
-#endif
-                long time_dim = m_mesh_vars->variable[i]->dims[0];
-                long layer_dim = m_mesh_vars->variable[i]->dims[1];
-                long xy_dim = m_mesh_vars->variable[i]->dims[2];
-                bool swap_loops = false;
-                // Todo: HACK assumed is that the time is the first dimension
-                // Todo: HACK just the variables at the layers, interfaces are skipped
-                if (m_map_dim_name["zs_dim_layer"] == m_mesh_vars->variable[i]->dim_names[2] ||
-                    m_map_dim_name["zs_dim_interface"] == m_mesh_vars->variable[i]->dim_names[2] ||
-                    m_map_dim_name["zs_dim_bed_layer"] == m_mesh_vars->variable[i]->dim_names[2])
-                {
-                    // loop over layers and nodes should be swapped
-                    swap_loops = true;
-                }
-                values_c = (double *)malloc(sizeof(double) * length);
-                if (swap_loops)
-                {
-                    for (int t = 0; t < time_dim; t++)
-                    {
-                        for (int xy = 0; xy < xy_dim; xy++)
-                        {
-                            for (int l = 0; l < layer_dim; l++)
-                            {
-                                int k_target = t * xy_dim * layer_dim  + xy * layer_dim + l;
-                                int k_source = t * xy_dim * layer_dim + l * xy_dim + xy;
-                                values_c[k_target] = read_c[k_source];
-
-                                double fraction = 100. + 900. * double(k_target) / double(length);
-#ifdef NATIVE_C
-#else
-                                m_pgBar->setValue(int(fraction));
-#endif
-                            }
-                        }
-                    }
-                    int tmp_dim = layer_dim;
-                    layer_dim = xy_dim;
-                    xy_dim = tmp_dim;
-                    free(read_c);
-                }
-                else
-                {
-                    memcpy(values_c, read_c, length*sizeof(double));
-                }
-                DataValuesProvider3D<double> DataValuesProvider3D(values_c, time_dim, layer_dim, xy_dim);
-
-                for (int j = 0; j < m_mesh_vars->variable[i]->dim_names.size(); j++)
-                {
-                    if (m_map_dim_name["z_sigma_interface"] == m_mesh_vars->variable[i]->dim_names[j])
-                    {
-#ifdef NATIVE_C
-                        fprintf(stderr, "    3D data on interfaces not yet supported.\n");
-#else
-                        QMessageBox::warning(0, QString("Warning"), QString("3D data on interfaces not yet supported,\ndata: %1").arg(var_name.c_str()));
-#endif
-                        return DataValuesProvider3D;
-                    }
-
-                }
-                m_mesh_vars->variable[i_var]->data_3d = DataValuesProvider3D;
-                m_mesh_vars->variable[i]->read = true;
-#ifdef NATIVE_C
-#else
-                m_pgBar->hide();
-#endif
-                return m_mesh_vars->variable[i_var]->data_3d;  // if read, skip all remaining variables
-            }
-            return m_mesh_vars->variable[i_var]->data_3d;
-        }
-    }
-    return data_pointer;
-}
-//------------------------------------------------------------------------------
-DataValuesProvider4D<double> UGRID::get_variable_4d_values(const std::string var_name)
-// return: 4d dimensional value(time, bed/hydro-layer, sediment, xy_space)
-{
-    int var_id;
-    int status;
-    double * read_c;
-    double * values_c;
-    DataValuesProvider4D<double> data_pointer;
-#ifdef NATIVE_C
-    fprintf(stderr, "UGRID::get_variable_values()\n");
-#endif    
-
-    for (int i = 0; i < m_mesh_vars->nr_vars; i++)
-    {
-        if (var_name == m_mesh_vars->variable[i]->var_name)  //var_name is a three dimensio
-        {
-            if (!m_mesh_vars->variable[i]->read)  // are the z_values already read
-            {
-#ifdef NATIVE_C
-#else
-                m_pgBar->show();
-#endif
-                status = nc_inq_varid(this->m_ncid, var_name.c_str(), &var_id);
-                size_t length = 1;
-                for (int j = 0; j < m_mesh_vars->variable[i]->dims.size(); j++)
-                {
-                    length *= m_mesh_vars->variable[i]->dims[j];
-                }
-                read_c = (double *)malloc(sizeof(double) * length);
-                //boost::timer::cpu_timer timer;
-                status = nc_get_var_double(this->m_ncid, var_id, read_c);
-                //std::cout << timer.format() << '\n';
-#ifdef NATIVE_C
-#else
-                m_pgBar->setValue(100);
-#endif
-                struct _mesh2d * m2d = this->get_mesh_2d();
-
-                std::vector<long> dims(4);  // required order of dimensions: time, nbedlayers, nsedtot, nFaces
-                bool correct_order = true;
-                std::vector<long> dim_to;
-                dim_to.resize(m_mesh_vars->variable[i]->dims.size());
-                for (int j = 0; j < m_mesh_vars->variable[i]->dims.size(); j++)
-                {
-                    if (m_mesh_vars->variable[i]->dim_names[j] == m_map_dim_name["time"])
-                    {
-                        dims[0] = m_map_dim[m_map_dim_name["time"]];
-                        dim_to[j] = 0;
-                        if (j != 0)
-                        {
-                            correct_order = false;
-                        }
-                    }
-                    else if (m_mesh_vars->variable[i]->dim_names[j] == m_map_dim_name["zs_dim_bed_layer"])
-                    {
-                        dims[1] = m_map_dim[m_map_dim_name["zs_dim_bed_layer"]];
-                        dim_to[j] = 1;
-                        if (j != 1)
-                        {
-                            correct_order = false;
-                        }
-                    }
-                    else if (m_mesh_vars->variable[i]->dim_names[j] == "nSedTot")  // Todo: HACK, use m_map_dim_name["nSedTot"])
-                    {
-                        dims[2] = m_map_dim["nSedTot"];
-                        dim_to[j] = 2;
-                        if (j != 2) 
-                        {
-                            correct_order = false;
-                        }
-                    }
-                    else
-                    {
-                        if (m_mesh_vars->variable[i]->location == "edge")
-                        {
-                            dims[3] = m2d->edge[0]->x.size();
-                        }
-                        if (m_mesh_vars->variable[i]->location == "face")
-                        {
-                            dims[3] = m2d->face[0]->x.size();
-                        }
-                        if (m_mesh_vars->variable[i]->location == "node")
-                        {
-                            dims[3] = m2d->node[0]->x.size();
-                        }
-                        dim_to[j] = 3;
-                        if (j != 3)
-                        {
-                            correct_order = false;
-                        }
-                    }
-                }
-
-                // set the array dimensions in the order: time, bed/hydro_layer, sediment, xy_dim
-                if (correct_order)
-                {
-                    // if already in this order, then copy the memory with memcpy.
-                    values_c = (double *)malloc(sizeof(double) * length);
-                    memcpy(values_c, read_c, length * sizeof(double));  // Todo: HACK, assumed to be the right order
-                }
-                else
-                {
-                    values_c = permute_array(read_c, dim_to, dims);
-                }
-                DataValuesProvider4D<double> DataValuesProvider4D(values_c, dims[0], dims[1], dims[2], dims[3]);  //  time_dim, layer_dim, sed_dim, xy_dim);
-
-                for (int j = 0; j < m_mesh_vars->variable[i]->dim_names.size(); j++)
-                {
-                    if (m_map_dim_name["z_sigma_interface"] == m_mesh_vars->variable[i]->dim_names[j])
-                    {
-#ifdef NATIVE_C
-                        fprintf(stderr, "    3D data on interfaces not yet supported.\n");
-#else
-                        QMessageBox::warning(0, QString("Warning"), QString("3D data on interfaces not yet supported,\ndata: %1").arg(var_name.c_str()));
-#endif
-                        return DataValuesProvider4D;
-                    }
-
-                }
-                m_mesh_vars->variable[i]->data_4d = DataValuesProvider4D;
-                m_mesh_vars->variable[i]->read = true;
-#ifdef NATIVE_C
-#else
-                m_pgBar->hide();
-#endif
-                return m_mesh_vars->variable[i]->data_4d;  // if read, skip all remaining variables
-            }
-            return m_mesh_vars->variable[i]->data_4d;
-        }
-    }
-    return data_pointer;
-}
 //==============================================================================
 // PRIVATE functions
 //==============================================================================
@@ -1679,18 +1420,16 @@ int UGRID::get_attribute(int ncid, int i_var, char * att_name, long * att_value)
     return status;
 }
 //------------------------------------------------------------------------------
-int UGRID::get_dimension(int ncid, char* dim_name, size_t* dim_length)
+int UGRID::get_dimension(int ncid, char * dim_name, size_t * dim_length)
 {
     int dimid;
     int status = -1;
 
+    *dim_length = 0;
     if (dim_name != NULL && strlen(dim_name) != 0)
     {
         status = nc_inq_dimid(ncid, dim_name, &dimid);
-        if (status == NC_NOERR)
-        {
-            status = nc_inq_dimlen(ncid, dimid, dim_length);
-        }
+        status = nc_inq_dimlen(ncid, dimid, dim_length);
     }
     return status;
 }
@@ -1700,13 +1439,11 @@ int UGRID::get_dimension(int ncid, std::string dim_name, size_t * dim_length)
     int dimid;
     int status = -1;
 
+    *dim_length = 0;
     if (dim_name.size() != 0)
     {
         status = nc_inq_dimid(ncid, dim_name.c_str(), &dimid);
-        if (status == NC_NOERR)
-        {
-            status = nc_inq_dimlen(ncid, dimid, dim_length);
-        }
+        status = nc_inq_dimlen(ncid, dimid, dim_length);
     }
     return status;
 }
@@ -1716,21 +1453,18 @@ int UGRID::get_dimension_var(int ncid, std::string var_name, size_t * dim_length
     // get the total dimension length in bytes of the var_name variable
     int dimid;
     int status = -1;
+    *dim_length = 0;
 
     if (var_name.size() != 0)
     {
         int janm;
         status = nc_inq_varid(ncid, var_name.c_str(), &dimid);
-        if (status == NC_NOERR)
-        {
-            *dim_length = 0;
-            status = nc_inq_vardimid(ncid, dimid, &janm);
-            char* tmp_value = (char*)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
-            status = nc_inq_dimname(ncid, janm, tmp_value);
-            status = get_dimension(ncid, tmp_value, dim_length);
-            free(tmp_value);
-            tmp_value = nullptr;
-        }
+        status = nc_inq_vardimid(ncid, dimid, &janm);
+        char * tmp_value = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
+        status = nc_inq_dimname(ncid, janm, tmp_value);
+        status = get_dimension(ncid, tmp_value, dim_length);
+        free(tmp_value);
+        tmp_value = nullptr;
     }
     return status;
 }
@@ -1762,1498 +1496,7 @@ std::vector<std::string>  UGRID::get_dimension_names(int ncid, std::string var_n
     }
     return dim_names;
 }
-//------------------------------------------------------------------------------
-std::vector<std::string> UGRID::get_names(int ncid, std::string names, size_t count)
-{
-    int var_id;
-    int status;
-    std::vector<std::string> token;
 
-    status = nc_inq_varid(ncid, names.c_str(), &var_id);
-    if (status == NC_NOERR)
-    {
-        int ndims[2];
-        char * length_name = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
-        status = nc_inq_vardimid(ncid, var_id, (int*)ndims);
-        status = nc_inq_dimname(ncid, ndims[1], length_name);
-        size_t strlen;
-        status = get_dimension(ncid, length_name, &strlen);
-
-        char * c = (char *)malloc(sizeof(char) * (count * strlen));
-        status = nc_get_var_text(ncid, var_id, c);
-
-        token = tokenize(c, count);
-        free(c);
-        c = nullptr;
-        free(length_name);
-        length_name = nullptr;
-    }
-    return token;
-}
-//------------------------------------------------------------------------------
-std::vector<std::string> UGRID::get_string_var(int ncid, std::string var_name)
-{
-    int varid;
-    int ndims;
-    int nr_names = 0;
-    nc_type nc_type;
-    int status = -1;
-    std::vector<std::string> result;
-
-    char * dim_name_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
-    dim_name_c[0] = '\0';
-
-    if (var_name.size() != 0)
-    {
-        status = nc_inq_varid(ncid, var_name.c_str(), &varid);
-        status = nc_inq_var(ncid, varid, NULL, &nc_type, &ndims, NULL, NULL);
-        long * sn_dims = (long *)malloc(sizeof(long) * ndims);
-        status = nc_inq_vardimid(ncid, varid, (int*)sn_dims);
-
-        int mem_length = 1;
-        int name_len = -1;
-        for (long j = 0; j < ndims; j++)
-        {
-            size_t length = (size_t) -1;
-            status = nc_inq_dim(this->m_ncid, sn_dims[j], dim_name_c, &length);
-
-            if (strstr(dim_name_c, "len") || name_len == -1 && j == 1)  // second dimension is the string length if not already set
-            {
-                name_len = length;
-            }
-            else
-            {
-                nr_names = (long)length;
-            }
-            mem_length = mem_length * length;
-        }
-        result.reserve(nr_names);
-        // reading 64 strings for each location, length of string??
-        if (nc_type == NC_STRING)
-        {
-            char ** location_strings = (char **)malloc(sizeof(char *) * (mem_length)+1);
-            status = nc_get_var_string(ncid, varid, location_strings);
-            QString janm = QString("JanM");
-            for (int k = 0; k < nr_names; k++)
-            {
-                janm = QString("");
-                for (int k2 = 0; k2 < name_len; k2++)
-                {
-                    QTextCodec *codec2 = QTextCodec::codecForName("UTF-8");
-                    QString str = codec2->toUnicode(*(location_strings + k * name_len + k2));
-                    janm = janm + str;
-                }
-                result.push_back(janm.toStdString());
-            }
-        }
-        else if (nc_type == NC_CHAR)
-        {
-            char * location_chars = (char *)malloc(sizeof(char *) * (mem_length)+1);
-            location_chars[0] = '\0';
-            status = nc_get_var_text(ncid, varid, location_chars);
-            char * janm = (char *)malloc(sizeof(char)*(name_len + 1));
-            janm[name_len] = '\0';
-            for (int k = 0; k < nr_names; k++)
-            {
-                strncpy(janm, location_chars + k * name_len, name_len);
-                result.push_back(std::string(janm));
-            }
-            free(janm);
-        }
-        else
-        {
-            // trying to read unsupported variable
-        }
-        free(sn_dims);
-    }
-    free(dim_name_c);
-    return result;
-}
-//------------------------------------------------------------------------------
-int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::string cf_role, int ndims, int * var_dimids)
-{
-    Q_UNUSED(var_dimids);
-    int topology_dimension;
-    int status = 1;
-    int var_id = -1;
-
-    long nr_ntw = 0;
-    long nr_geom = 0;
-    long nr_mesh1d = 0;
-    long nr_mesh2d = 0;
-
-    std::string att_value;
-
-    if (cf_role == "mesh_topology_contact")  // 1D + 2D mesh
-    {
-        m_nr_mesh_contacts += 1;
-        if (m_nr_mesh_contacts == 1)
-        {
-            m_mesh_contact_strings = (struct _mesh_contact_string **)malloc(sizeof(struct _mesh_contact_string *) * m_nr_mesh_contacts);
-        }
-        else
-        {
-        }
-        m_mesh_contact_strings[m_nr_mesh_contacts - 1] = new _mesh_contact_string();
-
-        if (cf_role == "parent_mesh_topology")
-        {
-            read_composite_mesh_attributes(m_mesh_contact_strings[m_nr_mesh_contacts - 1], i_var, var_name);
-        }
-        else
-        {
-            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->meshes = "";
-            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_contact = var_name;
-
-            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_a = "";
-            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_b = "";
-        }
-
-        if (m_nr_mesh_contacts == 1)
-        {
-            m_mesh_contact = new _mesh_contact();
-
-            m_mesh_contact->node = (struct _feature **)malloc(sizeof(struct _feature*));
-            m_mesh_contact->node[m_nr_mesh_contacts - 1] = new _feature();
-
-            m_mesh_contact->edge = (struct _edge **)malloc(sizeof(struct _edge *));
-            m_mesh_contact->edge[m_nr_mesh_contacts - 1] = new _edge();
-        }
-        else
-        {
-            // nothing
-        }
-        m_mesh_contact->nr_mesh_contact = m_nr_mesh_contacts;
-
-        status = nc_inq_varid(this->m_ncid, m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_contact.c_str(), &var_id);
-        status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
-        int * dimids = (int *)malloc(sizeof(int) * ndims);
-        status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
-        if (m_dimids[dimids[0]] != _two)  // one of the dimension is always 2
-        {
-            m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count = m_dimids[dimids[0]];
-        }
-        else
-        {
-            m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count = m_dimids[dimids[1]];
-        }
-        m_mesh_contact->node[m_nr_mesh_contacts - 1]->count = m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count * _two;
-
-        //get edge nodes (branch definition between connection nodes)
-        contact_edge_nodes = (int *)malloc(sizeof(int) * m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count * _two);
-        m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes = (int **)malloc(sizeof(int *) * m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count);
-        for (int i = 0; i < m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count; i++)
-        {
-            m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i] = contact_edge_nodes + _two * i;
-        }
-
-        size_t start2[] = { 0, 0 };
-        size_t count2[] = { m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count,  _two };
-        status = nc_inq_varid(this->m_ncid, m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_contact.c_str(), &var_id);
-        status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, contact_edge_nodes);
-
-        int start_index;
-        status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
-        if (status == NC_NOERR && start_index != 0)
-        {
-            for (int i = 0; i < m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count; i++)
-            {
-                m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i][0] -= start_index;
-                m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i][1] -= start_index;
-            }
-        }
-
-        std::string att_string;
-        status = get_attribute(this->m_ncid, var_id, "contact", &att_string);
-        // search for mesh_a, after semi colon is the location in mesh_a defined
-        // search for mesh_b, after semi colon is the location in mesh_b defined
-        // example: "mesh1D:node mesh2D:face" or "mesh1D: node mesh2D: face", yes/no a white space behind semi colon
-
-        for (size_t i = 0; i < att_string.size(); ++i) {
-            if (att_string[i] == ':') {
-                att_string.replace(i, 1, " ");
-            }
-        }
-        std::vector<std::string> token = tokenize(att_string, ' ');
-        if (token.size() != 4)
-        {
-#if defined NATIVE_C
-#else
-            QMessageBox::critical(0, "Error", QString("String \"%1\"should have 4 elements").arg(att_string.c_str()));
-#endif
-            status = 1;
-            return status;
-        }
-        m_mesh_contact->mesh_a = strdup(token[0].c_str());
-        m_mesh_contact->location_a = strdup(token[1].c_str());
-        m_mesh_contact->mesh_b = strdup(token[2].c_str());
-        m_mesh_contact->location_b = strdup(token[3].c_str());
-
-        if (m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_a == "")
-        {
-            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_a = m_mesh_contact->mesh_a;
-        }
-        if (m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_b == "")
-        {
-            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->mesh_b = m_mesh_contact->mesh_b;
-        }
-        if (m_mesh_contact_strings[m_nr_mesh_contacts - 1]->meshes == "")
-        {
-            m_mesh_contact_strings[m_nr_mesh_contacts - 1]->meshes = m_mesh_contact->mesh_a + " " + m_mesh_contact->mesh_b;
-        }
-
-        // (x, y) will be filled later, first the 1D nodes along branches should calculated
-
-#ifdef NATIVE_C
-        fprintf(stderr, "End of reading contact mesh\n");
-#else
-        //QMessageBox::information(0, "Information", "End of reading Network");
-#endif
-
-    }
-    if (cf_role == "mesh_topology")
-    {
-        // is is a mesh or geometry
-        topology_dimension = 0;
-        status = get_attribute(this->m_ncid, i_var, const_cast<char*>("topology_dimension"), &topology_dimension);
-        if (topology_dimension == 1)  // it is one dimensional
-        {
-            std::string edge_geometry;
-            status = get_attribute(this->m_ncid, i_var, "edge_geometry", &edge_geometry);  // required for when it is a network
-            if (status == NC_NOERR)  // attribute "edge_geometry" found, so it is a geometry
-            {
-                nr_ntw += 1;
-                if (nr_ntw == 1)
-                {
-                    m_ntw_strings = (struct _ntw_string **)malloc(sizeof(struct _ntw_string *) * nr_ntw);
-                }
-                else
-                {
-                }
-                m_ntw_strings[nr_ntw - 1] = new _ntw_string;
-
-                status = read_network_attributes(m_ntw_strings[nr_ntw - 1], i_var, var_name, topology_dimension);
-
-                if (nr_ntw == 1)
-                {
-                    m_ntw_nodes = new struct _ntw_nodes();
-                    m_ntw_nodes->node = (struct _feature **)malloc(sizeof(struct _feature *));
-                    m_ntw_nodes->node[nr_ntw - 1] = new _feature();
-
-                    m_ntw_edges = new struct _ntw_edges();
-                    m_ntw_edges->edge = (struct _edge **)malloc(sizeof(struct _edge*));
-                    m_ntw_edges->edge[nr_ntw - 1] = new struct _edge();
-
-                    m_ntw_geom = new _ntw_geom();
-                    m_ntw_geom->geom = (struct _geom **)malloc(sizeof(struct _geom*));
-                    m_ntw_geom->geom[nr_ntw - 1] = new _geom();
-                    m_ntw_geom->geom[nr_ntw - 1]->nodes = (struct _feature **)malloc(sizeof(struct _feature *));
-                    m_ntw_geom->geom[nr_ntw - 1]->nodes[nr_geom - 1] = new _feature();
-                }
-                else
-                {
-                }
-                m_ntw_nodes->nr_ntw = nr_ntw;
-                m_ntw_edges->nr_ntw = nr_ntw;
-
-                status = nc_inq_varid(this->m_ncid, m_ntw_strings[nr_ntw - 1]->edge_node_connectivity.c_str(), &var_id);
-                status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
-                int * dimids = (int *)malloc(sizeof(int) * ndims);
-                status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
-                if (m_dimids[dimids[0]] != _two)  // one of the dimension is always 2
-                {
-                    m_ntw_edges->edge[nr_ntw - 1]->count = m_dimids[dimids[0]];
-                }
-                else
-                {
-                    m_ntw_edges->edge[nr_ntw - 1]->count = m_dimids[dimids[1]];
-                }
-                free(dimids);
-                dimids = nullptr;
-                // get the branch length
-                m_ntw_edges->edge[nr_ntw - 1]->edge_length = std::vector<double>(m_ntw_edges->edge[nr_ntw - 1]->count);
-
-                var_id = -1;
-                size_t start1[] = { 0 };
-                size_t count1[] = { m_ntw_edges->edge[nr_ntw - 1]->count };
-                status = nc_inq_varid(this->m_ncid, m_ntw_strings[nr_ntw - 1]->edge_length.c_str(), &var_id);
-                status = nc_get_vara_double(this->m_ncid, var_id, start1, count1, m_ntw_edges->edge[nr_ntw - 1]->edge_length.data());
-
-                //get edge nodes (branch definition between connection nodes)
-                topo_edge_nodes = (int *)malloc(sizeof(int) * m_ntw_edges->edge[nr_ntw - 1]->count * _two);
-                m_ntw_edges->edge[nr_ntw - 1]->edge_nodes = (int **)malloc(sizeof(int *) * m_ntw_edges->edge[nr_ntw - 1]->count);
-                for (int i = 0; i < m_ntw_edges->edge[nr_ntw - 1]->count; i++)
-                {
-                    m_ntw_edges->edge[nr_ntw - 1]->edge_nodes[i] = topo_edge_nodes + _two * i;
-                }
-                size_t start2[] = { 0, 0 };
-                size_t count2[] = { m_ntw_edges->edge[nr_ntw - 1]->count, _two };
-                status = nc_inq_varid(this->m_ncid, m_ntw_strings[nr_ntw - 1]->edge_node_connectivity.c_str(), &var_id);
-                status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, topo_edge_nodes);
-
-                int start_index;
-                status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
-                if (status == NC_NOERR && start_index != 0)
-                {
-                    for (int i = 0; i < m_ntw_edges->edge[nr_ntw - 1]->count; i++)
-                    {
-                        m_ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][0] -= start_index;
-                        m_ntw_edges->edge[nr_ntw - 1]->edge_nodes[i][1] -= start_index;
-                    }
-                }
-
-                /* Read the data (x, y)-coordinate of each node */
-                status = get_dimension_var(this->m_ncid, m_ntw_strings[nr_ntw - 1]->x_ntw_name, &m_ntw_nodes->node[nr_ntw - 1]->count);
-
-                m_ntw_nodes->node[nr_ntw - 1]->x = std::vector<double>(m_ntw_nodes->node[nr_ntw - 1]->count);
-                m_ntw_nodes->node[nr_ntw - 1]->y = std::vector<double>(m_ntw_nodes->node[nr_ntw - 1]->count);
-
-                status = nc_inq_varid(this->m_ncid, m_ntw_strings[nr_ntw - 1]->x_ntw_name.c_str(), &var_id);
-                status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-                if (att_value == "projection_x_coordinate" || att_value == "longitude")
-                {
-                    status = nc_get_var_double(this->m_ncid, var_id, m_ntw_nodes->node[nr_ntw - 1]->x.data());
-                    status = nc_inq_varid(this->m_ncid, m_ntw_strings[nr_ntw - 1]->y_ntw_name.c_str(), &var_id);
-                    status = nc_get_var_double(this->m_ncid, var_id, m_ntw_nodes->node[nr_ntw - 1]->y.data());
-                }
-                else
-                {
-                    status = nc_get_var_double(this->m_ncid, var_id, m_ntw_nodes->node[nr_ntw - 1]->y.data());
-                    status = nc_inq_varid(this->m_ncid, m_ntw_strings[nr_ntw - 1]->y_ntw_name.c_str(), &var_id);
-                    status = nc_get_var_double(this->m_ncid, var_id, m_ntw_nodes->node[nr_ntw - 1]->x.data());
-                }
-
-                /////////////////////////////////////////////////////////////////////
-
-                m_ntw_nodes->node[nr_ntw - 1]->name = get_names(this->m_ncid, m_ntw_strings[nr_ntw - 1]->node_names, m_ntw_nodes->node[nr_ntw - 1]->count);
-                m_ntw_nodes->node[nr_ntw - 1]->long_name = get_names(this->m_ncid, m_ntw_strings[nr_ntw - 1]->node_long_names, m_ntw_nodes->node[nr_ntw - 1]->count);
-
-                /////////////////////////////////////////////////////////////////////
-
-                m_ntw_edges->edge[nr_ntw - 1]->name = get_names(this->m_ncid, m_ntw_strings[nr_ntw - 1]->edge_names, m_ntw_edges->edge[nr_ntw - 1]->count);
-                m_ntw_edges->edge[nr_ntw - 1]->long_name = get_names(this->m_ncid, m_ntw_strings[nr_ntw - 1]->edge_long_names, m_ntw_edges->edge[nr_ntw - 1]->count);
-
-                /////////////////////////////////////////////////////////////////////
-
-                // get the geometry of the network
-                nr_geom += 1;
-                if (nr_geom == 1)
-                {
-                    m_geom_strings = (struct _geom_string **)malloc(sizeof(struct _geom_string *) * nr_ntw);
-                }
-                else
-                {
-                }
-                m_geom_strings[nr_geom - 1] = new _geom_string;
-
-                status = nc_inq_varid(this->m_ncid, m_ntw_strings[nr_ntw - 1]->edge_geometry.c_str(), &var_id);
-                status = read_geometry_attributes(m_geom_strings[nr_ntw-1], var_id, m_ntw_strings[nr_ntw - 1]->edge_geometry, topology_dimension);
-                if (status != 0) {
-                    return status;
-                }
-
-                status = nc_inq_varid(this->m_ncid, m_geom_strings[nr_ntw - 1]->node_count.c_str(), &var_id);  // nodes per edge
-                status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
-                dimids = (int *)malloc(sizeof(int) * ndims);
-                status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
-                m_ntw_geom->geom[nr_ntw - 1]->count = m_dimids[dimids[0]];
-                free(dimids);
-                dimids = nullptr;
-
-                /* Read the data (x, y)-coordinates of the geometries */
-                status = nc_inq_varid(this->m_ncid, m_geom_strings[nr_ntw - 1]->node_count.c_str(), &var_id);
-                int * geom_node_count = (int *)malloc(sizeof(int) * m_ntw_geom->geom[nr_ntw - 1]->count);
-                status = nc_get_var_int(this->m_ncid, var_id, geom_node_count);
-
-                m_ntw_geom->geom[nr_ntw - 1]->nodes = (_feature **)malloc(sizeof(_feature *) * m_ntw_geom->geom[nr_ntw - 1]->count);
-                for (int i = 0; i < m_ntw_geom->geom[nr_ntw - 1]->count; i++)
-                {
-                    m_ntw_geom->geom[nr_ntw - 1]->nodes[i] = new _feature;
-                    m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->count = geom_node_count[i];
-                    m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->x = std::vector<double>(geom_node_count[i]);
-                    m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->y = std::vector<double>(geom_node_count[i]);
-                }
-                m_ntw_geom->nr_ntw = nr_ntw;
-
-                // read complete x, y array
-                status = nc_inq_varid(this->m_ncid, m_geom_strings[nr_ntw - 1]->x_geom_name.c_str(), &var_id);
-                status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
-                dimids = (int *)malloc(sizeof(int) * ndims);
-                status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
-
-                std::vector<double> x = std::vector<double>(m_dimids[dimids[0]]);
-                std::vector<double> y = std::vector<double>(m_dimids[dimids[0]]);
-
-                status = nc_inq_varid(this->m_ncid, m_geom_strings[nr_ntw - 1]->x_geom_name.c_str(), &var_id);
-                status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-                if (att_value == "projection_x_coordinate" || att_value == "longitude")
-                {
-                    status = nc_get_var_double(this->m_ncid, var_id, x.data());
-                    status = nc_inq_varid(this->m_ncid, m_geom_strings[nr_ntw - 1]->y_geom_name.c_str(), &var_id);
-                    status = nc_get_var_double(this->m_ncid, var_id, y.data());
-                }
-                else
-                {
-                    status = nc_get_var_double(this->m_ncid, var_id, y.data());
-                    status = nc_inq_varid(this->m_ncid, m_geom_strings[nr_ntw - 1]->y_geom_name.c_str(), &var_id);
-                    status = nc_get_var_double(this->m_ncid, var_id, x.data());
-                }
-
-
-                // dispatch the x, y array over the branches
-                int k = -1;
-                for (int i = 0; i < m_ntw_geom->geom[nr_ntw - 1]->count; i++)
-                {
-                    for (int j = 0; j < m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->count; j++)
-                    {
-                        k += 1;
-                        m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->x[j] = x[k];
-                        m_ntw_geom->geom[nr_ntw - 1]->nodes[i]->y[j] = y[k];
-                    }
-                }
-
-                /////////////////////////////////////////////////////////////////////
-
-                m_ntw_geom->geom[nr_ntw - 1]->name = get_names(this->m_ncid, m_ntw_strings[nr_ntw - 1]->edge_names, m_ntw_geom->geom[nr_ntw - 1]->count);
-                m_ntw_geom->geom[nr_ntw - 1]->long_name = get_names(this->m_ncid, m_ntw_strings[nr_ntw - 1]->edge_long_names, m_ntw_geom->geom[nr_ntw - 1]->count);
-
-                /////////////////////////////////////////////////////////////////////
-
-#ifdef NATIVE_C
-                fprintf(stderr, "End of reading network\n");
-#else
-                //QMessageBox::information(0, "Information", "End of reading Network");
-#endif
-            }
-            else
-                ///////////////////////////////////////////////////////////////////////////////////////////
-            {
-                // it is a 1 dimensional mesh because it does not contain edge_geometry
-#ifdef NATIVE_C
-                fprintf(stderr, "Start of reading 1D Mesh\n");
-#else
-                //QMessageBox::information(0, "Information", "Start of reading 1D Mesh");
-#endif
-                nr_mesh1d += 1;
-                if (nr_mesh1d == 1)
-                {
-                    m_mesh1d_strings = (struct _mesh1d_string **)malloc(sizeof(struct _mesh1d_string *) * nr_mesh1d);
-                }
-                else
-                {
-                }
-                m_mesh1d_strings[nr_mesh1d - 1] = new _mesh1d_string();
-
-                status = read_mesh1d_attributes(m_mesh1d_strings[nr_mesh1d - 1], i_var, var_name, topology_dimension);
-
-                if (nr_mesh1d == 1)
-                {
-                    m_mesh1d = new _mesh1d();
-                    m_mesh1d->node = (struct _feature **)malloc(sizeof(struct _feature *));
-                    m_mesh1d->node[nr_mesh1d - 1] = new _feature();
-
-                    m_mesh1d->edge = (struct _edge **)malloc(sizeof(struct _edge *));
-                    m_mesh1d->edge[nr_mesh1d - 1] = new _edge();
-                }
-                else
-                {
-                }
-                m_mesh1d->nr_mesh1d = nr_mesh1d;
-
-#ifdef NATIVE_C
-                fprintf(stderr, "    Variables with \'mesh_topology\' attribute: %s\n", var_name.c_str());
-#endif
-
-                //get edge nodes
-                status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->edge_node_connectivity.c_str(), &var_id);
-                int start_index;
-
-                if (status == NC_NOERR)
-                {
-                    status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
-                    int * dimids = (int *)malloc(sizeof(int) * ndims);
-                    status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
-                    if (m_dimids[dimids[0]] != _two)  // one of the dimension is always 2
-                    {
-                        m_mesh1d->edge[nr_mesh1d - 1]->count = m_dimids[dimids[0]];
-                    }
-                    else
-                    {
-                        m_mesh1d->edge[nr_mesh1d - 1]->count = m_dimids[dimids[1]];
-                    }
-                    free(dimids);
-                    dimids = nullptr;
-
-                    mesh1d_edge_nodes = (int *)malloc(sizeof(int) * m_mesh1d->edge[nr_mesh1d - 1]->count * _two);
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes = (int **)malloc(sizeof(int *) * m_mesh1d->edge[nr_mesh1d - 1]->count);
-                    for (int i = 0; i < m_mesh1d->edge[nr_mesh1d - 1]->count; i++)
-                    {
-                        m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i] = mesh1d_edge_nodes + _two * i;
-                    }
-                    size_t start2[] = { 0, 0 };
-                    size_t count2[] = { m_mesh1d->edge[nr_mesh1d - 1]->count, _two };
-                    status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->edge_node_connectivity.c_str(), &var_id);
-                    status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, mesh1d_edge_nodes);
-
-                    status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
-                    if (status == NC_NOERR && start_index != 0)
-                    {
-                        for (int i = 0; i < m_mesh1d->edge[nr_mesh1d - 1]->count; i++)
-                        {
-                            m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][0] -= start_index;
-                            m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][1] -= start_index;
-                        }
-                    }
-                }
-                else
-                {
-                    QMessageBox::information(0, "Information", "edge nodes connectivity not on file");
-                    m_mesh1d->edge[nr_mesh1d - 1]->count = 10;
-                    mesh1d_edge_nodes = (int *)malloc(sizeof(int) * m_mesh1d->edge[nr_mesh1d - 1]->count * _two);
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes = (int **)malloc(sizeof(int *) * m_mesh1d->edge[nr_mesh1d - 1]->count);
-                    for (int i = 0; i < m_mesh1d->edge[nr_mesh1d - 1]->count; i++)
-                    {
-                        m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i] = mesh1d_edge_nodes + _two * i;
-                    }
-                    for (int i = 0; i < m_mesh1d->edge[nr_mesh1d - 1]->count; i++)
-                    {
-                        m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][0] = 0;
-                        m_mesh1d->edge[nr_mesh1d - 1]->edge_nodes[i][1] = 1;
-                    }
-                }
-                /* Read the data branch id and chainage of each node */
-                /* Read the data (x, y)-coordinate of each node */
-                if (m_mesh1d_strings[nr_mesh1d - 1]->node_branch != "")
-                {
-                    status = get_dimension_var(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->node_branch, &m_mesh1d->node[nr_mesh1d - 1]->count);
-
-                    status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->node_branch.c_str(), &var_id);
-                    m_mesh1d->node[nr_mesh1d - 1]->branch = std::vector<long>(m_mesh1d->node[nr_mesh1d - 1]->count);
-                    status = nc_get_var_long(this->m_ncid, var_id, m_mesh1d->node[nr_mesh1d - 1]->branch.data());
-
-                    status = nc_get_att_int(this->m_ncid, var_id, "start_index", &start_index);
-                    if (status == NC_NOERR && start_index != 0)
-                    {
-                        for (int i = 0; i < m_mesh1d->node[nr_mesh1d - 1]->count; i++)
-                        {
-                            m_mesh1d->node[nr_mesh1d - 1]->branch[i] -= start_index;
-                        }
-                    }
-
-                    m_mesh1d->node[nr_mesh1d - 1]->chainage = std::vector<double>(m_mesh1d->node[nr_mesh1d - 1]->count);
-                    status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->node_chainage.c_str(), &var_id);
-                    status = nc_get_var_double(this->m_ncid, var_id, m_mesh1d->node[nr_mesh1d - 1]->chainage.data());
-                }
-                else
-                {
-                    status = get_dimension_var(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->x_node_name, &m_mesh1d->node[nr_mesh1d - 1]->count);
-                    m_mesh1d->node[nr_mesh1d - 1]->x = std::vector<double>(m_mesh1d->node[nr_mesh1d - 1]->count);
-                    m_mesh1d->node[nr_mesh1d - 1]->y = std::vector<double>(m_mesh1d->node[nr_mesh1d - 1]->count);
-                    status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->x_node_name.c_str(), &var_id);
-                    status = nc_get_var_double(this->m_ncid, var_id, m_mesh1d->node[nr_mesh1d - 1]->x.data());
-                    status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->y_node_name.c_str(), &var_id);
-                    status = nc_get_var_double(this->m_ncid, var_id, m_mesh1d->node[nr_mesh1d - 1]->y.data());
-                }
-                /* Read the data of each edge */
-                if (m_mesh1d_strings[nr_mesh1d - 1]->edge_branch != "")
-                {
-                    // read edge_branch array from file
-                    status = get_dimension_var(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->edge_branch, &m_mesh1d->edge[nr_mesh1d - 1]->count);
-
-                    status = nc_inq_varid(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->edge_branch.c_str(), &var_id);
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_branch = std::vector<long>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1);
-                    status = nc_get_var_long(this->m_ncid, var_id, m_mesh1d->edge[nr_mesh1d - 1]->edge_branch.data());
-
-                    status = nc_get_att_int(this->m_ncid, var_id, "start_index", &start_index);
-                    if (status == NC_NOERR && start_index != 0)
-                    {
-                        for (int i = 0; i < m_mesh1d->edge[nr_mesh1d - 1]->count; i++)
-                        {
-                            m_mesh1d->edge[nr_mesh1d - 1]->edge_branch[i] -= start_index;
-                        }
-                    }
-                }
-                else
-                {
-                    // determine the edge_branch array
-                    // not done yet, edge_length set to -1
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_branch = std::vector<long>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1);
-                    m_mesh1d->edge[nr_mesh1d - 1]->edge_length = std::vector<double>(m_mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
-                }
-
-                /////////////////////////////////////////////////////////////////////
-
-                m_mesh1d->node[nr_mesh1d - 1]->name = get_names(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->node_names, m_mesh1d->node[nr_mesh1d - 1]->count);
-                m_mesh1d->node[nr_mesh1d - 1]->long_name = get_names(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->node_long_names, m_mesh1d->node[nr_mesh1d - 1]->count);
-
-                /////////////////////////////////////////////////////////////////////
-
-                m_mesh1d->edge[nr_mesh1d - 1]->name = get_names(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->edge_names, m_mesh1d->edge[nr_mesh1d - 1]->count);
-                m_mesh1d->edge[nr_mesh1d - 1]->long_name = get_names(this->m_ncid, m_mesh1d_strings[nr_mesh1d - 1]->edge_long_names, m_mesh1d->edge[nr_mesh1d - 1]->count);
-
-                /////////////////////////////////////////////////////////////////////
-#ifdef NATIVE_C
-                fprintf(stderr, "End of reading 1D mesh\n");
-#else
-                //QMessageBox::information(0, "Information", "End of reading 1D mesh");
-#endif
-            }
-        }
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        if (topology_dimension == 2)  // it is a unstructured mesh
-        {
-            nr_mesh2d += 1;
-            if (nr_mesh2d == 1)
-            {
-                m_mesh2d_strings = (struct _mesh2d_string **)malloc(sizeof(struct _mesh2d_string *) * nr_mesh2d);
-            }
-            else
-            {
-            }
-            m_mesh2d_strings[nr_mesh2d - 1] = new _mesh2d_string;
-
-            status = read_mesh2d_attributes(m_mesh2d_strings[nr_mesh2d - 1], i_var, var_name, topology_dimension);
-
-            if (nr_mesh2d == 1)
-            {
-                m_mesh2d = new _mesh2d();
-                m_mesh2d->node = (struct _feature **)malloc(sizeof(struct _feature *));
-                m_mesh2d->node[nr_mesh2d - 1] = new _feature();
-
-                m_mesh2d->edge = (struct _edge **)malloc(sizeof(struct _edge *));
-                m_mesh2d->edge[nr_mesh2d - 1] = new _edge();
-
-                m_mesh2d->face = (struct _feature **)malloc(sizeof(struct _feature *));
-                m_mesh2d->face[nr_mesh2d - 1] = new _feature();
-            }
-            else
-            {
-            }
-            m_mesh2d->nr_mesh2d = nr_mesh2d;
-
-#ifdef NATIVE_C
-            fprintf(stderr, "    Variables with \'mesh_topology\' attribute: %s\n", var_name.c_str());
-#endif
-
-            //get edge nodes, optional required
-            int * dimids;
-            int start_index;
-            if (m_mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity != "")
-            {
-                status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity.c_str(), &var_id);
-                status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
-                dimids = (int *)malloc(sizeof(int) * ndims);
-                status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
-                if (m_dimids[dimids[0]] != _two)  // one of the dimension is always 2
-                {
-                    m_mesh2d->edge[nr_mesh2d - 1]->count = m_dimids[dimids[0]];
-                }
-                else
-                {
-                    m_mesh2d->edge[nr_mesh2d - 1]->count = m_dimids[dimids[1]];
-                }
-
-                mesh2d_edge_nodes = (int *)malloc(sizeof(int) * m_mesh2d->edge[nr_mesh2d - 1]->count * _two);
-                m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes = (int **)malloc(sizeof(int *) * m_mesh2d->edge[nr_mesh2d - 1]->count);
-                for (int i = 0; i < m_mesh2d->edge[nr_mesh2d - 1]->count; i++)
-                {
-                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i] = mesh2d_edge_nodes + _two * i;
-                }
-                size_t start2[] = { 0, 0 };
-                size_t count2[] = { m_mesh2d->edge[nr_mesh2d - 1]->count, _two };
-                status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity.c_str(), &var_id);
-                status = nc_get_vara_int(this->m_ncid, var_id, start2, count2, mesh2d_edge_nodes);
-
-                // get the branch length
-                if (m_mesh2d_strings[nr_mesh2d - 1]->edge_length.size() != 0)
-                {
-                    m_mesh2d->edge[nr_mesh2d - 1]->edge_length = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
-                }
-
-                status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
-                if (status == NC_NOERR && start_index != 0)
-                {
-                    for (int i = 0; i < m_mesh2d->edge[nr_mesh2d - 1]->count; i++)
-                    {
-                        m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0] -= start_index;
-                        m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1] -= start_index;
-                    }
-                }
-                free(dimids);
-                dimids = nullptr;
-            }
-
-            /* Read the data (x, y)-coordinate of each node */
-            status = get_dimension_var(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name, &m_mesh2d->node[nr_mesh2d - 1]->count);
-
-            m_mesh2d->node[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
-            m_mesh2d->node[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
-            status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
-            status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-            if (att_value == "projection_x_coordinate" || att_value == "longitude")
-            {
-                status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->x.data());
-                status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_node_name.c_str(), &var_id);
-                status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->y.data());
-            }
-            else
-            {
-                status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->y.data());
-                status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_node_name.c_str(), &var_id);
-                status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->x.data());
-            }
-
-            /* Read the data (x, y)-coordinate of each edge */
-            if (m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name != "")
-            {
-                status = get_dimension_var(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name, &m_mesh2d->edge[nr_mesh2d - 1]->count);
-                if (m_mesh2d->edge[nr_mesh2d - 1]->count != 0)  // not required attribute
-                {
-                    m_mesh2d->edge[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
-                    m_mesh2d->edge[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
-                    status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name.c_str(), &var_id);
-                    status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-                    if (att_value == "projection_x_coordinate" || att_value == "longitude")
-                    {
-                        status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->edge[nr_mesh2d - 1]->x.data());
-                        status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_edge_name.c_str(), &var_id);
-                        status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->edge[nr_mesh2d - 1]->y.data());
-                    }
-                    else
-                    {
-                        status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->edge[nr_mesh2d - 1]->y.data());
-                        status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_edge_name.c_str(), &var_id);
-                        status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->edge[nr_mesh2d - 1]->x.data());
-                    }
-
-                    status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->x_bound_edge_name);
-                    status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_edge_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->y_bound_edge_name);
-                }
-            }
-            else
-            {
-                // Compute the edge coordinates from the node coordinates, halfway on distance between nodes. 
-                // Boundary of the edge is determined by the node coordinates (edge_nodes)
-                // Number of edges determined when reading edge_node_connectivity
-                int p1, p2;
-                double x1, x2;
-                double y1, y2;
-                for (int j = 0; j < m_mesh2d->edge[0]->count; j++)
-                {
-                    p1 = m_mesh2d->edge[0]->edge_nodes[j][0];
-                    p2 = m_mesh2d->edge[0]->edge_nodes[j][1];
-                    x1 = m_mesh2d->node[0]->x[p1];
-                    y1 = m_mesh2d->node[0]->y[p1];
-                    x2 = m_mesh2d->node[0]->x[p2];
-                    y2 = m_mesh2d->node[0]->y[p2];
-
-                    m_mesh2d->edge[nr_mesh2d - 1]->x.push_back(0.5*(x1 + x2));
-                    m_mesh2d->edge[nr_mesh2d - 1]->y.push_back(0.5*(y1 + y2));
-                }
-            }
-
-            /* Read the data (x, y)-coordinate of each face */
-            if (m_mesh2d_strings[nr_mesh2d - 1]->x_face_name != "")
-            {
-
-                status = get_dimension_var(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name, &m_mesh2d->face[nr_mesh2d - 1]->count);
-
-                if (m_mesh2d->face[nr_mesh2d - 1]->count != 0)  // not required attribute
-                {
-                    m_mesh2d->face[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
-                    m_mesh2d->face[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
-                    status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name.c_str(), &var_id);
-                    status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-                    if (att_value == "projection_x_coordinate" || att_value == "longitude")
-                    {
-                        status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->face[nr_mesh2d - 1]->x.data());
-                        status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
-                        status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->face[nr_mesh2d - 1]->y.data());
-                    }
-                    else
-                    {
-                        status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->face[nr_mesh2d - 1]->y.data());
-                        status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_face_name.c_str(), &var_id);
-                        status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->face[nr_mesh2d - 1]->x.data());
-                    }
-                    status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->x_bound_face_name);
-                    status = get_attribute_by_var_name(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->y_face_name, "bounds", &m_mesh2d_strings[nr_mesh2d - 1]->y_bound_face_name);
-                }
-            }
-            else
-            {
-                // Compute the face coordinates from the node coordinates, mass centre of face. But is it needed?
-                // Boundary of the face is determined by the node coordinates (face_nodes)
-            }
-
-            /* Read the nodes indices for each face */
-            status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->face_node_connectivity.c_str(), &var_id);
-            status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
-            dimids = (int *)malloc(sizeof(int) * ndims);
-            status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
-            size_t length = 1;
-            for (int i = 0; i < ndims; i++)
-            {
-                length *= m_dimids[dimids[i]];
-            }
-            int * values_c = (int *)malloc(sizeof(int) * length);
-            status = nc_get_var_int(this->m_ncid, var_id, values_c);
-
-            m_mesh2d->face_nodes.reserve(length);
-            status = get_attribute(this->m_ncid, var_id, const_cast<char*>("start_index"), &start_index);
-            if (status != NC_NOERR)
-            {
-                start_index = 0;
-            }
-            std::vector<int> value;
-            int kk = -1;
-            for (int m = 0; m < m_dimids[dimids[0]]; m++)  // faces
-            {
-                for (int n = 0; n < m_dimids[dimids[1]]; n++)  // nodes
-                {
-                    kk++;
-                    int i_node = *(values_c + kk) - start_index;
-                    value.push_back(i_node);
-                }
-                m_mesh2d->face_nodes.push_back(value);
-                value.clear();
-            }
-            // start_index
-
-            // if edge connectivity is not given create the arrays for the face_node_connectivity array which is required by the UGRID standard
-            if (m_mesh2d_strings[nr_mesh2d - 1]->edge_node_connectivity == "")
-            {
-                START_TIMERN(edge_node_connectivity);
-
-                // TODO improve the performance of this algorithm
-                int max_edges_per_face = m_dimids[dimids[0]] + m_dimids[dimids[1]] - m_mesh2d->face_nodes.size();  // only applicable if number of dimensions is two
-                int total_edges = m_dimids[dimids[0]] * m_dimids[dimids[1]];
-                mesh2d_edge_nodes = (int *)malloc(sizeof(int) * total_edges * _two);
-                m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes = (int **)malloc(sizeof(int *) *total_edges);
-                for (int i = 0; i < total_edges; i++)
-                {
-                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i] = mesh2d_edge_nodes + _two * i;
-                }
-                
-                int edge_i;
-                int jp;
-                for (int k = 0; k < m_mesh2d->face_nodes.size(); k++)
-                {
-                    for (int j = 0; j < max_edges_per_face; j++)
-                    {
-                        edge_i = k * max_edges_per_face + j;  // edge number
-                        jp = j < max_edges_per_face-1 ? j + 1 : 0;
-                        m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[edge_i][0] = m_mesh2d->face_nodes[k][j];
-                        m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[edge_i][1] = m_mesh2d->face_nodes[k][jp];
-                    }
-                }
-                m_mesh2d->edge[nr_mesh2d - 1]->count = m_mesh2d->face_nodes.size() * max_edges_per_face;
-
-                // Edge array contains double entries: ex. a->b and b->a then retain a->b
-                // Creates an empty hashMap ummap
-                std::unordered_multimap<int, int> ummap;
-                ummap.reserve(m_mesh2d->edge[nr_mesh2d - 1]->count);
-
-                // Traverse through the given array
-                int j = 0;
-                int first = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][0];
-                int sec = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[j][1];
-                std::pair<int, int> mypair0(first, sec);
-                ummap.insert(mypair0);
-
-                for (int i = 1; i < m_mesh2d->edge[nr_mesh2d - 1]->count; i++)
-                {
-                    // First and second elements of current pair
-                    first = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][0];
-                    sec = m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i][1];
-
-                    std::pair<int, int> mypair(first, sec);
-                    bool found = false;
-
-                    auto its = ummap.equal_range(mypair.first);
-                    for (auto it = its.first; it != its.second; ++it) {
-                        if (it->second == sec)
-                        {
-                            found = true;
-                        }
-                    }
-                    its = ummap.equal_range(mypair.second);
-                    for (auto it = its.first; it != its.second; ++it) {
-                        if (it->second == first)
-                        {
-                            found = true;
-                        }
-                    }
-                    if (!found)
-                    {
-                        ummap.insert(mypair);
-                    }
-                }
-                size_t cnt = -1;
-                for (auto it = ummap.begin(); it != ummap.end(); ++it)
-                {
-                    cnt++;
-                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[cnt][0] = it->first;
-                    m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[cnt][1] = it->second;
-                }
-                m_mesh2d->edge[nr_mesh2d - 1]->count = cnt+1;
-                STOP_TIMER(edge_node_connectivity);
-            }
-            free(dimids);
-            dimids = nullptr;
-
-            // Do not name the mesh2d nodes, because the 2D mesh can be very large
-            length = m_mesh2d->node[nr_mesh2d - 1]->name.size();
-            length += m_mesh2d->node[nr_mesh2d - 1]->long_name.size();
-            length += m_mesh2d->edge[nr_mesh2d - 1]->name.size();
-            length += m_mesh2d->edge[nr_mesh2d - 1]->long_name.size();
-            length += m_mesh2d->face[nr_mesh2d - 1]->name.size();
-            length += m_mesh2d->face[nr_mesh2d - 1]->long_name.size();
-            if (length != 0)
-            {
-#if defined NATIVE_C
-                fprintf(stderr, "Length of the node/edge names of a 2D mesh have to be zero");
-                return 1;
-#else
-#endif
-            }
-        }
-    }
-
-    return status;
-}
-//------------------------------------------------------------------------------
-int UGRID::get_coordinate(char * mesh, char * location, int p, double * x, double * y)
-{
-    Q_UNUSED(mesh);
-    Q_UNUSED(location);
-    Q_UNUSED(p);
-    Q_UNUSED(x);
-    Q_UNUSED(y);
-    // find the mesh
-    // find the location coordinates
-    return -1;
-}
-
-int UGRID::read_grid_mapping(int i_var, std::string var_name, std::string grid_mapping_name)
-{
-    int status = -1;
-    m_mapping->epsg = -1;
-
-    status = get_attribute(this->m_ncid, i_var, "name", &m_mapping->name);
-    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("epsg"), &m_mapping->epsg);
-    m_mapping->grid_mapping_name = grid_mapping_name; //  == status = get_attribute(this->m_ncid, i_var, "grid_mapping_name", &map->grid_mapping_name);
-    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("longitude_of_prime_meridian"), &m_mapping->longitude_of_prime_meridian);
-    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("semi_major_axis"), &m_mapping->semi_major_axis);
-    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("semi_minor_axis"), &m_mapping->semi_minor_axis);
-    status = get_attribute(this->m_ncid, i_var, const_cast<char*>("inverse_flattening"), &m_mapping->inverse_flattening);
-    status = get_attribute(this->m_ncid, i_var, "EPSG_code", &m_mapping->epsg_code);
-    status = get_attribute(this->m_ncid, i_var, "value", &m_mapping->value);
-    status = get_attribute(this->m_ncid, i_var, "projection_name", &m_mapping->projection_name);
-    status = get_attribute(this->m_ncid, i_var, "wkt", &m_mapping->wkt);
-
-    if (m_mapping->epsg == -1 && m_mapping->epsg_code.size() != 0)
-    {
-        std::vector<std::string> token = tokenize(m_mapping->epsg_code, ':');
-        m_mapping->epsg = atoi(token[1].c_str());  // second token contains the plain EPSG code
-    }
-
-    return status;
-}
-int UGRID::read_composite_mesh_attributes(struct _mesh_contact_string * mesh_contact_strings, int i_var, std::string var_name)
-{
-    int status = -1;
-    mesh_contact_strings->var_name = var_name;
-    status = get_attribute(this->m_ncid, i_var, "meshes", &mesh_contact_strings->meshes);
-    status = get_attribute(this->m_ncid, i_var, "mesh_contact", &mesh_contact_strings->mesh_contact);
-
-    std::vector<std::string> token = tokenize(mesh_contact_strings->meshes, ' ');
-    mesh_contact_strings->mesh_a = token[0];
-    mesh_contact_strings->mesh_b = token[1];
-
-    return status;
-}
-int UGRID::read_network_attributes(struct _ntw_string * ntw_strings, int i_var, std::string var_name, size_t topology_dimension)
-{
-    int status = 1;
-
-    ntw_strings->var_name = var_name;
-    ntw_strings->toplogy_dimension = topology_dimension;
-
-    status = get_attribute(this->m_ncid, i_var, "edge_dimension", &ntw_strings->edge_dimension);
-    //status = get_attribute(this->m_ncid, i_var, "node_dimension", &ntw_strings->node_dimension);
-    status = get_attribute(this->m_ncid, i_var, "edge_geometry", &ntw_strings->edge_geometry);
-    status = get_attribute(this->m_ncid, i_var, "edge_length", &ntw_strings->edge_length);
-    if (status == NC_ENOTATT)
-    {
-        status = get_attribute(this->m_ncid, i_var, "branch_lengths", &ntw_strings->edge_length);
-    }
-    status = get_attribute(this->m_ncid, i_var, "edge_node_connectivity", &ntw_strings->edge_node_connectivity);
-    status = get_attribute(this->m_ncid, i_var, "long_name", &ntw_strings->long_name);
-    status = get_attribute(this->m_ncid, i_var, "node_coordinates", &ntw_strings->node_coordinates);
-    //status = get_attribute(this->m_ncid, i_var, "node_edge_exchange", &ntw_string->node_edge_exchange);
-    // no edge_type defined for network
-
-    //get nodes (x_geom_name y_geom_name) of the network (ie connection nodes)
-    // split the node_coordinates string into two separate strings (x_geom_name and y_geom_name)
-    std::vector<std::string> token = tokenize(ntw_strings->node_coordinates, ' ');
-    ntw_strings->x_ntw_name = token[0];
-    ntw_strings->y_ntw_name = token[1];
-
-    // Non ugrid standard attributes
-
-    // ids and long_names of nodes and branches
-    status = get_attribute(this->m_ncid, i_var, "node_id", &ntw_strings->node_names);
-    if (status != NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "node_ids", &ntw_strings->node_names); }
-    status = get_attribute(this->m_ncid, i_var, "node_long_name", &ntw_strings->node_long_names);
-    if (status != NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "node_long_names", &ntw_strings->node_long_names); }
-    status = get_attribute(this->m_ncid, i_var, "branch_id", &ntw_strings->edge_names);
-    if (status != NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "branch_ids", &ntw_strings->edge_names); }
-    status = get_attribute(this->m_ncid, i_var, "branch_long_name", &ntw_strings->edge_long_names);
-    if (status != NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "branch_long_names", &ntw_strings->edge_long_names); }
-    status = get_attribute(this->m_ncid, i_var, "branch_order", &ntw_strings->edge_order);
-
-    return status;
-}
-
-int UGRID::read_geometry_attributes(struct _geom_string * geom_strings, int i_var, std::string var_name, int topology_dimension)
-{
-    Q_UNUSED(topology_dimension);
-    int status = -1;
-    geom_strings->var_name = var_name;
-
-    status = get_attribute(this->m_ncid, i_var, "node_coordinates", &geom_strings->node_coordinates);
-
-    status = get_attribute(this->m_ncid, i_var, "node_count", &geom_strings->node_dimension);
-    status = get_attribute(this->m_ncid, i_var, "part_node_count", &geom_strings->node_count);
-    if (status != NC_NOERR)
-    {
-        status = get_attribute(this->m_ncid, i_var, "node_dimension", &geom_strings->node_dimension);
-        if (status != NC_NOERR)
-        {
-            geom_strings->node_dimension = strdup("nnetwork_geometry");
-#ifdef NATIVE_C
-            fprintf(stderr, "    Attribute \'node_dimension\' not found, set to: %s\n", geom_strings->node_dimension.c_str());
-#else
-            //QMessageBox::warning(0, "Message", QString("UGRID::read_mesh()\nAttribute \'node_dimension\' not found, set to: %1\n").arg(ntw->geom_node_dimension));
-#endif
-        }
-        status = get_attribute(this->m_ncid, i_var, "node_count", &geom_strings->node_count);
-    }
-    if (status != NC_NOERR)
-    {
-        geom_strings->node_dimension = strdup("nnetwork_geometry");
-#ifdef NATIVE_C
-        fprintf(stderr, "    Attribute \'node_dimension\' not found, set to: %s\n", geom_strings->node_dimension.c_str());
-#else
-        //QMessageBox::warning(0, "Message", QString("UGRID::read_mesh()\nAttribute \'node_dimension\' not found, set to: %1\n").arg(ntw->geom_node_dimension));
-#endif
-    }
-
-    // get geometry nodes (x_geom_name y_geom_name) of the network geometry (thalweg)
-    // split the geom_node_coordinates string into two separate strings (x_geom_name and y_geom_name)
-    std::vector<std::string> token = tokenize(geom_strings->node_coordinates, ' ');
-    if (token.size() == 2)
-    {
-        geom_strings->x_geom_name = token[0];
-        geom_strings->y_geom_name = token[1];
-    }
-    else
-    {
-#ifdef NATIVE_C
-#else
-        QString msg = QString("UGRID::read_geometry_attributes\nFile does not contain the geometry coordinates attribute");
-        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
-#endif
-        status = 1;
-    }
-
-    return status;
-}
-
-int UGRID::read_mesh1d_attributes(struct _mesh1d_string * mesh1d_strings, int i_var, std::string var_name, int topology_dimension)
-{
-    int status = 1;
-
-    mesh1d_strings->var_name = var_name;
-    mesh1d_strings->topology_dimension = size_t(topology_dimension);
-
-    status = get_attribute(this->m_ncid, i_var, "coordinate_space", &mesh1d_strings->coordinate_space);
-    status = get_attribute(this->m_ncid, i_var, "edge_dimension", &mesh1d_strings->edge_dimension);
-    status = get_attribute(this->m_ncid, i_var, "node_dimension", &mesh1d_strings->node_dimension);
-    //status = get_attribute(this->m_ncid, i_var, "edge_length", &mesh1d_strings->edge_length);  // is given by edge length between connection nodes
-    status = get_attribute(this->m_ncid, i_var, "edge_node_connectivity", &mesh1d_strings->edge_node_connectivity);
-    status = get_attribute(this->m_ncid, i_var, "long_name", &mesh1d_strings->long_name);
-    status = get_attribute(this->m_ncid, i_var, "node_coordinates", &mesh1d_strings->node_coordinates);
-    status = get_attribute(this->m_ncid, i_var, "edge_coordinates", &mesh1d_strings->edge_coordinates);  // optional required
-    if (status != NC_NOERR)
-    {
-        mesh1d_strings->edge_coordinates = "";
-    }
-    status = get_attribute(this->m_ncid, i_var, "node_edge_exchange", &mesh1d_strings->node_edge_exchange);
-    status = get_attribute(this->m_ncid, i_var, "edge_type", &mesh1d_strings->edge_type);
-    if (status != NC_NOERR)
-    {
-        mesh1d_strings->edge_type = var_name + "_edge_type";
-    }
-
-    // split 'node coordinate' string
-    std::vector<std::string> token = tokenize(mesh1d_strings->node_coordinates, ' ');
-    int var_id;
-    for (int i = 0; i < token.size(); i++)
-    {
-        var_id = -1;
-        status = nc_inq_varid(this->m_ncid, token[i].c_str(), &var_id);
-        std::string att_value;
-        status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-        if (status == NC_NOERR)
-        {
-            if (att_value == "projection_x_coordinate" || att_value == "longitude")
-            {
-                mesh1d_strings->x_node_name = token[i];
-            }
-            else if (att_value == "projection_y_coordinate" || att_value == "latitude")
-            {
-                mesh1d_strings->y_node_name = token[i];
-            }
-            else
-            {
-                status = get_attribute(this->m_ncid, var_id, "units", &att_value);  // does the units attribute exist?
-                if (status == NC_NOERR)
-                {
-                    mesh1d_strings->node_chainage = token[i];
-                }
-                else
-                {
-                    mesh1d_strings->node_branch = token[i];
-                }
-            }
-        }
-        else  // no standard name found, so it can be a coordinate
-        {
-            status = get_attribute(this->m_ncid, var_id, "units", &att_value);  // does the attribute units exists?
-            if (status == NC_NOERR)
-            {
-                mesh1d_strings->node_chainage = token[i];
-            }
-            else
-            {
-                mesh1d_strings->node_branch = token[i];
-            }
-        }
-    }
-    // split 'edge coordinate' string
-    token = tokenize(mesh1d_strings->edge_coordinates, ' ');
-    for (int i = 0; i < token.size(); i++)
-    {
-        var_id = -1;
-        status = nc_inq_varid(this->m_ncid, token[i].c_str(), &var_id);
-        std::string att_value;
-        status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-        if (status == NC_NOERR)
-        {
-            if (att_value == "projection_x_coordinate" || att_value == "longitude")
-            {
-                mesh1d_strings->x_edge_name = token[i];
-            }
-            else if (att_value == "projection_y_coordinate" || att_value == "latitude")
-            {
-                mesh1d_strings->y_edge_name = token[i];
-            }
-            else
-            {
-                char * att_value_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
-                status = get_attribute(this->m_ncid, var_id, const_cast<char*>("units"), &att_value_c);  // does the units attribute exist?
-                if (status == NC_NOERR)
-                {
-                    mesh1d_strings->edge_chainage = token[i];
-                }
-                else
-                {
-                    mesh1d_strings->edge_branch = token[i];
-                }
-                free(att_value_c);
-                att_value_c = nullptr;
-            }
-        }
-        else  // no standard name found
-        {
-            char * att_value_c = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));
-            status = get_attribute(this->m_ncid, var_id, const_cast<char*>("units"), &att_value_c);  // does the attribute units exists?
-            if (status == NC_NOERR)
-            {
-                mesh1d_strings->edge_chainage = token[i];
-            }
-            else
-            {
-                mesh1d_strings->edge_branch = token[i];
-            }
-            free(att_value_c);
-            att_value_c = nullptr;
-        }
-    }
-
-    // ids and long_names of nodes and branches
-    status = get_attribute(this->m_ncid, i_var, "node_id", &mesh1d_strings->node_names);
-    if (status != NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "node_ids", &mesh1d_strings->node_names); }
-    status = get_attribute(this->m_ncid, i_var, "node_long_name", &mesh1d_strings->node_long_names);
-    if (status != NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "node_long_names", &mesh1d_strings->node_long_names); }
-    status = get_attribute(this->m_ncid, i_var, "branch_id", &mesh1d_strings->edge_names);
-    if (status != NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "branch_ids", &mesh1d_strings->edge_names); }
-    status = get_attribute(this->m_ncid, i_var, "branch_long_name", &mesh1d_strings->edge_long_names);
-    if (status != NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "branch_long_names", &mesh1d_strings->edge_long_names); }
-
-    return status;
-    }
-
-int UGRID::read_mesh2d_attributes(struct _mesh2d_string * mesh2d_strings, int i_var, std::string var_name, int topology_dimension)
-{
-    int status = 1;
-
-    mesh2d_strings->var_name = var_name;
-
-    // Required attributes
-    //
-    // cf_role == mesh_topology
-    // topology_dimension
-    // node coordinates
-    // face_node_connectivity
-    mesh2d_strings->topology_dimension = size_t(topology_dimension);
-    status = get_attribute(this->m_ncid, i_var, "node_coordinates", &mesh2d_strings->node_coordinates);
-    if (status == NC_NOERR) { status = get_attribute(this->m_ncid, i_var, "face_node_connectivity", &mesh2d_strings->face_node_connectivity); }
-    if (status != NC_NOERR)
-    {
-#ifdef NATIVE_C
-        fprintf(stderr, "    Mesh \'%s\' does not meet the UGRID standard for 2D meshes. Required attributes are missing.\n", mesh2d_strings->var_name.c_str());
-#else
-        //QMessageBox::warning(0, "Message", QString("UGRID::read_mesh2d_attributes()\nMesh \'%1\"does not meet the UGRID standard\nRequired attributes are missing").arg(mesh2d_strings->var_name.c_str()));
-#endif
-    }
-
-    // optional required attributes
-    status = get_attribute(this->m_ncid, i_var, "edge_dimension", &mesh2d_strings->edge_dimension);
-    status = get_attribute(this->m_ncid, i_var, "face_dimension", &mesh2d_strings->face_dimension);
-    status = get_attribute(this->m_ncid, i_var, "edge_node_connectivity", &mesh2d_strings->edge_node_connectivity);
-
-    // optional attributes
-    //status = get_attribute(this->m_ncid, i_var, "coordinate_space", &mesh2d_strings[nr_mesh2d - 1]->coordinate_space);
-    status = get_attribute(this->m_ncid, i_var, "edge_coordinates", &mesh2d_strings->edge_coordinates);
-    status = get_attribute(this->m_ncid, i_var, "edge_geometry", &mesh2d_strings->edge_geometry);
-    status = get_attribute(this->m_ncid, i_var, "edge_length", &mesh2d_strings->edge_length);
-    status = get_attribute(this->m_ncid, i_var, "long_name", &mesh2d_strings->long_name);
-    //status = get_attribute(this->m_ncid, i_var, "node_dimension", &mesh2d_strings->node_dimension);
-    status = get_attribute(this->m_ncid, i_var, "node_edge_exchange", &mesh2d_strings->node_edge_exchange);
-
-    status = get_attribute(this->m_ncid, i_var, "max_face_nodes_dimension", &mesh2d_strings->max_face_nodes_dimension);
-    status = get_attribute(this->m_ncid, i_var, "edge_face_connectivity", &mesh2d_strings->edge_face_connectivity);
-    status = get_attribute(this->m_ncid, i_var, "face_coordinates", &mesh2d_strings->face_coordinates);
-    status = get_attribute(this->m_ncid, i_var, "edge_type", &mesh2d_strings->edge_type);
-    if (status != NC_NOERR)
-    {
-        mesh2d_strings->edge_type = var_name + "_edge_type";
-    }
-
-    status = get_attribute(this->m_ncid, i_var, "layer_dimension", &mesh2d_strings->layer_dimension);
-    if (status == NC_NOERR)
-    {
-        m_map_dim_name["zs_dim_layer"] = mesh2d_strings->layer_dimension;
-        status = get_attribute(this->m_ncid, i_var, "interface_dimension", &mesh2d_strings->layer_interface_dimension);
-        if (status == NC_NOERR)
-        {
-            m_map_dim_name["zs_dim_interface"] = mesh2d_strings->layer_interface_dimension;
-        }
-    }
-    if (status != NC_NOERR)
-    {
-        mesh2d_strings->layer_dimension = "";
-        mesh2d_strings->layer_interface_dimension = "";
-    }
-    // split required 'node coordinate' string
-    std::vector<std::string> token = tokenize(mesh2d_strings->node_coordinates, ' ');
-    if (token.size() == 2)
-    {
-        mesh2d_strings->x_node_name = token[0];
-        mesh2d_strings->y_node_name = token[1];
-    }
-
-    // split 'edge coordinate' string
-    token = tokenize(mesh2d_strings->edge_coordinates, ' ');
-    if (token.size() == 2)
-    {
-        mesh2d_strings->x_edge_name = token[0];
-        mesh2d_strings->y_edge_name = token[1];
-        status = get_attribute_by_var_name(this->m_ncid, mesh2d_strings->x_edge_name, "bounds", &mesh2d_strings->x_bound_edge_name);
-        status = get_attribute_by_var_name(this->m_ncid, mesh2d_strings->y_edge_name, "bounds", &mesh2d_strings->y_bound_edge_name);
-    }
-
-    // split 'face_coordinates' string
-    token = tokenize(mesh2d_strings->face_coordinates, ' ');
-    if (token.size() == 2)
-    {
-        mesh2d_strings->x_face_name = token[0];
-        mesh2d_strings->y_face_name = token[1];
-        status = get_attribute_by_var_name(this->m_ncid, mesh2d_strings->x_face_name, "bounds", &mesh2d_strings->x_bound_face_name);
-        status = get_attribute_by_var_name(this->m_ncid, mesh2d_strings->y_face_name, "bounds", &mesh2d_strings->y_bound_face_name);
-    }
-
-    return status;
-}
-
-int UGRID::determine_mesh1d_edge_length(struct _mesh1d* mesh1d, struct _ntw_edges* ntw_edges)
-{
-    if (mesh1d == nullptr || ntw_edges == nullptr)
-    {
-        return 0;  // there is no 1D mesh or network
-    }
-    // determine the edge length between the nodes (by definition >= 0)
-    int nr_mesh1d = 1;  // HACK: there is just one mesh1d allowed
-    mesh1d->edge[nr_mesh1d - 1]->edge_length = std::vector<double>(mesh1d->edge[nr_mesh1d - 1]->count, -1.0);
-    for (int j = 0; j < mesh1d->edge[nr_mesh1d - 1]->count; j++)
-    {
-        int j_branch = mesh1d->edge[nr_mesh1d - 1]->edge_branch[j];
-        int p1 = mesh1d->edge[0]->edge_nodes[j][0];
-        int p2 = mesh1d->edge[0]->edge_nodes[j][1];
-        if (mesh1d->node[0]->branch[p1] == mesh1d->node[0]->branch[p2])
-        {
-            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = mesh1d->node[0]->chainage[p2] - mesh1d->node[0]->chainage[p1];
-        }
-        else if (mesh1d->node[0]->branch[p1] == j_branch)
-        {
-            // p1 on branch, p2 not on branch, so it is the last edge on a branch
-            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = ntw_edges->edge[0]->edge_length[j_branch] - mesh1d->node[0]->chainage[p1];
-        }
-        else if (mesh1d->node[0]->branch[p2] == j_branch)
-        {
-            // p1 not on branch, p2 on branch, so it is the first edge on a branch
-            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = mesh1d->node[0]->chainage[p2];
-        }
-        else
-        {
-            // branch length is equal long to the geometry branch length
-            mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = ntw_edges->edge[0]->edge_length[j_branch];
-        }
-    }
-}
-int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_edges, struct _ntw_geom * ntw_geom)
-{
-    // determine the (x, y) location of the mesh1d node along the geometry of the network
-
-    if (mesh1d == nullptr || ntw_edges == nullptr || ntw_geom == nullptr)
-    {
-        return 0;  // there is no 1D mesh or network
-    }
-    size_t nr_ntw = ntw_geom->nr_ntw;
-    if (mesh1d->node[nr_ntw - 1]->branch.size() == 0)
-    {
-        return 0;  // Coordinates already read
-    }
-
-#ifndef NATIVE_C
-    int pgbar_value = 950;
-    m_pgBar->setValue(pgbar_value);
-#endif
-
-    int status = -1;
-    for (int i_mesh1d = 1; i_mesh1d <= mesh1d->nr_mesh1d; i_mesh1d++)  // loop over 1D meshes
-    {
-        mesh1d->node[i_mesh1d - 1]->x = std::vector<double>(mesh1d->node[i_mesh1d - 1]->count);
-        mesh1d->node[i_mesh1d - 1]->y = std::vector<double>(mesh1d->node[i_mesh1d - 1]->count);
-
-        double xp;
-        double yp;
-        std::vector<double> chainage;
-        for (int branch = 0; branch < ntw_geom->geom[nr_ntw - 1]->count; branch++)  // loop over the geometries
-        {
-            double branch_length = ntw_edges->edge[nr_ntw - 1]->edge_length[branch];
-            size_t geom_nodes_count = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->count;
-
-            chainage.resize(geom_nodes_count);
-            chainage[0] = 0.0;
-            for (int i = 1; i < geom_nodes_count; i++)
-            {
-                double x1 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->x[i - 1];
-                double y1 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->y[i - 1];
-                double x2 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->x[i];
-                double y2 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->y[i];
-
-                chainage[i] = chainage[i - 1] + sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));  // Todo: HACK: this is just the euclidian distance
-            }
-
-            for (int i = 0; i <  mesh1d->node[i_mesh1d - 1]->count; i++)  // loop over computational nodes
-            {
-                if (mesh1d->node[nr_ntw - 1]->branch[i] == branch)  // is this node on this edge
-                {
-                    double fraction = -1.0;
-                    double chainage_node = mesh1d->node[i_mesh1d - 1]->chainage[i];
-                    fraction = chainage_node / branch_length;
-                    if (fraction < 0.0 || fraction > 1.0)
-                    {
-#ifdef NATIVE_C
-                        fprintf(stderr, "UGRID::determine_computational_node_on_geometry()\n    Branch(%d). Offset %f is larger then branch length %f.\n", branch + 1, chainage_node, branch_length);
-#else
-                        //QMessageBox::warning(0, "Message", QString("UGRID::determine_computational_node_on_geometry()\nBranch(%3). Offset %1 is larger then branch length %2.\n").arg(offset).arg(branch_length).arg(branch+1));
-#endif
-                    }
-                    double chainage_point = fraction * chainage[geom_nodes_count - 1];
-
-                    xp = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->x[0];
-                    yp = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->y[0];
-
-                    for (int j = 1; j < geom_nodes_count; j++)
-                    {
-                        if (chainage_point <= chainage[j])
-                        {
-                            double alpha = (chainage_point - chainage[j - 1]) / (chainage[j] - chainage[j - 1]);
-                            double x1 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->x[j - 1];
-                            double y1 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->y[j - 1];
-                            double x2 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->x[j];
-                            double y2 = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->y[j];
-
-                            xp = x1 + alpha * (x2 - x1);
-                            yp = y1 + alpha * (y2 - y1);
-                            break;
-                        }
-                    }
-                    mesh1d->node[i_mesh1d - 1]->x[i] = xp;
-                    mesh1d->node[i_mesh1d - 1]->y[i] = yp;
-                }
-            }
-        }
-        status = 0;
-    }
-#ifndef NATIVE_C
-    m_pgBar->setValue(990);
-#endif
-    return status;
-}
-int UGRID::create_mesh_contacts(struct _ntw_nodes * mesh1d_nodes, struct _ntw_edges * ntw_edges, struct _ntw_geom * ntw_geom)
-{
-    // zoek variabele mesh_a
-    // haal bijbehorende (x, y) coordinate van beginpunt van de edge op
-    // zoek variabele mesh_b
-    // haal bijbehorende (x, y) coordinate van het eindpunt van de edge op
-    Q_UNUSED(ntw_edges);
-    Q_UNUSED(ntw_geom);
-    //int k = 0;
-    for (int i = 0; i <m_mesh_contact->edge[m_nr_mesh_contacts - 1]->count; i++)
-    {
-        // p1: begin point edge
-        int p1 = m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i][0];
-        m_mesh_contact->node[0]->x[i] = mesh1d_nodes->node[0]->x[p1];
-        m_mesh_contact->node[0]->y[i] = mesh1d_nodes->node[0]->y[p1];
-
-        // p2: end point edge
-        //int p2 = m_mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i][1];
-        //k = 2 * i + 1;
-        //mesh_contact->node[0]->x[k] = mesh2d->face[0]->x[p2];
-        //mesh_contact->node[0]->y[k] = mesh2d->face[0]->y[p2];
-
-        //status = get_coordinate(mesh_contact->mesh_a, mesh_contact->location_a, mesh_contact->edge[m_nr_mesh_contacts - 1]->edge_nodes[i][0], x1, y1);
-        //status = get_coordinate_y(mesh_contact->mesh_a, mesh_contact->location_a, mesh_contact->edge[m_nr_mesh_contacts - 1]->);
-    }
-    return 0;
-
-}
 
 char * UGRID::strndup(const char *s, size_t n)
 {
@@ -3271,85 +1514,6 @@ char * UGRID::strndup(const char *s, size_t n)
     return (char *)memcpy(result, s, len);
 }
 
-std::vector<std::string> UGRID::tokenize(const std::string& s, char c) {
-    auto end = s.cend();
-    auto start = end;
 
-    std::vector<std::string> v;
-    for (auto it = s.cbegin(); it != end; ++it) {
-        if (*it != c) {
-            if (start == end)
-                start = it;
-            continue;
-        }
-        if (start != end) {
-            v.emplace_back(start, it);
-            start = end;
-        }
-    }
-    if (start != end)
-        v.emplace_back(start, end);
-    return v;
-}
-
-std::vector<std::string> UGRID::tokenize(const std::string& s, std::size_t count)
-{
-    size_t minsize = s.size() / count;
-    std::vector<std::string> tokens;
-    for (size_t i = 0, offset = 0; i < count; ++i)
-    {
-        size_t size = minsize;
-        if ((offset + size) < s.size())
-            tokens.push_back(s.substr(offset, size));
-        else
-            tokens.push_back(s.substr(offset, s.size() - offset));
-        offset += size;
-    }
-    return tokens;
-}
-
-double *  UGRID::permute_array(double * in_arr, std::vector<long> order, std::vector<long> dim)
-{
-    //
-    // in_array: array which need to be permuted
-    // order: order of the dimensions in the supplied array in_array
-    // dim: dimensions in required order
-    // return value: permuted array in required order
-    //
-    if (dim.size() != 4) {
-        return nullptr;
-    }
-    long k_source;
-    long k_target;
-    long length = 1;
-    std::vector<long> cnt(4);
-    for (long i = 0; i < dim.size(); ++i)
-    {
-        length *= dim[i];
-    }
-    double * out_arr = (double *)malloc(sizeof(double) * length);
-    for (long i = 0; i < dim[0]; i++) {
-        cnt[0] = i;
-        for (long j = 0; j < dim[1]; j++) {
-            cnt[1] = j;
-            for (long k = 0; k < dim[2]; k++) {
-                cnt[2] = k;
-                for (long l = 0; l < dim[3]; l++) {
-                    cnt[3] = l;
-                    k_source = get_index_in_c_array(cnt[order[0]], cnt[order[1]], cnt[order[2]], cnt[order[3]], dim[order[0]], dim[order[1]], dim[order[2]], dim[order[3]]);
-                    k_target = get_index_in_c_array(i, j, k, l, dim[0], dim[1], dim[2], dim[3]);
-                    out_arr[k_target] = in_arr[k_source];
-                }
-            }
-        }
-    }
-    free(in_arr);
-    return out_arr;
-}
-long UGRID::get_index_in_c_array(long t, long l, long s, long xy, long time_dim, long layer_dim, long sed_dim, long xy_dim)
-{
-    Q_UNUSED(time_dim);
-    return t * layer_dim * sed_dim * xy_dim + l * sed_dim * xy_dim + s * xy_dim + xy;
-}
 
 

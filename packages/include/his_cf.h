@@ -1,6 +1,8 @@
 #ifndef HISCF_H
 #define HISCF_H
 
+#define CFTSHISTORY_API __declspec(dllexport)
+
 #include <QFileInfo>
 #include <QtCore/QObject>
 #include <QtCore/QDateTime>
@@ -15,8 +17,6 @@
 #include <QtWidgets/QProgressBar>
 
 #include <QtGui/QIcon>
-
-#include <qgsmessagelog.h>
 
 #include "data_struct.h"
 
@@ -41,7 +41,7 @@ struct _location {
 };
 
 struct _location_type {
-    enum OBSERVATION_TYPE type = OBS_NONE;
+    enum OBSERVATION_TYPE type = OBSERVATION_TYPE::OBS_NONE;
     char * location_var_name;  // to check the coordinate attribute
     char * location_long_name;  // to present in combobox i.e. observation point or cross-section
     char * location_dim_name;
@@ -74,7 +74,8 @@ public:
     struct _global_attributes * get_global_attributes(void);
     std::vector<_location_type *> get_observation_location();
 
-    struct _mapping * get_grid_mapping();
+    struct _mapping* get_grid_mapping();
+    CFTSHISTORY_API int get_epsg();
 
     long set_grid_mapping_epsg(long, std::string);
     std::vector<std::string> get_names(int, std::string, size_t);

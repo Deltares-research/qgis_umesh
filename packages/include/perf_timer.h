@@ -1,3 +1,5 @@
+#ifndef __PERF_TIMER_H__
+#define __PERF_TIMER_H__
 //
 // Programmer: Jan Mooiman
 // Date: 14 April 2021
@@ -11,7 +13,7 @@
 #include <chrono>
 #include <iterator>
 
-#define DO_TIMING 0
+#define DO_TIMING 1
 #if DO_TIMING == 1
 #   define TOSTRING(x) #x
 #   define START_TIMER(x) tt = TestTimer::get_instance(); tt->start(TOSTRING(x), __FILE__, __FUNCTION__, __LINE__);
@@ -102,3 +104,4 @@ public:
         std::string m_functionname;
         int m_line_number;
 };
+#endif

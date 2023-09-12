@@ -8,11 +8,10 @@
 #include <math.h>       /* sqrt */
 
 #include "AbstractCanvas.h"
-#include "ugrid.h"
+#include "grid.h"
 #include "QColorRampEditor.h"
 #include "map_property.h"
 
-#define GUI_EXPORT __declspec(dllimport)
 #include "qgisinterface.h"
 #include "qgsmaptool.h"
 #include "qgsmaptoolemitpoint.h"
@@ -21,7 +20,7 @@
 #include "qgsmapcanvasitem.h"
 #include "qgsmapmouseevent.h"
 
-#include <qgsapplication.h>
+//janm  #include <qgsapplication.h>
 #include <qgsgeometry.h>
 #include <qgslayertree.h>
 #include <qgslayertreegroup.h>
@@ -99,8 +98,7 @@ private slots:
 
 
 public:
-    MyCanvas();
-    MyCanvas(QgisInterface*);
+    MyCanvas(QgisInterface *);
     ~MyCanvas();
 
     void empty_cache(drawing_cache);
@@ -171,7 +169,7 @@ public:
     void setFullExtend(double minX, double maxX, double minY, double maxY);
     void zoomToExtend(double minX, double maxX, double minY, double maxY);
 
-    void setUgridFile(UGRID *);
+    void set_grid_file(GRID *);
     void reset_min_max();
     void set_variable(struct _variable *);
     void set_variables(struct _mesh_variable * variables);
@@ -190,9 +188,11 @@ public:
     void draw_dot_at_node();
     void draw_data_along_edge();
     void draw_data_at_face();
+    void draw_data_at_node();   // isofill of the control volume around node
     void draw_line_at_edge();
-    void draw_vector_arrow_at_face();
+    void draw_vector_arrow();
     void draw_vector_direction_at_face();
+    void draw_vector_direction_at_node();
 
     double * z_value = nullptr;
     double * u_value = nullptr;
@@ -258,7 +258,7 @@ private:
     void InitDrawEachCaches(void);
     void DrawEachCaches(void);
 
-    UGRID * m_ugrid_file;
+    GRID * m_grid_file;
     struct _variable * m_variable;
     struct _mesh_variable * m_variables;
     QStringList m_coordinate_type;
@@ -273,6 +273,8 @@ private:
     bool m_vscale_determined;
     double m_vec_length;
     vector_quantity m_vector_draw;
+
+    bool m_permuted;
 };
 
 #endif  /* _INC_MyCanvas */
