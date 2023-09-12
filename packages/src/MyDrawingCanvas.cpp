@@ -39,6 +39,11 @@ using namespace std;
 //MapProperty * MapProperty::obj;  // Initialize static member of class MapProperty (Singleton)
 //
 //
+MyCanvas::MyCanvas() :
+    QgsMapTool(nullptr),
+    QgsMapCanvasItem(nullptr)
+{
+}
 MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     QgsMapTool(QGisIface->mapCanvas()),
     QgsMapCanvasItem(QGisIface->mapCanvas()),
@@ -1663,7 +1668,8 @@ bool MyCanvas::isFontAvailable(const char* name)
 //
 int MyCanvas::getTextWidth(const char* name)
 {
-    int size = (mMapCanvas->fontMetrics()).width(name);
+    int size = (mMapCanvas->fontMetrics()).horizontalAdvance(name);
+
     return size;
 }
 //

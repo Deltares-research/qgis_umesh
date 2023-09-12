@@ -99,7 +99,8 @@ private slots:
 
 
 public:
-    MyCanvas(QgisInterface *);
+    MyCanvas();
+    MyCanvas(QgisInterface*);
     ~MyCanvas();
 
     void empty_cache(drawing_cache);

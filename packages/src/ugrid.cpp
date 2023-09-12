@@ -1679,16 +1679,18 @@ int UGRID::get_attribute(int ncid, int i_var, char * att_name, long * att_value)
     return status;
 }
 //------------------------------------------------------------------------------
-int UGRID::get_dimension(int ncid, char * dim_name, size_t * dim_length)
+int UGRID::get_dimension(int ncid, char* dim_name, size_t* dim_length)
 {
     int dimid;
     int status = -1;
 
-    *dim_length = 0;
     if (dim_name != NULL && strlen(dim_name) != 0)
     {
         status = nc_inq_dimid(ncid, dim_name, &dimid);
-        status = nc_inq_dimlen(ncid, dimid, dim_length);
+        if (status == NC_NOERR)
+        {
+            status = nc_inq_dimlen(ncid, dimid, dim_length);
+        }
     }
     return status;
 }
@@ -1698,11 +1700,13 @@ int UGRID::get_dimension(int ncid, std::string dim_name, size_t * dim_length)
     int dimid;
     int status = -1;
 
-    *dim_length = 0;
     if (dim_name.size() != 0)
     {
         status = nc_inq_dimid(ncid, dim_name.c_str(), &dimid);
-        status = nc_inq_dimlen(ncid, dimid, dim_length);
+        if (status == NC_NOERR)
+        {
+            status = nc_inq_dimlen(ncid, dimid, dim_length);
+        }
     }
     return status;
 }
@@ -1712,18 +1716,21 @@ int UGRID::get_dimension_var(int ncid, std::string var_name, size_t * dim_length
     // get the total dimension length in bytes of the var_name variable
     int dimid;
     int status = -1;
-    *dim_length = 0;
 
     if (var_name.size() != 0)
     {
         int janm;
         status = nc_inq_varid(ncid, var_name.c_str(), &dimid);
-        status = nc_inq_vardimid(ncid, dimid, &janm);
-        char * tmp_value = (char *)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
-        status = nc_inq_dimname(ncid, janm, tmp_value);
-        status = get_dimension(ncid, tmp_value, dim_length);
-        free(tmp_value);
-        tmp_value = nullptr;
+        if (status == NC_NOERR)
+        {
+            *dim_length = 0;
+            status = nc_inq_vardimid(ncid, dimid, &janm);
+            char* tmp_value = (char*)malloc(sizeof(char) * (NC_MAX_NAME + 1));;
+            status = nc_inq_dimname(ncid, janm, tmp_value);
+            status = get_dimension(ncid, tmp_value, dim_length);
+            free(tmp_value);
+            tmp_value = nullptr;
+        }
     }
     return status;
 }

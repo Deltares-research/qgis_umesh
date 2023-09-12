@@ -220,7 +220,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>c:\OSGeo4W\apps\qgis\plugins\$(ProjectName).pdb</ProgramDatabaseFile>
     </Link>
     <Bscmake>
