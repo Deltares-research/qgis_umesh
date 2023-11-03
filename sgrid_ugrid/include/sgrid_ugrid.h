@@ -407,10 +407,13 @@ public:
     std::vector<std::string> tokenize(const std::string & , const char );
     std::vector<std::string> tokenize(const std::string & , std::size_t );
 
-    long get_count_times();
+    long get_times_count();
+    char * get_times_unit();
+    long get_var_count();
+    std::string units_cpp;
     QDateTime * m_RefDate;
-    std::vector<double> get_times();
-    QVector<QDateTime> get_qdt_times();  // qdt: Qt Date Time
+    std::vector<double> * get_times();
+    QVector<QDateTime> get_times_qdt();  // qdt: Qt Date Time
     QVector<QDateTime> qdt_times;
 
     struct _mesh_variable * get_variables();

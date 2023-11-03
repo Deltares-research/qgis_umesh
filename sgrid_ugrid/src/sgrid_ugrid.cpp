@@ -119,6 +119,11 @@ long SUGRID::read()
         START_TIMER(Read_ugrid_variables);
         status = this->read_ugrid_variables();
         STOP_TIMER(Read Read_ugrid_variables);
+
+        if (status != 0)
+        {
+            status = 0;  // Assumedx: No variables define grid
+        }
     }
     if (m_ftype == FILE_TYPE::SGRID ||
         m_ftype == FILE_TYPE::KISS)
@@ -135,6 +140,11 @@ long SUGRID::read()
         START_TIMER(Read_sgrid_variables);
         status = this->read_sgrid_variables();
         STOP_TIMER(Read_sgrid_variables);
+
+        if (status != 0)
+        {
+            status = 0;  // Assumedx: No variables define grid
+        }
     }
     return status;
 }
@@ -607,7 +617,6 @@ long SUGRID::read_times()
     int ndims, nvars, natts, nunlimited;
     int status;
     char * var_name_c;
-    char * units_c;
     size_t length;
     int dimids;
     int nr_time_series = 0;
@@ -635,9 +644,6 @@ long SUGRID::read_times()
         status = nc_inq_attlen(this->m_ncid, i_var, "units", &length);
         if (status == NC_NOERR)
         {
-            units_c = (char *)malloc(sizeof(char) * (length + 1));
-            units_c[length] = '\0';
-            std::string units_cpp;
             units_cpp.resize(length);
             status = nc_get_att(this->m_ncid, i_var, "units", units_cpp.data());
             if (m_ftype == FILE_TYPE::KISS)
@@ -778,8 +784,6 @@ long SUGRID::read_times()
                     break;
                 }
             }
-            free(units_c);
-            units_c = nullptr;
         }
     }
     free(var_name_c); 
@@ -791,18 +795,23 @@ long SUGRID::read_times()
     return (long)status;
 }
 //------------------------------------------------------------------------------
-long SUGRID::get_count_times()
+long SUGRID::get_times_count()
 {
     size_t nr = time_series[0].nr_times;
     return (long)nr;
 }
 //------------------------------------------------------------------------------
-std::vector<double> SUGRID::get_times()
+char * SUGRID::get_times_unit()
 {
-    return time_series[0].times;
+    return units_cpp.data();
 }
 //------------------------------------------------------------------------------
-QVector<QDateTime> SUGRID::get_qdt_times()  // qdt: Qt Date Time
+std::vector<double>* SUGRID::get_times()
+{
+    return &time_series[0].times;
+}
+//------------------------------------------------------------------------------
+QVector<QDateTime> SUGRID::get_times_qdt()  // qdt: Qt Date Time
 {
     return qdt_times;
 }//------------------------------------------------------------------------------

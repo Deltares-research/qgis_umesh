@@ -2,7 +2,11 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LocalDebuggerCommand>c:\OSGeo4W\bin\qgis-bin.exe</LocalDebuggerCommand>
-    <LocalDebuggerWorkingDirectory>d:\mooiman\home\models\delft3d\grids\test_qgis\harlingen\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>d:\mooiman\home\models\delft3d\grids\test_qgis\tmp</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommand>c:\OSGeo4W\bin\qgis.bat</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>
