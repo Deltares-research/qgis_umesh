@@ -12,7 +12,6 @@
 #include <QtGui/QPainter>
 #include <QtGui/QMouseEvent>
 #include <QtWidgets/QMessageBox>
-#include <QtWidgets/QApplication>
 
 // -----------------------------------------------------------
 // QColorRampEditor ------------------------------------------

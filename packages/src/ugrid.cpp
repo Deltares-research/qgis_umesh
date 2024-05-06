@@ -317,8 +317,8 @@ long UGRID::read_mesh()
         std::string mesh_b;
         std::string location_a;
         std::string location_b;
-        int topology_a;
-        int topology_b;
+        int topology_a = -1;
+        int topology_b = -1;
 
         int i = 0;
         for (int i_var = 0; i_var < nvars; i_var++)
@@ -2689,7 +2689,7 @@ int UGRID::read_variables_with_cf_role(int i_var, std::string var_name, std::str
                         ummap.insert(mypair);
                     }
                 }
-                size_t cnt = -1;
+                size_t cnt = size_t(-1);
                 for (auto it = ummap.begin(); it != ummap.end(); ++it)
                 {
                     cnt++;
@@ -3133,6 +3133,7 @@ int UGRID::determine_mesh1d_edge_length(struct _mesh1d* mesh1d, struct _ntw_edge
             mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = ntw_edges->edge[0]->edge_length[j_branch];
         }
     }
+    return 0;
 }
 int UGRID::create_mesh1d_nodes(struct _mesh1d * mesh1d, struct _ntw_edges * ntw_edges, struct _ntw_geom * ntw_geom)
 {

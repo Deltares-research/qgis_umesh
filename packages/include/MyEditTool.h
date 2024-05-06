@@ -8,19 +8,13 @@
 #include <assert.h>
 
 #define GUI_EXPORT __declspec(dllimport)
-#include "qgisinterface.h"
-#include "qgsmaptool.h"
-#include "qgsmaptoolemitpoint.h"
-#include "qgspointxy.h"
-#include "qgsmapcanvas.h"
-#include "qgsmapcanvasitem.h"
-#include "qgsmapmouseevent.h"
 
 #include <QtCore/QVector>
 #include <QtCore/QObject>
 #include <QtCore/QPointer>
 
 #include <QtGui/QColor>
+#include <QtGui/QCursor>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
@@ -30,7 +24,13 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QVBoxLayout>
 
+#include "qgisinterface.h"
 #include "qgsmaptool.h"
+#include "qgsmaptoolemitpoint.h"
+#include "qgsmapcanvas.h"
+#include "qgsmapcanvasitem.h"
+#include "qgsmapmouseevent.h"
+#include "qgspointxy.h"
 #include "qgsrubberband.h"
 
 #define IMAGE_WIDTH  3840 // 1420 // 

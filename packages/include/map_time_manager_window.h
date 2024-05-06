@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QAction>
+#include <QApplication>
 #include <QButtonGroup>
 #include <QComboBox>
 #include <QDateTime>
@@ -26,7 +27,6 @@
 #include <QVBoxLayout>
 
 #include <qmath.h>
-#include <qgsapplication.h>
 #include <qgisinterface.h>
 #include <qgisplugin.h>
 

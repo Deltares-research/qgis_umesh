@@ -1,7 +1,6 @@
 #ifndef _INC_MYQDATETIMEEDIT
 #define _INC_MYQDATETIMEEDIT
 
-#include <QtWidgets/QApplication>
 #include <QtWidgets/QDateTimeEdit>
 
 class MyQDateTimeEdit : public QDateTimeEdit

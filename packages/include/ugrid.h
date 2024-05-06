@@ -10,7 +10,6 @@
 #include <QtCore/qtextcodec.h>
 #include <QtCore/qdebug.h>
 
-#include <QtWidgets/QApplication>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QProgressBar>
 

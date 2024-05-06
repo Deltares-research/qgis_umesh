@@ -12,23 +12,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="generated\moc_add_current_view_window.cpp" />
-    <ClCompile Include="generated\moc_edit_observation_points_window.cpp" />
+    <ClCompile Include="generated\moc_handle_vector_layers.cpp" />
     <ClCompile Include="generated\moc_map_property.cpp" />
     <ClCompile Include="generated\moc_map_property_window.cpp" />
     <ClCompile Include="generated\moc_map_time_manager_window.cpp" />
     <ClCompile Include="generated\moc_MyDrawingCanvas.cpp" />
-    <ClCompile Include="generated\moc_MyEditTool.cpp" />
     <ClCompile Include="generated\moc_my_date_time_edit.cpp" />
     <ClCompile Include="generated\moc_QColorRampEditor.cpp" />
     <ClCompile Include="generated\moc_qgis_umesh.cpp" />
     <ClCompile Include="src\add_current_view_window.cpp" />
-    <ClCompile Include="src\edit_observation_points_window.cpp" />
+    <ClCompile Include="src\handle_vector_layers.cpp" />
     <ClCompile Include="src\his_cf.cpp" />
     <ClCompile Include="src\map_property.cpp" />
     <ClCompile Include="src\map_property_window.cpp" />
     <ClCompile Include="src\map_time_manager_window.cpp" />
     <ClCompile Include="src\MyDrawingCanvas.cpp" />
-    <ClCompile Include="src\MyEditTool.cpp" />
     <ClCompile Include="src\my_date_time_edit.cpp" />
     <ClCompile Include="src\perf_timer.cpp" />
     <ClCompile Include="src\QColorRampEditor.cpp" />
@@ -44,16 +42,6 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
-    </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="include\MyEditTool.h">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
     </CustomBuild>
   </ItemGroup>
@@ -108,8 +96,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
     </CustomBuild>
-    <ClInclude Include="include\data_struct.h" />
-    <CustomBuild Include="include\edit_observation_points_window.h">
+    <CustomBuild Include="include\handle_vector_layers.h">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
@@ -117,6 +104,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
     </CustomBuild>
+    <ClInclude Include="include\data_struct.h" />
     <ClInclude Include="include\his_cf.h" />
     <ClInclude Include="include\json_reader.h" />
     <ClInclude Include="include\netcdf.h" />

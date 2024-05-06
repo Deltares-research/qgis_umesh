@@ -6,18 +6,17 @@
 #include <string.h>
 
 #define DLL_EXPORT
-#include "MyEditTool.h"
+#include <qmath.h>
+//#include "MyEditTool.h"
 
 #define GUI_EXPORT __declspec(dllimport)
 #include "qgsmapcanvas.h"
 #include "qgsmapcanvasmap.h"
-//#include "qgscursors.h"
 #include "qgsmaptopixel.h"
 #include "qgsrubberband.h"
 #include "qgscoordinatereferencesystem.h"
 #include "qgsmaptool.h"
 #include "qgspoint.h"
-#include "qgsapplication.h"
 
 #if defined(WIN32) || defined(WIN64)
 #  include <windows.h>
@@ -38,8 +37,7 @@ MyEditTool::MyEditTool(QgsMapCanvas* mapCanvas) :
     QgsMapTool( mapCanvas ),
     QgsMapCanvasItem( mapCanvas )
 {
-    QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CrossHair));
-    //QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CapturePoint));
+    QgsMapTool::setCursor(Qt::CrossCursor);
 
     mMapCanvas = mapCanvas;
     mMapCanvasItem = mapCanvas;

@@ -1,7 +1,6 @@
 #ifndef _INC_MAP_PROPERTY
 #define _INC_MAP_PROPERTY
 
-#include <QApplication>
 #include <QDateTimeEdit>
 #include <QGroupBox>
 #include <QGridLayout>

@@ -23,7 +23,6 @@
 #include <QVBoxLayout>
 
 #include <qmath.h>
-#include <qgsapplication.h>
 #include <QgsLayerTreeView.h>
 #include <qgsmapmouseevent.h>
 
