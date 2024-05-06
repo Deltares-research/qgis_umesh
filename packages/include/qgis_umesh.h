@@ -27,36 +27,10 @@
 #include <QFileInfo>
 #include <QFileDialog>
 
-//jamm #include <qgsapplication.h>
-#include <qgsgeometry.h>
-#include <qgslayertree.h>
-#include <qgslayertreegroup.h>
-#include <QgsLayerTreeNode.h>
-#include <QgsLayerTreeView.h>
-#include <qgsmapcanvas.h>
-#include <qgsmaplayer.h>
-#include <qgsmaptool.h>
-#include <qgsmessagelog.h>
-#include <qgsvectorlayer.h>
-#include <qgisplugin.h>
-#include <qgisinterface.h>
-#include <qgscoordinatereferencesystem.h>
 #include <qgsstatusbar.h>
-#include <qgslinestring.h>
-#include <qgsmultilinestring.h>
-#include <qgslinesymbollayer.h>
-#include <qgsmarkersymbol.h>
-#include <qgsmarkersymbollayer.h>
-#include <qgsabstract3drenderer.h>
-#include <QgsGraduatedSymbolRenderer.h>
-#include <QgsSingleSymbolRenderer.h>
-//#include <QgsLineSymbolLayer>
-#include <QgsMarkerSymbolLayer.h>
-#include <qgsproject.h>
-#include <qgssymbol.h>
-#include <qgsvectorlayer.h>
 
-#include "MyEditTool.h"
+//#include "MyEditTool.h"
+#include "handle_vector_layers.h"
 #include "MyDrawingCanvas.h"
 #include "netcdf.h"
 #include "grid.h"
@@ -95,39 +69,7 @@ class qgis_umesh
 
         //  qgis_umesh functions
         char* stripSpaces(char *);
-        void create_vector_layer_data_on_edges(QString, _variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_edge_type(QString, _variable * var, struct _feature *, struct _edge *, double *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_data_on_nodes(QString, _variable * var, struct _feature *, double *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_nodes(QString, QString, struct _feature *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_edges(QString, QString, struct _feature *, struct _edge *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_geometry(QString, QString, struct _ntw_geom *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_point(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_polyline(QString, QString, _location_type *, long, QgsLayerTreeGroup *);
 
-        // Reading input files (ie JSON format)
-        void create_vector_layer_1D_external_forcing(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_structure(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_chainage_observation_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_crs_observation_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_fixed_weir(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_thin_dams(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_observation_cross_section(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_1D_observation_cross_section(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_2D_observation_cross_section(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_structure(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_drypoints(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_1D_cross_section(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-        void create_vector_layer_1D_retention(GRID*, JSON_READER*, long, QgsLayerTreeGroup*);
-        void create_vector_layer_sample_point(GRID *, JSON_READER *, long, QgsLayerTreeGroup *);
-
-        void create_vector_layer_1D2D_link(JSON_READER *, long);
-        long compute_location_along_geometry(struct _ntw_geom *, struct _ntw_edges *, std::string, double, double *, double *, double *);
-        long find_location_boundary(struct _ntw_nodes *, std::string, double *, double *);
-
-
-        QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
-        void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
         void show_map_output(GRID *);
         void edit_1d_obs_points();
         void experiment();
@@ -150,12 +92,10 @@ class qgis_umesh
         void activate_observation_layers();
         void ShowUserManual();
 
-        GRID * get_active_grid_file(QString);
         HISCF * get_active_his_cf_file(QString);
         void set_show_map_output();
         void start_plotcfts();
         void dummy_slot();
-        void CrsChanged();
         void mapPropertyWindow();
         void onWillRemoveChildren(QgsLayerTreeNode *, int, int);
         void onRemovedChildren(QString);
@@ -168,13 +108,12 @@ class qgis_umesh
         void unload_vector_layers();
         QIcon get_icon_file(QDir, QString);
         int QT_SpawnProcess(int, char *, char **);
-        std::vector<std::string> tokenize(const std::string &, const char);
-        std::vector<std::string> tokenize(const std::string &, std::size_t);
 
         // variables
         QgisInterface * mQGisIface; // Pointer to the QGIS interface object
         QgsMapCanvas  * mCanvas; // Pointer to the QGIS canvas
         QgsStatusBar * status_bar;
+        QgsCoordinateReferenceSystem m_crs;
 
         QAction * mainAction;
         QAction * open_action_map;
@@ -210,7 +149,7 @@ class qgis_umesh
         QString m_working_dir;
         QProgressBar * pgBar;
 
-        MyEditTool * mMyEditTool;
+        //MyEditTool * mMyEditTool;
         MyCanvas * mMyCanvas;
 
         char * msgtxt = (char *)malloc(MSG_LENGTH * sizeof(char *));
@@ -223,8 +162,7 @@ class qgis_umesh
         std::vector<HISCF *> m_his_cf_file;
         int _mdu_fil_index;
         std::vector<JSON_READER *> m_mdu_files;
-        struct _global_attributes* m_global_attributes;
-
-        QgsCoordinateReferenceSystem m_crs;
+        HVL* m_hvl = nullptr; 
+        //struct _global_attributes* m_global_attributes;
 };
 #endif  // QGIS_UMESH_H

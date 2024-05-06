@@ -1,6 +1,6 @@
 #ifndef _INC_MAP_PROPERTY_WINDOW
 #define _INC_MAP_PROPERTY_WINDOW
-#include <QApplication>
+
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QDateTimeEdit>

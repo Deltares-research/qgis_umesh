@@ -10,7 +10,6 @@
 #include <QtCore/qtextcodec.h>
 #include <QtCore/qdebug.h>
 
-#include <QtWidgets/QApplication>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QProgressBar>
 
@@ -74,7 +73,7 @@ public:
     struct _global_attributes * get_global_attributes(void);
     std::vector<_location_type *> get_observation_location();
 
-    struct _mapping* get_grid_mapping();
+    struct _mapping * get_grid_mapping();
 
     long set_grid_mapping_epsg(long, std::string);
     std::vector<std::string> get_names(int, std::string, size_t);

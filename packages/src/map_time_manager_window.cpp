@@ -917,7 +917,7 @@ void MapTimeManagerWindow::start_reverse()
     for (int i = m_current_step ; i >= first_date_time_indx; i--)
     {
         one_step_backward();
-        QApplication::processEvents();
+        //QApplication::processEvents();
         if (stop_time_loop)
         {
             break;
@@ -944,7 +944,7 @@ void MapTimeManagerWindow::start_forward()
     for (int i = m_current_step; i < m_q_times.size(); i++)
     {
         one_step_forward();
-        QApplication::processEvents();
+        //QApplication::processEvents();
         if (stop_time_loop)
         {
             break;

@@ -26,13 +26,13 @@
 #include <QVBoxLayout>
 
 #include <qmath.h>
-//janm #include <qgsapplication.h>
 #include <qgisinterface.h>
 #include <qgisplugin.h>
 
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
 
+#include "grid.h"
 #include "MyDrawingCanvas.h"
 #include "my_date_time_edit.h"
 #include "QColorRampEditor.h"

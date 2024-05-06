@@ -84,6 +84,12 @@
     <ClCompile Include="src\grid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="generated\moc_handle_vector_layers.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\handle_vector_layers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="include\qgis_umesh.h">
@@ -111,6 +117,9 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="include\add_current_view_window.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\handle_vector_layers.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

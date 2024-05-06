@@ -12,22 +12,21 @@
 #include "QColorRampEditor.h"
 #include "map_property.h"
 
-#include "qgisinterface.h"
-#include "qgsmaptool.h"
-#include "qgsmaptoolemitpoint.h"
-#include "qgspointxy.h"
-#include "qgsmapcanvas.h"
-#include "qgsmapcanvasitem.h"
-#include "qgsmapmouseevent.h"
+#define GUI_EXPORT __declspec(dllimport)
+#include <qgisinterface.h>
+#include <qgsmaptool.h>
+#include <qgsmaptoolemitpoint.h>
+#include <qgspointxy.h>
+#include <qgsmapcanvas.h>
+#include <qgsmapcanvasitem.h>
+#include <qgsmapmouseevent.h>
 
-//janm  #include <qgsapplication.h>
 #include <qgsgeometry.h>
 #include <qgslayertree.h>
 #include <qgslayertreegroup.h>
 #include <qgsmessagelog.h>
 
-#include "qgsmaptool.h"
-#include "qgsrubberband.h"
+#include <qgsrubberband.h>
 
 
 #include <QtCore/QVector>
@@ -35,6 +34,7 @@
 #include <QtCore/QPointer>
 
 #include <QtGui/QColor>
+#include <QtGui/QCursor>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPainter>
@@ -98,6 +98,7 @@ private slots:
 
 
 public:
+    MyCanvas();
     MyCanvas(QgisInterface *);
     ~MyCanvas();
 

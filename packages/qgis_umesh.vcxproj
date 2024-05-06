@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="generated\moc_add_current_view_window.cpp" />
     <ClCompile Include="generated\moc_edit_observation_points_window.cpp" />
+    <ClCompile Include="generated\moc_handle_vector_layers.cpp" />
     <ClCompile Include="generated\moc_map_property_window.cpp" />
     <ClCompile Include="generated\moc_map_time_manager_window.cpp" />
     <ClCompile Include="generated\moc_MyDrawingCanvas.cpp" />
@@ -23,6 +24,7 @@
     <ClCompile Include="src\add_current_view_window.cpp" />
     <ClCompile Include="src\edit_observation_points_window.cpp" />
     <ClCompile Include="src\grid.cpp" />
+    <ClCompile Include="src\handle_vector_layers.cpp" />
     <ClCompile Include="src\his_cf.cpp" />
     <ClCompile Include="src\map_property.cpp" />
     <ClCompile Include="src\map_property_window.cpp" />
@@ -84,6 +86,14 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
     </CustomBuild>
     <ClInclude Include="include\grid.h" />
+    <CustomBuild Include="include\handle_vector_layers.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR64OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+    </CustomBuild>
     <ClInclude Include="include\map_property.h">
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
@@ -137,7 +147,7 @@
     <None Include="include\version_number.ini" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>qgis_umesh</ProjectName>
+    <ProjectName>qgis_sumesh</ProjectName>
     <ProjectGuid>{3C0EC403-C128-496D-B683-08C131CFA609}</ProjectGuid>
     <RootNamespace>WL_dll</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
@@ -206,6 +216,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -253,6 +264,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BrowseInformation>true</BrowseInformation>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

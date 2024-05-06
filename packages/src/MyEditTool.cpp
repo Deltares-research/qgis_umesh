@@ -37,8 +37,7 @@ MyEditTool::MyEditTool(QgsMapCanvas* mapCanvas) :
     QgsMapTool( mapCanvas ),
     QgsMapCanvasItem( mapCanvas )
 {
-    //janm QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CrossHair));
-    //QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CapturePoint));
+    QgsMapTool::setCursor(Qt::CrossCursor);
 
     mMapCanvas = mapCanvas;
     mMapCanvasItem = mapCanvas;

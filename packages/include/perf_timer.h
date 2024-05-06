@@ -27,9 +27,9 @@
 #else
 #   define START_TIMERN(x)
 #   define START_TIMER(x)
-#   define CLEAR_TIMER(x)
-#   define DELETE_TIMER(x)
-#   define DELETE_TIMERN(x)
+#   define CLEAR_TIMER()
+#   define DELETE_TIMER()
+#   define DELETE_TIMERN()
 #   define STOP_TIMER(x)
 #   define PRINT_TIMERN(x)
 #   define PRINT_TIMERS(x)
@@ -104,4 +104,4 @@ public:
         std::string m_functionname;
         int m_line_number;
 };
-#endif
+#endif  // __PERF_TIMER_H__
