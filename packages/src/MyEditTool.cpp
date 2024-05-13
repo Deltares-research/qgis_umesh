@@ -10,13 +10,11 @@
 
 #include "qgsmapcanvas.h"
 #include "qgsmapcanvasmap.h"
-//#include "qgscursors.h"
 #include "qgsmaptopixel.h"
 #include "qgsrubberband.h"
 #include "qgscoordinatereferencesystem.h"
 #include "qgsmaptool.h"
 #include "qgspoint.h"
-//janm #include "qgsapplication.h"
 
 #if defined(WIN32) || defined(WIN64)
 #  include <windows.h>

@@ -370,8 +370,8 @@ long GRID::read_ugrid_mesh()
         std::string mesh_b;
         std::string location_a;
         std::string location_b;
-        int topology_a;
-        int topology_b;
+        int topology_a = -1;
+        int topology_b = -1;
 
         int i = 0;
         for (int i_var = 0; i_var < nvars; i_var++)

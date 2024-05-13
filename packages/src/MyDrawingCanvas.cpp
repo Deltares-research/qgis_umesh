@@ -2,6 +2,7 @@
 #include <string.h>
 
 #define DLL_EXPORT
+#include <qmath.h>
 #include "MyDrawingCanvas.h"
 #include "map_time_manager_window.h"
 #include "color_ramp.h"
@@ -9,13 +10,11 @@
 
 #include "qgsmapcanvas.h"
 #include "qgsmapcanvasmap.h"
-//#include "qgscursors.h"
 #include "qgsmaptopixel.h"
 #include "qgsrubberband.h"
 #include "qgscoordinatereferencesystem.h"
 #include "qgsmaptool.h"
 #include "qgspoint.h"
-//janm #include "qgsapplication.h"
 #include <qgsdistancearea.h>
 
 #if defined(WIN32) || defined(WIN64)
@@ -43,7 +42,7 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     QgsMapCanvasItem(QGisIface->mapCanvas()),
     printing(false)
     {
-    //janm QgsMapTool::setCursor(QgsApplication::getThemeCursor(QgsApplication::Cursor::CrossHair));
+    QgsMapTool::setCursor(Qt::CrossCursor);
     m_property = MapProperty::getInstance();
 
     mQGisIface = QGisIface;

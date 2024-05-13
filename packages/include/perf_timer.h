@@ -48,12 +48,12 @@ public:
         nr_calls = 1;
     }
 
-    bool running;
-    std::string name;
+    bool running = false;
+    std::string name = "";
     int level;
     int line_number;
     int nr_calls;
-    double elapse_time;
+    double elapse_time = 0.0;
     std::string filename;
     std::string functionname;
     std::chrono::high_resolution_clock::time_point start;

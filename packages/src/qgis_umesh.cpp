@@ -323,7 +323,7 @@ void qgis_umesh::set_enabled()
     }
     else
     {
-        //QMessageBox::warning(0, tr("Message"), QString("Plugin will be enabled.\n"));
+        //QMessageBox::warning(0, tr("Message"), QString("Plugin will be disabled.\n"));
         mainAction->setChecked(false);
         _menuToolBar->setEnabled(false);
         open_action_map->setEnabled(false);
@@ -554,11 +554,11 @@ void qgis_umesh::openFile()
     fd->selectNameFilter(list->at(0));
     fd->setFileMode(QFileDialog::ExistingFiles);  // Enable multiple file selection at once
 
-    QDir path("d:/mooiman/home/models/delft3d/grids/test_qgis");
-    if (path.exists())
-    {
-        fd->setDirectory(path);
-    }
+    //QDir path("d:/mooiman/home/models/delft3d/grids/test_qgis");
+    //if (path.exists())
+    //{
+    //    fd->setDirectory(path);
+    //}
 
     bool canceled = fd->exec() != QDialog::Accepted;
     if (!canceled)
@@ -638,11 +638,11 @@ void qgis_umesh::open_file_his_cf()
     fd->selectNameFilter(list->at(0));
     fd->setFileMode(QFileDialog::ExistingFiles);  // Enable multiple file selection at once
 
-    QDir path("d:/mooiman/home/models/delft3d/grids/test_qgis");
-    if (path.exists())
-    {
-        fd->setDirectory(path);
-    }
+    //QDir path("d:/mooiman/home/models/delft3d/grids/test_qgis");
+    //if (path.exists())
+    //{
+    //    fd->setDirectory(path);
+    //}
 
     bool canceled = fd->exec() != QDialog::Accepted;
     if (!canceled)
@@ -671,7 +671,9 @@ void qgis_umesh::open_file_his_cf()
 void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
 {
     int ncid;
+#if DO_TIMING == 1
     auto start = std::chrono::steady_clock::now();
+#endif
     char* fname = strdup(ncfile.absoluteFilePath().toUtf8());
     int status = nc_open(fname, NC_NOWRITE, &ncid);
     (void)nc_close(ncid);
@@ -689,10 +691,12 @@ void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
     _his_cf_file->read();
     activate_observation_layers();
 
+#if DO_TIMING == 1
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapse_time = end - start;
     QString msg = QString(tr("Timing reading meta data from netCDF file \"%1\": %2 [sec]").arg(ncfile.fileName()).arg(elapse_time.count()));
     QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+#endif
 }
 //
 //-----------------------------------------------------------------------------
@@ -747,6 +751,9 @@ void qgis_umesh::open_file_mdu()
     delete fd;
     delete str;
 }
+//
+//-----------------------------------------------------------------------------
+//
 void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
 {
     std::string fname = jsonfile.absoluteFilePath().toStdString();
@@ -1434,7 +1441,7 @@ void qgis_umesh::activate_layers()
     if (mainAction->isChecked())
     {
         QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
-        for (int i = 0; i< groups.length(); i++)
+        for (int i = 0; i < groups.length(); i++)
         {
             //QMessageBox::warning(0, "Message", QString("_fil_index: %1+1.").arg(_fil_index+1));
             for (int j = 0; j < _fil_index + 1; j++)
