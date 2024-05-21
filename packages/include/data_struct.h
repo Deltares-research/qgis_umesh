@@ -2,14 +2,14 @@
 #define DATA_H_INC
 
 // data structures needed in several file
-enum LOCATION
+enum class LOCATION
 {
     NODE = 0,
     EDGE,
     FACE,
     NR_LOCATIONS
 };
-enum OBSERVATION_TYPE
+enum class OBSERVATION_TYPE
 {
     OBS_NONE,  // needed for observation point
     OBS_POINT,  // needed for observation point

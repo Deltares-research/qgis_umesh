@@ -101,13 +101,13 @@ class HVL
         
         QgsLayerTreeGroup* get_subgroup(QgsLayerTreeGroup*, QString);
         void add_layer_to_group(QgsVectorLayer*, QgsLayerTreeGroup*);
+        std::vector<std::string> tokenize(const std::string& s, char c);
+        std::vector<std::string> tokenize(const std::string& s, std::size_t count);
 
     private slots:
 
     private:
         void CrsChanged();
-        std::vector<std::string> tokenize(const std::string& s, char c);
-        std::vector<std::string> tokenize(const std::string& s, std::size_t count);
 
         QgisInterface* m_QGisIface;
         std::vector<UGRID*> m_ugrid_file;

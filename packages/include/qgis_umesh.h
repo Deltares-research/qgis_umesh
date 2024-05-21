@@ -54,7 +54,6 @@ class UGRID;
 
 class qgis_umesh
     : public QObject, public QgisPlugin
-
 {
     Q_OBJECT
 
@@ -165,6 +164,5 @@ class qgis_umesh
         int _mdu_fil_index;
         std::vector<JSON_READER *> m_mdu_files;
         HVL* m_hvl = nullptr; 
-
 };
 #endif  // QGIS_UMESH_H

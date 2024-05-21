@@ -2,8 +2,6 @@
 #include "qgis_umesh.h"
 #include "perf_timer.h"
 
-//#define GUI_EXPORT __declspec(dllimport)
-
 #if defined(WIN64)
 #  include <windows.h>
 #  define strdup _strdup
@@ -19,7 +17,6 @@
 
 /* static */ const QgisPlugin::PluginType qgis_umesh::s_plugin_type = QgisPlugin::UI;
 /* static */ const QString* s_plugin_icon;
-
 //
 //-----------------------------------------------------------------------------
 //
@@ -47,12 +44,12 @@ qgis_umesh::qgis_umesh(QgisInterface* iface):
     status_bar = mQGisIface->statusBarIface();
     status_bar->addPermanentWidget(this->pgBar, 0, QgsStatusBar::Anchor::AnchorRight);
 
-    QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible}
+    QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible}
     //connect(treeRoot, &QgsLayerTree::removedChildren, this, &qgis_umesh::onWillRemoveChildren);
-    connect(treeRoot, SIGNAL(removedChildren(QgsLayerTreeNode *, int, int)), this, SLOT(onWillRemoveChildren(QgsLayerTreeNode *, int, int)));
+    connect(treeRoot, SIGNAL(removedChildren(QgsLayerTreeNode*, int, int)), this, SLOT(onWillRemoveChildren(QgsLayerTreeNode*, int, int)));
     connect(treeRoot, SIGNAL(layerWillBeRemoved(QString)), this, SLOT(onRemovedChildren(QString)));
 }
-void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, int indexTo)
+void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode* node, int indexFrom, int indexTo)
 {
     Q_UNUSED(indexTo);
     QString name = node->name();  // contains the group name
@@ -65,7 +62,7 @@ void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode * node, int indexFrom, in
             // Close the map time manager window
             // Remove the file entry belonging to this group
 
-            QString timings_file(m_working_dir + "/timing_qgis_umesh.log");
+            QString timings_file(m_working_dir + "/qgis_umesh_timing.log");
             PRINT_TIMERN(timings_file.toStdString());
             CLEAR_TIMER();
             m_working_dir = QString("");  // make it empty
@@ -122,7 +119,7 @@ void qgis_umesh::initGui()
     }
 
     connect(this->mQGisIface, SIGNAL(projectRead()), this, SLOT(project_read()));
-    connect(this->mQGisIface, SIGNAL(currentLayerChanged(QgsMapLayer *)), this, SLOT(set_enabled()));
+    connect(this->mQGisIface, SIGNAL(currentLayerChanged(QgsMapLayer*)), this, SLOT(set_enabled()));
 
     QProcessEnvironment env;
     QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
@@ -236,7 +233,7 @@ void qgis_umesh::initGui()
     //connect(mapoutputAction, &QAction::triggered, MapTimeManagerWindow, &MapTimeManagerWindow::contextMenu);
 
     icon_open = get_icon_file(program_files_dir, "/icons/file_open.png");
-    QAction * saveAction = new QAction(icon_open, tr("&Save"));
+    QAction* saveAction = new QAction(icon_open, tr("&Save"));
     saveAction->setToolTip(tr("Dummmy Item"));
     saveAction->setStatusTip(tr("Dummy item shown in statusbar"));
     saveAction->setEnabled(true);
@@ -257,10 +254,10 @@ void qgis_umesh::initGui()
 //------------------------------------------------------------------------------
     _menuToolBar = new QToolBar();
 
-    QMenuBar * janm = new QMenuBar();
+    QMenuBar* janm = new QMenuBar();
     janm->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    QMenu * janm1 = janm->addMenu("File");
+    QMenu* janm1 = janm->addMenu("File");
     janm1->addAction(open_action_map);
     janm1->addAction(open_action_his_cf);
 
@@ -318,7 +315,7 @@ void qgis_umesh::set_enabled()
         open_action_mdu->setEnabled(true);
 
         inspectAction->setEnabled(false);
-        UGRID * active_grid_file = m_hvl->get_active_ugrid_file("");
+        UGRID* active_grid_file = m_hvl->get_active_ugrid_file("");
         if (active_grid_file != nullptr)
         {
             inspectAction->setEnabled(true);
@@ -357,13 +354,13 @@ QIcon qgis_umesh::get_icon_file(QDir home_dir, QString file)
 //
 //-----------------------------------------------------------------------------
 //
-void qgis_umesh::show_map_output(UGRID * ugrid_file)
+void qgis_umesh::show_map_output(UGRID* ugrid_file)
 {
     //QMessageBox::information(0, "Information", QString("qgis_umesh::show_map_output()\nTime manager: %1.").arg(MapTimeManagerWindow::get_count()));
 
     // Check on at least UGRID-1.0 file formaat
     long nr_times = 0;
-    struct _global_attributes * globals;
+    struct _global_attributes* globals;
     bool conventions_found = false;
 
     if (ugrid_file != nullptr)
@@ -400,7 +397,7 @@ void qgis_umesh::show_map_output(UGRID * ugrid_file)
         {
             // CRS layer should be the same as the presentation CRS
             QgsCoordinateReferenceSystem s_crs = QgsProject::instance()->crs();  // CRS of the screen
-            QgsMapLayer * active_layer = mQGisIface->activeLayer();
+            QgsMapLayer* active_layer = mQGisIface->activeLayer();
             QgsCoordinateReferenceSystem new_crs = active_layer->crs(); // CRS of the vector layer
             if (s_crs != new_crs)
             {
@@ -436,6 +433,10 @@ void qgis_umesh::experiment()
 //
 void qgis_umesh::mapPropertyWindow()
 {
+    if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
+    {
+        MapPropertyWindow* map_property = new MapPropertyWindow(mMyCanvas);
+    }
 }
 //
 //-----------------------------------------------------------------------------
@@ -475,7 +476,7 @@ Function:   Start an process, main program will wait or continue
 depending on argument waiting
 Context:    -
 -------------------------------------------------------*/
-int qgis_umesh::QT_SpawnProcess(int waiting, char * prgm, char ** args)
+int qgis_umesh::QT_SpawnProcess(int waiting, char* prgm, char** args)
 {
     int i = 0;
     int status;
@@ -508,7 +509,6 @@ int qgis_umesh::QT_SpawnProcess(int waiting, char * prgm, char ** args)
         delete proc;
     }
     return status;
-
 }
 //
 //-----------------------------------------------------------------------------
@@ -538,9 +538,9 @@ void qgis_umesh::about()
 //
 void qgis_umesh::openFile()
 {
-    QString * str = new QString();
-    QFileDialog * fd = new QFileDialog();
-    QStringList * list = new QStringList();
+    QString* str = new QString();
+    QFileDialog* fd = new QFileDialog();
+    QStringList* list = new QStringList();
 
     str->clear();
 
@@ -573,16 +573,16 @@ void qgis_umesh::openFile()
     fd->selectNameFilter(list->at(0));
     fd->setFileMode(QFileDialog::ExistingFiles);  // Enable multiple file selection at once
 
-    QDir path("d:/mooiman/home/models/delft3d/grids/test_qgis");
-    if (path.exists())
-    {
-        fd->setDirectory(path);
-    }
+    //QDir path("d:/mooiman/home/models/delft3d/grids/test_qgis");
+    //if (path.exists())
+    //{
+    //    fd->setDirectory(path);
+    //}
 
     bool canceled = fd->exec() != QDialog::Accepted;
     if (!canceled)
     {
-        QStringList * QFilenames = new QStringList();
+        QStringList* QFilenames = new QStringList();
         QFilenames->append(fd->selectedFiles());
 
         this->pgBar->show();
@@ -606,7 +606,7 @@ void qgis_umesh::openFile(QFileInfo ncfile)
     {
         m_working_dir = ncfile.absolutePath().toUtf8();
     }
-    char * fname_c = strdup(ncfile.absoluteFilePath().toUtf8());
+    char* fname_c = strdup(ncfile.absoluteFilePath().toUtf8());
     int status = nc_open(fname_c, NC_NOWRITE, &ncid);
     (void)nc_close(ncid);
     free(fname_c); fname_c = nullptr;
@@ -618,14 +618,14 @@ void qgis_umesh::openFile(QFileInfo ncfile)
     }
     _fil_index++;
     m_ugrid_file.push_back(new UGRID(ncfile, this->pgBar));
-    UGRID * ugrid_file = new UGRID(ncfile, this->pgBar);
+    UGRID* ugrid_file = new UGRID(ncfile, this->pgBar);
     //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1.").arg(ncfile.absoluteFilePath()));
     ugrid_file->read();
     m_ugrid_file[_fil_index] = ugrid_file;
     m_hvl->set_ugrid_file(m_ugrid_file);
     // check on UGRID file; that is an item in teh conventions attribute
     bool conventions_found = false;
-    struct _global_attributes * globals = ugrid_file->get_global_attributes();
+    struct _global_attributes* globals = ugrid_file->get_global_attributes();
     for (int i = 0; i < globals->count; i++)
     {
         if (globals->attribute[i]->name == "Conventions")
@@ -661,9 +661,9 @@ void qgis_umesh::openFile(QFileInfo ncfile)
 void qgis_umesh::open_file_his_cf()
 {
     QString fname;
-    QString * str = new QString();
-    QFileDialog * fd = new QFileDialog();
-    QStringList * list = new QStringList();
+    QString* str = new QString();
+    QFileDialog* fd = new QFileDialog();
+    QStringList* list = new QStringList();
 
     str->clear();
     str->append("CF Time Series");
@@ -685,16 +685,16 @@ void qgis_umesh::open_file_his_cf()
     fd->selectNameFilter(list->at(0));
     fd->setFileMode(QFileDialog::ExistingFiles);  // Enable multiple file selection at once
 
-    QDir path("d:/mooiman/home/models/delft3d/grids/test_qgis");
-    if (path.exists())
-    {
-        fd->setDirectory(path);
-    }
+    //QDir path("d:/mooiman/home/models/delft3d/grids/test_qgis");
+    //if (path.exists())
+    //{
+    //    fd->setDirectory(path);
+    //}
 
     bool canceled = fd->exec() != QDialog::Accepted;
     if (!canceled)
     {
-        QStringList * QFilenames = new QStringList();
+        QStringList* QFilenames = new QStringList();
         QFilenames->append(fd->selectedFiles());
 
         this->pgBar->show();
@@ -718,8 +718,10 @@ void qgis_umesh::open_file_his_cf()
 void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
 {
     int ncid;
+#if DO_TIMING == 1
     auto start = std::chrono::steady_clock::now();
-    char * fname = strdup(ncfile.absoluteFilePath().toUtf8());
+#endif
+    char* fname = strdup(ncfile.absoluteFilePath().toUtf8());
     int status = nc_open(fname, NC_NOWRITE, &ncid);
     (void)nc_close(ncid);
     if (status != NC_NOERR)
@@ -731,24 +733,26 @@ void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
     fname = nullptr;
     _his_cf_fil_index++;
     m_his_cf_file.push_back(new HISCF(ncfile, this->pgBar));
-    HISCF * _his_cf_file = m_his_cf_file[_his_cf_fil_index];
+    HISCF* _his_cf_file = m_his_cf_file[_his_cf_fil_index];
     //QMessageBox::warning(0, tr("Warning"), tr("netCDF file opened:\n%1.").arg(ncfile.absoluteFilePath()));
     _his_cf_file->read();
     activate_observation_layers();
 
+#if DO_TIMING == 1
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapse_time = end - start;
     QString msg = QString(tr("Timing reading meta data from netCDF file \"%1\": %2 [sec]").arg(ncfile.fileName()).arg(elapse_time.count()));
     QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+#endif
 }
 //
 //-----------------------------------------------------------------------------
 //
 void qgis_umesh::open_file_mdu()
 {
-    QString * str = new QString();
-    QFileDialog * fd = new QFileDialog();
-    QStringList * list = new QStringList();
+    QString* str = new QString();
+    QFileDialog* fd = new QFileDialog();
+    QStringList* list = new QStringList();
 
     str->clear();
     str->append("D-Flow FM json");
@@ -773,7 +777,7 @@ void qgis_umesh::open_file_mdu()
     bool canceled = fd->exec() != QDialog::Accepted;
     if (!canceled)
     {
-        QStringList * QFilenames = new QStringList();
+        QStringList* QFilenames = new QStringList();
         QFilenames->append(fd->selectedFiles());
 
         this->pgBar->show();
@@ -794,26 +798,560 @@ void qgis_umesh::open_file_mdu()
     delete fd;
     delete str;
 }
+//
+//-----------------------------------------------------------------------------
+//
 void qgis_umesh::open_file_mdu(QFileInfo jsonfile)
 {
+    std::string fname = jsonfile.absoluteFilePath().toStdString();
+    JSON_READER* pt_mdu = new JSON_READER(fname);
+    if (pt_mdu == nullptr)
+    {
+        QMessageBox::warning(0, tr("Warning"), tr("Cannot open JSON file:\n%1.").arg(jsonfile.absoluteFilePath()));
+        return;
+    }
+    m_mdu_files.push_back(pt_mdu);
+    //MDU* _mdu_file = new MDU(jsonfile, this->pgBar);
+    std::string json_key = "data.geometry.netfile";
+    std::vector<std::string> ncfile;
+    long status = pt_mdu->get(json_key, ncfile);
+    QString mesh;
+    if (ncfile.size() == 1)
+    {
+        mesh = jsonfile.absolutePath() + "/" + QString::fromStdString(ncfile[0]);
+        //QMessageBox::warning(0, tr("Warning"), tr("JSON file opened: %1\nMesh file opened: %2.").arg(jsonfile.absoluteFilePath()).arg(mesh));
+        openFile(QFileInfo(mesh));
+    }
+    else
+    {
+        QString qname = QString::fromStdString(pt_mdu->get_filename());
+        QString msg = QString(tr("No UGRID/SGRID mesh file given.\nTag \"%2\" does not exist in file \"%1\".").arg(QString::fromStdString(json_key)).arg(qname));
+        QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+        return;
+    }
+    QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
+    QgsLayerTreeGroup* myGroup = treeRoot->findGroup(QString("GRID - %1").arg(jsonfile.fileName()));
+    if (myGroup == nullptr)
+    {
+        QString name = QString("JSON - %1").arg(jsonfile.fileName());
+        myGroup = treeRoot->insertGroup(0, name);
+        myGroup->setExpanded(true);  // true is the default
+        myGroup->setItemVisibilityChecked(true);
+        //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
+        myGroup->setItemVisibilityCheckedRecursive(true);
+    }
+//------------------------------------------------------------------------------
+    int i_json_key = 0;
+    int n_json_key = 11;
+    this->pgBar->setMaximum(1000);
+    this->pgBar->setValue(i_json_key*1000/n_json_key);
+    this->pgBar->show();
+
+    json_key = "data.output.obsfile";
+    std::vector<std::string> obs_file;
+    status = pt_mdu->get(json_key, obs_file);
+    if (obs_file.size() != 0 && obs_file[0] != "null")
+    {
+        for (int i = 0; i < obs_file.size(); ++i)
+        {
+            QString obser_file = jsonfile.absolutePath() + "/" + QString::fromStdString(obs_file[i]);
+            if (!QFileInfo(obser_file).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Observation points are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = obser_file.toStdString();
+                JSON_READER* pt_obs = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_observation_point(grid_file, pt_obs, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+//------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.external_forcing.extforcefile";
+    std::vector<std::string> extold_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, extold_file_name);
+
+    if (extold_file_name.size() != 0 && extold_file_name[0] != "null" )
+    {
+        for (int i = 0; i < extold_file_name.size(); ++i)
+        {
+            QString extold_file = jsonfile.absolutePath() + "/" + QString::fromStdString(extold_file_name[i]);
+            if (!QFileInfo(extold_file).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("External forcing file (old format) is skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = extold_file.toStdString();
+                JSON_READER* pt_extold_file = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_1D_external_forcing(grid_file, pt_extold_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+//------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.external_forcing.extforcefilenew";
+    std::vector<std::string> ext_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, ext_file_name);
+
+    if (ext_file_name.size() != 0 && ext_file_name[0] != "null")
+    {
+        for (int i = 0; i < ext_file_name.size(); ++i)
+        {
+            QString ext_file = jsonfile.absolutePath() + "/" + QString::fromStdString(ext_file_name[i]);
+            if (!QFileInfo(ext_file).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("External forcings are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = ext_file.toStdString();
+                JSON_READER* pt_ext_file = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_1D_external_forcing(grid_file, pt_ext_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.geometry.structurefile";
+    std::vector<std::string> structure_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, structure_file_name);
+    if (structure_file_name.size() != 0 && structure_file_name[0] != "null")
+    {
+        for (int i = 0; i < structure_file_name.size(); ++i)
+        {
+            QString struct_file = jsonfile.absolutePath() + "/" + QString::fromStdString(structure_file_name[i]);
+            if (!QFileInfo(struct_file).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Structures are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = struct_file.toStdString();
+                JSON_READER* pt_struct_file = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_structure(grid_file, pt_struct_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.geometry.drypointsfile";
+    std::vector<std::string> drypoints_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, drypoints_file_name);
+    if (drypoints_file_name.size() != 0 && drypoints_file_name[0] != "null")
+    {
+        for (int i = 0; i < drypoints_file_name.size(); ++i)
+        {
+            QString drypoints_file = jsonfile.absolutePath() + "/" + QString::fromStdString(drypoints_file_name[i]);
+            if (!QFileInfo(drypoints_file).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Structures are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = drypoints_file.toStdString();
+                JSON_READER* pt_file = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_drypoints(grid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.geometry.proflocfile";
+    std::vector<std::string> prof_loc_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, prof_loc_file_name);
+    if (prof_loc_file_name.size() != 0 && prof_loc_file_name[0] != "null")
+    {
+        for (int i = 0; i < prof_loc_file_name.size(); ++i)
+        {
+            QString abs_fname = jsonfile.absolutePath() + "/" + QString::fromStdString(prof_loc_file_name[i]);
+            if (!QFileInfo(abs_fname).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Structures are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = abs_fname.toStdString();
+                JSON_READER* pt_profloc = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_sample_point(grid_file, pt_profloc, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.output.crsfile";
+    std::vector<std::string> cross_section_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, cross_section_file_name);
+    if (cross_section_file_name.size() != 0 && cross_section_file_name[0] != "null")
+    {
+        for (int i = 0; i < cross_section_file_name.size(); ++i)
+        {
+            QString obs_cross_file = jsonfile.absolutePath() + "/" + QString::fromStdString(cross_section_file_name[i]);
+            if (!QFileInfo(obs_cross_file).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Observation cross-sections are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = obs_cross_file.toStdString();
+                JSON_READER* pt_obs_cross_file = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_observation_cross_section(grid_file, pt_obs_cross_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+//------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.geometry.thindamfile";
+    std::vector<std::string> thin_dam_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, thin_dam_file_name);
+    if (thin_dam_file_name.size() != 0 && thin_dam_file_name[0] != "null")
+    {
+        for (int i = 0; i < thin_dam_file_name.size(); ++i)
+        {
+            QString thin_dam_file = jsonfile.absolutePath() + "/" + QString::fromStdString(thin_dam_file_name[i]);
+            if (!QFileInfo(thin_dam_file).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Thin dams are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = thin_dam_file.toStdString();
+                JSON_READER* pt_thin_dam_file = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_thin_dams(grid_file, pt_thin_dam_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+//------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.geometry.fixedweirfile";
+    std::vector<std::string> fixed_weir_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, fixed_weir_file_name);
+    if (fixed_weir_file_name.size() != 0 && fixed_weir_file_name[0] != "null")
+    {
+        for (int i = 0; i < fixed_weir_file_name.size(); ++i)
+        {
+            QString fix_weir_file = jsonfile.absolutePath() + "/" + QString::fromStdString(fixed_weir_file_name[i]);
+            if (!QFileInfo(fix_weir_file).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Thin dams are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = fix_weir_file.toStdString();
+                JSON_READER* pt_file = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_fixed_weir(grid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.geometry.crosslocfile";
+    std::vector<std::string> cross_section_location_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, cross_section_location_file_name);
+    if (cross_section_location_file_name.size() != 0 && cross_section_location_file_name[0] != "null")
+    {
+        for (int i = 0; i < cross_section_location_file_name.size(); ++i)
+        {
+            QString full_file_name = jsonfile.absolutePath() + "/" + QString::fromStdString(cross_section_location_file_name[i]);
+            if (!QFileInfo(full_file_name).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Cross-section locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = full_file_name.toStdString();
+                JSON_READER* pt_file = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_1D_cross_section(grid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    //------------------------------------------------------------------------------
+    i_json_key += 1;
+    this->pgBar->setValue(i_json_key * 1000 / n_json_key);
+    json_key = "data.geometry.retentionfile";
+    std::vector<std::string> retention_location_file_name;  // There is just one name, so size should be 1
+    status = pt_mdu->get(json_key, retention_location_file_name);
+    if (retention_location_file_name.size() != 0 && retention_location_file_name[0] != "null")
+    {
+        for (int i = 0; i < retention_location_file_name.size(); ++i)
+        {
+            QString full_file_name = jsonfile.absolutePath() + "/" + QString::fromStdString(retention_location_file_name[i]);
+            if (!QFileInfo(full_file_name).exists())
+            {
+                QString qname = QString::fromStdString(pt_mdu->get_filename());
+                QString msg = QString(tr("Retention locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
+            }
+            else
+            {
+                fname = full_file_name.toStdString();
+                JSON_READER* pt_file = new JSON_READER(fname);
+                UGRID* grid_file = m_ugrid_file[_fil_index];
+                if (grid_file->get_filename().fileName() != QString::fromStdString(ncfile[0]))
+                {
+                    QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Mesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromStdString(ncfile[0])).arg(grid_file->get_filename().fileName()));
+                    return;
+                }
+                struct _mapping* mapping;
+                mapping = grid_file->get_grid_mapping();
+                m_hvl->create_vector_layer_1D_retention(grid_file, pt_file, mapping->epsg, myGroup);  // i.e. a JSON file
+            }
+        }
+    }
+    this->pgBar->setValue(1000);
+    this->pgBar->hide();
 }
 //
 //-----------------------------------------------------------------------------
 //
 void qgis_umesh::open_file_link1d2d_json()
 {
+    QString fname;
+    QString* str = new QString();
+    QFileDialog* fd = new QFileDialog();
+    QStringList* list = new QStringList();
+
+    str->clear();
+    str->append("Link1D2D json");
+    str->append(" (*_ini.json)");
+    list->append(*str);
+    str->clear();
+    str->append("All files");
+    str->append(" (*.*)");
+    list->append(*str);
+
+    fd->setWindowTitle("Open Link1D2D json file");
+    fd->setNameFilters(*list);
+    fd->selectNameFilter(list->at(0));
+    fd->setFileMode(QFileDialog::ExistingFiles);  // Enable multiple file selection at once
+
+    QDir path("d:/mooiman/home/models/delft3d/GIS/grids/test_qgis");
+    if (path.exists())
+    {
+        fd->setDirectory(path);
+    }
+
+    bool canceled = fd->exec() != QDialog::Accepted;
+    if (!canceled)
+    {
+        QStringList* QFilenames = new QStringList();
+        QFilenames->append(fd->selectedFiles());
+
+        this->pgBar->show();
+        this->pgBar->setMaximum(1000);
+        this->pgBar->setValue(0);
+
+        for (QStringList::Iterator it = QFilenames->begin(); it != QFilenames->end(); ++it) {
+            fname = *it;
+            open_file_link1d2d_json(fname);
+        }
+
+        this->pgBar->setValue(1000);
+        if (this->pgBar->value() == this->pgBar->maximum())
+        {
+            this->pgBar->hide();
+        }
+    }
+    delete fd;
+    delete str;
 }
 void qgis_umesh::open_file_link1d2d_json(QFileInfo jsonfile)
 {
+    std::string fname = jsonfile.absoluteFilePath().toStdString();
+    JSON_READER* pt_link1d2d = new JSON_READER(fname);
+    if (pt_link1d2d == nullptr)
+    {
+        QMessageBox::warning(0, tr("Warning"), tr("Cannot open JSON file:\n%1.").arg(jsonfile.absoluteFilePath()));
+        return;
+    }
+
+    long epsg = 0;
+    m_hvl->create_vector_layer_1D2D_link(pt_link1d2d, epsg);  // i.e. a JSON file
 }
 //
 //-----------------------------------------------------------------------------
 //
 void qgis_umesh::open_file_obs_point_json()
 {
+    QString fname;
+    QString* str = new QString();
+    QFileDialog* fd = new QFileDialog();
+    QStringList* list = new QStringList();
+
+    str->clear();
+    str->append("Observation point json");
+    str->append(" (*_xyn.json)");
+    list->append(*str);
+    str->clear();
+    str->append("All files");
+    str->append(" (*.*)");
+    list->append(*str);
+
+    fd->setWindowTitle("Open Observation point json file");
+    fd->setNameFilters(*list);
+    fd->selectNameFilter(list->at(0));
+    fd->setFileMode(QFileDialog::ExistingFiles);  // Enable multiple file selection at once
+
+    QDir path("d:/mooiman/home/models/delft3d/GIS/grids/test_qgis");
+    if (path.exists())
+    {
+        fd->setDirectory(path);
+    }
+
+    bool canceled = fd->exec() != QDialog::Accepted;
+    if (!canceled)
+    {
+        QStringList* QFilenames = new QStringList();
+        QFilenames->append(fd->selectedFiles());
+
+        this->pgBar->show();
+        this->pgBar->setMaximum(1000);
+        this->pgBar->setValue(0);
+
+        for (QStringList::Iterator it = QFilenames->begin(); it != QFilenames->end(); ++it) {
+            fname = *it;
+            open_file_obs_point_json(fname);
+        }
+
+        this->pgBar->setValue(1000);
+        if (this->pgBar->value() == this->pgBar->maximum())
+        {
+            this->pgBar->hide();
+        }
+
+    }
+    delete fd;
+    delete str;
 }
 void qgis_umesh::open_file_obs_point_json(QFileInfo jsonfile)
 {
+    std::string fname = jsonfile.absoluteFilePath().toStdString();
+    JSON_READER* pt_file = new JSON_READER(fname);
+    if (pt_file == nullptr)
+    {
+        QMessageBox::warning(0, tr("Warning"), tr("Cannot open JSON file:\n%1.").arg(jsonfile.absoluteFilePath()));
+        return;
+    }
+
+    long epsg = 0;
+    QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();
+    QgsLayerTreeGroup* treeGroup;
+    treeGroup = m_hvl->get_subgroup(treeRoot, QString("Location point"));
+
+    std::vector<std::string> token = m_hvl->tokenize(pt_file->get_filename(), '/');
+    UGRID* ugrid_file = new UGRID(QFileInfo(QString::fromStdString(token[token.size() - 1])), nullptr);
+    m_hvl->create_vector_layer_observation_point(ugrid_file, pt_file, epsg, treeGroup);  // i.e. a JSON file
 }
 //
 //-----------------------------------------------------------------------------
@@ -863,13 +1401,69 @@ void qgis_umesh::start_plotcfts()
         delete proc;
     }
     return;
-
 }
 //-----------------------------------------------------------------------------
 //
-HISCF * qgis_umesh::get_active_his_cf_file(QString layer_id)
+HISCF* qgis_umesh::get_active_his_cf_file(QString layer_id)
 {
-    return nullptr;
+    // Function to find the filename belonging by the highlighted layer,
+    // or to which group belongs the highligthed layer,
+    // or the highlighted group
+    QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
+    QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
+    QgsMapLayer* active_layer = NULL;
+    HISCF* _his_cf_file = nullptr;
+
+    if (layer_id == "")
+    {
+        active_layer = mQGisIface->activeLayer();
+        if (active_layer != nullptr)
+        {
+            layer_id = active_layer->id();
+        }
+        else
+        {
+            // Probably a group is selected, is it the correct one
+            // for (int j = 0; j < _his_cf_fil_index + 1; j++)
+            for (int j = 0; j < 0; j++)
+            {
+                QgsLayerTreeGroup* myGroup = treeRoot->findGroup(QString("History - %1").arg(m_his_cf_file[_his_cf_fil_index]->get_filename().fileName()));
+                if (myGroup != nullptr)
+                {
+                   // _his_cf_file = _his_cf_files[j];  ToDo : Needed, what group is selected
+                }
+            }
+        }
+    }
+    if (layer_id != "")
+    {
+        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nActive layer: %1.").arg(active_layer->name()));
+        // if there is an active layer, belongs it to a Mesh-group?
+        for (int j = 0; j < _his_cf_fil_index + 1; j++)
+        {
+            QgsLayerTreeGroup* myGroup = treeRoot->findGroup(QString("History - %1").arg(m_his_cf_file[_his_cf_fil_index]->get_filename().fileName()));
+            if (myGroup != nullptr)
+            {
+                QList <QgsLayerTreeLayer*> layers = myGroup->findLayers();
+                for (int k = 0; k < layers.length(); k++)
+                {
+                    // belong the active layer to this group?
+                    if (layers[k]->layerId() == layer_id)
+                    {
+                        //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2.").arg(myGroup->name()).arg(active_layer->name()));
+                        // get the full file name
+                        _his_cf_file = m_his_cf_file[j];
+                    }
+                }
+            }
+        }
+    }
+    //else
+    //{
+    //    QMessageBox::information(0, "Information", QString("No layer selected, determination of output files is not possible."));
+    //}
+
+    return _his_cf_file;
 }
 //
 //-----------------------------------------------------------------------------
@@ -1116,7 +1710,6 @@ void qgis_umesh::activate_layers()
             myGroup->setItemVisibilityChecked(false);
         }
     }
-
 }
 //
 //-----------------------------------------------------------------------------
@@ -1184,11 +1777,11 @@ void qgis_umesh::activate_observation_layers()
             {
                 for (int i = 0; i < obs_type.size(); i++)
                 {
-                    if (obs_type[i]->type == OBS_POINT)
+                    if (obs_type[i]->type == OBSERVATION_TYPE::OBS_POINT)
                     {
                         m_hvl->create_vector_layer_observation_point(fname, QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
                     }
-                    else if (obs_type[i]->type == OBS_POLYLINE)
+                    else if (obs_type[i]->type == OBSERVATION_TYPE::OBS_POLYLINE)
                     {
                         m_hvl->create_vector_layer_observation_polyline(fname, QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
                     }
@@ -1241,11 +1834,11 @@ void qgis_umesh::unload()
     unload_vector_layers();
 
     // clean the Mesh (unstructured) group
-    QgsLayerTree * treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
-    QList< QgsLayerTreeGroup * > groups = treeRoot->findGroups();
+    QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
+    QList< QgsLayerTreeGroup* > groups = treeRoot->findGroups();
     for (int i = 0; i < groups.size(); i++)
     {
-        QgsLayerTreeGroup * janm = groups.at(i);
+        QgsLayerTreeGroup* janm = groups.at(i);
         QString str = janm->name();
         if (str.contains("UGRID - ") ||
             str.contains("History -"))
@@ -1265,6 +1858,11 @@ void qgis_umesh::unload()
         //delete m_ugrid_file;
     }
 
+    if (mtm_widget != NULL)
+    {
+        delete mtm_widget;
+        mtm_widget = NULL;
+    }
     DELETE_TIMERN()
     //QMessageBox::warning(0, tr("Message"), QString("qgis_umesh::unload()."));
 }
@@ -1273,10 +1871,24 @@ void qgis_umesh::unload()
 //
 void qgis_umesh::unload_vector_layers()
 {
+    // remove scratch layer
+    QList< QgsMapLayer* > layers = mQGisIface->mapCanvas()->layers();
+
+    for (int i = 0; i < layers.count(); i++)
+    {
+        //QMessageBox::warning(0, tr("Message"), QString(tr("Layer name: ")) + layers[i]->name());
+        QString jan = layers[i]->name();
+        if (jan.contains("Points (Mooiman) vl_1") ||
+            jan == QString("Splines(Mooiman) vl_2") ||
+            jan == QString("Polylines(Mooiman) vl_3") ||
+            jan == QString("Polygons (Mooiman) vl_4"))
+        {
+            QgsProject::instance()->removeMapLayer(layers[i]);
+        }
+    }
 }
-
 //
-
+//-----------------------------------------------------------------------------
 //
 void qgis_umesh::dummy_slot()
 {
@@ -1294,14 +1906,14 @@ void qgis_umesh::dummy_slot()
 QGISEXTERN int type()
 {
     //QgsMessageLog::logMessage("::type()", "Hello World", Qgis::Info, true);
-    return qgis_umesh::s_plugin_type; // eerste, na selectie in plugin manager
+    return int(qgis_umesh::s_plugin_type); // eerste, na selectie in plugin manager
 }
 
 // Class factory to return a new instance of the plugin class
 QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
 {
     //QgsMessageLog::logMessage("::classFactory()", "QGIS umesh", Qgis::Info, true);
-    qgis_umesh * p = new qgis_umesh(iface);
+    qgis_umesh* p = new qgis_umesh(iface);
     return (QgisPlugin*) p; // tweede na selectie in plugin manager
 }
 
@@ -1314,7 +1926,7 @@ QGISEXTERN const QString* name()
 QGISEXTERN const QString* category()
 {
     //QgsMessageLog::logMessage("::category()", "QGIS umesh", Qgis::Info, true);
-    return &qgis_umesh::s_category; //
+    return &qgis_umesh::s_category;
 }
 
 QGISEXTERN const QString* description()

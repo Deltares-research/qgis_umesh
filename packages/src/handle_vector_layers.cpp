@@ -118,7 +118,7 @@ void HVL::create_vector_layer_nodes(QString fname, QString layer_name, struct _f
             QgsFeature MyFeature;
             QgsGeometry MyPoints;
             // int nsig = long( log10(nodes->count) ) + 1;
-            //START_TIMER(create_vector_layer_nodes_add_features);
+            START_TIMER(create_vector_layer_nodes_add_features);
             for (int j = 0; j < nodes->count; j++)
             {
                 int k = -1;
@@ -144,9 +144,13 @@ void HVL::create_vector_layer_nodes(QString fname, QString layer_name, struct _f
                 MyFeature.setValid(true);
                 MyFeatures.append(MyFeature);
             }
+            STOP_TIMER(create_vector_layer_nodes_add_features);
+            START_TIMER(create_vector_layer_nodes_add_features_data_provider);
             dp_vl->addFeatures(MyFeatures);
+            STOP_TIMER(create_vector_layer_nodes_add_features_data_provider);
+            START_TIMER(create_vector_layer_nodes_add_features_commit);
             vl->commitChanges();
-            //STOP_TIMER(create_vector_layer_nodes_add_features);
+            STOP_TIMER(create_vector_layer_nodes_add_features_commit);
 
             vl->setTitle(layer_name + ": " + fname);
 
@@ -724,7 +728,7 @@ void HVL::create_vector_layer_edges(QString fname, QString layer_name, struct _f
 //------------------------------------------------------------------------------
 void HVL::create_vector_layer_observation_point(QString fname, QString layer_name, _location_type * obs_points, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    if (obs_points != NULL && obs_points->type == OBS_POINT  || obs_points->type == OBS_POLYLINE)
+    if (obs_points != NULL && obs_points->type == OBSERVATION_TYPE::OBS_POINT  || obs_points->type == OBSERVATION_TYPE::OBS_POLYLINE)
     {
         START_TIMERN(create_vector_layer_observation_point);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
@@ -827,7 +831,7 @@ void HVL::create_vector_layer_observation_point(QString fname, QString layer_nam
 //------------------------------------------------------------------------------
 void HVL::create_vector_layer_observation_polyline(QString fname, QString layer_name, _location_type * obs_points, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    if (obs_points != NULL && obs_points->type == OBS_POLYLINE)
+    if (obs_points != NULL && obs_points->type == OBSERVATION_TYPE::OBS_POLYLINE)
     {
         START_TIMERN(create_vector_layer_observation_polyline);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
