@@ -892,51 +892,54 @@ void MyCanvas::draw_data_along_edge()
             string var_name = var->var_name;
             struct _mesh1d* mesh1d = m_ugrid_file->get_mesh_1d();
 
-            DataValuesProvider2D<double>std_data_at_node = m_ugrid_file->get_variable_values(var_name);
-            z_value = std_data_at_node.GetValueAtIndex(m_current_step, 0);
-            int length = std_data_at_node.m_numXY;
-
-            dims = var->dims;
-
-            struct _edge* edges = mesh1d->edge[0];
-            this->startDrawing(CACHE_1D);
-            double opacity = mCache_painter->opacity();
-            mCache_painter->setOpacity(m_property->get_opacity());
-            this->setPointSize(13);
-            vector<double> edge_x(2);
-            vector<double> edge_y(2);
-            vector<QColor> edge_color(2);
-
-            double missing_value = var->fill_value;
-            determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
-
-            if (true)  // boolean to draw gradient along line?
+            if (mesh1d != nullptr)
             {
-                for (int j = 0; j < edges->count; j++)
-                {
-                    int p1 = edges->edge_nodes[j][0];
-                    int p2 = edges->edge_nodes[j][1];
-                    edge_x[0] = mesh1d->node[0]->x[p1];
-                    edge_y[0] = mesh1d->node[0]->y[p1];
-                    edge_x[1] = mesh1d->node[0]->x[p2];
-                    edge_y[1] = mesh1d->node[0]->y[p2];
+                DataValuesProvider2D<double>std_data_at_node = m_ugrid_file->get_variable_values(var_name);
+                z_value = std_data_at_node.GetValueAtIndex(m_current_step, 0);
+                int length = std_data_at_node.m_numXY;
 
-                    edge_color[0] = m_ramph->getRgbFromValue(z_value[p1]);
-                    edge_color[1] = m_ramph->getRgbFromValue(z_value[p2]);
+                dims = var->dims;
 
-                    this->drawLineGradient(edge_x, edge_y, edge_color);
-                }
-            }
-            if (false)  // boolean to draw multidot?
-            {
-                m_rgb_color.resize(length);
-                for (int j = 0; j < length; j++)
+                struct _edge* edges = mesh1d->edge[0];
+                this->startDrawing(CACHE_1D);
+                double opacity = mCache_painter->opacity();
+                mCache_painter->setOpacity(m_property->get_opacity());
+                this->setPointSize(13);
+                vector<double> edge_x(2);
+                vector<double> edge_y(2);
+                vector<QColor> edge_color(2);
+
+                double missing_value = var->fill_value;
+                determine_min_max(z_value, length, &m_z_min, &m_z_max, missing_value);
+
+                if (true)  // boolean to draw gradient along line?
                 {
-                    m_rgb_color[j] = m_ramph->getRgbFromValue(z_value[j]);
+                    for (int j = 0; j < edges->count; j++)
+                    {
+                        int p1 = edges->edge_nodes[j][0];
+                        int p2 = edges->edge_nodes[j][1];
+                        edge_x[0] = mesh1d->node[0]->x[p1];
+                        edge_y[0] = mesh1d->node[0]->y[p1];
+                        edge_x[1] = mesh1d->node[0]->x[p2];
+                        edge_y[1] = mesh1d->node[0]->y[p2];
+
+                        edge_color[0] = m_ramph->getRgbFromValue(z_value[p1]);
+                        edge_color[1] = m_ramph->getRgbFromValue(z_value[p2]);
+
+                        this->drawLineGradient(edge_x, edge_y, edge_color);
+                    }
                 }
-                this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
+                if (false)  // boolean to draw multidot?
+                {
+                    m_rgb_color.resize(length);
+                    for (int j = 0; j < length; j++)
+                    {
+                        m_rgb_color[j] = m_ramph->getRgbFromValue(z_value[j]);
+                    }
+                    this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
+                }
+                mCache_painter->setOpacity(opacity);
             }
-            mCache_painter->setOpacity(opacity);
         }
     }
 }
