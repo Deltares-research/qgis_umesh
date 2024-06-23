@@ -102,7 +102,9 @@ void TestTimer::log(std::string out_file)
         size_t function_strlen = 8;
         for (auto& t : timing)
         {
-            name_strlen = std::max(name_strlen, t.name.length());
+            std::string s(2*t.level, '-');
+            std::string t_name = s + t.name ;
+            name_strlen = std::max(name_strlen, t_name.length());
             std::string file_str = t.filename.substr(t.filename.find_last_of("/\\") + 1);
             file_strlen = std::max(file_strlen, file_str.length());
             function_strlen = std::max(function_strlen, t.functionname.length());
@@ -135,13 +137,15 @@ void TestTimer::log(std::string out_file)
                 continue;  // skip the first one
             }
             std::string file_str = t.filename.substr(t.filename.find_last_of("/\\") + 1);
+            std::string s(2 * (t.level-1), ' ');
+            std::string t_name = s + t.name;
             os << std::setw(5) << t.level
                 << "   "
                 << std::setw(5) << t.nr_calls
                 << "   "
                 << std::setw(10) << std::fixed << std::setprecision(3) << t.elapse_time
                 << "   "
-                << std::left << std::setw(name_strlen) << t.name
+                << std::left << std::setw(name_strlen) << t_name
                 << "   "
                 << std::left << std::setw(file_strlen) << file_str
                 << "   "
