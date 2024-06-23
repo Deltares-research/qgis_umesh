@@ -9,7 +9,7 @@
 #define qgis_umesh_company "Deltares"
 #define qgis_umesh_company_url "https://www.deltares.nl"
 #define qgis_umesh_source_url "VCS_SOURCE_URL"
-#define qgis_umesh_program "QGIS_UMESH"
+#define qgis_umesh_program "QGIS_SUMESH"
 #define qgis_umesh_version_number "VN_MAJOR.VN_MINOR.VN_REVISION.VCS_BUILD_HASH"
 
 #if defined(WIN32)
