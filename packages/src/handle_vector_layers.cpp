@@ -92,17 +92,17 @@ void HVL::create_vector_layer_nodes(QString fname, QString layer_name, struct _f
             int nr_attrib_fields = 0;
             if (nodes->name.size() != 0)
             {
-                lMyAttribField << QgsField(QString("Node name"));
+                lMyAttribField << QgsField("Node name", QVariant::String);
                 nr_attrib_fields++;
             }
             if (nodes->long_name.size() != 0)
             {
-                lMyAttribField << QgsField(QString("Node long name"));
+                lMyAttribField << QgsField("Node long name", QVariant::String);
                 nr_attrib_fields++;
             }
-            lMyAttribField << QgsField(QString("Node Id (0-based)"));;
+            lMyAttribField << QgsField("Node Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Node Id (1-based)"));;
+            lMyAttribField << QgsField("Node Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QVector<QVariant> attribute(nr_attrib_fields);
@@ -152,7 +152,7 @@ void HVL::create_vector_layer_nodes(QString fname, QString layer_name, struct _f
             vl->commitChanges();
             STOP_TIMER(create_vector_layer_nodes_add_features_commit);
 
-            vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            vl->setTitle(layer_name + ": " + fname);
 
             if (layer_name == QString("Mesh1D Connection nodes") ||
                 layer_name == QString("Mesh1D nodes") ||
@@ -226,7 +226,7 @@ void HVL::create_vector_layer_data_on_edges(QString fname, _variable * var, stru
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 1;
-            lMyAttribField << QgsField(QString("Value", QVariant::Double);
+            lMyAttribField << QgsField("Value", QVariant::Double);
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -265,7 +265,7 @@ void HVL::create_vector_layer_data_on_edges(QString fname, _variable * var, stru
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
-            vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            vl->setTitle(layer_name + ": " + fname);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.5);
@@ -308,7 +308,7 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
                 QList <QgsField> lMyAttribField;
 
                 int nr_attrib_fields = 1;
-                lMyAttribField << QgsField(QString("Value", QVariant::Double);
+                lMyAttribField << QgsField("Value", QVariant::Double);
 
                 QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
                 vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -345,7 +345,7 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
 
                 if (vl->featureCount() != 0)
                 {
-                    vl->serverProperties()->setTitle(layer_name + ": " + fname);
+                    vl->setTitle(layer_name + ": " + fname);
 
                     QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
                     if (i == 0) {
@@ -415,7 +415,7 @@ void HVL::create_vector_layer_data_on_nodes(QString fname, _variable * var, stru
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 1;
-            lMyAttribField << QgsField(QString("Value", QVariant::Double);
+            lMyAttribField << QgsField("Value", QVariant::Double);
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -438,7 +438,7 @@ void HVL::create_vector_layer_data_on_nodes(QString fname, _variable * var, stru
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
-            vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            vl->setTitle(layer_name + ": " + fname);
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
             simple_marker->setStrokeStyle(Qt::NoPen);
@@ -511,17 +511,17 @@ void HVL::create_vector_layer_geometry(QString fname, QString layer_name, struct
             int nr_attrib_fields = 0;
             if (ntw_geom->geom[0]->name.size() != 0)
             {
-                lMyAttribField << QgsField(QString("Geometry edge name"));;
+                lMyAttribField << QgsField("Geometry edge name", QVariant::String);
                 nr_attrib_fields++;
             }
             if (ntw_geom->geom[0]->long_name.size() != 0)
             {
-                lMyAttribField << QgsField(QString("Geometry edge long name"));;
+                lMyAttribField << QgsField("Geometry edge long name", QVariant::String);
                 nr_attrib_fields++;
             }
-            lMyAttribField << QgsField(QString("Geometry Id (0-based)"));;
+            lMyAttribField << QgsField("Geometry Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Geometry Id (1-based)"));;
+            lMyAttribField << QgsField("Geometry Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
@@ -572,7 +572,7 @@ void HVL::create_vector_layer_geometry(QString fname, QString layer_name, struct
                 dp_vl->addFeatures(MyFeatures);
                 vl->commitChanges();
             }
-            vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            vl->setTitle(layer_name + ": " + fname);
 
             if (layer_name == QString("Mesh1D geometry"))
             {
@@ -620,22 +620,22 @@ void HVL::create_vector_layer_edges(QString fname, QString layer_name, struct _f
             int nr_attrib_fields = 0;
             if (edges->edge_length.size() > 0)
             {
-                lMyAttribField << QgsField(QString("Edge length", QVariant::Double);
+                lMyAttribField << QgsField("Edge length", QVariant::Double);
                 nr_attrib_fields++;
             }
             if (edges->name.size() > 0)
             {
-                lMyAttribField << QgsField(QString("Edge name"));;
+                lMyAttribField << QgsField("Edge name", QVariant::String);
                 nr_attrib_fields++;
             }
             if (edges->long_name.size() > 0)
             {
-                lMyAttribField << QgsField(QString("Edge long name"));;
+                lMyAttribField << QgsField("Edge long name", QVariant::String);
                 nr_attrib_fields++;
             }
-            lMyAttribField << QgsField(QString("Edge Id (0-based)"));;
+            lMyAttribField << QgsField("Edge Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Edge Id (1-based)"));;
+            lMyAttribField << QgsField("Edge Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QVector<QVariant> attribute(nr_attrib_fields);
@@ -697,7 +697,7 @@ void HVL::create_vector_layer_edges(QString fname, QString layer_name, struct _f
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             //STOP_TIMER(create_vector_layer_edges_add_features);
-            vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            vl->setTitle(layer_name + ": " + fname);
 
             QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
             if (layer_name == QString("Mesh2D edges"))
@@ -754,9 +754,9 @@ void HVL::create_vector_layer_observation_point(QString fname, QString layer_nam
                 lMyAttribField << QgsField(obs_points->location_long_name, QVariant::String);
                 nr_attrib_fields++;
             }
-            lMyAttribField << QgsField(QString("Observation point Id (0-based)"));;
+            lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Observation point Id (1-based)"));;
+            lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -794,7 +794,7 @@ void HVL::create_vector_layer_observation_point(QString fname, QString layer_nam
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
-            vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            vl->setTitle(layer_name + ": " + fname);
 
             QgsSymbol * marker = new QgsMarkerSymbol();
             if (std::string(obs_points->location_dim_name).find("lateral") != std::string::npos)
@@ -857,9 +857,9 @@ void HVL::create_vector_layer_observation_polyline(QString fname, QString layer_
                 lMyAttribField << QgsField(obs_points->location_long_name, QVariant::String);
                 nr_attrib_fields++;
             }
-            lMyAttribField << QgsField(QString("Cross section Id (0-based)"));;
+            lMyAttribField << QgsField("Cross section Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Cross section Id (1-based)"));;
+            lMyAttribField << QgsField("Cross section Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
@@ -909,7 +909,7 @@ void HVL::create_vector_layer_observation_polyline(QString fname, QString layer_
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
-            vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            vl->setTitle(layer_name + ": " + fname);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -1029,11 +1029,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Bridge name"));;
+            lMyAttribField << QgsField("Bridge name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Bridge Id (0-based)"));;
+            lMyAttribField << QgsField("Bridge Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Bridge Id (1-based)"));;
+            lMyAttribField << QgsField("Bridge Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1075,7 +1075,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_bridge_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1115,11 +1115,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Bridge pillars name"));;
+            lMyAttribField << QgsField("Bridge pillars name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Bridge pillars Id (0-based)"));;
+            lMyAttribField << QgsField("Bridge pillars Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Bridge pillars Id (1-based)"));;
+            lMyAttribField << QgsField("Bridge pillars Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1161,7 +1161,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_bridgepillar_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1201,11 +1201,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Compound structures name"));;
+            lMyAttribField << QgsField("Compound structures name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Compound structures Id (0-based)"));;
+            lMyAttribField << QgsField("Compound structures Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Compound structures Id (1-based)"));;
+            lMyAttribField << QgsField("Compound structures Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1273,7 +1273,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_compound_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1313,11 +1313,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Culvert name"));;
+            lMyAttribField << QgsField("Culvert name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Culvert Id (0-based)"));;
+            lMyAttribField << QgsField("Culvert Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Culvert Id (1-based)"));;
+            lMyAttribField << QgsField("Culvert Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1359,7 +1359,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_culvert_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1403,11 +1403,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Extra resistance name"));;
+            lMyAttribField << QgsField("Extra resistance name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Extra resistance Id (0-based)"));;
+            lMyAttribField << QgsField("Extra resistance Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Extra resistance Id (1-based)"));;
+            lMyAttribField << QgsField("Extra resistance Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1449,7 +1449,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_extra_resistance_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1489,11 +1489,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("General structure name"));;
+            lMyAttribField << QgsField("General structure name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("General structure Id (0-based)"));;
+            lMyAttribField << QgsField("General structure Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("General structure Id (1-based)"));;
+            lMyAttribField << QgsField("General structure Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1535,7 +1535,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_general_structure_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1575,11 +1575,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Inverted siphon name"));;
+            lMyAttribField << QgsField("Inverted siphon name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Inverted siphon Id (0-based)"));;
+            lMyAttribField << QgsField("Inverted siphon Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Inverted siphon Id (1-based)"));;
+            lMyAttribField << QgsField("Inverted siphon Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1620,7 +1620,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_inverted_siphon_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1660,11 +1660,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Orifice name"));;
+            lMyAttribField << QgsField("Orifice name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Orifice Id (0-based)"));;
+            lMyAttribField << QgsField("Orifice Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Orifice Id (1-based)"));;
+            lMyAttribField << QgsField("Orifice Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1706,7 +1706,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_orifice_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1746,11 +1746,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Pump name"));;
+            lMyAttribField << QgsField("Pump name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Pump Id (0-based)"));;
+            lMyAttribField << QgsField("Pump Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Pump Id (1-based)"));;
+            lMyAttribField << QgsField("Pump Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1792,7 +1792,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_pump_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1832,11 +1832,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("River weir name"));;
+            lMyAttribField << QgsField("River weir name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("River weir Id (0-based)"));;
+            lMyAttribField << QgsField("River weir Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("River weir Id (1-based)"));;
+            lMyAttribField << QgsField("River weir Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1878,7 +1878,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_riverweir_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1922,11 +1922,11 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Weir name"));;
+            lMyAttribField << QgsField("Weir name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Weir Id (0-based)"));;
+            lMyAttribField << QgsField("Weir Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Weir Id (1-based)"));;
+            lMyAttribField << QgsField("Weir Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -1968,7 +1968,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_weir_1d.svg"));
             simple_marker->setSize(5.0);
@@ -2065,9 +2065,9 @@ void HVL::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_REA
 
     int nr_attrib_fields = 3;
 
-    lMyAttribField << QgsField(QString("Observation point name"));;
-    lMyAttribField << QgsField(QString("Observation point Id (0-based)"));;
-    lMyAttribField << QgsField(QString("Observation point Id (1-based)"));;
+    lMyAttribField << QgsField("Observation point name", QVariant::String);
+    lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
+    lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
 
     QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
     vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -2098,7 +2098,7 @@ void HVL::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_REA
     dp_vl->addFeatures(MyFeatures);
     vl->commitChanges();
     std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-    vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+    vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
     QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
     simple_marker->setSize(4.0);
@@ -2179,11 +2179,11 @@ void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSO
         QList <QgsField> lMyAttribField;
 
         int nr_attrib_fields = 0;
-        lMyAttribField << QgsField(QString("Observation point name"));;
+        lMyAttribField << QgsField("Observation point name", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Observation point Id (0-based)"));;
+        lMyAttribField << QgsField("Observation point Id (0-based)", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Observation point Id (1-based)"));;
+        lMyAttribField << QgsField("Observation point Id (1-based)", QVariant::String);
         nr_attrib_fields++;
 
         QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -2223,7 +2223,7 @@ void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSO
         dp_vl->addFeatures(MyFeatures);
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setSize(4.0);
@@ -2289,9 +2289,9 @@ void HVL::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READER * pro
 
     int nr_attrib_fields = 3;
 
-    lMyAttribField << QgsField(QString("Sample point value", QVariant::Double);
-    lMyAttribField << QgsField(QString("Sample point Id (0-based)"));;
-    lMyAttribField << QgsField(QString("Sample point Id (1-based)"));;
+    lMyAttribField << QgsField("Sample point value", QVariant::Double);
+    lMyAttribField << QgsField("Sample point Id (0-based)", QVariant::String);
+    lMyAttribField << QgsField("Sample point Id (1-based)", QVariant::String);
 
     QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
     vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -2321,7 +2321,7 @@ void HVL::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READER * pro
     dp_vl->addFeatures(MyFeatures);
     vl->commitChanges();
     std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-    vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+    vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
     QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
     simple_marker->setSize(2.4);
@@ -2413,11 +2413,11 @@ void HVL::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JS
         QList <QgsField> lMyAttribField;
 
         int nr_attrib_fields = 0;
-        lMyAttribField << QgsField(QString("Observation cross-sections name"));;
+        lMyAttribField << QgsField("Observation cross-sections name", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Observation cross-sections point Id (0-based)"));;
+        lMyAttribField << QgsField("Observation cross-sections point Id (0-based)", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Observation cross-sections point Id (1-based)"));;
+        lMyAttribField << QgsField("Observation cross-sections point Id (1-based)", QVariant::String);
         nr_attrib_fields++;
 
         QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -2457,7 +2457,7 @@ void HVL::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JS
         dp_vl->addFeatures(MyFeatures);
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleMarkerSymbolLayer* simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setSize(2.5);
@@ -2512,11 +2512,11 @@ void HVL::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_file, JS
         status = prop_tree->get("data.path.multiline", poly_lines);
 
         int nr_attrib_fields = 0;
-        lMyAttribField << QgsField(QString("Observation cross-section name"));;
+        lMyAttribField << QgsField("Observation cross-section name", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Observation cross-section Id (0-based)"));;
+        lMyAttribField << QgsField("Observation cross-section Id (0-based)", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Observation cross-section Id (1-based)"));;
+        lMyAttribField << QgsField("Observation cross-section Id (1-based)", QVariant::String);
         nr_attrib_fields++;
 
         QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
@@ -2624,7 +2624,7 @@ void HVL::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_file, JS
         dp_vl->addFeatures(MyFeatures);
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -2680,11 +2680,11 @@ void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_t
         QList <QgsField> lMyAttribField;
 
         int nr_attrib_fields = 0;
-        lMyAttribField << QgsField(QString("Structure name"));;
+        lMyAttribField << QgsField("Structure name", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Structure Id (0-based)"));;
+        lMyAttribField << QgsField("Structure Id (0-based)", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Structure Id (1-based)"));;
+        lMyAttribField << QgsField("Structure Id (1-based)", QVariant::String);
         nr_attrib_fields++;
 
         QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
@@ -2804,7 +2804,7 @@ void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_t
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(fname[i]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(fname[i]));
         }
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -2906,7 +2906,7 @@ void HVL::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER * prop_t
         dp_vl->addFeatures(MyFeatures);
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " +  QString::fromStdString(token[token.size() - 1]));
+        vl->setTitle(layer_name + ": " +  QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -2959,11 +2959,11 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Source Sink name"));;
+            lMyAttribField << QgsField("Source Sink name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Source Sink Id (0-based)"));;
+            lMyAttribField << QgsField("Source Sink Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Source Sink Id (1-based)"));;
+            lMyAttribField << QgsField("Source Sink Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             //lines
@@ -3069,7 +3069,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             if (vl_points->featureCount() != 0)
             {
-                vl_points->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+                vl_points->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
                 QgsSimpleMarkerSymbolLayer* simple_marker = new QgsSimpleMarkerSymbolLayer();
                 simple_marker->setStrokeStyle(Qt::NoPen);
@@ -3086,7 +3086,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             }
             if (vl_lines->featureCount() != 0)
             {
-                vl_lines->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+                vl_lines->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
                 QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
                 line_marker->setWidth(0.75);
                 line_marker->setColor(QColor(255, 165, 0));  //  orange
@@ -3131,11 +3131,11 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Boundary name"));;
+            lMyAttribField << QgsField("Boundary name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Boundary Id (0-based)"));;
+            lMyAttribField << QgsField("Boundary Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Boundary Id (1-based)"));;
+            lMyAttribField << QgsField("Boundary Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
@@ -3208,7 +3208,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                 }
             }
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -3250,11 +3250,11 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Lateral area name"));;
+            lMyAttribField << QgsField("Lateral area name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Lateral area Id (0-based)"));;
+            lMyAttribField << QgsField("Lateral area Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Lateral area Id (1-based)"));;
+            lMyAttribField << QgsField("Lateral area Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
@@ -3327,7 +3327,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                 }
             }
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -3399,13 +3399,13 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Lateral point name"));;
+            lMyAttribField << QgsField("Lateral point name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Lateral point rotation", QVariant::Double);
+            lMyAttribField << QgsField("Lateral point rotation", QVariant::Double);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Lateral point Id (0-based)"));;
+            lMyAttribField << QgsField("Lateral point Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Lateral point Id (1-based)"));;
+            lMyAttribField << QgsField("Lateral point Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -3445,7 +3445,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
             simple_marker->setSize(2.7);
@@ -3497,11 +3497,11 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             QList <QgsField> lMyAttribField;
 
             int nr_attrib_fields = 0;
-            lMyAttribField << QgsField(QString("Boundary name"));;
+            lMyAttribField << QgsField("Boundary name", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Boundary point Id (0-based)"));;
+            lMyAttribField << QgsField("Boundary point Id (0-based)", QVariant::String);
             nr_attrib_fields++;
-            lMyAttribField << QgsField(QString("Boundary point Id (1-based)"));;
+            lMyAttribField << QgsField("Boundary point Id (1-based)", QVariant::String);
             nr_attrib_fields++;
 
             QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -3538,7 +3538,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
             //QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("d:/checkouts/git/qgis_plugins/qgis_umesh/svg/tmp_bridge_tui.svg"));
@@ -3651,7 +3651,7 @@ void HVL::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER * prop_t
             vl->commitChanges();
         }
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -3749,7 +3749,7 @@ void HVL::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER * prop_
             vl->commitChanges();
         }
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -3825,11 +3825,11 @@ void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER *
         QList <QgsField> lMyAttribField;
 
         int nr_attrib_fields = 0;
-        lMyAttribField << QgsField(QString("Cross-section name"));;
+        lMyAttribField << QgsField("Cross-section name", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Cross-section Id (0-based)"));;
+        lMyAttribField << QgsField("Cross-section Id (0-based)", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Cross-section Id (1-based)"));;
+        lMyAttribField << QgsField("Cross-section Id (1-based)", QVariant::String);
         nr_attrib_fields++;
 
         QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -3867,7 +3867,7 @@ void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER *
         }
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/cross_section_location_1d.svg"));
         simple_marker->setSize(5.0);
@@ -3952,11 +3952,11 @@ void HVL::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_
         QList <QgsField> lMyAttribField;
 
         int nr_attrib_fields = 0;
-        lMyAttribField << QgsField(QString("Retention name"));;
+        lMyAttribField << QgsField("Retention name", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Retention Id (0-based)"));;
+        lMyAttribField << QgsField("Retention Id (0-based)", QVariant::String);
         nr_attrib_fields++;
-        lMyAttribField << QgsField(QString("Retention Id (1-based)"));;
+        lMyAttribField << QgsField("Retention Id (1-based)", QVariant::String);
         nr_attrib_fields++;
 
         QString uri = QString("Point?crs=epsg:") + QString::number(epsg_code);
@@ -3994,7 +3994,7 @@ void HVL::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_
         }
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
         QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/retention_location_1d.svg"));
         simple_marker->setSize(5.0);
@@ -4068,8 +4068,8 @@ void HVL::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long epsg_code)
 
             int nr_attrib_fields = 2;
 
-            lMyAttribField << QgsField(QString("Link Id (0-based)"));;
-            lMyAttribField << QgsField(QString("Link Id (1-based)"));;
+            lMyAttribField << QgsField("Link Id (0-based)", QVariant::String);
+            lMyAttribField << QgsField("Link Id (1-based)", QVariant::String);
 
             QString uri = QString("MultiLineString?crs=epsg:") + QString::number(epsg_code);
             vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -4110,7 +4110,7 @@ void HVL::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long epsg_code)
                 vl->commitChanges();
             }
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.25);
