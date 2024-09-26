@@ -943,12 +943,15 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
         std::string json_key = "data.structure.id";
         std::vector<std::string> id;
         status = prop_tree->get(json_key, id);
+
         json_key = "data.structure.branchid";
         std::vector<std::string> branch_name;
         status = prop_tree->get(json_key, branch_name);
+
         json_key = "data.structure.chainage";
         std::vector<double> chainage;
         status = prop_tree->get(json_key, chainage);
+
         if (branch_name.size() == 0)
         {
             STOP_TIMER(create_vector_layer_1D_structure);
@@ -989,7 +992,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             if (structure_type[j] == "universalWeir") { cnt_universalweirs += 1; }
             if (structure_type[j] == "weir") { cnt_weirs += 1; }
         }
-        int sum =
+        int total_cnt =
             cnt_bridges +
             cnt_bridgepillars +
             cnt_compound_structures +
@@ -1004,7 +1007,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             cnt_universalweirs +
             cnt_weirs;
 
-        if (id.size() != sum)
+        if (id.size() != total_cnt)
         {
             QString fname = QString::fromStdString(prop_tree->get_filename());
             QString msg = QString(tr("Not all structure locations are supported.\nInvestigate file \"%1\".")).arg(fname);
@@ -1228,8 +1231,20 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             status = prop_tree->get(json_key, structure_ids);
             int i_cmp_struct = -1;
             int cnt = 0;
-            for (int j = 0; j < id.size(); j++)
+            int j = -1;
+            int m = -1;
+            bool do_while = true;
+            while (do_while)
             {
+                ++j;
+                ++m;
+                if (structure_type[j] == "dambreak")
+                {
+                    ++j;
+                }
+                if (j == id.size()) {
+                    do_while = false;
+                }
                 if (structure_type[j] == "compound")
                 {
                     i_cmp_struct += 1;
@@ -1245,26 +1260,28 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
                     {
                         if (structure_ids[cnt] == id[k])
                         {
-                            branch_name[j] = branch_name[k];
-                            chainage[j] = chainage[k];
+                            branch_name[m] = branch_name[k];
+                            chainage.push_back(chainage[k]);
+                            break;
                         }
                     }
+                    {
+                        status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[m], chainage[m], &xp, &yp, &rotation);
+                        QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
+                        QgsFeature MyFeature;
+                        MyFeature.setGeometry(MyPoints);
 
-                    status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
-                    QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
-                    QgsFeature MyFeature;
-                    MyFeature.setGeometry(MyPoints);
+                        MyFeature.initAttributes(nr_attrib_fields);
+                        int k = -1;
+                        k++;
+                        MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                        k++;
+                        MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                        k++;
+                        MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
 
-                    MyFeature.initAttributes(nr_attrib_fields);
-                    int k = -1;
-                    k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
-                    k++;
-                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                    k++;
-                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
-
-                    dp_vl->addFeature(MyFeature);
+                        dp_vl->addFeature(MyFeature);
+                    }
                 }
             }
             vl->commitChanges();
@@ -3676,9 +3693,13 @@ void HVL::create_vector_layer_fixed_weir(GRID * grid_file, JSON_READER * prop_tr
     if (tmp_line_name.size() != 0)
     {
         START_TIMERN(create_vector_layer_fixed_weir);
-        QgsLayerTreeGroup * subTreeGroup;
-        subTreeGroup = get_subgroup(treeGroup, QString("Area"));
-        QString layer_name = "Fix weir";
+        QgsLayerTreeGroup* mainTreeGroup;
+        QgsLayerTreeGroup* subTreeGroup;
+        mainTreeGroup = get_subgroup(treeGroup, QString("Area"));
+        subTreeGroup = get_subgroup(mainTreeGroup, QString("Fixed weirs"));
+        std::filesystem::path fname = prop_tree->get_filename();
+        std::string stem = fname.stem().generic_string();
+        QString layer_name = QString::fromStdString(stem);
         // create the vector
         QgsVectorLayer * vl;
         QgsVectorDataProvider * dp_vl;

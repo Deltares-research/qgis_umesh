@@ -12,19 +12,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="generated\moc_qgis_umesh.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\qgis_umesh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="generated\moc_MyEditTool.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MyEditTool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\qgis_umesh_version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\map_time_manager_window.cpp">
@@ -90,11 +81,17 @@
     <ClCompile Include="src\handle_vector_layers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="generated\moc_qgis_sumesh.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\qgis_sumesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\qgis_sumesh_version.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="include\qgis_umesh.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="include\map_time_manager_window.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
@@ -122,6 +119,9 @@
     <CustomBuild Include="include\handle_vector_layers.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="include\qgis_sumesh.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\netcdf.h">
@@ -145,13 +145,13 @@
     <ClInclude Include="include\perf_timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\qgis_umesh_version.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\map_property.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\qgis_sumesh_version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

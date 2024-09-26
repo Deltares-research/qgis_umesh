@@ -45,6 +45,7 @@
 
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
+#include <filesystem> // for MAX_PATH
 
 #define MSG_LENGTH 101
 #define PATH_LENGTH 1024
