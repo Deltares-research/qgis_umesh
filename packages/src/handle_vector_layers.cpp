@@ -1265,23 +1265,21 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
                             break;
                         }
                     }
-                    {
-                        status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[m], chainage[m], &xp, &yp, &rotation);
-                        QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
-                        QgsFeature MyFeature;
-                        MyFeature.setGeometry(MyPoints);
+                    status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[m], chainage[m], &xp, &yp, &rotation);
+                    QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
+                    QgsFeature MyFeature;
+                    MyFeature.setGeometry(MyPoints);
 
-                        MyFeature.initAttributes(nr_attrib_fields);
-                        int k = -1;
-                        k++;
-                        MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
-                        k++;
-                        MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-                        k++;
-                        MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    int k = -1;
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
+                    k++;
+                    MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
 
-                        dp_vl->addFeature(MyFeature);
-                    }
+                    dp_vl->addFeature(MyFeature);
                 }
             }
             vl->commitChanges();
