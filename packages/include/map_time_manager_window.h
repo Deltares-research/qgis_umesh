@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QAction>
+#include <QApplication>
 #include <QButtonGroup>
 #include <QComboBox>
 #include <QDateTime>

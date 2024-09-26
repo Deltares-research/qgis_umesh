@@ -1,18 +1,49 @@
-cmake_minimum_required(VERSION 3.15.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.30.0)
 
-set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
+# set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
 
-project(qgis_umesh VERSION 0.15.0 LANGUAGES CXX)
-
-set(CMAKE_PREFIX_PATH "c:/OSGeo4W/apps/Qt5/")
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Boost 1.77.0 COMPONENTS REQUIRED)
+project(qgis_sumesh VERSION 0.15.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if (MSVC)
+    message("*** MSVC ")
+    set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/../bin/x64)
+    set(CMAKE_CXX_COMPILER cl)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+set(CMAKE_PREFIX_PATH "c:/OSGeo4W/apps/Qt5/")
+find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets PrintSupport)
+if (Qt5_FOUND)
+    message("*** Qt5 found")
+else()
+    message("*** Qt5 not found")
+endif()
+
+# set(CMAKE_PREFIX_PATH "c:/boost/boost_1_85_0/")
+find_package(Boost 1.85.0 REQUIRED COMPONENTS
+             date_time filesystem iostreams)
+if(Boost_FOUND)
+    message("*** Boost found")
+else()
+    message("*** Boost not found")
+endif()
+
+find_package(netCDF 4.9.2 REQUIRED)
+if(netCDF_FOUND)
+    message("*** netCDF found")
+else()
+    message("*** netCDF not found")
+endif()
+
 
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
+# set(CMAKE_AUTORCC ON)
 # set(CMAKE_AUTOUIC ON)
 
 ################################################################################
@@ -35,7 +66,7 @@ set(CMAKE_CONFIGURATION_TYPES
     "Release"
     CACHE STRING "" FORCE
 )
-
+# message("***  1 ")
 ################################################################################
 # Global compiler options
 ################################################################################
@@ -45,6 +76,7 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "")
     set(CMAKE_CXX_FLAGS_RELEASE "")
 endif()
+# message("***  2 ")
 
 ################################################################################
 # Global linker options
@@ -64,6 +96,8 @@ if(MSVC)
     set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS}")
     set(CMAKE_STATIC_LINKER_FLAGS_RELEASE "${CMAKE_STATIC_LINKER_FLAGS}")
 endif()
+# message("***  3 ")
+
 
 ################################################################################
 # Nuget packages function stub.
@@ -73,24 +107,30 @@ function(use_package TARGET PACKAGE VERSION)
                     "Package \"${PACKAGE}\" with version \"${VERSION}\" "
                     "for target \"${TARGET}\" is ignored!")
 endfunction()
+# message("***  4 ")
 
 ################################################################################
 # Common utils
 ################################################################################
 include(CMake/Utils.cmake)
+# message("***  5 ")
 
 ################################################################################
 # Additional Global Settings(add specific info there)
 ################################################################################
 include(CMake/GlobalSettingsInclude.cmake OPTIONAL)
+# message("***  6 ")
 
 ################################################################################
 # Use solution folders feature
 ################################################################################
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+# message("***  7 ")
 
 ################################################################################
 # Sub-projects
 ################################################################################
 add_subdirectory(packages)
+# message("***  8 ")
+
 

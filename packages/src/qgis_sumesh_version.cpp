@@ -29,7 +29,7 @@
 //#include <stdio.h>
 #include <string.h>
 
-#include "qgis_umesh_version.h"
+#include "qgis_sumesh_version.h"
 
 #if defined(WIN32) || defined (WIN64)
 # define strdup _strdup

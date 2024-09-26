@@ -10,7 +10,6 @@
 #include <QtCore/qtextcodec.h>
 #include <QtCore/qdebug.h>
 
-#include <QtWidgets/QApplication>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QProgressBar>
 
@@ -220,23 +219,23 @@ struct _mesh_contact {
 ////////////////////////////////////////////////////////////////////////////////
 struct _ntw_geom {
     size_t nr_ntw;
-    struct _geom** geom;
+    struct _geom ** geom;
 };
 
 struct _geom {
     size_t count;
-    struct _feature** nodes;
+    struct _feature ** nodes;
     std::vector<std::string> name;
     std::vector<std::string> long_name;
 };
 
 struct _ntw_edges {
     size_t nr_ntw;
-    struct _edge** edge;
+    struct _edge ** edge;
 };
 struct _ntw_nodes {
     size_t nr_ntw;
-    struct _feature** node;
+    struct _feature ** node;
 };
 struct _edge {
     size_t count;
@@ -244,7 +243,7 @@ struct _edge {
     std::vector<double> y;
     std::vector<std::vector<double>> x_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
     std::vector<std::vector<double>> y_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
-    int** edge_nodes;
+    int ** edge_nodes;
     std::vector<long> edge_branch;
     std::vector<double> edge_length;
     std::vector<std::string> name;

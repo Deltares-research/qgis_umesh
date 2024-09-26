@@ -151,11 +151,11 @@ void AddCurrentViewWindow::create_vector_layer()
 
         int nr_attrib_fields = 0;
         QString field_name = m_quantity;
-        lMyAttribField << QgsField(field_name, QVariant::Double);
+        lMyAttribField << QgsField(field_name, QMetaType::Double);
         nr_attrib_fields++;
-        lMyAttribField << QgsField("Point Id (0-based)", QVariant::String);
+        lMyAttribField << QgsField("Point Id (0-based)", QMetaType::QString);
         nr_attrib_fields++;
-        lMyAttribField << QgsField("Point Id (1-based)", QVariant::String);
+        lMyAttribField << QgsField("Point Id (1-based)", QMetaType::QString);
         nr_attrib_fields++;
 
         QString uri = QString("Point?crs=epsg:") + QString::number(m_epsg);
@@ -189,7 +189,7 @@ void AddCurrentViewWindow::create_vector_layer()
             dp_vl->addFeature(MyFeature);
         }
         vl->commitChanges();
-        vl->setTitle(field_name);
+        vl->serverProperties()->setTitle(field_name);
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setStrokeStyle(Qt::NoPen);

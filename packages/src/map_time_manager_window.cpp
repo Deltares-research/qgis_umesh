@@ -1607,7 +1607,7 @@ void MapTimeManagerWindow::clicked_current_view()
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_1d->currentText();
-            QString quantity = text + "; 1D " + date_time;
+            QString quantity = text + "; 1D: " + date_time;
 
             QVariant j = m_cb_1d->currentData();
             int jj = j.toInt();
@@ -1632,7 +1632,7 @@ void MapTimeManagerWindow::clicked_current_view()
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
             QString text = m_cb_2d->currentText();
-            QString quantity = text + "; 2D " + date_time;
+            QString quantity = text + "; 2D: " + date_time;
 
             QVariant j = m_cb_2d->currentData();
             int jj = j.toInt();
@@ -1667,7 +1667,7 @@ void MapTimeManagerWindow::clicked_current_view()
             int jj = j.toInt();
             struct _variable* var = m_vars->variable[jj];
             int layer_indx = m_sb_hydro_layer->value();
-            QString quantity = text + "; 3D(" + QString::number(layer_indx) + ") " +  date_time ;
+            QString quantity = text + "; 3D(" + QString::number(layer_indx) + "): " +  date_time ;
             DataValuesProvider3D<double> var_time = var->data_3d;
             double* z_value = var_time.GetValueAtIndex(time_indx, layer_indx-1, 0);  // xy_space
             if (var->location == "edge")

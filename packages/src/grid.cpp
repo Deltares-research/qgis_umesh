@@ -271,7 +271,7 @@ long GRID::read_ugrid_mesh()
         status = nc_inq_dimlen(this->m_ncid, i, &m_dimids[i]);
         status = nc_inq_dimname(this->m_ncid, i, var_name_c);
         m_dim_names.push_back(std::string(var_name_c));
-        m_map_dim[std::string(var_name_c)] = m_dimids[i];
+        m_map_dim[std::string(var_name_c)] = (long)m_dimids[i];
     }
     status = nc_inq_unlimdim(this->m_ncid, &unlimid);
     for (int i_var = 0; i_var < nvars; i_var++)
@@ -497,7 +497,7 @@ long GRID::read_sgrid_mesh()
         status = nc_inq_dimlen(this->m_ncid, i, &m_dimids[i]);
         status = nc_inq_dimname(this->m_ncid, i, var_name_c);
         m_dim_names.push_back(std::string(var_name_c));
-        m_map_dim[std::string(var_name_c)] = m_dimids[i];
+        m_map_dim[std::string(var_name_c)] = (long)m_dimids[i];
     }
     status = nc_inq_unlimdim(this->m_ncid, &unlimid);
     for (int i_var = 0; i_var < nvars; i_var++)
@@ -712,7 +712,7 @@ long GRID::read_times()
 
                     status = nc_inq_dimlen(this->m_ncid, dimids, &time_series[0].nr_times);
                     time_var_name = strdup(var_name_c);
-                    m_map_dim[time_var_name] = time_series[0].nr_times;
+                    m_map_dim[time_var_name] = (long)time_series[0].nr_times;
                     m_map_dim_name["time"] = time_var_name;
 
                     qdt_times.reserve((int)time_series[0].nr_times);  // Todo: HACK typecast
@@ -2703,8 +2703,8 @@ std::vector<std::string> GRID::get_string_var(int ncid, std::string var_name)
         long* sn_dims = (long*)malloc(sizeof(long) * ndims);
         status = nc_inq_vardimid(ncid, varid, (int*)sn_dims);
 
-        int mem_length = 1;
-        int name_len = -1;
+        long mem_length = 1;
+        long name_len = -1;
         for (long j = 0; j < ndims; j++)
         {
             size_t length = (size_t)-1;
@@ -2712,13 +2712,13 @@ std::vector<std::string> GRID::get_string_var(int ncid, std::string var_name)
 
             if (strstr(dim_name_c, "len") || name_len == -1 && j == 1)  // second dimension is the string length if not already set
             {
-                name_len = length;
+                name_len = (long)length;
             }
             else
             {
                 nr_names = (long)length;
             }
-            mem_length = mem_length * length;
+            mem_length = mem_length * (long)length;
         }
         result.reserve(nr_names);
         // reading 64 strings for each location, length of string??
@@ -3675,11 +3675,11 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                 status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
                 dimids = (int*)malloc(sizeof(int) * ndims);
                 status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
-                jmax_node = m_dimids[dimids[0]];
+                jmax_node = (int)m_dimids[dimids[0]];
             }
             else
             {
-                jmax_node = m_dimids[dimids[1]];
+                jmax_node = (int)m_dimids[dimids[1]];
             }
 
             m_mesh2d->edge[nr_mesh2d - 1]->count = imax_node * (jmax_node - 1) + jmax_node * (imax_node - 1);

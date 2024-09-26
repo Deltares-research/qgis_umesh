@@ -1,5 +1,5 @@
-#include "qgis_umesh_version.h"
-#include "qgis_umesh.h"
+#include "qgis_sumesh_version.h"
+#include "qgis_sumesh.h"
 #include "perf_timer.h"
 
 #if defined(WIN64)
@@ -129,8 +129,8 @@ void qgis_umesh::initGui()
     {
         QMessageBox::warning(0, tr("Message"), QString(tr("Missing installation directory:\n")) + program_files);
     }
-    executable_dir = QDir::currentPath();  // get directory where the executable is located
-    current_dir = QDir::currentPath();  // get current working directory  (_getcwd(current_dir, _MAX_PATH);)
+    executable_dir.setPath(QDir::currentPath());  // get directory where the executable is located
+    current_dir.setPath(QDir::currentPath());  // get current working directory  (_getcwd(current_dir, _MAX_PATH);)
     //
     // Load the plugins list
     //
