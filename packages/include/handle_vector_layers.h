@@ -7,6 +7,7 @@
 
 #include <QObject>
 #include <iostream>
+#include <filesystem>
 
 #include <QAction>
 #include <QComboBox>
