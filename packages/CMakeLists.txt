@@ -197,10 +197,10 @@ add_custom_command_if(
     TARGET ${PROJECT_NAME}
     PRE_BUILD
     COMMANDS
-    COMMAND   $<CONFIG:Debug> call ../scripts/git_insert_hash.cmd ./include qgis_umesh_version.h
-    COMMAND   $<CONFIG:Debug> call ../scripts/git_insert_hash.cmd ./include qgis_umesh_version.rc
-    COMMAND $<CONFIG:Release> call ../scripts/git_insert_hash.cmd ./include qgis_umesh_version.h
-    COMMAND $<CONFIG:Release> call ../scripts/git_insert_hash.cmd ./include qgis_umesh_version.rc
+    COMMAND   $<CONFIG:Debug> call ../scripts/git_insert_hash.cmd .\\include qgis_umesh_version.h
+    COMMAND   $<CONFIG:Debug> call ../scripts/git_insert_hash.cmd .\\include qgis_umesh_version.rc
+    COMMAND $<CONFIG:Release> call ../scripts/git_insert_hash.cmd .\\include qgis_umesh_version.h
+    COMMAND $<CONFIG:Release> call ../scripts/git_insert_hash.cmd .\\include qgis_umesh_version.rc
 )
 
 ################################################################################
