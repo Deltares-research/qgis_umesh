@@ -81,7 +81,7 @@ class qgis_umesh
         void open_file_his_cf();
         void open_file_his_cf(QFileInfo);
         void open_file_mdu();
-        void open_file_mdu(QFileInfo);
+        void open_file_mdu(QString);
         void open_file_link1d2d_json();
         void open_file_link1d2d_json(QFileInfo);
         void open_file_obs_point_json();

@@ -1,7 +1,7 @@
 message("*** Enter packages directory") 
 
 set(CMAKE_AUTOMOC ON)
-set(AUTOMOC_EXECUTABLE "c:/OSGeo4W/apps/Qt5/bin/moc.exe")
+set(AUTOMOC_EXECUTABLE "$ENV{QT5DIROSGEO}/bin/moc.exe")
 
 set(PROJECT_NAME qgis_sumesh)
 
@@ -34,7 +34,7 @@ set(Header_Files
     "include/perf_timer.h"
     "include/QColorRampEditor.h"
     "include/qgis_sumesh.h"
-#   "include/qgis_umesh_version.h"
+    "include/qgis_sumesh_version.h"
 #   "include/qgis_umesh_version.h.vcs"
 #   "include/qgis_umesh_version.rc"
 #   "include/qqis_umesh_version.rc"
@@ -93,8 +93,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # Output directory
 ################################################################################
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    OUTPUT_DIRECTORY_DEBUG   "${CMAKE_SOURCE_DIR}/bin/$ENV{platform}/$<CONFIG>"
-    OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/$ENV{platform}/$<CONFIG>"
+    OUTPUT_DIRECTORY_DEBUG   "c:/OSGeo4W/apps/qgis/plugins"
+    OUTPUT_DIRECTORY_RELEASE "c:/OSGeo4W/apps/qgis/plugins"
 )
 ################################################################################
 # MSVC runtime library
@@ -125,7 +125,6 @@ if (MSVC)
         "c:/OSGeo4W/apps/qgis/include;"
         "$ENV{QT5DIROSGEO}/include;"
         "$ENV{QT5DIROSGEO}/include/ActiveQt;"
-        "$ENV{QT5DIROSGEO}/include/Qt;"
         "$ENV{QT5DIROSGEO}/include/QtCore;"
         "$ENV{QT5DIROSGEO}/include/QtGui;"
         "$ENV{QT5DIROSGEO}/include/QtSvg;"
@@ -208,22 +207,18 @@ add_custom_command_if(
 ################################################################################
 set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "$<$<CONFIG:Debug>:"
-        "qtmain"
         "Qt5Core"
         "Qt5Gui"
         "Qt5Widgets"
         "Qt5PrintSupport"
-        "qgis_analysis"
         "qgis_core"
         "qgis_gui"
     ">"
     "$<$<CONFIG:Release>:"
-        "qtmain"
         "Qt5Core"
         "Qt5Gui"
         "Qt5Widgets"
         "Qt5PrintSupport"
-        "qgis_analysis"
         "qgis_core"
         "qgis_gui"
     ">"
@@ -233,8 +228,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE "${ADDITIONAL_LIBRARY_DEPENDENCIES
 
 target_link_directories(${PROJECT_NAME} PRIVATE
     "$ENV{QT5DIROSGEO}/lib;"
-    "c:/OSGeoW/apps/qgis/lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../lib/${CMAKE_VS_PLATFORM_NAME}/$<CONFIG>"
+    "c:/OSGeo4W/apps/qgis/lib"
+    "c:/Program Files/netCDF 4.9.2/lib"
 )
 
 message("*** Exiting packages directory") 

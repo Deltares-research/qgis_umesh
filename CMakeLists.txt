@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 if (MSVC)
     message("*** MSVC ")
-    set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/../bin/x64)
+    set(EXECUTABLE_OUTPUT_PATH "c:/OSGeo4W/apps/qgis/plugins")
     set(CMAKE_CXX_COMPILER cl)
     set(CMAKE_BUILD_TYPE Release)
 endif()

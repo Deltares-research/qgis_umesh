@@ -90,7 +90,7 @@ struct Getter
         {
             (void)e;  // to prevent compiler warning
             //cout << e.what() << endl;
-            //QString msg = QString::fromStdString(e.what()).trimmed();
+            //QString msg = QString::fromUtf8(e.what().c_str()).trimmed();
             //QMessageBox::warning(0, "JSON_READER::prop_get_json", QString("%1").arg(msg));
         }
     }
@@ -149,7 +149,7 @@ JSON_READER::JSON_READER(std::string file_json)
     {
         (void)e;  // to prevent compiler warning
         //cout << e.what() << endl;
-        //QString msg = QString::fromStdString(e.what()).trimmed();
+        //QString msg = QString::fromUtf8(e.what().c_str()).trimmed();
         //QMessageBox::warning(0, "JSON_READER::JSON_READER", QString("%1").arg(msg));
     }
 }

@@ -558,7 +558,8 @@ void MyCanvas::draw_vector_arrow()
             int i_var = 0;
             for (int i = 0; i < vars->nr_vars; ++i)
             {
-                if (vars->variable[i]->var_name == m_coordinate_type[1].toStdString())
+                QString qname = QString::fromUtf8(vars->variable[i]->var_name.c_str());
+                if (qname == m_coordinate_type[1])
                 {
                     dimens = vars->variable[i]->dims.size();
                     missing_value = vars->variable[i]->fill_value;
@@ -569,20 +570,24 @@ void MyCanvas::draw_vector_arrow()
                 dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
                 dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jamx)
             {
-                DataValuesProvider2D<double>std_u_vec_at_node = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
+                std::string std_string = m_coordinate_type[1].toUtf8();
+                DataValuesProvider2D<double>std_u_vec_at_node = m_grid_file->get_variable_values(std_string);
                 u_value = std_u_vec_at_node.GetValueAtIndex(m_current_step, 0);
                 numXY = std_u_vec_at_node.m_numXY;
-                DataValuesProvider2D<double>std_v_vec_at_node = m_grid_file->get_variable_values(m_coordinate_type[2].toStdString());
+                std_string = m_coordinate_type[2].toUtf8();
+                DataValuesProvider2D<double>std_v_vec_at_node = m_grid_file->get_variable_values(std_string);
                 v_value = std_v_vec_at_node.GetValueAtIndex(m_current_step, 0);
             }
             else if (dimens == 3) // 3D: time, layer, nodes
             {
                 if (m_hydro_layer > 0)
                 {
-                    DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
+                    std::string std_string = m_coordinate_type[1].toUtf8();
+                    DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(std_string);
                     numXY = std_u_vec_at_face_3d.m_numXY;
                     u_value = std_u_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
-                    DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
+                    std_string = m_coordinate_type[2].toUtf8();
+                    DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(std_string);
                     v_value = std_v_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
                 }
             }
@@ -628,13 +633,13 @@ void MyCanvas::draw_vector_arrow()
 
                 vlen = sqrt(u_value[i] * u_value[i] + v_value[i] * v_value[i]);  // The "length" of the vector
                 beta = atan2(v_value[i], u_value[i]);
-                if (vscale * vlen < 0.00001)
+                if (vscale * vlen < 1.0E-04)
                 {
                     vlen = 0.0;
                 }
                 else
                 {
-                    vlen = max(vscale * vlen, 0.0001);
+                    vlen = max(vscale * vlen, 1.0E-04);
                 }
                 for (int k = 1; k < 4; k++)
                 {
@@ -720,8 +725,6 @@ void MyCanvas::draw_vector_arrow()
 
             // set scaled unit vector in right lower corner 
             this->setLineWidth(1);
-            coord_x.clear();
-            coord_y.clear();
             double alpha = 0.95;
             double unitv_x_head = (1.0 - alpha) * getMinVisibleX() + alpha * getMaxVisibleX();
             alpha = 0.05;
@@ -791,7 +794,8 @@ void MyCanvas::draw_vector_direction_at_face()
         int i_var = 0;
         for (int i = 0; i < vars->nr_vars; i++)
         {
-            if (vars->variable[i]->var_name == m_coordinate_type[1].toStdString())
+            QString qname = QString::fromUtf8(vars->variable[i]->var_name.c_str());
+            if (qname == m_coordinate_type[1])
             {
                 dimens = vars->variable[i]->dims.size();
                 missing_value = vars->variable[i]->fill_value;
@@ -805,18 +809,22 @@ void MyCanvas::draw_vector_direction_at_face()
             dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
             dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jmax)
         {
-            DataValuesProvider2D<double>std_u_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[1].toStdString());
+            std::string std_string = m_coordinate_type[1].toUtf8();
+            DataValuesProvider2D<double>std_u_vec_at_face = m_grid_file->get_variable_values(std_string);
             u_value = std_u_vec_at_face.GetValueAtIndex(m_current_step, 0);
-            DataValuesProvider2D<double>std_v_vec_at_face = m_grid_file->get_variable_values(m_coordinate_type[2].toStdString());
+            std_string = m_coordinate_type[2].toUtf8();
+            DataValuesProvider2D<double>std_v_vec_at_face = m_grid_file->get_variable_values(std_string);
             v_value = std_v_vec_at_face.GetValueAtIndex(m_current_step, 0);
         }
         else if (dimens == 3) // 3D: time, layer, nodes
         {
             if (m_hydro_layer > 0)
             {
-                DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[1].toStdString());
+                std::string std_string = m_coordinate_type[1].toUtf8();
+                DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(std_string);
                 u_value = std_u_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
-                DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(m_coordinate_type[2].toStdString());
+                std_string = m_coordinate_type[2].toUtf8();
+                DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(std_string);
                 v_value = std_v_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
             }
         }
@@ -886,7 +894,8 @@ void MyCanvas::draw_vector_direction_at_node()
         int i_var = 0;
         for (int i = 0; i < vars->nr_vars; ++i)
         {
-            if (vars->variable[i]->var_name == m_coordinate_type[1].toStdString())
+            QString qname = QString::fromUtf8(vars->variable[i]->var_name.c_str());
+            if (qname == m_coordinate_type[1])
             {
                 dimens = vars->variable[i]->dims.size();
                 missing_value = vars->variable[i]->fill_value;

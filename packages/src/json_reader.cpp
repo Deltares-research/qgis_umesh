@@ -88,7 +88,7 @@ struct Getter
         catch (const ptree_error &e)
         {
             //cout << e.what() << endl;
-            //QString msg = QString::fromStdString(e.what()).trimmed();
+            //QString msg = QString::fromUtf8(e.what().c_str()).trimmed();
             //QMessageBox::warning(0, "JsonReader::prop_get_json", QString("%1").arg(msg));
         }
     }
@@ -145,7 +145,7 @@ JsonReader::JsonReader(string file_json)
     catch (const ptree_error &e)
     {
         //cout << e.what() << endl;
-        //QString msg = QString::fromStdString(e.what()).trimmed();
+        //QString msg = QString::fromUtf8(e.what().c_str()).trimmed();
         //QMessageBox::warning(0, "JsonReader::JsonReader", QString("%1").arg(msg));
     }
 }

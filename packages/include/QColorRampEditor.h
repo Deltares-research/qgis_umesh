@@ -11,14 +11,14 @@
 #ifndef __QCOLORRAMPEDITOR_H__
 #define __QCOLORRAMPEDITOR_H__
 
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QColorDialog>
-#include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QHBoxLayout>
-#include <QtGui/QPainter>
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QLineEdit>
+#include <QWidget>
+#include <QColorDialog>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPainter>
+#include <QPushButton>
+#include <QLabel>
+#include <QLineEdit>
 
 #include <iostream>
 #include <cmath>

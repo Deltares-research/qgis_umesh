@@ -670,7 +670,7 @@ long GRID::read_times()
                     units_cpp = "seconds since 2000-01-01 00:00:00";
                 }
             }
-            QString units = QString::fromStdString(units_cpp);
+            QString units = QString::fromUtf8((units_cpp).c_str());
             units.replace("T", " ");  // "seconds since 1970-01-01T00:00:00" changed into "seconds since 1970-01-01 00:00:00"
             date_time = units.split(" ");
             if (date_time.count() >= 2)
@@ -920,7 +920,7 @@ long GRID::read_ugrid_variables()
                 status = nc_inq_dimname(this->m_ncid, var_dimids[j], var_name_c);
                 
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // Todo: HACK typecast: size_t -> long
-                if (time_series[0].nr_times != 0 && QString::fromStdString(m_dim_names[var_dimids[j]]) == time_series[0].dim_name)
+                if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == time_series[0].dim_name)
                 {
                     m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
                 }
@@ -942,7 +942,7 @@ long GRID::read_ugrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -995,7 +995,7 @@ long GRID::read_ugrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -1192,7 +1192,7 @@ long GRID::read_ugrid_variables()
                 // - sediment dimension
                 // - xy-space dimension
                 // - z-space (nbedlayers)
-                QString qname = QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name);
+                QString qname = QString::fromUtf8((m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name).c_str());
                 QString msg = QString("Variable \'%1\' does have 4 dimensions, still under construction.").arg(qname) ;
 #ifdef NATIVE_C
 #else
@@ -1202,7 +1202,7 @@ long GRID::read_ugrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -1421,7 +1421,7 @@ long GRID::read_sgrid_variables()
                 status = nc_inq_dimname(this->m_ncid, var_dimids[j], var_name_c);
 
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // Todo: HACK typecast: size_t -> long
-                if (time_series[0].nr_times != 0 && QString::fromStdString(m_dim_names[var_dimids[j]]) == time_series[0].dim_name)
+                if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == time_series[0].dim_name)
                 {
                     m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
                 }
@@ -1445,7 +1445,7 @@ long GRID::read_sgrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -1498,7 +1498,7 @@ long GRID::read_sgrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -1695,7 +1695,7 @@ long GRID::read_sgrid_variables()
                 // - sediment dimension
                 // - xy-space dimension
                 // - z-space (nbedlayers)
-                QString qname = QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name);
+                QString qname = QString::fromUtf8((m_mesh_vars->variable[m_nr_mesh_var - 1]->var_name).c_str());
                 QString msg = QString("Variable \'%1\' does have 4 dimensions, still under construction.").arg(qname);
 #ifdef NATIVE_C
 #else
@@ -1705,7 +1705,7 @@ long GRID::read_sgrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromStdString(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i]) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;

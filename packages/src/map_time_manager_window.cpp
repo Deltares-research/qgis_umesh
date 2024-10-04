@@ -137,8 +137,8 @@ void MapTimeManagerWindow::create_window()
     QFrame* line = new QFrame();
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
-    vl->addWidget(line);
     vl->addWidget(m_slider);
+    vl->addWidget(line);
 
     // Selection of parameter and/or vector 
 
@@ -518,11 +518,11 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d(QString text)
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
-            QString unit = QString::fromStdString(m_vars->variable[i]->units).trimmed();
+            QString name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());
+            QString unit = QString::fromUtf8((m_vars->variable[i]->units).c_str());
             name = name + " [" + unit + "]";
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
+            QString mesh_var_name = QString::fromUtf8((m_vars->variable[i]->mesh).c_str());
             if (mesh_var_name == text)
             {
                 cb->addItem(name, map[name]);
@@ -547,11 +547,11 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
-            QString unit = QString::fromStdString(m_vars->variable[i]->units).trimmed();
+            QString name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());
+            QString unit = QString::fromUtf8((m_vars->variable[i]->units).c_str());
             name = name + " [" + unit + "]";
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
+            QString mesh_var_name = QString::fromUtf8((m_vars->variable[i]->mesh).c_str());
             if (mesh_var_name == text)
             {
                 cb->addItem(name, map[name]);
@@ -581,11 +581,11 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
-            QString unit = QString::fromStdString(m_vars->variable[i]->units).trimmed();
+            QString name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());
+            QString unit = QString::fromUtf8((m_vars->variable[i]->units).c_str());
             name = name + " [" + unit + "]";
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
+            QString mesh_var_name = QString::fromUtf8((m_vars->variable[i]->mesh).c_str());
             if (m_vars->variable[i]->dims.size() == 2 ||
                 m_vars->variable[i]->dims.size() == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
                 m_vars->variable[i]->dims.size() == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS)  // Todo: HACK: assumed time, xy-space
@@ -645,7 +645,7 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
     {
         m_show_check_1d = check_parameter_1d();
         hl->addWidget(m_show_check_1d, row, 0);
-        QString txt = QString::fromStdString(m1d[0]->var_name);
+        QString txt = QString::fromUtf8((m1d[0]->var_name).c_str());
         m_cb_1d = create_parameter_selection_1d(txt);
         hl->addWidget(m_cb_1d, row, 1);
     }
@@ -656,7 +656,7 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
         row += 1;
         m_show_check_1d2d = check_parameter_1d2d();
         hl->addWidget(m_show_check_1d2d, row, 0);
-        QString txt = QString::fromStdString(m1d2d[0]->mesh_contact);
+        QString txt = QString::fromUtf8((m1d2d[0]->mesh_contact).c_str());
         m_cb_1d2d = create_parameter_selection_1d2d(txt);
         hl->addWidget(m_cb_1d2d, row, 1);
     }
@@ -664,7 +664,7 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
     struct _mesh2d_string ** m2d = m_grid_file->get_mesh2d_string();
     if (m_grid_file->get_mesh2d_string() != nullptr)
     {
-        QString txt = QString::fromStdString(m2d[0]->var_name);
+        QString txt = QString::fromUtf8((m2d[0]->var_name).c_str());
         m_cb_2d = new QComboBox();
         m_cb_3d = new QComboBox();
         status = create_parameter_selection_2d_3d(txt, m_cb_2d, m_cb_3d);
@@ -743,7 +743,7 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
     m_cb_vec_2d = new QComboBox();
     m_cb_vec_3d = new QComboBox();
     m_cb_vec_2d->setMinimumSize(100, 22);
-    QString text = QString::fromStdString(m2d[0]->var_name);
+    QString text = QString::fromUtf8((m2d[0]->var_name).c_str());
     status = create_parameter_selection_vector_2d_3d(text, m_cb_vec_2d, m_cb_vec_3d);
     if (m_cb_vec_2d->count() == 0 && m_cb_vec_3d->count() == 0) { return nullptr;  }
 
@@ -816,13 +816,13 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString std_name = QString::fromStdString(m_vars->variable[i]->standard_name).trimmed();
+            QString std_name = QString::fromUtf8((m_vars->variable[i]->standard_name).c_str());
             if (std_name.isEmpty())
             {
-                std_name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();  // Todo: HACK for sediment, they do not have standard names
+                std_name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());  // Todo: HACK for sediment, they do not have standard names
             }
             map[std_name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
+            QString mesh_var_name = QString::fromUtf8((m_vars->variable[i]->mesh).c_str());
             if (m_vars->variable[i]->dims.size() == 2 ||
                 m_vars->variable[i]->dims.size() == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
                 m_vars->variable[i]->dims.size() == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS)  // Todo: HACK: assumed time, xy-space
@@ -832,14 +832,14 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
                     if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                     {
                         vec_cartesian_component_2dh += 1;
-                        if (std_name.contains("sea_water_x_velocity")) { cart_2dh[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                        if (std_name.contains("sea_water_y_velocity")) { cart_2dh[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                        if (std_name.contains("sea_water_x_velocity")) { cart_2dh[1] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
+                        if (std_name.contains("sea_water_y_velocity")) { cart_2dh[2] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
                     }
                     if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                     {
                         vec_spherical_component_2dh += 1;
-                        if (std_name.contains("eastward_sea_water_velocity")) { spher_2dh[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                        if (std_name.contains("northward_sea_water_velocity")) { spher_2dh[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                        if (std_name.contains("eastward_sea_water_velocity")) { spher_2dh[1] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
+                        if (std_name.contains("northward_sea_water_velocity")) { spher_2dh[2] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
                     }
                     if (vec_cartesian_component_2dh == 2 || vec_spherical_component_2dh == 2)
                     {
@@ -867,14 +867,14 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
                 if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                 {
                     vec_cartesian_component += 1;
-                    if (std_name.contains("sea_water_x_velocity")) { cart_layer[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                    if (std_name.contains("sea_water_y_velocity")) { cart_layer[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                    if (std_name.contains("sea_water_x_velocity")) { cart_layer[1] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
+                    if (std_name.contains("sea_water_y_velocity")) { cart_layer[2] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
                 }
                 if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                 {
                     vec_spherical_component += 1;
-                    if (std_name.contains("eastward_sea_water_velocity")) { spher_layer[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                    if (std_name.contains("northward_sea_water_velocity")) { spher_layer[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                    if (std_name.contains("eastward_sea_water_velocity")) { spher_layer[1] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
+                    if (std_name.contains("northward_sea_water_velocity")) { spher_layer[2] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
                 }
                 if (vec_cartesian_component == 2 || vec_spherical_component == 2)
                 {
