@@ -23,13 +23,14 @@ extern "C" {
         epsg = grid->get_epsg();
         return epsg;
     }
-    UGRIDSGRID_API long get_edge_face_node_count_api(SUGRID* grid, int* n_edges, int* n_faces, int* n_nodes)
+    UGRIDSGRID_API long get_edge_face_node_count_api(SUGRID* grid, int* n_edges, int* n_faces, int* n_nodes, int* n_face_nodes)
     {
         long status = -1;
         struct _mesh2d* m2d = grid->get_mesh_2d();
         *n_edges = (int)m2d->edge[0]->count;
         *n_faces = (int)m2d->face[0]->count;
         *n_nodes = (int)m2d->node[0]->count;
+        *n_face_nodes = (int)m2d->face_nodes[0].size();
         return status;
     }
     UGRIDSGRID_API long get_xy_node_coordinate_api(SUGRID* grid, double** x, double** y)
@@ -55,6 +56,26 @@ extern "C" {
         *edge_nodes = m2d->edge[0]->edge_nodes[0];
         return status;
     }
+    UGRIDSGRID_API long get_face_nodes_index_api(SUGRID* grid, int** face_nodes)
+    {
+        long status = -1;
+        struct _mesh2d* m2d = grid->get_mesh_2d();
+        int n_faces = m2d->face_nodes.size();
+        int nodes_per_face = m2d->face_nodes[0].size();
+        int * f_nodes = (int*)malloc(sizeof(int) * n_faces * nodes_per_face);
+        int k = 0;
+        for (int j = 0; j < n_faces; ++j)
+        {
+            for (int i = 0; i < nodes_per_face; ++i)
+            {
+                k = j * nodes_per_face + i;
+                f_nodes[k] = m2d->face_nodes[j][i];
+            }
+        }
+        *face_nodes = f_nodes;
+        return status;
+    }
+        
     UGRIDSGRID_API long get_edge_type_count_api(SUGRID* grid, int* edge_type_count)
     {
         long ret_value = -1;
@@ -145,6 +166,44 @@ extern "C" {
         }
         return bname;
     }
+    UGRIDSGRID_API char* get_face_value_api(SUGRID* grid, int index, int current_step, double** z_value)
+    {
+        long status = -1;
+        struct _mesh_variable* vars = grid->get_variables();
+        std::vector<char*> flag_m;
+        std::string meaning_str;
+        char* bname = nullptr;
+        int indx = -1;
+        for (int i = 0; i < vars->nr_vars; i++)
+        {
+            _variable* var = vars->variable[i];
+            if (var->time_series && var->coordinates != "")
+            {
+                if (var->location == "face" && var->topology_dimension == 2 && var->nc_type == NC_DOUBLE)
+                {
+                    indx += 1;
+                    if (i == index)  // choose requested stationary variable
+                    {
+                        bname = var->long_name.data();
+                        if (var->long_name.size() == 0)
+                        {
+                            bname = var->standard_name.data();
+                            if (var->standard_name.size() == 0)
+                            {
+                                bname = var->standard_name.data();
+                            }
+                        }
+                        // var->sediment_index == -1
+                        DataValuesProvider2D<double>std_data_at_face = grid->get_variable_values(var->var_name, -1);
+                        *z_value = std_data_at_face.GetValueAtIndex(current_step, 0);
+                        status = 0;
+                        break;
+                    }
+                }
+            }
+        }
+        return bname;
+    }
     UGRIDSGRID_API char* get_node_value_stationary_api(SUGRID* grid, int index, double** z_value)
     {
         long status = -1;
@@ -221,6 +280,20 @@ extern "C" {
         }
         return str;
     }
+    UGRIDSGRID_API char* get_location_2d_scalar_api(SUGRID* grid, int index)
+    {
+        char* str = nullptr;
+        struct _mesh_variable* vars = grid->get_variables();
+        _variable* var = vars->variable[index];
+        str = _strdup("");
+        if (var->time_series && var->coordinates != "")  // it is a time-series
+        {
+            if (var->dims.size() == 2 ||
+                var->dims.size() == 3 && grid->get_file_type() == FILE_TYPE::SGRID)
+                str = _strdup(var->location.data());
+        }
+        return str;
+    }
     UGRIDSGRID_API char* get_unit_2d_scalar_api(SUGRID* grid, int index)
     {
         char* str = nullptr;
@@ -248,6 +321,20 @@ extern "C" {
         }
         return str;
     }
+    UGRIDSGRID_API char* get_location_3d_scalar_api(SUGRID* grid, int index)
+    {
+        char* str = nullptr;
+        struct _mesh_variable* vars = grid->get_variables();
+        _variable* var = vars->variable[index];
+        str = _strdup("");
+        if (var->time_series && var->coordinates != "")  // it is a time-series
+        {
+            if (var->dims.size() == 3)
+                str = _strdup(var->location.data());
+        }
+        return str;
+    }
+
     UGRIDSGRID_API char* get_unit_3d_scalar_api(SUGRID* grid, int index)
     {
         char* str = nullptr;

@@ -60,7 +60,7 @@ An extra define of M_PI_2 is added at line 215
 #endif
 
 and file qgsabstractgeometry.h
-Line 574
+Line 596
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288
 #endif
