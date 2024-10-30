@@ -271,7 +271,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <Culture>0x0413</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;qgis_core.lib;qgis_gui.lib;qgis_analysis.lib;netcdf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;qgis_core.lib;qgis_gui.lib;qgis_analysis.lib;netcdf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>c:\OSGeo4W\apps\qgis\plugins\$(ProjectName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>c:\OSGeo4W\apps\Qt5\lib;c:\OSGeo4W\apps\qgis\lib\;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

@@ -1,19 +1,18 @@
 #ifndef __GRID_H__
 #define __GRID_H__
 
+//#include <QObject>
+#include <QDateTime>
+#include <QDate>
 #include <QFileInfo>
-#include <QtCore/QObject>
-#include <QtCore/QDateTime>
-#include <QtCore/QDate>
-#include <QtCore/QFileInfo>
-#include <QtCore/QTime>
-#include <QtCore/qtextcodec.h>
-#include <QtCore/qdebug.h>
+#include <QTime>
+#include <qtextcodec.h>
+#include <qdebug.h>
 
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QProgressBar>
+#include <QMessageBox>
+#include <QProgressBar>
 
-#include <QtGui/QIcon>
+#include <QIcon>
 
 #ifdef NATIVE_C
 #else

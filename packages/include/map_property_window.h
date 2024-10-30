@@ -14,6 +14,7 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QSlider>
+
 #include "map_property.h"
 #include "MyDrawingCanvas.h"
 
