@@ -37,3 +37,6 @@ packages/qgis_umesh.vcxproj.user
 *.obj
 packages/generated/moc_create_vector_layers.cpp
 packages/generated/moc_handle_vector_layers.cpp
+/_build
+*.pdb
+packages/generated/moc_qgis_sumesh.cpp
