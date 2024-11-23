@@ -25,7 +25,7 @@ else()
     message("*** Qt5 not found")
 endif()
 
-# set(CMAKE_PREFIX_PATH "c:/boost/boost_1_85_0/")
+set(CMAKE_PREFIX_PATH "c:/boost/boost_1_85_0")
 find_package(Boost 1.85.0 REQUIRED COMPONENTS
              date_time filesystem iostreams)
 if(Boost_FOUND)
@@ -132,5 +132,13 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 ################################################################################
 add_subdirectory(packages)
 # message("***  8 ")
+
+
+get_cmake_property(_variableNames VARIABLES)
+list (SORT _variableNames)
+foreach (_variableName ${_variableNames})
+    message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()
+# message("***  9 ")
 
 
