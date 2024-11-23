@@ -33,3 +33,7 @@ packages/Release/
 packages/x64/
 bin/x64/Release/qgis_umesh.lib
 packages/qgis_umesh.vcxproj.user
+*.bak
+*.obj
+packages/generated/moc_create_vector_layers.cpp
+packages/generated/moc_handle_vector_layers.cpp

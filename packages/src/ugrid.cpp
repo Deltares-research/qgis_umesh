@@ -806,17 +806,41 @@ long UGRID::read_variables()
                             m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_layers;
 
                             std::string name = m_map_dim_name["zs_name_layer"];
-                            int ii;
-                            status = nc_inq_varid(m_ncid, name.c_str(), &ii);
+                            int var_id;
+                            status = nc_inq_varid(m_ncid, name.c_str(), &var_id);
                             if (status == NC_NOERR)
                             {
-                                double * values_c = (double *)malloc(sizeof(double) * nr_layers);
-                                status = nc_get_var_double(this->m_ncid, ii, values_c);
                                 std::vector<double> values;
                                 values.reserve(nr_layers);
+                                int dim_of_var;
+                                status = nc_inq_varndims(this->m_ncid, var_id, &dim_of_var);
                                 for (int j = 0; j < nr_layers; j++)
                                 {
-                                    values.push_back(*(values_c + j));
+                                    values.push_back(j + 1);
+                                }
+                                if (dim_of_var != 1)
+                                {
+                                }
+                                if (false)  // janm
+                                {
+                                    if (nc_type == NC_DOUBLE)
+                                    {
+                                        double* values_c = (double*)malloc(sizeof(double) * nr_layers);
+                                        status = nc_get_var_double(this->m_ncid, var_id, values_c);
+                                        for (int j = 0; j < nr_layers; j++)
+                                        {
+                                            values.push_back(*(values_c + j));
+                                        }
+                                    }
+                                    else if (nc_type == NC_FLOAT)
+                                    {
+                                        float* values_c = (float*)malloc(sizeof(float) * nr_layers);
+                                        status = nc_get_var_float(this->m_ncid, var_id, values_c);
+                                        for (int j = 0; j < nr_layers; j++)
+                                        {
+                                            values.push_back(*(values_c + j));
+                                        }
+                                    }
                                 }
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                             }
@@ -831,17 +855,38 @@ long UGRID::read_variables()
                             m_mesh_vars->variable[m_nr_mesh_var - 1]->nr_hydro_layers = nr_layers;
 
                             std::string name = m_map_dim_name["zs_name_interface"];
-                            int ii;
-                            status = nc_inq_varid(m_ncid, name.c_str(), &ii);
+                            int var_id;
+                            status = nc_inq_varid(m_ncid, name.c_str(), &var_id);
                             if (status == NC_NOERR)
                             {
-                                double* values_c = (double*)malloc(sizeof(double) * nr_layers);
-                                status = nc_get_var_double(this->m_ncid, ii, values_c);
                                 std::vector<double> values;
                                 values.reserve(nr_layers);
+                                int dim_of_var;
+                                status = nc_inq_varndims(this->m_ncid, var_id, &dim_of_var);
                                 for (int j = 0; j < nr_layers; j++)
                                 {
-                                    values.push_back(*(values_c + j));
+                                    values.push_back(j + 1);
+                                }
+                                if (false)  // janm
+                                {
+                                    if (nc_type == NC_DOUBLE)
+                                    {
+                                        double* values_c = (double*)malloc(sizeof(double) * nr_layers);
+                                        status = nc_get_var_double(this->m_ncid, var_id, values_c);
+                                        for (int j = 0; j < nr_layers; j++)
+                                        {
+                                            values.push_back(*(values_c + j));
+                                        }
+                                    }
+                                    else if (nc_type == NC_FLOAT)
+                                    {
+                                        float* values_c = (float*)malloc(sizeof(float) * nr_layers);
+                                        status = nc_get_var_float(this->m_ncid, var_id, values_c);
+                                        for (int j = 0; j < nr_layers; j++)
+                                        {
+                                            values.push_back(*(values_c + j));
+                                        }
+                                    }
                                 }
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                             }
