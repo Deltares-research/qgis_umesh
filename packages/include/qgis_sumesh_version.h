@@ -3,12 +3,12 @@
 #define qgis_umesh_major "0"     
 #define qgis_umesh_minor "30"     
 #define qgis_umesh_revision "00"     
-#define qgis_umesh_build "87beed4"     
+#define qgis_umesh_build "38e3270"     
 #define qgis_umesh_company "Deltares"     
 #define qgis_umesh_company_url "https://www.deltares.nl"     
-#define qgis_umesh_source_url "https://github.com/Deltares/qgis_umesh"     
+#define qgis_umesh_source_url "https://github.com/Deltares-research/qgis_umesh.git"     
 #define qgis_umesh_program "QGIS_SUMESH"     
-#define qgis_umesh_version_number "0.30.00.87beed4"     
+#define qgis_umesh_version_number "0.30.00.38e3270"     
 #if defined(WIN32)     
 #define qgis_umesh_arch "Win32"     
 #elif defined(WIN64)     
