@@ -137,8 +137,8 @@ void MapTimeManagerWindow::create_window()
     QFrame* line = new QFrame();
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
-    vl->addWidget(line);
     vl->addWidget(m_slider);
+    vl->addWidget(line);
 
     // Selection of parameter and/or vector 
 
@@ -687,7 +687,7 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             {
                 m_layerLabelPrefix = new QLabel(tr("Layer"));
                 m_layerLabelSuffix = new QLabel(tr("[0,0]"));
-                m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_hydro_layers - 1]));
+                m_layerLabelSuffix->setText(tr("[1,%1]").arg(var->layer_center[var->nr_hydro_layers - 1]));
                 m_sb_hydro_layer = spinbox_layer(var->nr_hydro_layers);
                 connect(m_sb_hydro_layer, SIGNAL(valueChanged(int)), this, SLOT(spinbox_value_changed(int)));
 
@@ -768,7 +768,7 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
         struct _variable * var = m_vars->variable[strings[3].toInt()];
         m_layerLabelPrefix_vec = new QLabel(tr("Layer"));
         m_layerLabelSuffix_vec = new QLabel(tr("[0,0]"));
-        m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[var->nr_hydro_layers - 1]));
+        m_layerLabelSuffix_vec->setText(tr("[1,%1]").arg(var->layer_center[var->nr_hydro_layers - 1]));
         m_sb_hydro_layer_vec = spinbox_layer(var->nr_hydro_layers);
         connect(m_sb_hydro_layer_vec, SIGNAL(valueChanged(int)), this, SLOT(spinbox_vec_value_changed(int)));
 
@@ -1220,7 +1220,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
             m_sb_hydro_layer->setValue(var->nr_hydro_layers);
         }
         int i_lay = m_sb_hydro_layer->value();
-        m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("[1,%1]").arg(var->layer_center[i_lay - 1]));
     }
 
     if (var->nr_bed_layers > 0)
@@ -1311,7 +1311,7 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
         m_sb_hydro_layer_vec->setValue(var->nr_hydro_layers);
     }
     int i_lay = m_sb_hydro_layer_vec->value();
-    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+    m_layerLabelSuffix_vec->setText(tr("[1,%1]").arg(var->layer_center[i_lay - 1]));
 
     m_MyCanvas->reset_min_max();
     if (!m_show_map_vector_3d)
@@ -1424,20 +1424,20 @@ void MapTimeManagerWindow::draw_time_dependent_data_1d(QComboBox * cb, int item)
     // begin HACK edge vs contact
     if (location == "edge" || location == "contact")
     {
-        var->draw = true;;
+        var->draw = true;
         int i = m_q_times.indexOf(curr_date_time->dateTime());
         m_MyCanvas->set_current_step(i);
         m_MyCanvas->draw_all();
     }
     else if (location == "face")
     {
-        var->draw = true;;
+        var->draw = true;
         //int i = m_q_times.indexOf(curr_date_time->dateTime());
         m_MyCanvas->draw_all();
     }
     else if (location == "node")
     {
-        var->draw = true;;
+        var->draw = true;
         int i = m_q_times.indexOf(curr_date_time->dateTime());
         m_MyCanvas->set_current_step(i);
         m_MyCanvas->draw_all();
@@ -1567,13 +1567,14 @@ void MapTimeManagerWindow::spinbox_value_changed(int i_lay)
     struct _variable * var = m_vars->variable[jj];
     if (var->nr_hydro_layers > 0)
     {
-        m_layerLabelSuffix->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("[1,%1]").arg(var->layer_center[i_lay - 1]));
     }
     if (var->nr_bed_layers > 0)
     {
         m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[i_lay - 1]));
     }
     m_show_check_3d->setChecked(false);
+    m_show_check_3d->setChecked(true);
 
     return;
 }
@@ -1585,7 +1586,9 @@ void MapTimeManagerWindow::spinbox_vec_value_changed(int i_lay)
     int jj = slist[3].toInt();
 
     struct _variable * var = m_vars->variable[jj];
-    m_layerLabelSuffix_vec->setText(tr("z/sigma: %1").arg(var->layer_center[i_lay - 1]));
+    m_layerLabelSuffix_vec->setText(tr("[1,%1]").arg(var->layer_center[i_lay - 1]));
+    m_show_check_vec_3d->setChecked(false);
+    m_show_check_vec_3d->setChecked(true);
     return;
 }
 void MapTimeManagerWindow::clicked_current_view()

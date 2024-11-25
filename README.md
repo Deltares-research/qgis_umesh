@@ -12,8 +12,8 @@ At this moment the development environment is based on Visual Studio 2017.
  
 ## Environment variables
 Environment variables (example)
-QT5DIR64=c:\Qt\Qt5.12.6\5.12.6\msvc2017_64\
-QT5DIR64OSGEO=c:\OSGeo4W64\apps\Qt5
+QT5DIR_OSGEO=c:\OSGeo4W64\apps\Qt5
+BOOST_ROOT_DIR=c:\boost\boost_1_85_0\
 
 ## Link Libraries
 netCDF library:
