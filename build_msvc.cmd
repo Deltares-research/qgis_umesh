@@ -1,12 +1,8 @@
 echo off
 
-set netCDF_DIR=c:\Program Files\netCDF 4.9.2\
-set PATH=c:/OSGeo4W/apps/Qt5/;%PATH%
-set PATH=c:\boost\Boost_1_85_0\;%PATH%
-
-set BOOST_INCLUDEDIR=C:\boost\boost_1_85_0\
-set BOOST_LIBRARYDIR=C:\boost\boost_1_85_0\lib64-msvc-14.2
-set BOOST_ROOT=C:\boost\boost_1_85_0\boost
+rem set netCDF_DIR=c:\Program Files\netCDF 4.9.2\
+rem set PATH=c:/OSGeo4W/apps/Qt5/;%PATH%
+rem set PATH=c:\boost\Boost-1.85.0\;%PATH%
 
 del _build
 
