@@ -45,6 +45,8 @@ public:
         level(level), name(std::move(name)), filename(std::move(fileName)), functionname(std::move(functionName)), line_number(lineNumber)
     {
         start = std::chrono::high_resolution_clock::now();
+        elapse_time = 0.0;
+        level = 0;
         nr_calls = 1;
     }
 
