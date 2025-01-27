@@ -9,20 +9,20 @@
 
 
 
-#include <QtCore/QVector>
-#include <QtCore/QObject>
-#include <QtCore/QPointer>
+#include <QVector>
+#include <QObject>
+#include <QPointer>
 
-#include <QtGui/QColor>
-#include <QtGui/QCursor>
-#include <QtGui/QKeyEvent>
-#include <QtGui/QMouseEvent>
-#include <QtGui/QPainter>
-#include <QtGui/QWheelEvent>
+#include <QColor>
+#include <QCursor>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QWheelEvent>
 
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QVBoxLayout>
+#include <QLabel>
+#include <QMessageBox>
+#include <QVBoxLayout>
 
 #include "qgisinterface.h"
 #include "qgsmaptool.h"

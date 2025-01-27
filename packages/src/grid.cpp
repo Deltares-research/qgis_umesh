@@ -1015,13 +1015,14 @@ long GRID::read_ugrid_variables()
                             status = nc_inq_varid(m_ncid, name.c_str(), &ii);
                             if (status == NC_NOERR)
                             {
-                                double * values_c = (double *)malloc(sizeof(double) * nr_layers);
-                                status = nc_get_var_double(this->m_ncid, ii, values_c);
+                                //double * values_c = (double *)malloc(sizeof(double) * nr_layers);
+                                //status = nc_get_var_double(this->m_ncid, ii, values_c);
                                 std::vector<double> values;
                                 values.reserve(nr_layers);
                                 for (int j = 0; j < nr_layers; j++)
                                 {
-                                    values.push_back(*(values_c + j));
+                                    //values.push_back(*(values_c + j));
+                                    values.push_back(j+1);
                                 }
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                             }
@@ -1040,13 +1041,14 @@ long GRID::read_ugrid_variables()
                             status = nc_inq_varid(m_ncid, name.c_str(), &ii);
                             if (status == NC_NOERR)
                             {
-                                double* values_c = (double*)malloc(sizeof(double) * nr_layers);
-                                status = nc_get_var_double(this->m_ncid, ii, values_c);
+                                //double* values_c = (double*)malloc(sizeof(double) * nr_layers);
+                                //status = nc_get_var_double(this->m_ncid, ii, values_c);
                                 std::vector<double> values;
                                 values.reserve(nr_layers);
                                 for (int j = 0; j < nr_layers; j++)
                                 {
-                                    values.push_back(*(values_c + j));
+                                    //values.push_back(*(values_c + j));
+                                    values.push_back(j+1);
                                 }
                                 m_mesh_vars->variable[m_nr_mesh_var - 1]->layer_center = values;
                             }

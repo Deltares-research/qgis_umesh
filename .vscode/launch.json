@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Jan (Windows)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\bin\\x64\\${fileBasenameNoExtension}.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "console": "externalTerminal",
+            "visualizerFile": "c:\\Users\\janmo\\AppData\\Roaming\\Code\\User\\workspaceStorage\\0c240371d65344c9af7a52925c2bdf24\\tonka3000.qtvsctools\\qt.natvis.xml"
+        },
+        {
+            "name": "Debug (QGIS)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "c:\\OSGeo4W\\bin\\qgis-bin.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "c:\\Users\\janmo\\home\\models\\harlingen\\",
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "C/C++: cl.exe build active file",
+            "visualizerFile": "c:\\Users\\janmo\\AppData\\Roaming\\Code\\User\\workspaceStorage\\0c240371d65344c9af7a52925c2bdf24\\tonka3000.qtvsctools\\qt.natvis.xml"
+        }
+    ]
+}

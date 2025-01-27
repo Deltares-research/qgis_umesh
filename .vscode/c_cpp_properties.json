@@ -1,0 +1,52 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}\\packages\\include\\*.h",
+                "${workspaceFolder}\\..\\..\\lib\\eigen",
+                "${workspaceFolder}\\..\\..\\lib\\netcdf"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "windows-msvc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.40.33807/bin/Hostx64/x64/cl.exe",
+            "compilerArgs": [
+                "/Zi",
+                "/EHsc",
+                "/nologo",
+                "/std:c++20",
+                "/I ${workspaceFolder}\\packages\\include\\*.h",
+                "/I ${workspaceFolder}\\..\\..\\lib\\eigen",
+                "/I ${workspaceFolder}\\..\\..\\lib\\netcdf",
+                "/Fe${workspaceFolder}\\bin\\x64\\${fileBasenameNoExtension}.exe",
+                "${workspaceFolder}\\packages\\src\\*.cpp"
+            ]
+        },
+        {
+            "name": "WIN32 Release",
+            "includePath": [
+                "${workspaceFolder}\\packages\\include\\*.h",
+                "${workspaceFolder}\\..\\..\\lib\\eigen",
+                "${workspaceFolder}\\..\\..\\lib\\netcdf"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "cStandard": "c23",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}

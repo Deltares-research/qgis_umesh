@@ -29,22 +29,22 @@
 #include <qgsrubberband.h>
 
 
-#include <QtCore/QVector>
-#include <QtCore/QObject>
-#include <QtCore/QPointer>
+#include <QVector>
+#include <QObject>
+#include <QPointer>
 
-#include <QtGui/QColor>
-#include <QtGui/QCursor>
-#include <QtGui/QKeyEvent>
-#include <QtGui/QMouseEvent>
-#include <QtGui/QPainter>
-#include <QtGui/QPen>
-#include <QtGui/QWheelEvent>
+#include <QColor>
+#include <QCursor>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QPen>
+#include <QWheelEvent>
 
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QWidget>
+#include <QLabel>
+#include <QMessageBox>
+#include <QVBoxLayout>
+#include <QWidget>
 
 
 #define IMAGE_WIDTH  3840 // 1420 // 
