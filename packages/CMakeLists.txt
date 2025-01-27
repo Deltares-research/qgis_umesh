@@ -1,7 +1,8 @@
 message("*** Enter packages directory") 
 
 set(CMAKE_AUTOMOC ON)
-set(AUTOMOC_EXECUTABLE "c:/OSGeo4W/apps/Qt5/bin/moc.exe")
+set(AUTOMOC_EXECUTABLE "$ENV{QT5DIR_OSGEO}/bin/moc.exe")
+
 
 set(PROJECT_NAME qgis_umesh)
 
@@ -123,15 +124,15 @@ if (MSVC)
         "c:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/ucrt/"
         "c:/OSGeo4W/include;"
         "c:/OSGeo4W/apps/qgis/include;"
-        "$ENV{QT5DIROSGEO}/include;"
-        "$ENV{QT5DIROSGEO}/include/ActiveQt;"
-        "$ENV{QT5DIROSGEO}/include/Qt;"
-        "$ENV{QT5DIROSGEO}/include/QtCore;"
-        "$ENV{QT5DIROSGEO}/include/QtGui;"
-        "$ENV{QT5DIROSGEO}/include/QtSvg;"
-        "$ENV{QT5DIROSGEO}/include/QtWidgets;"
-        "$ENV{QT5DIROSGEO}/include/QtXml;"
-        "c:/boost/boost_1_85_0/"
+        "$ENV{QT5DIR_OSGEO}/include;"
+        "$ENV{QT5DIR_OSGEO}/include/ActiveQt;"
+        "$ENV{QT5DIR_OSGEO}/include/Qt;"
+        "$ENV{QT5DIR_OSGEO}/include/QtCore;"
+        "$ENV{QT5DIR_OSGEO}/include/QtGui;"
+        "$ENV{QT5DIR_OSGEO}/include/QtSvg;"
+        "$ENV{QT5DIR_OSGEO}/include/QtWidgets;"
+        "$ENV{QT5DIR_OSGEO}/include/QtXml;"
+        "$ENV{BOOST_ROOT_DIR}"
     )
 else()
     message("*** not supported, ex. UCRT64 ")
@@ -232,7 +233,7 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
 target_link_libraries(${PROJECT_NAME} PRIVATE "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
 
 target_link_directories(${PROJECT_NAME} PRIVATE
-    "$ENV{QT5DIROSGEO}/lib;"
+    "$ENV{QT5DIR_OSGEO}/lib;"
     "c:/OSGeoW/apps/qgis/lib"
     "${CMAKE_CURRENT_SOURCE_DIR}/../lib/${CMAKE_VS_PLATFORM_NAME}/$<CONFIG>"
 )

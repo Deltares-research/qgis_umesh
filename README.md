@@ -4,16 +4,18 @@ QGIS plugin to plot 1D, 1D2D and 2D time series map results as animation. The ma
 ![alt tag](doc/pictures/oosterschelde_velocity_arrow.png)
 
 ## To build
-To build the plugin qgis_umesh you have to install QGIS (OSGeo4W network installer (64 bit), https://qgis.org/en/site/forusers/download.html ), QT 5.12 LTS, BOOST 1.72.0 and netCDF4.
-The windows solution will place the qgis_umesh.dll on the qgis plugin directory (ex. c:\OSGeo4W64\apps\qgis\plugins\qgis_umesh.dll)
+To build the plugin qgis_umesh you have to install QGIS (OSGeo4W network installer (64 bit), https://qgis.org/en/site/forusers/download.html ).
+The windows solution and/or the CMake environment will place the qgis_umesh.dll on the qgis plugin directory (ex. c:\OSGeo4W64\apps\qgis\plugins\qgis_umesh.dll).
+
 
 ## Development environment
 At this moment the development environment is based on Visual Studio 2017.
  
 ## Environment variables
 Environment variables (example)
-QT5DIR_OSGEO=c:\OSGeo4W64\apps\Qt5
-BOOST_ROOT_DIR=c:\boost\boost_1_85_0\
+QT5DIR5_OSGEO=c:\OSGeo4W64\apps\Qt5
+BOOST_ROOT_DIR=c:\boost\boost_1_85_0
+NETCDF_DIR=c:\Program Files\netCDF 4.9.2
 
 ## Link Libraries
 netCDF library:
