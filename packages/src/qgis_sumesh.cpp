@@ -62,7 +62,7 @@ void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode* node, int indexFrom, int
             // Close the map time manager window
             // Remove the file entry belonging to this group
 
-            QString timings_file(m_working_dir + QString("/timing_qgis_umesh.log"));
+            QString timings_file(m_working_dir + QString("/qgis_sumesh_timing.log"));
             std::string std_string = timings_file.toUtf8();
             PRINT_TIMERN(std_string);
             CLEAR_TIMER();
