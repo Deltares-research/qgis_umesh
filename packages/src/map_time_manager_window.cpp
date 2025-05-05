@@ -297,10 +297,14 @@ QHBoxLayout * MapTimeManagerWindow::create_push_buttons_layout_steps()
     pb_end->setMinimumWidth(5);
 
     connect(pb_begin, SIGNAL(released()), this, SLOT(goto_begin()));
+    connect(pb_begin, &QPushButton::released, this, &MapTimeManagerWindow::pause_time_loop);
     connect(pb_back, SIGNAL(released()), this, SLOT(one_step_backward()));
+    connect(pb_back, &QPushButton::released, this, &MapTimeManagerWindow::pause_time_loop);
     connect(pb_step, SIGNAL(released()), this, SLOT(one_step_forward()));
+    connect(pb_step, &QPushButton::released, this, &MapTimeManagerWindow::pause_time_loop);
     connect(pb_end, SIGNAL(released()), this, SLOT(goto_end()));
-    
+    connect(pb_end, &QPushButton::released, this, &MapTimeManagerWindow::pause_time_loop);
+
     hl->addWidget(pb_begin);
     hl->addWidget(pb_back);
     hl->addWidget(pb_step);
@@ -933,6 +937,7 @@ void MapTimeManagerWindow::start_reverse()
 void MapTimeManagerWindow::pause_time_loop()
 {
     //QMessageBox::warning(0, tr("Message"), QString("Goto_begin pressed"));
+    pb_pauze->setChecked(true);
     stop_time_loop = true;
 }
 void MapTimeManagerWindow::start_forward()

@@ -125,7 +125,7 @@ long GRID::read()
     {
         START_TIMERN(Read_ugrid_mesh);
         status = this->read_ugrid_mesh();
-        STOP_TIMER(Read_ugrid_mesh mesh);
+        STOP_TIMER(Read_ugrid_mesh);
 
         START_TIMER(Read_times);
         status = this->read_times();
@@ -133,7 +133,7 @@ long GRID::read()
 
         START_TIMER(Read_ugrid_variables);
         status = this->read_ugrid_variables();
-        STOP_TIMER(Read Read_ugrid_variables);
+        STOP_TIMER(Read_ugrid_variables);
     }
     if (m_ftype == FILE_TYPE::SGRID ||
         m_ftype == FILE_TYPE::KISS)
