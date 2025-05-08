@@ -6,8 +6,8 @@ copy .\doc\qgis_umesh_installation.pdf  "c:\Program Files\Deltares\qgis_umesh\do
 copy .\icons\*.*                        "c:\Program Files\Deltares\qgis_umesh\icons\*.*"
 
 rem copy to Bulletin
-rem copy "c:\OSGeo4W\apps\qgis\plugins\qgis_sumesh.dll"      n:\Deltabox\Bulletin\mooiman\programs\QGIS_3.40.03_qgis_umesh\*.*
-rem copy .\doc\qgis_umesh_um.pdf                            n:\Deltabox\Bulletin\mooiman\programs\QGIS_3.40.03_qgis_umesh\doc\*.*
-rem copy .\doc\qgis_umesh_installation.pdf                  n:\Deltabox\Bulletin\mooiman\programs\QGIS_3.40.03_qgis_umesh\doc\*.*
-rem copy .\icons\*.*                                        n:\Deltabox\Bulletin\mooiman\programs\QGIS_3.40.03_qgis_umesh\icons\*.*
+copy "c:\OSGeo4W\apps\qgis\plugins\qgis_sumesh.dll"      n:\Deltabox\Bulletin\mooiman\programs\QGIS_3.40.03_qgis_umesh\*.*
+copy .\doc\qgis_umesh_um.pdf                            n:\Deltabox\Bulletin\mooiman\programs\QGIS_3.40.03_qgis_umesh\doc\*.*
+copy .\doc\qgis_umesh_installation.pdf                  n:\Deltabox\Bulletin\mooiman\programs\QGIS_3.40.03_qgis_umesh\doc\*.*
+copy .\icons\*.*                                        n:\Deltabox\Bulletin\mooiman\programs\QGIS_3.40.03_qgis_umesh\icons\*.*
 rem pause
