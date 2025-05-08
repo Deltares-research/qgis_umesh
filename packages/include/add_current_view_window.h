@@ -50,7 +50,7 @@ public:
 
 public slots:
     void close();
-    void clicked_add();
+    void clicked_addclose();
     void clicked_close();
     void clicked(QModelIndex);
 
