@@ -2778,6 +2778,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
     long nr_mesh2d = 0;
 
     std::string att_value;
+    double fill_value;
 
     if (cf_role == "mesh_topology_contact")  // 1D + 2D mesh
     {
@@ -3385,6 +3386,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             m_mesh2d->node[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
             status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
             status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
+            status = get_attribute(this->m_ncid, var_id, "_FillValue", &m_mesh2d->node[nr_mesh2d - 1]->fill_value);
             if (att_value == "projection_x_coordinate" || att_value == "longitude")
             {
                 status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->x.data());
@@ -3408,6 +3410,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                     m_mesh2d->edge[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
                     status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name.c_str(), &var_id);
                     status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
+                    status = get_attribute(this->m_ncid, var_id, "_FillValue", &m_mesh2d->edge[nr_mesh2d - 1]->fill_value);
                     if (att_value == "projection_x_coordinate" || att_value == "longitude")
                     {
                         status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->edge[nr_mesh2d - 1]->x.data());
@@ -3459,6 +3462,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                     m_mesh2d->face[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
                     status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name.c_str(), &var_id);
                     status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
+                    status = get_attribute(this->m_ncid, var_id, "_FillValue", &m_mesh2d->face[nr_mesh2d - 1]->fill_value);
                     if (att_value == "projection_x_coordinate" || att_value == "longitude")
                     {
                         status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->face[nr_mesh2d - 1]->x.data());
@@ -3763,6 +3767,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                 m_mesh2d->node[nr_mesh2d - 1]->x = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
                 m_mesh2d->node[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
                 status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
+                status = get_attribute(this->m_ncid, var_id, "_FillValue", &m_mesh2d->node[nr_mesh2d - 1]->fill_value);
                 if (att_value == "projection_x_coordinate" || att_value == "longitude")
                 {
                     status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->x.data());
@@ -3804,6 +3809,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                     m_mesh2d->face[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->face[nr_mesh2d - 1]->count);
                     status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_face_name.c_str(), &var_id);
                     status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
+                    status = get_attribute(this->m_ncid, var_id, "_FillValue", &m_mesh2d->face[nr_mesh2d - 1]->fill_value);
                     if (att_value == "projection_x_coordinate" || att_value == "longitude")
                     {
                         status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->face[nr_mesh2d - 1]->x.data());

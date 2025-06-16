@@ -117,32 +117,40 @@ void HVL::create_vector_layer_nodes(QString fname, QString layer_name, struct _f
             QgsFeatureList MyFeatures;
             QgsFeature MyFeature;
             QgsGeometry MyPoints;
+            QgsPointXY p1;
+            QgsPointXY miss_point;
+            double missing_value = nodes->fill_value;
+            miss_point = QgsPointXY(missing_value, missing_value);
             // int nsig = long( log10(nodes->count) ) + 1;
             //START_TIMER(create_vector_layer_nodes_add_features);
             for (int j = 0; j < nodes->count; j++)
             {
                 int k = -1;
-                MyPoints = QgsGeometry::fromPointXY(QgsPointXY(nodes->x[j], nodes->y[j]));
-                MyFeature.setGeometry(MyPoints);
+                p1 = QgsPointXY(QgsPointXY(nodes->x[j], nodes->y[j]));
+                if (p1 != miss_point)
+                {
+                    MyPoints = QgsGeometry::fromPointXY(p1);
+                    MyFeature.setGeometry(MyPoints);
 
-                MyFeature.initAttributes(nr_attrib_fields);
-                if (nodes->name.size() != 0)
-                {
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    if (nodes->name.size() != 0)
+                    {
+                        ++k;
+                        attribute[k] = QString("%1").arg(QString::fromUtf8((nodes->name[j]).c_str()).trimmed());
+                    }
+                    if (nodes->long_name.size() != 0)
+                    {
+                        ++k;
+                        attribute[k] = QString("%1").arg(QString::fromUtf8((nodes->long_name[j]).c_str()).trimmed());
+                    }
                     ++k;
-                    attribute[k] = QString("%1").arg(QString::fromUtf8((nodes->name[j]).c_str()).trimmed());
-                }
-                if (nodes->long_name.size() != 0)
-                {
+                    attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
                     ++k;
-                    attribute[k] = QString("%1").arg(QString::fromUtf8((nodes->long_name[j]).c_str()).trimmed());
+                    attribute[k] = QString("%1:1").arg(j + 1);
+                    MyFeature.setAttributes(attribute);
+                    MyFeature.setValid(true);
+                    MyFeatures.append(MyFeature);
                 }
-                ++k;
-                attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
-                ++k;
-                attribute[k] = QString("%1:1").arg(j + 1);
-                MyFeature.setAttributes(attribute);
-                MyFeature.setValid(true);
-                MyFeatures.append(MyFeature);
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
@@ -233,6 +241,9 @@ void HVL::create_vector_layer_data_on_edges(QString fname, _variable * var, stru
             vl->updatedFields();
 
             QVector<QgsPointXY> point(2);
+            double missing_value = nodes->fill_value;
+            QgsPointXY miss_point;
+            miss_point = QgsPointXY(missing_value, missing_value);
             QgsPolylineXY line;
             QgsFeatureList MyFeatures;
             MyFeatures.reserve(edges->count);
@@ -251,13 +262,16 @@ void HVL::create_vector_layer_data_on_edges(QString fname, _variable * var, stru
                 //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5).").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
                 line = point;
 
-                QgsFeature MyFeature;
-                MyFeature.setGeometry(QgsGeometry::fromPolylineXY(line));
+                if (point[0] != miss_point && point[1] != miss_point)
+                {
+                    QgsFeature MyFeature;
+                    MyFeature.setGeometry(QgsGeometry::fromPolylineXY(line));
 
-                MyFeature.initAttributes(nr_attrib_fields);
-                MyFeature.setAttribute(0, z_value[j]);
-                MyFeature.setValid(true);
-                MyFeatures.append(MyFeature);
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    MyFeature.setAttribute(0, z_value[j]);
+                    MyFeature.setValid(true);
+                    MyFeatures.append(MyFeature);
+                }
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
@@ -315,6 +329,9 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
                 vl->updatedFields();
 
                 QVector<QgsPointXY> point(2);
+                double missing_value = nodes->fill_value;
+                QgsPointXY miss_point;
+                miss_point = QgsPointXY(missing_value, missing_value);
                 QgsFeatureList MyFeatures;
                 MyFeatures.reserve(edges->count);
 
@@ -327,13 +344,16 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
                         point[0] = QgsPointXY(nodes->x[p1], nodes->y[p1]);
                         point[1] = QgsPointXY(nodes->x[p2], nodes->y[p2]);
 
-                        QgsFeature MyFeature;
-                        MyFeature.setGeometry(QgsGeometry::fromPolylineXY(point));
+                        if (point[0] != miss_point && point[1] != miss_point)
+                        {
+                            QgsFeature MyFeature;
+                            MyFeature.setGeometry(QgsGeometry::fromPolylineXY(point));
 
-                        MyFeature.initAttributes(nr_attrib_fields);
-                        MyFeature.setAttribute(0, z_value[j]);
-                        MyFeature.setValid(true);
-                        MyFeatures.append(MyFeature);
+                            MyFeature.initAttributes(nr_attrib_fields);
+                            MyFeature.setAttribute(0, z_value[j]);
+                            MyFeature.setValid(true);
+                            MyFeatures.append(MyFeature);
+                        }
                     }
                 }
                 dp_vl->addFeatures(MyFeatures);
@@ -422,15 +442,24 @@ void HVL::create_vector_layer_data_on_nodes(QString fname, _variable * var, stru
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
+            QgsPointXY p1;
+            double missing_value = nodes->fill_value;
+            QgsPointXY miss_point;
+            miss_point = QgsPointXY(missing_value, missing_value);
+            
             QgsFeatureList MyFeatures;
             QgsFeature MyFeature;
             for (int j = 0; j < nodes->count; j++)
             {
-                MyFeature.setGeometry(QgsGeometry::fromPointXY(QgsPointXY(nodes->x[j], nodes->y[j])));
+                p1 = QgsPointXY(nodes->x[j], nodes->y[j]);
+                if (p1 != miss_point)
+                {
+                    MyFeature.setGeometry(QgsGeometry::fromPointXY(p1));
 
-                MyFeature.initAttributes(nr_attrib_fields);
-                MyFeature.setAttribute(0, z_value[j]);
-                MyFeatures.append(MyFeature);
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    MyFeature.setAttribute(0, z_value[j]);
+                    MyFeatures.append(MyFeature);
+                }
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
@@ -645,6 +674,9 @@ void HVL::create_vector_layer_edges(QString fname, QString layer_name, struct _f
             vl->updatedFields();
 
             QVector<QgsPointXY> point(2);
+            double missing_value = nodes->fill_value;
+            QgsPointXY miss_point;
+            miss_point = QgsPointXY(missing_value, missing_value);
             QgsFeatureList MyFeatures;
             QgsFeature MyFeature;
 
@@ -655,40 +687,44 @@ void HVL::create_vector_layer_edges(QString fname, QString layer_name, struct _f
             {
                 point[0] = QgsPointXY(nodes->x[edges->edge_nodes[j][0]], nodes->y[edges->edge_nodes[j][0]]);
                 point[1] = QgsPointXY(nodes->x[edges->edge_nodes[j][1]], nodes->y[edges->edge_nodes[j][1]]);
-                MyFeature.setGeometry(QgsGeometry::fromPolylineXY(point));
-
-                int k = -1;
-                if (edges->edge_length.size() > 0)
+                if (point[0] != miss_point && point[1] != miss_point)
                 {
-                    ++k;
-                    attribute[k] = edges->edge_length[j];
-                    if (edges->edge_length[j] < 0)
+                    MyFeature.setGeometry(QgsGeometry::fromPolylineXY(point));
+
+                    int k = -1;
+                    if (edges->edge_length.size() > 0)
                     {
-                        if (!msg_given)
+                        ++k;
+                        attribute[k] = edges->edge_length[j];
+                        if (edges->edge_length[j] < 0)
                         {
-                            QString msg = QString("Some edge lengths are negative (due to an error in the orientation of the edge) \'%1\'.").arg(layer_name);
-                            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
-                            msg_given = true;
+                            if (!msg_given)
+                            {
+                                QString msg = QString("Some edge lengths are negative (due to an error in the orientation of the edge) \'%1\'.").arg(layer_name);
+                                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+                                msg_given = true;
+                            }
                         }
                     }
-                }
-                if (edges->name.size() > 0)
-                {
+                    if (edges->name.size() > 0)
+                    {
+                        ++k;
+                        attribute[k] = QString("%1").arg(QString::fromUtf8((edges->name[j]).c_str()).trimmed());
+                    }
+                    if (edges->long_name.size() > 0)
+                    {
+                        ++k;
+                        attribute[k] = QString("%1").arg(QString::fromUtf8((edges->long_name[j]).c_str()).trimmed());
+                    }
                     ++k;
-                    attribute[k] = QString("%1").arg(QString::fromUtf8((edges->name[j]).c_str()).trimmed());
-                }
-                if (edges->long_name.size() > 0)
-                {
+                    attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
                     ++k;
-                    attribute[k] = QString("%1").arg(QString::fromUtf8((edges->long_name[j]).c_str()).trimmed());
+                    attribute[k] = QString("%1:1").arg(j + 1);
+                    MyFeature.setAttributes(attribute);
+                    MyFeature.setValid(true);
+                    MyFeatures.append(MyFeature);
                 }
-                ++k;
-                attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
-                ++k;
-                attribute[k] = QString("%1:1").arg(j + 1);
-                MyFeature.setAttributes(attribute);
-                MyFeature.setValid(true);
-                MyFeatures.append(MyFeature);
+
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
