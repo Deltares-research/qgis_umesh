@@ -26,15 +26,17 @@
 #include <QFileInfo>
 #include <QFileDialog>
 
-#include <qgslayertree.h>
-#include <QgsLayerTreeView.h>
-#include <qgsvectorlayer.h>
+#include <qgis.h>
+#include <qgis_core.h>
 #include <qgisinterface.h>
+#include <qgslayertree.h>
+#include <qgslayertreeview.h>
+#include <qgsvectorlayer.h>
 #include <qgsmultilinestring.h>
 #include <qgslinesymbollayer.h>
 #include <qgsmarkersymbol.h>
 #include <qgsmarkersymbollayer.h>
-#include <QgsSingleSymbolRenderer.h>
+#include <qgssinglesymbolrenderer.h>
 #include <qgssymbol.h>
 
 #include "grid.h"

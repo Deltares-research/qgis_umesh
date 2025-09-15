@@ -2563,6 +2563,7 @@ int GRID::determine_mesh1d_edge_length(struct _mesh1d* mesh1d, struct _ntw_edges
             mesh1d->edge[nr_mesh1d - 1]->edge_length[j] = ntw_edges->edge[0]->edge_length[j_branch];
         }
     }
+    return 0;
 }
 int GRID::create_mesh1d_nodes(struct _mesh1d* mesh1d, struct _ntw_edges* ntw_edges, struct _ntw_geom* ntw_geom)
 {
