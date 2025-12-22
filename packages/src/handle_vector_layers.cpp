@@ -157,7 +157,8 @@ void HVL::create_vector_layer_nodes(QString fname, QString layer_name, struct _f
             //STOP_TIMER(create_vector_layer_nodes_add_features);
 
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
-
+            setLabelFontSize(vl, 8);
+            
             if (layer_name == QString("Mesh1D Connection nodes") ||
                 layer_name == QString("Mesh1D nodes") ||
                 layer_name == QString("Mesh2D nodes") ||
@@ -276,6 +277,7 @@ void HVL::create_vector_layer_data_on_edges(QString fname, _variable * var, stru
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.5);
@@ -362,6 +364,7 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
                 if (vl->featureCount() != 0)
                 {
                     vl->serverProperties()->setTitle(layer_name + ": " + fname);
+                    setLabelFontSize(vl, 8);
 
                     QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
                     if (i == 0) {
@@ -464,6 +467,7 @@ void HVL::create_vector_layer_data_on_nodes(QString fname, _variable * var, stru
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
             simple_marker->setStrokeStyle(Qt::NoPen);
@@ -598,6 +602,7 @@ void HVL::create_vector_layer_geometry(QString fname, QString layer_name, struct
                 vl->commitChanges();
             }
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             if (layer_name == QString("Mesh1D geometry"))
             {
@@ -730,6 +735,7 @@ void HVL::create_vector_layer_edges(QString fname, QString layer_name, struct _f
             vl->commitChanges();
             //STOP_TIMER(create_vector_layer_edges_add_features);
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
             if (layer_name == QString("Mesh2D edges"))
@@ -827,6 +833,7 @@ void HVL::create_vector_layer_observation_point(QString fname, QString layer_nam
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSymbol * marker = new QgsMarkerSymbol();
             if (std::string(obs_points->location_dim_name).find("lateral") != std::string::npos)
@@ -942,6 +949,7 @@ void HVL::create_vector_layer_observation_polyline(QString fname, QString layer_
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -1111,6 +1119,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_bridge_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1197,6 +1206,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_bridgepillar_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1322,6 +1332,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_compound_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1408,6 +1419,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_culvert_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1498,6 +1510,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_extra_resistance_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1584,6 +1597,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_general_structure_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1669,6 +1683,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_inverted_siphon_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1755,6 +1770,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_orifice_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1841,6 +1857,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_pump_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1927,6 +1944,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_riverweir_1d.svg"));
             simple_marker->setSize(5.0);
@@ -2017,6 +2035,7 @@ void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_weir_1d.svg"));
             simple_marker->setSize(5.0);
@@ -2147,6 +2166,7 @@ void HVL::create_vector_layer_crs_observation_point(GRID * grid_file, JSON_READE
     vl->commitChanges();
     std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
     vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+    setLabelFontSize(vl, 8);
 
     QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
     simple_marker->setSize(4.0);
@@ -2273,6 +2293,7 @@ void HVL::create_vector_layer_chainage_observation_point(GRID * grid_file, JSON_
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setSize(4.0);
@@ -2371,6 +2392,7 @@ void HVL::create_vector_layer_sample_point(GRID * grid_file, JSON_READER * prop_
     vl->commitChanges();
     std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
     vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+    setLabelFontSize(vl, 8);
 
     QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
     simple_marker->setSize(2.4);
@@ -2507,6 +2529,7 @@ void HVL::create_vector_layer_1D_observation_cross_section(GRID* grid_file, JSON
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleMarkerSymbolLayer* simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setSize(2.5);
@@ -2674,6 +2697,7 @@ void HVL::create_vector_layer_2D_observation_cross_section(GRID* grid_file, JSON
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -2855,6 +2879,7 @@ void HVL::create_vector_layer_structure(GRID * grid_file, JSON_READER * prop_tre
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((fname[i]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
         }
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -2957,6 +2982,7 @@ void HVL::create_vector_layer_drypoints(GRID * grid_file, JSON_READER * prop_tre
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->serverProperties()->setTitle(layer_name + ": " +  QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -3261,6 +3287,7 @@ void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER 
             }
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -3381,6 +3408,7 @@ void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER 
             }
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -3501,6 +3529,7 @@ void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER 
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
             simple_marker->setSize(2.7);
@@ -3595,6 +3624,7 @@ void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER 
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
             //QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("d:/checkouts/git/qgis_plugins/qgis_umesh/svg/tmp_bridge_tui.svg"));
@@ -3709,6 +3739,7 @@ void HVL::create_vector_layer_thin_dams(GRID * grid_file, JSON_READER * prop_tre
         }
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -3812,6 +3843,7 @@ void HVL::create_vector_layer_fixed_weir(GRID * grid_file, JSON_READER * prop_tr
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
 
+        setLabelFontSize(vl, 8);
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
         line_marker->setColor(QColor(128, 0, 128));
@@ -3931,6 +3963,7 @@ void HVL::create_vector_layer_1D_cross_section(GRID * grid_file, JSON_READER * p
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/cross_section_location_1d.svg"));
         simple_marker->setSize(5.0);
@@ -4060,6 +4093,7 @@ void HVL::create_vector_layer_1D_retention(GRID* grid_file, JSON_READER* prop_tr
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
         vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/retention_location_1d.svg"));
         simple_marker->setSize(5.0);
@@ -4178,6 +4212,7 @@ void HVL::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long epsg_code)
             }
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.25);
@@ -4386,6 +4421,29 @@ void HVL::add_layer_to_group(QgsVectorLayer* vl, QgsLayerTreeGroup* treeGroup)
     root->removeLayer(map_layer);
     STOP_TIMER(add_layer_to_group);
 }
+//------------------------------------------------------------------------------
+void HVL::setLabelFontSize(QgsVectorLayer *layer, double size)
+{
+    // Create labeling settings
+    QgsPalLayerSettings palSettings;
+
+    // Prepare a text format
+    QgsTextFormat textFormat;
+    QFont font("Arial");
+    font.setPointSizeF(size);               // <-- Set font size here
+    textFormat.setFont(font);
+    textFormat.setSize(size);               // <-- QGIS uses this too
+
+    // Attach format to labeling
+    palSettings.setFormat(textFormat);
+
+
+    // Apply labeling to the layer
+    layer->setLabeling(new QgsVectorLayerSimpleLabeling(palSettings));
+    layer->setLabelsEnabled(true);
+    layer->triggerRepaint();
+}
+//------------------------------------------------------------------------------
 std::vector<std::string> HVL::tokenize(const std::string& s, char c) {
     auto end = s.cend();
     auto start = end;

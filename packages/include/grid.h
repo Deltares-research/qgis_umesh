@@ -175,6 +175,7 @@ public:
 
 struct _feature {
     size_t count;
+    double fill_value;
     std::vector<long> branch;  // 1D, on which branch the node is
     std::vector<double> chainage;  // 1D, chainage of the node
     std::vector<double> x;
@@ -238,6 +239,7 @@ struct _ntw_nodes {
 };
 struct _edge {
     size_t count;
+    double fill_value;
     std::vector<double> x;
     std::vector<double> y;
     std::vector<std::vector<double>> x_bounds;  // begin- and endpoint of edge when drawing quantities, not necessarily the begin an end point
@@ -251,6 +253,7 @@ struct _edge {
 
 struct _faces {
     size_t count;
+    double fill_value;
     std::vector<double> x;
     std::vector<double> y;
     std::vector<std::vector<double>> x_bounds;  // polygon used when drawing quantities, not necessarily the total face

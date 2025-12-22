@@ -19,6 +19,8 @@
 #include <QVBoxLayout>
 #include <QHeaderView>
 
+#include <qgis.h>
+#include <qgis_core.h>
 #include <qgisinterface.h>
 #include <qgslayertree.h>
 #include <qgslayertreegroup.h>
@@ -26,8 +28,8 @@
 #include <qgslayertreeview.h>
 #include <qgsvectorlayer.h>
 #include <qgsmarkersymbollayer.h>
-#include <QgsSingleSymbolRenderer.h>
-#include <QgsSymbol.h>
+#include <qgssinglesymbolrenderer.h>
+#include <qgssymbol.h>
 
 class AddCurrentViewWindow 
     : public QWidget
@@ -59,6 +61,7 @@ private:
     void create_window();
     QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
     void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
+    void setLabelFontSize(QgsVectorLayer *layer, double size);
 
     QgisInterface * m_QGisIface; // Pointer to the QGIS interface object
     static AddCurrentViewWindow * obj;

@@ -341,9 +341,9 @@ QColorRampEditor * MapTimeManagerWindow::create_color_ramp(vector_quantity vecto
     {
         QVector<QPair<qreal, QColor> > initramp;
         initramp.push_back(QPair<qreal, QColor>(0.00, QColor(0, 0, 255)));  // west
-        initramp.push_back(QPair<qreal, QColor>(0.25, QColor(255, 0, 0)));  // south
-        initramp.push_back(QPair<qreal, QColor>(0.50, QColor(255, 255, 255)));  // east
-        initramp.push_back(QPair<qreal, QColor>(0.75, QColor(0, 255, 0)));  // north
+        initramp.push_back(QPair<qreal, QColor>(0.25, QColor(255, 255, 0)));  // south
+        initramp.push_back(QPair<qreal, QColor>(0.50, QColor(0, 0, 255)));  // east
+        initramp.push_back(QPair<qreal, QColor>(0.75, QColor(255, 255, 0)));  // north
         initramp.push_back(QPair<qreal, QColor>(1.00, QColor(0, 0, 255)));  // west
 
         ramph->setSlideUpdate(true);

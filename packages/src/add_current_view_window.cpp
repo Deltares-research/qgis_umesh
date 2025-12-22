@@ -178,6 +178,7 @@ void AddCurrentViewWindow::create_vector_layer()
         }
         vl->commitChanges();
         vl->serverProperties()->setTitle(field_name);
+        setLabelFontSize(vl, 8);
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setStrokeStyle(Qt::NoPen);
@@ -219,5 +220,25 @@ void AddCurrentViewWindow::add_layer_to_group(QgsVectorLayer * vl, QgsLayerTreeG
     QgsMapLayer * map_layer = QgsProject::instance()->addMapLayer(vl, false);
     treeGroup->addLayer(map_layer);
     root->removeLayer(map_layer);
+}
+//------------------------------------------------------------------------------
+void AddCurrentViewWindow::setLabelFontSize(QgsVectorLayer *layer, double size)
+{
+    // Create labeling settings
+    QgsPalLayerSettings palSettings;
+
+    // Prepare a text format
+    QgsTextFormat textFormat;
+    QFont font("Arial");
+    font.setPointSizeF(size);               // <-- Set font size here
+    textFormat.setFont(font);
+    textFormat.setSize(size);               // <-- QGIS uses this too
+
+    palSettings.setFormat(textFormat);
+
+    // Apply labeling to the layer
+    layer->setLabeling(new QgsVectorLayerSimpleLabeling(palSettings));
+    layer->setLabelsEnabled(true);
+    layer->triggerRepaint();
 }
 

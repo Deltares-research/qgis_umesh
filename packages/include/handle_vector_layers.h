@@ -26,15 +26,18 @@
 #include <QFileInfo>
 #include <QFileDialog>
 
-#include <qgslayertree.h>
-#include <QgsLayerTreeView.h>
-#include <qgsvectorlayer.h>
+#include <qgis.h>
+#include <qgis_core.h>
 #include <qgisinterface.h>
+#include <qgslayertree.h>
+#include <qgslayertreeview.h>
+#include <qgsvectorlayer.h>
 #include <qgsmultilinestring.h>
 #include <qgslinesymbollayer.h>
 #include <qgsmarkersymbol.h>
 #include <qgsmarkersymbollayer.h>
-#include <QgsSingleSymbolRenderer.h>
+#include <qgsbasicnumericformat.h>   // <- concrete numeric format
+#include <qgssinglesymbolrenderer.h>
 #include <qgssymbol.h>
 
 #include "grid.h"
@@ -101,6 +104,7 @@ class HVL
         
         QgsLayerTreeGroup* get_subgroup(QgsLayerTreeGroup*, QString);
         void add_layer_to_group(QgsVectorLayer*, QgsLayerTreeGroup*);
+        void setLabelFontSize(QgsVectorLayer *layer, double size);
         std::vector<std::string> tokenize(const std::string& s, char c);
         std::vector<std::string> tokenize(const std::string& s, std::size_t count);
 
