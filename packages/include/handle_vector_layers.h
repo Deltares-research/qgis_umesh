@@ -36,6 +36,7 @@
 #include <qgslinesymbollayer.h>
 #include <qgsmarkersymbol.h>
 #include <qgsmarkersymbollayer.h>
+#include <qgsbasicnumericformat.h>   // <- concrete numeric format
 #include <qgssinglesymbolrenderer.h>
 #include <qgssymbol.h>
 
@@ -103,6 +104,7 @@ class HVL
         
         QgsLayerTreeGroup* get_subgroup(QgsLayerTreeGroup*, QString);
         void add_layer_to_group(QgsVectorLayer*, QgsLayerTreeGroup*);
+        void setLabelFontSize(QgsVectorLayer *layer, double size);
         std::vector<std::string> tokenize(const std::string& s, char c);
         std::vector<std::string> tokenize(const std::string& s, std::size_t count);
 

@@ -61,6 +61,7 @@ private:
     void create_window();
     QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
     void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
+    void setLabelFontSize(QgsVectorLayer *layer, double size);
 
     QgisInterface * m_QGisIface; // Pointer to the QGIS interface object
     static AddCurrentViewWindow * obj;

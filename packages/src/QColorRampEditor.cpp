@@ -209,16 +209,13 @@ void QColorRampEditor::setMinMax(double z_min, double z_max)
 
     double m_z_min = z_min;
     double m_z_max = z_max;
-    if (m_z_max - m_z_min < 0.001)
+    double range = 0.001;
+    if (m_z_max - m_z_min < range)
     {
-        if (std::abs(m_z_min) <= 0.001)
+        m_z_min = m_z_min - 0.5 * range;
+        m_z_max = m_z_max + 0.5 * range;
         {
-            m_z_min = -0.001;
-            m_z_max =  0.001;
-        }
-        else
-        {
-            int delta = log10(std::abs(m_z_min)) - 2;
+            int delta = log10(std::abs(m_z_max - m_z_min)) - 2;
             m_z_min = m_z_min - std::pow(10., delta);
             m_z_max = m_z_max + std::pow(10., delta);
         }
