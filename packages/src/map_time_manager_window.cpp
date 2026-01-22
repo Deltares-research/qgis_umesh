@@ -551,6 +551,7 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
+            QString comment = QString::fromUtf8((m_vars->variable[i]->comment).c_str());
             QString name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());
             QString unit = QString::fromUtf8((m_vars->variable[i]->units).c_str());
             name = name + " [" + unit + "]";
@@ -559,6 +560,10 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
             if (mesh_var_name == text)
             {
                 cb->addItem(name, map[name]);
+                if (comment.size() > 0)
+                {
+                    cb->setItemData(cb->count() - 1, comment, Qt::ToolTipRole);
+                }
             }
         }
     }
@@ -566,6 +571,14 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
     cb->blockSignals(false);
 
     connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked_1d2d(int)));
+    connect(cb,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this,
+            [=](int index)
+            {
+                cb->setToolTip(cb->itemData(index, Qt::ToolTipRole).toString());
+            }
+    );
 
     return cb;
 }
@@ -585,6 +598,7 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
+            QString comment = QString::fromUtf8((m_vars->variable[i]->comment).c_str());
             QString name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());
             QString unit = QString::fromUtf8((m_vars->variable[i]->units).c_str());
             name = name + " [" + unit + "]";
@@ -597,6 +611,10 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
                 if (mesh_var_name == text)
                 {
                     cb_2d->addItem(name, map[name]);
+                    if (comment.size() > 0)
+                    {
+                        cb_2d->setItemData(cb_2d->count() - 1, comment, Qt::ToolTipRole);
+                    }
                 }
             }
             else if (m_vars->variable[i]->dims.size() == 3)  // Todo: HACK: assumed time, xy-space, layer
@@ -607,10 +625,18 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
                         m_grid_file->get_file_type() == FILE_TYPE::KISS)
                     {
                         cb_2d->addItem(name, map[name]);
+                        if (comment.size() > 0)
+                        {
+                            cb_2d->setItemData(cb_2d->count() - 1, comment, Qt::ToolTipRole);
+                        }
                     }
                     else
                     {
                         cb_3d->addItem(name, map[name]);
+                        if (comment.size() > 0)
+                        {
+                            cb_3d->setItemData(cb_2d->count() - 1, comment, Qt::ToolTipRole);
+                        }
                     }
                 }
             }
@@ -619,6 +645,10 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
                 if (mesh_var_name == text)
                 {
                     cb_3d->addItem(name, map[name]);
+                    if (comment.size() > 0)
+                    {
+                        cb_3d->setItemData(cb_2d->count() - 1, comment, Qt::ToolTipRole);
+                    }
                 }
             }
         }
@@ -630,7 +660,24 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
     cb_3d->blockSignals(false);
 
     connect(cb_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_2d(int)));
+    connect(cb_2d,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this,
+            [=](int index)
+            {
+                cb_2d->setToolTip(cb_2d->itemData(index, Qt::ToolTipRole).toString());
+            }
+    );
+
     connect(cb_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_3d(int)));
+    connect(cb_3d,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this,
+            [=](int index)
+            {
+                cb_3d->setToolTip(cb_3d->itemData(index, Qt::ToolTipRole).toString());
+            }
+    );
 
     return 0;
 }
