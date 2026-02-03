@@ -14,18 +14,19 @@
     <ClCompile Include="generated\moc_add_current_view_window.cpp" />
     <ClCompile Include="generated\moc_edit_observation_points_window.cpp" />
     <ClCompile Include="generated\moc_handle_vector_layers.cpp" />
+    <ClCompile Include="generated\moc_legend_overlay.cpp" />
     <ClCompile Include="generated\moc_map_property_window.cpp" />
     <ClCompile Include="generated\moc_map_time_manager_window.cpp" />
     <ClCompile Include="generated\moc_MyDrawingCanvas.cpp" />
     <ClCompile Include="generated\moc_MyEditTool.cpp" />
     <ClCompile Include="generated\moc_my_date_time_edit.cpp" />
-    <ClCompile Include="generated\moc_QColorRampEditor.cpp" />
     <ClCompile Include="generated\moc_qgis_sumesh.cpp" />
     <ClCompile Include="src\add_current_view_window.cpp" />
     <ClCompile Include="src\edit_observation_points_window.cpp" />
     <ClCompile Include="src\grid.cpp" />
     <ClCompile Include="src\handle_vector_layers.cpp" />
     <ClCompile Include="src\his_cf.cpp" />
+    <ClCompile Include="src\legend_overlay.cpp" />
     <ClCompile Include="src\map_property.cpp" />
     <ClCompile Include="src\map_property_window.cpp" />
     <ClCompile Include="src\map_time_manager_window.cpp" />
@@ -33,10 +34,10 @@
     <ClCompile Include="src\MyEditTool.cpp" />
     <ClCompile Include="src\my_date_time_edit.cpp" />
     <ClCompile Include="src\perf_timer.cpp" />
-    <ClCompile Include="src\QColorRampEditor.cpp" />
     <ClCompile Include="src\qgis_sumesh.cpp" />
     <ClCompile Include="src\qgis_sumesh_version.cpp" />
     <ClCompile Include="src\read_json.cpp" />
+    <ClCompile Include="src\unit_vector_overlay.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="include\qgis_sumesh.h">
@@ -59,6 +60,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\unit_vector_overlay.h" />
     <CustomBuild Include="include\map_time_manager_window.h">
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
@@ -87,6 +89,22 @@
     </CustomBuild>
     <ClInclude Include="include\grid.h" />
     <CustomBuild Include="include\handle_vector_layers.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="include\legend_overlay.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </DeploymentContent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
@@ -130,14 +148,6 @@
     <ClInclude Include="include\his_cf.h" />
     <ClInclude Include="include\json_reader.h" />
     <ClInclude Include="include\netcdf.h" />
-    <CustomBuild Include="include\QColorRampEditor.h">
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
-    </CustomBuild>
     <ClInclude Include="include\perf_timer.h" />
     <ClInclude Include="include\qgis_sumesh_version.h" />
   </ItemGroup>
@@ -203,7 +213,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>MinSpace</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include;c:\OSGeo4W\apps\qgis\include;$(QT5DIR_OSGEO)\include;$(QT5DIR_OSGEO)\include\ActiveQt\;$(QT5DIR_OSGEO)\include\Qt\;$(QT5DIR_OSGEO)\include\QtCore\;$(QT5DIR_OSGEO)\include\QtGui\;$(QT5DIR_OSGEO)\include\QtSvg\;$(QT5DIR_OSGEO)\include\QtWidgets\;$(QT5DIR_OSGEO)\include\QtXml\;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;QT_DLL;QT_THREAD_SUPPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>

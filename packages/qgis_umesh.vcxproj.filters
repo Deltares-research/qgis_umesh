@@ -36,12 +36,6 @@
     <ClCompile Include="src\my_date_time_edit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="generated\moc_QColorRampEditor.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\QColorRampEditor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\map_property.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -90,6 +84,15 @@
     <ClCompile Include="src\qgis_sumesh_version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="generated\moc_legend_overlay.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\legend_overlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\unit_vector_overlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="include\map_time_manager_window.h">
@@ -99,9 +102,6 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="include\MyDrawingCanvas.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="include\QColorRampEditor.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="include\my_date_time_edit.h">
@@ -120,6 +120,9 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="include\qgis_sumesh.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\legend_overlay.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
@@ -152,6 +155,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\qgis_sumesh_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\unit_vector_overlay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

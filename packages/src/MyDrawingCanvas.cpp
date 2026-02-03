@@ -54,11 +54,11 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     m_bed_layer = 0;
     m_hydro_layer = 0;
     m_current_step = 0;
-    m_ramph = new QColorRampEditor();
-    m_ramph_vec_dir = new QColorRampEditor();
     m_vscale_determined = false;
     m_vec_length = 0.0;
     m_vector_draw = VECTOR_NONE;
+    mUnitVectorOverlay = UnitVectorOverlay::getInstance(mMapCanvas);
+    m_overlay = NumericLegendOverlay::getInstance(mMapCanvas);
 
     qgis_painter = NULL;
     mCache_painter = new QPainter();
@@ -90,10 +90,6 @@ MyCanvas::MyCanvas(QgisInterface * QGisIface) :
     QObject::connect(this, SIGNAL(MouseReleaseEvent(QMouseEvent *)), this, SLOT(MyMouseReleaseEvent(QMouseEvent *)));
     QObject::connect(this, SIGNAL(WheelEvent(QWheelEvent *)), this, SLOT(MyWheelEvent(QWheelEvent *)));
     //connect(this, &QgsMapTool::wheelEvent, this, &MyCanvas::MyWheelEvent);
-
-
-    QObject::connect(m_ramph, SIGNAL(rampChanged()), this, SLOT(draw_all()));
-    QObject::connect(m_ramph_vec_dir, SIGNAL(rampChanged()), this, SLOT(draw_all()));
 
     if (DRAW_CACHES) {
         InitDrawEachCaches(); // debug utility
@@ -273,7 +269,10 @@ void MyCanvas::draw_data_at_face()
                 }
                 if (in_view)
                 {
-                    QColor col = m_ramph->getRgbFromValue(z_value[i]);
+                    m_overlay->setTitle(QString::fromStdString(var_name));
+                    double z = (z_value[i] - m_z_min)/(m_z_max-m_z_min);
+                    QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
+
                     double alpha = min(col.alphaF(), m_property->get_opacity());
                     mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
@@ -396,7 +395,8 @@ void MyCanvas::draw_data_at_node()
                     vertex_x.push_back(edge_x_31);
                     vertex_y.push_back(edge_y_31);
                     // draw polygon
-                    QColor col = m_ramph->getRgbFromValue(z_value[p0]);
+                    double z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
+                    QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     double alpha = min(col.alphaF(), m_property->get_opacity());
                     mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
@@ -416,7 +416,8 @@ void MyCanvas::draw_data_at_node()
                     vertex_x.push_back(edge_x_01);
                     vertex_y.push_back(edge_y_01);
                     // draw polygon
-                    col = m_ramph->getRgbFromValue(z_value[p0]);
+                    z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
+                    col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     alpha = min(col.alphaF(), m_property->get_opacity());
                     mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
@@ -436,7 +437,8 @@ void MyCanvas::draw_data_at_node()
                     vertex_x.push_back(edge_x_12);
                     vertex_y.push_back(edge_y_12);
                     // draw polygon
-                    col = m_ramph->getRgbFromValue(z_value[p0]);
+                    z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
+                    col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     alpha = min(col.alphaF(), m_property->get_opacity());
                     mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
@@ -456,7 +458,9 @@ void MyCanvas::draw_data_at_node()
                     vertex_x.push_back(edge_x_23);
                     vertex_y.push_back(edge_y_23);
                     // draw polygon
-                    col = m_ramph->getRgbFromValue(z_value[p0]);
+                    m_overlay->setTitle(QString::fromStdString(var_name));
+                    z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
+                    col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     alpha = min(col.alphaF(), m_property->get_opacity());
                     mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
@@ -751,22 +755,26 @@ void MyCanvas::draw_vector_arrow()
             coord_x.push_back(unitv_x_head);
             coord_y.push_back(unitv_y_head);
 
-            this->setFillColor(QColor(255, 255, 255));
-            this->setLineWidth(1);
-            mCache_painter->setOpacity(0.66);
-            int vh = qy(coord_y[3]) - qy(coord_y[2]);  // vector height
-            int width = 5 + vw + 5;
-            int height = -(5 + vh + 3 + th + 5);
-            this->drawRectangle(coord_x[0] - 5. * pix_dx, coord_y[3] - 5. * pix_dy, width, height);
-
-            mCache_painter->setOpacity(1.0);
             char scratch[50];
             sprintf(scratch, "%3.3f", v_length / vscale);
             string txt(scratch);
             string text = txt + " x unit vector";
-            this->drawText(coord_x[0], coord_y[0] + (5 + th) * pix_dy, 0, 0, text.c_str());
 
-            this->drawPolyline(coord_x, coord_y);
+            std::vector<int> pix_x(5);
+            std::vector<int> pix_y(5);
+            for (int i = coord_x.size()-1; i >= 0; --i)
+            {
+                pix_x[i] = qx(coord_x[i] - coord_x[0]);
+                pix_y[i] = qy(coord_y[i] - coord_y[0]);
+            }
+            for (int i = coord_x.size()-1; i >= 0; --i)
+            {
+                pix_x[i] = pix_x[i] - pix_x[0];
+                pix_y[i] = pix_y[i] - pix_y[0];
+            }
+
+            mUnitVectorOverlay->setTitle(QString::fromStdString(text));
+            mUnitVectorOverlay->setPolyline(pix_x, pix_y); // polyline is given in pixel coordinates
 
             this->finishDrawing();
         }
@@ -835,7 +843,6 @@ void MyCanvas::draw_vector_direction_at_face()
 
         vector<double> vec_z(mesh2d->face_nodes.size(), 0.0); // will contain the direction
         m_rgb_color.resize(mesh2d->face_nodes.size());
-        m_ramph_vec_dir->update();
 
         this->startDrawing(CACHE_2D);
         mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
@@ -867,7 +874,12 @@ void MyCanvas::draw_vector_direction_at_face()
             }
             if (in_view && vec_z[i] != missing_value)
             {
-                setFillColor(m_ramph_vec_dir->getRgbFromValue(vec_z[i]));
+                m_overlay->setTitle(QString("Velocity dirextion"));
+                double z = (vec_z[i] - m_z_min)/(m_z_max-m_z_min);
+                QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
+                double alpha = min(col.alphaF(), m_property->get_opacity());
+                mCache_painter->setOpacity(alpha);
+                this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
             }
         }
@@ -885,6 +897,9 @@ void MyCanvas::draw_vector_direction_at_node()
     struct _mesh2d* mesh2d = m_grid_file->get_mesh_2d();
     if (mesh2d != nullptr)
     {
+        m_z_min = -180.0;
+        m_z_max =  180.0;
+        m_overlay->setRange(m_z_min, m_z_max);
         size_t dimens = 0;
         double missing_value = -INFINITY;
 
@@ -933,7 +948,6 @@ void MyCanvas::draw_vector_direction_at_node()
         auto start = std::chrono::steady_clock::now();
 #endif
         m_rgb_color.resize(mesh2d->face_nodes.size());
-        m_ramph_vec_dir->update();  
 
         this->startDrawing(CACHE_2D);
         mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
@@ -1007,7 +1021,8 @@ void MyCanvas::draw_vector_direction_at_node()
                 vertex_y.push_back(edge_y_31);
                 // draw polygon
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                double z = (direction - m_z_min)/(m_z_max-m_z_min);
+                QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                 alpha = min(col.alphaF(), m_property->get_opacity());
                 mCache_painter->setOpacity(alpha);
                 this->setFillColor(col);
@@ -1028,7 +1043,8 @@ void MyCanvas::draw_vector_direction_at_node()
                 vertex_y.push_back(edge_y_01);
                 // draw polygon
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                z = (direction - m_z_min)/(m_z_max-m_z_min);
+                col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                 alpha = min(col.alphaF(), m_property->get_opacity());
                 mCache_painter->setOpacity(alpha);
                 this->setFillColor(col);
@@ -1049,7 +1065,8 @@ void MyCanvas::draw_vector_direction_at_node()
                 vertex_y.push_back(edge_y_12);
                 // draw polygon
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                z = (direction - m_z_min)/(m_z_max-m_z_min);
+                col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                 alpha = min(col.alphaF(), m_property->get_opacity());
                 mCache_painter->setOpacity(alpha);
                 this->setFillColor(col);
@@ -1069,8 +1086,10 @@ void MyCanvas::draw_vector_direction_at_node()
                 vertex_x.push_back(edge_x_23);
                 vertex_y.push_back(edge_y_23);
                 // draw polygon
+                m_overlay->setTitle(QString("Velocity direction"));
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                col = m_ramph_vec_dir->getRgbFromValue(direction);
+                z = (direction - m_z_min)/(m_z_max-m_z_min);
+                col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                 alpha = min(col.alphaF(), m_property->get_opacity());
                 mCache_painter->setOpacity(alpha);
                 this->setFillColor(col);
@@ -1283,7 +1302,8 @@ void MyCanvas::draw_line_at_edge()
                     edge_x[1] = mesh1d2d->node[0]->x[p2];
                     edge_y[1] = mesh1d2d->node[0]->y[p2];
                 }
-                this->setLineColor(m_ramph->getRgbFromValue(z_value[j]));
+                double z = (z_value[j] - m_z_min)/(m_z_max - m_z_min);
+                this->setLineColor(m_color_ramp->color(std::clamp(z,0.0,1.0)));
                 // 10 klasses: 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11
                 //double alpha = (*z_value[j] - m_z_min) / (m_z_max - m_z_min);
                 //double width = (1. - alpha) * 1. + alpha * 11.;
@@ -1343,8 +1363,10 @@ void MyCanvas::draw_data_along_edge()
                         edge_x[1] = mesh1d->node[0]->x[p2];
                         edge_y[1] = mesh1d->node[0]->y[p2];
 
-                        edge_color[0] = m_ramph->getRgbFromValue(z_value[p1]);
-                        edge_color[1] = m_ramph->getRgbFromValue(z_value[p2]);
+                        double z = (z_value[p1] - m_z_min)/(m_z_max-m_z_min);
+                        edge_color[0] = m_color_ramp->color(std::clamp(z,0.0,1.0));
+                        z = (z_value[p2] - m_z_min)/(m_z_max-m_z_min);
+                        edge_color[1] = m_color_ramp->color(std::clamp(z,0.0,1.0));
 
                         this->drawLineGradient(edge_x, edge_y, edge_color);
                     }
@@ -1354,7 +1376,8 @@ void MyCanvas::draw_data_along_edge()
                     m_rgb_color.resize(length);
                     for (int j = 0; j < length; j++)
                     {
-                        m_rgb_color[j] = m_ramph->getRgbFromValue(z_value[j]);
+                        double z = (z_value[j] - m_z_min)/(m_z_max-m_z_min);
+                        m_rgb_color[j] = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     }
                     this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
                 }
@@ -1363,13 +1386,9 @@ void MyCanvas::draw_data_along_edge()
         }
     }
 }
-void MyCanvas::setColorRamp(QColorRampEditor * ramph)
+void MyCanvas::setRamp(QgsColorRamp * color_ramp)
 {
-    m_ramph = ramph;
-}
-void MyCanvas::setColorRampVector(QColorRampEditor * ramph)
-{
-    m_ramph_vec_dir = ramph;
+    m_color_ramp = color_ramp;
 }
 
 //-----------------------------------------------------------------------------
@@ -1430,7 +1449,8 @@ void MyCanvas::determine_min_max(double * z, int length, double * z_min, double 
             {
                 *z_min = min(*z_min, z[i]);
                 *z_max = max(*z_max, z[i]);
-                rgb_color[i] = m_ramph->getRgbFromValue(z[i]);
+                double z_tmp = (z[i] - *z_min)/(*z_max - *z_min);
+                rgb_color[i] = m_color_ramp->color(std::clamp(z_tmp,0.0,1.0));
             }
             else
             {
@@ -1445,8 +1465,19 @@ void MyCanvas::determine_min_max(double * z, int length, double * z_min, double 
         *z_min = m_property->get_minimum();
         *z_max = m_property->get_maximum();
     }
-    m_ramph->setMinMax(*z_min, *z_max);
-    m_ramph->update();
+    if (z_max < z_min) 
+    {
+        // mMax always greater then mMin
+        double t = *z_max;
+        *z_max = *z_min;
+        *z_min = t;
+    }
+    if (std::abs(*z_max - *z_min) < 0.001)
+    {
+        *z_max = *z_max + 0.001;
+        *z_min = *z_min - 0.001;
+    }
+    m_overlay->setRange(*z_min, *z_max);
 }
 void MyCanvas::determine_min_max(double * z, int length, double * z_min, double * z_max, double missing_value)
 {
@@ -1470,8 +1501,19 @@ void MyCanvas::determine_min_max(double * z, int length, double * z_min, double 
         *z_min = m_property->get_minimum();
         *z_max = m_property->get_maximum();
     }
-    m_ramph->setMinMax(*z_min, *z_max);
-    m_ramph->update();
+    if (z_max < z_min) 
+    {
+        // mMax always greater then mMin
+        double t = *z_max;
+        *z_max = *z_min;
+        *z_min = t;
+    }
+    if (std::abs(*z_max - *z_min) < 0.001)
+    {
+        *z_max = *z_max + 0.001;
+        *z_min = *z_min - 0.001;
+    }
+    m_overlay->setRange(*z_min, *z_max);
 }
 
 double MyCanvas::statistics_averaged_length_of_cell(struct _variable * var)

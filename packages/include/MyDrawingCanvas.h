@@ -9,8 +9,10 @@
 
 #include "AbstractCanvas.h"
 #include "grid.h"
-#include "QColorRampEditor.h"
 #include "map_property.h"
+#include "legend_overlay.h"
+#include "unit_vector_overlay.h"
+
 
 #define GUI_EXPORT __declspec(dllimport)
 #include <qgisinterface.h>
@@ -180,9 +182,9 @@ public:
     void set_bed_layer(int);
     void set_hydro_layer(int);
     void set_current_step(int);
-    void setColorRamp(QColorRampEditor *);
-    void setColorRampVector(QColorRampEditor *);
     void set_draw_vector(vector_quantity);
+
+    void setRamp(QgsColorRamp * color_ramp);
 
     void draw_dot_at_edge();
     void draw_dot_at_face();
@@ -200,8 +202,7 @@ public:
     double * v_value = nullptr;
     double m_z_min;
     double m_z_max;
-    QColorRampEditor * m_ramph;
-    QColorRampEditor * m_ramph_vec_dir;
+    NumericLegendOverlay * m_overlay;
 
 protected:
     // From world (document) coordinates to Qt
@@ -224,6 +225,7 @@ private:
     QPointer<QgsMapCanvas> mMapCanvasItem;
     QPixmap * mMapCanvasMap;
     AbstractCanvas * mCanvas;
+    UnitVectorOverlay * mUnitVectorOverlay; 
 
     AbstractCanvasListener* listener;
     bool drawing;
@@ -274,6 +276,7 @@ private:
     bool m_vscale_determined;
     double m_vec_length;
     vector_quantity m_vector_draw;
+    QgsColorRamp * m_color_ramp;
 
     bool m_permuted;
 };

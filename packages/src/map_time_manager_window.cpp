@@ -13,7 +13,6 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, GRID * gri
     m_sb_bed_layer_vec = nullptr;
     m_sb_hydro_layer = nullptr;
     m_sb_hydro_layer_vec = nullptr;
-    m_ramph_vec_dir = nullptr;
     m_map_property_window = nullptr;
     m_cur_view = nullptr;
     m_grid_file = grid_file;
@@ -35,11 +34,20 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, GRID * gri
     m_property = MapProperty::getInstance();
     m_vector_draw = VECTOR_NONE;
 
-    connect(m_ramph, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
-    if (m_ramph_vec_dir != nullptr)
-    {
-        connect(m_ramph_vec_dir, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
-    }
+    QgsMapCanvas * qgs_map_canvas = QGisIface->mapCanvas();
+    mUnitVectorOverlay = UnitVectorOverlay::getInstance(qgs_map_canvas);
+
+    mLegendOverlay = NumericLegendOverlay::getInstance(qgs_map_canvas);
+    mLegendOverlay->setTitle("My Numeric Legend");
+    mLegendOverlay->setRange(0.0, 100.0);
+    mLegendOverlay->setRamp(mRampButton->colorRamp());
+    m_MyCanvas->setRamp(mRampButton->colorRamp());
+
+    // Live updates when the user changes the ramp
+    connect(mRampButton, &QgsColorRampButton::colorRampChanged, this, [this]() {
+        mLegendOverlay->setRamp(mRampButton->colorRamp());  // drawing the legend
+        m_MyCanvas->setRamp(mRampButton->colorRamp());  // drawing the data
+        });    
 }
 MapTimeManagerWindow::~MapTimeManagerWindow()
 {
@@ -55,30 +63,20 @@ void MapTimeManagerWindow::ramp_changed()
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::ramp_changed()");
     m_MyCanvas->draw_all();
 }
-
 void MapTimeManagerWindow::contextMenu(const QPoint & point)
 {
     Q_UNUSED(point);
-    QRect crec = m_ramph->geometry();
-    QPoint p1 = m_ramph->parentWidget()->mapFromGlobal(QCursor::pos());
-    if (crec.contains(p1)) // test mouse is in ramp
-    {
-        // the mouse release event will be catched by the QCOlorRampEditor
-    }
-    else
-    {  // not in ramp
-        if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
-        {
-            m_map_property_window = new MapPropertyWindow(m_MyCanvas);
-        }
-        m_map_property_window->set_dynamic_limits_enabled(true);
-        if (m_vector_draw == VECTOR_DIRECTION)
-        {
-            // set ramp limits en/disabled
-            m_map_property_window->set_dynamic_limits_enabled(false);
-        }
-    }
 
+    if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
+    {
+        m_map_property_window = new MapPropertyWindow(m_MyCanvas);
+    }
+    m_map_property_window->set_dynamic_limits_enabled(true);
+    if (m_vector_draw == VECTOR_DIRECTION)
+    {
+        // set ramp limits en/disabled
+        m_map_property_window->set_dynamic_limits_enabled(false);
+    }
 }
 //
 //-----------------------------------------------------------------------------
@@ -180,7 +178,45 @@ void MapTimeManagerWindow::create_window()
 
     wid->setLayout(vl);
     this->setWidget(wid);
+
+    connect(tw, &QTabWidget::currentChanged, this, &MapTimeManagerWindow::stacked_window_changed);
+    connect(iso_patch, &QWidget::activateWindow, this, &MapTimeManagerWindow::show_hide_overlay_legend);
+    connect(vectors, &QWidget::activateWindow, this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
+
     return;
+}
+void MapTimeManagerWindow::stacked_window_changed(int idx)
+{
+    for (int i = 0; i < m_cb_2d->count(); ++i)
+    {
+        QVariant k = m_cb_2d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+    for (int i = 0; i < m_cb_vec_2d->count(); ++i)
+    {
+        QVariant k = m_cb_vec_2d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+    // TODO 1D, 1D2D, 3D
+    m_MyCanvas->empty_caches();
+    mUnitVectorOverlay->setShow(false);
+    if (idx == 0) { 
+        m_stacked_window = 0; 
+        color_ramped_changed();
+        show_hide_overlay_legend();
+        mUnitVectorOverlay->setShow(false);  // visable as idx=1
+        show_hide_map_data_2d();
+    }
+    if (idx == 1) { 
+        m_stacked_window = 1; 
+        color_ramped_changed_dir();
+        show_hide_overlay_legend_dir();
+        show_hide_map_vector_2d();
+    }
 }
 QGridLayout * MapTimeManagerWindow::create_date_time_layout()
 {
@@ -311,54 +347,6 @@ QHBoxLayout * MapTimeManagerWindow::create_push_buttons_layout_steps()
     hl->addWidget(pb_end);
     
     return hl;
-}
-QColorRampEditor * MapTimeManagerWindow::create_color_ramp(vector_quantity vector_draw)
-{
-    QColorRampEditor* ramph = new QColorRampEditor(NULL, Qt::Horizontal);
-    m_vector_draw = vector_draw;
-    if (vector_draw == VECTOR_NONE)
-    {
-        QVector<QPair<qreal, QColor> > initramp;
-        initramp.push_back(QPair<qreal, QColor>(0.00, QColor(0, 0, 128)));
-        initramp.push_back(QPair<qreal, QColor>(0.125, QColor(0, 0, 255)));
-        initramp.push_back(QPair<qreal, QColor>(0.375, QColor(0, 255, 255)));
-        initramp.push_back(QPair<qreal, QColor>(0.50, QColor(0, 255, 0)));
-        initramp.push_back(QPair<qreal, QColor>(0.625, QColor(255, 255, 0)));
-        initramp.push_back(QPair<qreal, QColor>(0.875, QColor(255, 0, 0)));
-        initramp.push_back(QPair<qreal, QColor>(1.00, QColor(128, 0, 0)));
-
-        ramph->setSlideUpdate(true);
-        ramph->setMappingTextVisualize(true);
-        ramph->setMappingTextColor(Qt::black);
-        ramph->setMappingTextAccuracy(2);
-        ramph->setNormRamp(initramp);
-        ramph->setRamp(initramp);
-        ramph->setFixedHeight(40);  // bar breedte 40 - text(= 16) - indicator
-
-        m_MyCanvas->setColorRamp(ramph);
-    }
-    else if (vector_draw == VECTOR_DIRECTION)
-    {
-        QVector<QPair<qreal, QColor> > initramp;
-        initramp.push_back(QPair<qreal, QColor>(0.00, QColor(0, 0, 255)));  // west
-        initramp.push_back(QPair<qreal, QColor>(0.25, QColor(255, 255, 0)));  // south
-        initramp.push_back(QPair<qreal, QColor>(0.50, QColor(0, 0, 255)));  // east
-        initramp.push_back(QPair<qreal, QColor>(0.75, QColor(255, 255, 0)));  // north
-        initramp.push_back(QPair<qreal, QColor>(1.00, QColor(0, 0, 255)));  // west
-
-        ramph->setSlideUpdate(true);
-        ramph->setMappingTextVisualize(true);
-        ramph->setMappingTextColor(Qt::black);
-        ramph->setMappingTextAccuracy(2);
-        ramph->setNormRamp(initramp);
-        ramph->setRamp(initramp);
-        ramph->setFixedHeight(40);  // bar breedte 40 - text(= 16) - indicator
-        ramph->setMinMax(-180.0, 180.0);
-
-        m_MyCanvas->setColorRampVector(ramph);
-    }
-
-    return ramph;
 }
 void MapTimeManagerWindow::button_group_pressed(int)
 {
@@ -773,15 +761,65 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
                 hl->addLayout(sp_group_3d_bed, row, 1);
             }
         }
+
+        //======================================================================
+        m_crb_check = new QCheckBox();  // color ramp button check box
+        m_crb_check->setChecked(true);
+        mRampButton = new QgsColorRampButton();
+        mRampButton->setShowNull(false);
+        mRampButton->setColorRamp(QgsStyle::defaultStyle()->colorRamp("Turbo"));
+        mRampButton->setMaximumWidth(300);
+
+        row += 1;
+        hl->addWidget(m_crb_check, row, 0);
+        hl->addWidget(mRampButton, row, 1);
+
+        connect(mRampButton, &QgsColorRampButton::colorRampChanged,
+                this, &MapTimeManagerWindow::color_ramped_changed);
+        connect(mRampButton, &QgsColorRampButton::colorRampChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend);
+        connect(m_crb_check, &QCheckBox::stateChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend);
+        connect(m_crb_check, &QCheckBox::stateChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend);
+
+        vl_tw_iso->addLayout(hl);
+        vl_tw_iso->addStretch();
+
+        return vl_tw_iso;
     }
-    vl_tw_iso->addLayout(hl);
-    m_ramph = create_color_ramp(VECTOR_NONE);
-    vl_tw_iso->addWidget(m_ramph);
-
-    vl_tw_iso->addStretch();
-
-    return vl_tw_iso;
 }
+void MapTimeManagerWindow::color_ramped_changed()
+{
+    if (!mRampButton || !mLegendOverlay)
+        return;
+
+    QgsColorRamp* buttonRamp = mRampButton->colorRamp();
+    if (!buttonRamp)
+        return;
+
+    // Set ramp in overlay (overlay clones it internally)
+    mLegendOverlay->setRamp(buttonRamp);
+    m_MyCanvas->setRamp(buttonRamp);
+
+    // Force immediate repaint of overlay
+    mLegendOverlay->update();
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+void MapTimeManagerWindow::show_hide_overlay_legend()
+{
+    mLegendOverlay->setShow(false);
+    if (m_show_check_2d->checkState() == Qt::Checked &&
+        m_crb_check->checkState() == Qt::Checked)
+    {
+        QgsColorRamp* buttonRamp = mRampButton->colorRamp();
+        mLegendOverlay->setRamp(buttonRamp);
+        m_MyCanvas->setRamp(buttonRamp);
+        mLegendOverlay->setShow(true);
+    }
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+
 QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
 {
     int status = 1;
@@ -834,17 +872,86 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
         row += 1;
         gl->addLayout(sp_group_vec, row, 1);
     }
-    
+
+        //======================================================================
+        m_crb_check_vec = new QCheckBox();  // color ramp button check box
+        mRampButton_vec = new QgsColorRampButton();
+        mRampButton_vec->setShowNull(false);
+        mRampButton_vec->setColorRamp(QgsStyle::defaultStyle()->colorRamp("Turbo"));
+        mRampButton_vec->setMaximumWidth(300);
+
+        row += 1;
+        gl->addWidget(m_crb_check_vec, row, 0);
+        gl->addWidget(mRampButton_vec, row, 1);
+
+        connect(mRampButton_vec, &QgsColorRampButton::colorRampChanged,
+                this, &MapTimeManagerWindow::color_ramped_changed_dir);
+        connect(mRampButton_vec, &QgsColorRampButton::colorRampChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
+        connect(m_crb_check_vec, &QCheckBox::stateChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
+
+        connect(mRampButton_vec, &QgsColorRampButton::colorRampChanged, this, [this]() {
+        mLegendOverlay->setRamp(mRampButton_vec->colorRamp());  // drawing the legend
+        m_MyCanvas->setRamp(mRampButton_vec->colorRamp());  // drawing the data
+        });    
+
     vl_tw_vec->addLayout(gl);
-    m_ramph_vec_dir = create_color_ramp(VECTOR_DIRECTION);
-    vl_tw_vec->addWidget(m_ramph_vec_dir);
     vl_tw_vec->addStretch();
 
     connect(m_cb_vec_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_2d(int)));
+    connect(m_cb_vec_2d, &QComboBox::releaseMouse, this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
+    //connect(m_cb_vec_2d, &QComboBox::releaseMouse, this, &MapTimeManagerWindow::show_hide_overlay_unit_vector);
     connect(m_cb_vec_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_3d(int)));
 
     return vl_tw_vec;
 }
+void MapTimeManagerWindow::show_hide_overlay_legend_dir()
+{
+    mLegendOverlay->setShow(false);
+    if (m_cb_vec_2d->currentIndex() == 0) { return; }
+    if (m_show_check_vec_2d->checkState() == Qt::Checked &&
+        m_crb_check_vec->checkState() == Qt::Checked)
+    {
+        QgsColorRamp* buttonRamp = mRampButton_vec->colorRamp();
+        mLegendOverlay->setRamp(buttonRamp);
+        m_MyCanvas->setRamp(buttonRamp);
+        mLegendOverlay->setShow(true);
+    }
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+void MapTimeManagerWindow::show_hide_overlay_unit_vector()
+{
+    mUnitVectorOverlay->setShow(false);
+    if (m_cb_vec_2d->currentIndex() == 1) { return; }
+
+    if (m_show_check_vec_2d->checkState() == Qt::Checked)
+    {
+        mUnitVectorOverlay->setShow(true);
+    }
+    else if (m_show_check_vec_2d->checkState() == Qt::Unchecked)
+    {
+    }
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+void MapTimeManagerWindow::color_ramped_changed_dir()
+{
+    if (!mRampButton_vec || !mLegendOverlay)
+        return;
+
+    QgsColorRamp* buttonRamp = mRampButton_vec->colorRamp();
+    if (!buttonRamp)
+        return;
+
+    // Set ramp in overlay (overlay clones it internally)
+    mLegendOverlay->setRamp(buttonRamp);
+    m_MyCanvas->setRamp(buttonRamp);
+
+    // Force immediate repaint of overlay
+    mLegendOverlay->update();
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+
 int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, QComboBox * cb_vec_2d, QComboBox * cb_vec_3d)
 {
     int vec_cartesian_component_2dh = 0;
@@ -1342,6 +1449,15 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
         draw_time_dependent_vector(m_cb_vec_2d, item);
+        
+        if (m_cb_vec_2d->currentIndex() == 0) { 
+            mLegendOverlay->setShow(false); 
+            mUnitVectorOverlay->setShow(true); 
+        }
+        if (m_cb_vec_2d->currentIndex() == 1) { 
+            show_hide_overlay_legend_dir();
+            mUnitVectorOverlay->setShow(false); 
+        }
     }
 }
 void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
@@ -1552,6 +1668,7 @@ void MapTimeManagerWindow::show_hide_map_data_1d2d()
             m_pb_cur_view->setEnabled(false);
         }
     }
+
     cb_clicked_1d2d(m_cb_1d2d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_2d()
@@ -1570,7 +1687,7 @@ void MapTimeManagerWindow::show_hide_map_data_2d()
             m_pb_cur_view->setEnabled(false);
         }
     }
-
+    show_hide_overlay_legend();
     cb_clicked_2d(m_cb_2d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_3d()
@@ -1596,10 +1713,14 @@ void MapTimeManagerWindow::show_hide_map_vector_2d()
     if (m_show_check_vec_2d->checkState() == Qt::Checked)
     {
         m_show_map_vector_2d = true;
+        if (m_cb_vec_2d->currentIndex() == 0) {
+            mUnitVectorOverlay->setShow(true);
+        }
     }
     else if (m_show_check_vec_2d->checkState() == Qt::Unchecked)
     {
         m_show_map_vector_2d = false;
+        mUnitVectorOverlay->setShow(false);
     }
     cb_clicked_vec_2d(m_cb_vec_2d->currentIndex());
 }
