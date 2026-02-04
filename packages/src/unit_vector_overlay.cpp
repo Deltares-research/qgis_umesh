@@ -77,8 +77,8 @@ void UnitVectorOverlay::paint(QPainter* painter)
     QSize canvasSize = mCanvas->size();
     QRect box(
         m_margin,  // canvasSize.width()  - boxWidth - margin, // right
-        m_margin,  // canvasSize.height() - m_boxHeight - m_margin,  // bottom
-        m_boxWidth + m_margin,
+        canvasSize.height() - m_boxHeight - m_margin,  // bottom
+        m_boxWidth,
         m_boxHeight
     );
 
