@@ -118,8 +118,8 @@ void MyCanvas::draw_all()
     draw_data_at_node();  // isofill of the control volume around node
     draw_dot_at_face();
     draw_dot_at_node();
-    draw_data_along_edge();
-    draw_line_at_edge();
+    draw_data_1d_along_edge();
+    draw_data_2d_along_edge();
     draw_vector_arrow();
     draw_vector_direction_at_face();
     draw_vector_direction_at_node();
@@ -153,11 +153,12 @@ void MyCanvas::draw_dot_at_face()
 #endif
 
         this->startDrawing(CACHE_2D);
-        double opacity = mCache_painter->opacity();
+        double opacity_org = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         this->setPointSize(13);
         this->drawMultiDot(mesh2d->face[0]->x, mesh2d->face[0]->y, m_rgb_color);
-        mCache_painter->setOpacity(opacity);
+        m_overlay->setTitle(QString::fromStdString(var_name));
+        mCache_painter->setOpacity(opacity_org);
         this->finishDrawing();
 
 #if DO_TIMING == 1
@@ -240,7 +241,7 @@ void MyCanvas::draw_data_at_face()
 #endif        
             this->startDrawing(CACHE_2D);
             mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
-            double opacity = mCache_painter->opacity();
+            double opacity_org = mCache_painter->opacity();
             mCache_painter->setOpacity(m_property->get_opacity());
             vector<double> vertex_x(mesh2d->face_nodes[0].size());
             vector<double> vertex_y(mesh2d->face_nodes[0].size());
@@ -269,17 +270,14 @@ void MyCanvas::draw_data_at_face()
                 }
                 if (in_view)
                 {
-                    m_overlay->setTitle(QString::fromStdString(var_name));
                     double z = (z_value[i] - m_z_min)/(m_z_max-m_z_min);
                     QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-
-                    double alpha = min(col.alphaF(), m_property->get_opacity());
-                    mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
                 }
             }
-            mCache_painter->setOpacity(opacity);
+            m_overlay->setTitle(QString::fromStdString(var_name));
+            mCache_painter->setOpacity(opacity_org);
 
 #if DO_TIMING == 1
             end = std::chrono::steady_clock::now();
@@ -332,6 +330,7 @@ void MyCanvas::draw_data_at_node()
 
             this->startDrawing(CACHE_2D);
             mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
+            double opacity_org = mCache_painter->opacity();
             mCache_painter->setOpacity(m_property->get_opacity());
             int nr_nodes_per_max_quad = 4;
             vector<double> vertex_x(nr_nodes_per_max_quad);
@@ -397,8 +396,6 @@ void MyCanvas::draw_data_at_node()
                     // draw polygon
                     double z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
                     QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                    double alpha = min(col.alphaF(), m_property->get_opacity());
-                    mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
 
@@ -418,8 +415,6 @@ void MyCanvas::draw_data_at_node()
                     // draw polygon
                     z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
                     col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                    alpha = min(col.alphaF(), m_property->get_opacity());
-                    mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
 
@@ -439,8 +434,6 @@ void MyCanvas::draw_data_at_node()
                     // draw polygon
                     z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
                     col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                    alpha = min(col.alphaF(), m_property->get_opacity());
-                    mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
 
@@ -458,15 +451,14 @@ void MyCanvas::draw_data_at_node()
                     vertex_x.push_back(edge_x_23);
                     vertex_y.push_back(edge_y_23);
                     // draw polygon
-                    m_overlay->setTitle(QString::fromStdString(var_name));
                     z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
                     col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                    alpha = min(col.alphaF(), m_property->get_opacity());
-                    mCache_painter->setOpacity(alpha);
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
                 }
             }
+            m_overlay->setTitle(QString::fromStdString(var_name));
+            mCache_painter->setOpacity(opacity_org);
 #if DO_TIMING == 1
             end = std::chrono::steady_clock::now();
             elapse_time = end - start;
@@ -508,6 +500,7 @@ void MyCanvas::draw_vector_arrow()
 
         if (m_coordinate_type.size() != 4) { return; }
 
+        double opacity_org = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         // get average cell size (ie sqrt(area))    
         struct _mesh_variable * vars = m_grid_file->get_variables();
@@ -776,6 +769,7 @@ void MyCanvas::draw_vector_arrow()
             mUnitVectorOverlay->setTitle(QString::fromStdString(text));
             mUnitVectorOverlay->setPolyline(pix_x, pix_y); // polyline is given in pixel coordinates
 
+            mCache_painter->setOpacity(opacity_org);
             this->finishDrawing();
         }
         //else if (m_coordinate_type[0] == "Spherical")
@@ -846,7 +840,7 @@ void MyCanvas::draw_vector_direction_at_face()
 
         this->startDrawing(CACHE_2D);
         mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
-        double opacity = mCache_painter->opacity();
+        double opacity_org = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         vector<double> vertex_x(mesh2d->face_nodes[0].size());
         vector<double> vertex_y(mesh2d->face_nodes[0].size());
@@ -874,16 +868,14 @@ void MyCanvas::draw_vector_direction_at_face()
             }
             if (in_view && vec_z[i] != missing_value)
             {
-                m_overlay->setTitle(QString("Velocity dirextion"));
-                double z = (vec_z[i] - m_z_min)/(m_z_max-m_z_min);
+                double z = (vec_z[i] - m_z_min)/(m_z_max - m_z_min);
                 QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                double alpha = min(col.alphaF(), m_property->get_opacity());
-                mCache_painter->setOpacity(alpha);
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
             }
         }
-        mCache_painter->setOpacity(opacity);
+        m_overlay->setTitle(QString("Velocity direction"));
+        mCache_painter->setOpacity(opacity_org);
         this->finishDrawing();
     }
 }
@@ -951,7 +943,7 @@ void MyCanvas::draw_vector_direction_at_node()
 
         this->startDrawing(CACHE_2D);
         mCache_painter->setPen(Qt::NoPen);  // The bounding line of the polygon is not drawn
-        double opacity = mCache_painter->opacity();
+        double opacity_org = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         int nr_nodes_per_max_quad = 4;
         vector<double> vertex_x(nr_nodes_per_max_quad);
@@ -1023,11 +1015,8 @@ void MyCanvas::draw_vector_direction_at_node()
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
                 double z = (direction - m_z_min)/(m_z_max-m_z_min);
                 QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                alpha = min(col.alphaF(), m_property->get_opacity());
-                mCache_painter->setOpacity(alpha);
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
-
 
                 // determine the polygons [p, edge, centre, edge]
                 vertex_x.clear();
@@ -1045,11 +1034,8 @@ void MyCanvas::draw_vector_direction_at_node()
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
                 z = (direction - m_z_min)/(m_z_max-m_z_min);
                 col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                alpha = min(col.alphaF(), m_property->get_opacity());
-                mCache_painter->setOpacity(alpha);
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
-
 
                 // determine the polygons [p, edge, centre, edge]
                 vertex_x.clear();
@@ -1067,11 +1053,8 @@ void MyCanvas::draw_vector_direction_at_node()
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
                 z = (direction - m_z_min)/(m_z_max-m_z_min);
                 col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                alpha = min(col.alphaF(), m_property->get_opacity());
-                mCache_painter->setOpacity(alpha);
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
-
 
                 // determine the polygons [p, edge, centre, edge]
                 vertex_x.clear();
@@ -1086,17 +1069,15 @@ void MyCanvas::draw_vector_direction_at_node()
                 vertex_x.push_back(edge_x_23);
                 vertex_y.push_back(edge_y_23);
                 // draw polygon
-                m_overlay->setTitle(QString("Velocity direction"));
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
                 z = (direction - m_z_min)/(m_z_max-m_z_min);
                 col = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                alpha = min(col.alphaF(), m_property->get_opacity());
-                mCache_painter->setOpacity(alpha);
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
             }
         }
-        mCache_painter->setOpacity(opacity);
+        m_overlay->setTitle(QString("Velocity direction"));
+        mCache_painter->setOpacity(opacity_org);
         this->finishDrawing();
     }
 }
@@ -1122,11 +1103,12 @@ void MyCanvas::draw_dot_at_node()
             determine_min_max(z_value, mesh1d->node[0]->x.size(), &m_z_min, &m_z_max, m_rgb_color, missing_value);
 
             this->startDrawing(CACHE_1D);
-            double opacity = mCache_painter->opacity();
+            double opacity_org = mCache_painter->opacity();
             mCache_painter->setOpacity(m_property->get_opacity());
             this->setPointSize(13);
             this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
-            mCache_painter->setOpacity(opacity);
+            m_overlay->setTitle(QString::fromStdString(var_name));
+            mCache_painter->setOpacity(opacity_org);
             this->finishDrawing();
         }
     }
@@ -1186,16 +1168,17 @@ void MyCanvas::draw_dot_at_edge()
         }
 
         this->startDrawing(CACHE_1D);
-        double opacity = mCache_painter->opacity();
+        double opacity_org = mCache_painter->opacity();
         mCache_painter->setOpacity(m_property->get_opacity());
         this->setPointSize(13);
         this->drawMultiDot(edge_x, edge_y, m_rgb_color);
-        mCache_painter->setOpacity(opacity);
+        m_overlay->setTitle(QString::fromStdString(var_name));
+        mCache_painter->setOpacity(opacity_org);
         this->finishDrawing();
     }
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::draw_line_at_edge()
+void MyCanvas::draw_data_2d_along_edge()
 {
     if (m_grid_file == nullptr) { return; }
 
@@ -1275,7 +1258,7 @@ void MyCanvas::draw_line_at_edge()
 
             m_rgb_color.resize(edges->count);
             this->startDrawing(CACHE_1D);
-            double opacity = mCache_painter->opacity();
+            double opacity_org = mCache_painter->opacity();
             mCache_painter->setOpacity(m_property->get_opacity());
             for (int j = 0; j < edges->count; j++)
             {
@@ -1303,22 +1286,21 @@ void MyCanvas::draw_line_at_edge()
                     edge_y[1] = mesh1d2d->node[0]->y[p2];
                 }
                 double z = (z_value[j] - m_z_min)/(m_z_max - m_z_min);
-                this->setLineColor(m_color_ramp->color(std::clamp(z,0.0,1.0)));
-                // 10 klasses: 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11
-                //double alpha = (*z_value[j] - m_z_min) / (m_z_max - m_z_min);
-                //double width = (1. - alpha) * 1. + alpha * 11.;
+                QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
+                this->setLineColor(col);
                 this->setPointSize(13);
                 this->setLineWidth(9);
                 this->drawPolyline(edge_x, edge_y);
             }
-            mCache_painter->setOpacity(opacity);
+            m_overlay->setTitle(QString::fromStdString(var_name));
+            mCache_painter->setOpacity(opacity_org);
             this->finishDrawing();
         }
     }
 }
 
 //-----------------------------------------------------------------------------
-void MyCanvas::draw_data_along_edge()
+void MyCanvas::draw_data_1d_along_edge()
 {
     if (m_grid_file == nullptr) { return; }
 
@@ -1342,7 +1324,7 @@ void MyCanvas::draw_data_along_edge()
 
                 struct _edge* edges = mesh1d->edge[0];
                 this->startDrawing(CACHE_1D);
-                double opacity = mCache_painter->opacity();
+                double opacity_org = mCache_painter->opacity();
                 mCache_painter->setOpacity(m_property->get_opacity());
                 this->setPointSize(13);
                 vector<double> edge_x(2);
@@ -1381,7 +1363,9 @@ void MyCanvas::draw_data_along_edge()
                     }
                     this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
                 }
-                mCache_painter->setOpacity(opacity);
+                m_overlay->setTitle(QString::fromStdString(var_name));
+                mCache_painter->setOpacity(opacity_org);
+                this->finishDrawing();
             }
         }
     }
@@ -1651,8 +1635,8 @@ void MyCanvas::renderPlugin( QPainter * Painter )
     draw_data_at_node();  // isofill of the control volume around node
     draw_dot_at_face();
     draw_dot_at_node();
-    draw_data_along_edge();
-    draw_line_at_edge();
+    draw_data_1d_along_edge();
+    draw_data_2d_along_edge();
     draw_vector_arrow();
     draw_vector_direction_at_face();
     draw_vector_direction_at_node();

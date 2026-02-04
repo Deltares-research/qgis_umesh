@@ -189,10 +189,10 @@ public:
     void draw_dot_at_edge();
     void draw_dot_at_face();
     void draw_dot_at_node();
-    void draw_data_along_edge();
+    void draw_data_1d_along_edge();
     void draw_data_at_face();
     void draw_data_at_node();   // isofill of the control volume around node
-    void draw_line_at_edge();
+    void draw_data_2d_along_edge();
     void draw_vector_arrow();
     void draw_vector_direction_at_face();
     void draw_vector_direction_at_node();
