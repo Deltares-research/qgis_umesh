@@ -17,6 +17,10 @@ UnitVectorOverlay::UnitVectorOverlay(QgsMapCanvas* canvas)
     setZValue(1001);   // keep on top
     setVisible(true);
 }
+UnitVectorOverlay::~UnitVectorOverlay()
+{
+    return;
+}
 UnitVectorOverlay* UnitVectorOverlay::getInstance(QgsMapCanvas* canvas)
 {
     if (obj == nullptr)
@@ -24,6 +28,16 @@ UnitVectorOverlay* UnitVectorOverlay::getInstance(QgsMapCanvas* canvas)
         obj = new UnitVectorOverlay(canvas);
     }
     return obj;
+}
+void UnitVectorOverlay::deleteInstance()
+{
+    --count;
+    delete obj;
+    obj = nullptr;
+}
+int UnitVectorOverlay::get_count()
+{
+    return count;
 }
 void UnitVectorOverlay::setShow(bool show)
 {
@@ -63,7 +77,7 @@ void UnitVectorOverlay::paint(QPainter* painter)
     QSize canvasSize = mCanvas->size();
     QRect box(
         m_margin,  // canvasSize.width()  - boxWidth - margin, // right
-        canvasSize.height() - m_boxHeight - m_margin,  // bottom
+        m_margin,  // canvasSize.height() - m_boxHeight - m_margin,  // bottom
         m_boxWidth + m_margin,
         m_boxHeight
     );

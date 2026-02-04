@@ -12,8 +12,10 @@ class NumericLegendOverlay : public QgsMapCanvasItem
 {
 public:
     explicit NumericLegendOverlay(QgsMapCanvas* canvas);
+    ~NumericLegendOverlay();
 
     static NumericLegendOverlay* getInstance(QgsMapCanvas* canvas);
+    static void deleteInstance();
     static int get_count();
 
     void setRamp(QgsColorRamp* ramp);

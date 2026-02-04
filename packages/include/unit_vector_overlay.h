@@ -14,7 +14,10 @@ class UnitVectorOverlay : public QgsMapCanvasItem
 {
 public:
     explicit UnitVectorOverlay(QgsMapCanvas* canvas);
+    ~UnitVectorOverlay();
     static UnitVectorOverlay* getInstance(QgsMapCanvas* canvas);
+    static void deleteInstance();
+    int get_count();
 
     void setShow(bool show);
     void setTitle(const QString& title);

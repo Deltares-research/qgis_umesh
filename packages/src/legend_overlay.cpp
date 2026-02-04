@@ -20,6 +20,10 @@ NumericLegendOverlay::NumericLegendOverlay(QgsMapCanvas* canvas)
     setZValue(1000);   // keep on top
     setVisible(true);
 }
+NumericLegendOverlay::~NumericLegendOverlay()
+{
+    return;
+}
 NumericLegendOverlay* NumericLegendOverlay::getInstance(QgsMapCanvas* canvas)
 {
     if (obj == nullptr)
@@ -27,6 +31,12 @@ NumericLegendOverlay* NumericLegendOverlay::getInstance(QgsMapCanvas* canvas)
         obj = new NumericLegendOverlay(canvas);
     }
     return obj;
+}
+void NumericLegendOverlay::deleteInstance()
+{
+    --count;
+    delete obj;
+    obj = nullptr;
 }
 int NumericLegendOverlay::get_count()
 {
