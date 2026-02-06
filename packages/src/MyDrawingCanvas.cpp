@@ -950,7 +950,6 @@ void MyCanvas::draw_vector_direction_at_node()
         vector<double> vertex_y(nr_nodes_per_max_quad);
         this->setPointSize(13);
         double direction = 0.0;
-        double alpha;
         QColor col;
         for (int i = 0; i < mesh2d->face_nodes.size(); i++)
         {
@@ -1673,7 +1672,6 @@ void MyCanvas::canvasReleaseEvent(QgsMapMouseEvent * me )
             if (active_layer != nullptr)
             {
                 QString layer_id = active_layer->id();
-                int a = -1;
             }
     }
     emit MyMouseReleaseEvent( me );

@@ -343,7 +343,7 @@ long HISCF::read_locations()
             status = get_attribute(this->m_ncid, i_var, "grid_mapping_name", &grid_mapping_name);
             if (status == NC_NOERR)
             {
-                status = read_grid_mapping(i_var, var_name_c, grid_mapping_name);
+                status = read_grid_mapping(i_var, grid_mapping_name);
             }
         }
     }
@@ -843,7 +843,7 @@ std::vector<std::string> HISCF::get_names(int ncid, std::string names, size_t co
 }
 
 //------------------------------------------------------------------------------
-int HISCF::read_grid_mapping(int i_var, std::string var_name, std::string grid_mapping_name)
+int HISCF::read_grid_mapping(int i_var, std::string grid_mapping_name)
 {
     int status = -1;
     m_mapping->epsg = -1;

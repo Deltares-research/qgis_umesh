@@ -97,7 +97,7 @@ private:
     int get_dimension_var(int, std::string, size_t *);
     std::vector<std::string>  get_dimension_names(int, std::string);
 
-    int read_grid_mapping(int, std::string, std::string);
+    int read_grid_mapping(int, std::string);
 
     long _nr_mesh_contacts;
     std::size_t _two;

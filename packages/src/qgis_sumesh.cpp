@@ -361,7 +361,6 @@ void qgis_umesh::show_map_output(GRID* grid_file)
 
     // Check on at least UGRID-1.0 file formaat
     long nr_times = 0;
-    struct _global_attributes* globals;
 
     if (grid_file != nullptr)
     {

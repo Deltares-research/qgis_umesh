@@ -53,7 +53,6 @@ void EditObsPoints::create_window()
     QFrame * frame = new QFrame(this);
     QWidget * wid = new QWidget(frame);
     QVBoxLayout * vl = new QVBoxLayout();
-    QHBoxLayout * hl = new QHBoxLayout();
     QGridLayout * gl = new QGridLayout();
     QAction * _show_p = new QAction();
 

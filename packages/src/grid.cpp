@@ -36,7 +36,6 @@ GRID::GRID()
 }
 GRID::GRID(QFileInfo filename, int ncid, QProgressBar* pgBar)
 {
-    long ret_value = 1;
     m_fname = filename;  // filename without path, just the name
     m_ftype = FILE_TYPE::UNKNOWN;
     m_grid_file_name = filename.absoluteFilePath();  // filename with complete path
@@ -350,7 +349,7 @@ long GRID::read_ugrid_mesh()
         status = get_attribute(this->m_ncid, i_var, "grid_mapping_name", &grid_mapping_name);
         if (status == NC_NOERR)
         {
-            status = read_grid_mapping(i_var, var_name, grid_mapping_name);
+            status = read_grid_mapping(i_var, grid_mapping_name);
         }
         free(var_dimids);
         var_dimids = nullptr;
@@ -581,7 +580,7 @@ long GRID::read_sgrid_mesh()
         status = get_attribute(this->m_ncid, i_var, "grid_mapping_name", &grid_mapping_name);
         if (status == NC_NOERR)
         {
-            status = read_grid_mapping(i_var, var_name, grid_mapping_name);
+            status = read_grid_mapping(i_var, grid_mapping_name);
         }
         free(var_dimids);
         var_dimids = nullptr;
@@ -2779,7 +2778,6 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
     long nr_mesh2d = 0;
 
     std::string att_value;
-    double fill_value;
 
     if (cf_role == "mesh_topology_contact")  // 1D + 2D mesh
     {
@@ -4009,7 +4007,7 @@ int GRID::get_attribute_by_var_name(int ncid, std::string var_name, std::string 
     status = get_attribute(ncid, i_var, att_name, att_value);
     return status;
 }
-int GRID::read_grid_mapping(int i_var, std::string var_name, std::string grid_mapping_name)
+int GRID::read_grid_mapping(int i_var, std::string grid_mapping_name)
 {
     int status = -1;
     m_mapping->epsg = -1;

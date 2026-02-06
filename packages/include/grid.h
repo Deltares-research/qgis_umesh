@@ -458,7 +458,7 @@ private:
     int get_coordinate(char *, char *, int, double *, double *);
 
     int read_variables_with_cf_role(int, std::string, std::string, int, int *);
-    int read_grid_mapping(int, std::string, std::string);
+    int read_grid_mapping(int, std::string);
     int determine_mesh1d_edge_length(struct _mesh1d*, struct _ntw_edges*);
     int create_mesh1d_nodes(struct _mesh1d *, struct _ntw_edges *, struct _ntw_geom *);
     int create_mesh_contacts(struct _ntw_nodes *, struct _ntw_edges *, struct _ntw_geom *);
