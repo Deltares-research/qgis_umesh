@@ -215,7 +215,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include;c:\OSGeo4W\apps\qgis\include;$(QT5DIR_OSGEO)\include;$(QT5DIR_OSGEO)\include\ActiveQt\;$(QT5DIR_OSGEO)\include\Qt\;$(QT5DIR_OSGEO)\include\QtCore\;$(QT5DIR_OSGEO)\include\QtGui\;$(QT5DIR_OSGEO)\include\QtSvg\;$(QT5DIR_OSGEO)\include\QtWidgets\;$(QT5DIR_OSGEO)\include\QtXml\;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include;c:\OSGeo4W\apps\qgis\include;$(QT5DIR_OSGEO)\include;$(QT5DIR_OSGEO)\include\ActiveQt\;$(QT5DIR_OSGEO)\include\Qt\;$(QT5DIR_OSGEO)\include\QtCore\;$(QT5DIR_OSGEO)\include\QtGui\;$(QT5DIR_OSGEO)\include\QtSvg\;$(QT5DIR_OSGEO)\include\QtWidgets\;$(QT5DIR_OSGEO)\include\QtXml\;$(NETCDF_DIR)\include;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;QT_DLL;QT_THREAD_SUPPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -236,7 +236,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;qgis_core.lib;qgis_gui.lib;qgis_analysis.lib;netcdf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>c:\OSGeo4W\apps\qgis\plugins\$(ProjectName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(QT5DIR_OSGEO)\lib;c:\OSGeo4W\apps\qgis\lib\;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\lib\$(Platform)\$(Configuration);c:\OSGeo4W\apps\qgis\lib\;$(QT5DIR_OSGEO)\lib;$(NETCDF_DIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -264,7 +264,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include;c:\OSGeo4W\apps\qgis\include;$(QT5DIR_OSGEO)\include;$(QT5DIR_OSGEO)\include\ActiveQt\;$(QT5DIR_OSGEO)\include\Qt\;$(QT5DIR_OSGEO)\include\QtCore\;$(QT5DIR_OSGEO)\include\QtGui\;$(QT5DIR_OSGEO)\include\QtSvg\;$(QT5DIR_OSGEO)\include\QtWidgets\;$(QT5DIR_OSGEO)\include\QtXml\;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include;c:\OSGeo4W\apps\qgis\include;$(QT5DIR_OSGEO)\include;$(QT5DIR_OSGEO)\include\ActiveQt\;$(QT5DIR_OSGEO)\include\Qt\;$(QT5DIR_OSGEO)\include\QtCore\;$(QT5DIR_OSGEO)\include\QtGui\;$(QT5DIR_OSGEO)\include\QtSvg\;$(QT5DIR_OSGEO)\include\QtWidgets\;$(QT5DIR_OSGEO)\include\QtXml\;$(NETCDF_DIR)\include;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AssemblerListingLocation>.\Debug/</AssemblerListingLocation>
