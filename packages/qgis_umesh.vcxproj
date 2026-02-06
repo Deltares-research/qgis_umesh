@@ -12,31 +12,35 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="generated\moc_add_current_view_window.cpp" />
+    <ClCompile Include="generated\moc_edit_observation_points_window.cpp" />
     <ClCompile Include="generated\moc_handle_vector_layers.cpp" />
-    <ClCompile Include="generated\moc_map_property.cpp" />
+    <ClCompile Include="generated\moc_legend_overlay.cpp" />
     <ClCompile Include="generated\moc_map_property_window.cpp" />
     <ClCompile Include="generated\moc_map_time_manager_window.cpp" />
     <ClCompile Include="generated\moc_MyDrawingCanvas.cpp" />
+    <ClCompile Include="generated\moc_MyEditTool.cpp" />
     <ClCompile Include="generated\moc_my_date_time_edit.cpp" />
-    <ClCompile Include="generated\moc_QColorRampEditor.cpp" />
-    <ClCompile Include="generated\moc_qgis_umesh.cpp" />
+    <ClCompile Include="generated\moc_qgis_sumesh.cpp" />
     <ClCompile Include="src\add_current_view_window.cpp" />
+    <ClCompile Include="src\edit_observation_points_window.cpp" />
+    <ClCompile Include="src\grid.cpp" />
     <ClCompile Include="src\handle_vector_layers.cpp" />
     <ClCompile Include="src\his_cf.cpp" />
+    <ClCompile Include="src\legend_overlay.cpp" />
     <ClCompile Include="src\map_property.cpp" />
     <ClCompile Include="src\map_property_window.cpp" />
     <ClCompile Include="src\map_time_manager_window.cpp" />
     <ClCompile Include="src\MyDrawingCanvas.cpp" />
+    <ClCompile Include="src\MyEditTool.cpp" />
     <ClCompile Include="src\my_date_time_edit.cpp" />
     <ClCompile Include="src\perf_timer.cpp" />
-    <ClCompile Include="src\QColorRampEditor.cpp" />
-    <ClCompile Include="src\qgis_umesh.cpp" />
-    <ClCompile Include="src\qgis_umesh_version.cpp" />
+    <ClCompile Include="src\qgis_sumesh.cpp" />
+    <ClCompile Include="src\qgis_sumesh_version.cpp" />
     <ClCompile Include="src\read_json.cpp" />
-    <ClCompile Include="src\ugrid.cpp" />
+    <ClCompile Include="src\unit_vector_overlay.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="include\qgis_umesh.h">
+    <CustomBuild Include="include\qgis_sumesh.h">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
@@ -46,6 +50,17 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="include\MyEditTool.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\unit_vector_overlay.h" />
     <CustomBuild Include="include\map_time_manager_window.h">
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
@@ -72,14 +87,39 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
     </CustomBuild>
-    <CustomBuild Include="include\map_property.h">
+    <ClInclude Include="include\grid.h" />
+    <CustomBuild Include="include\handle_vector_layers.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="include\legend_overlay.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </DeploymentContent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="include\map_property.h">
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
-    </CustomBuild>
+    </ClInclude>
     <CustomBuild Include="include\map_property_window.h">
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
@@ -96,7 +136,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
     </CustomBuild>
-    <CustomBuild Include="include\handle_vector_layers.h">
+    <ClInclude Include="include\data_struct.h" />
+    <CustomBuild Include="include\edit_observation_points_window.h">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
@@ -104,27 +145,19 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
     </CustomBuild>
-    <ClInclude Include="include\data_struct.h" />
     <ClInclude Include="include\his_cf.h" />
     <ClInclude Include="include\json_reader.h" />
     <ClInclude Include="include\netcdf.h" />
-    <CustomBuild Include="include\QColorRampEditor.h">
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">generated\moc_%(Filename).cpp;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Performing Custom Build Step: MOC%27ing %(FullPath)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QT5DIR_OSGEO)\bin\moc.exe   %(FullPath)    -o generated\moc_%(Filename).cpp</Command>
-    </CustomBuild>
     <ClInclude Include="include\perf_timer.h" />
-    <ClInclude Include="include\qgis_umesh_version.h" />
-    <ClInclude Include="include\ugrid.h" />
+    <ClInclude Include="include\qgis_sumesh_version.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="cpp.hint" />
     <None Include="include\version_number.ini" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>qgis_umesh</ProjectName>
+    <ProjectName>qgis_sumesh</ProjectName>
     <ProjectGuid>{3C0EC403-C128-496D-B683-08C131CFA609}</ProjectGuid>
     <RootNamespace>WL_dll</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
@@ -168,7 +201,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
-      <Command>call ..\scripts\git_insert_hash.cmd .\include qgis_umesh_version.h
+      <Command>call ..\scripts\git_insert_hash.cmd .\include qgis_sumesh_version.h
 call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     </PreBuildEvent>
     <Midl>
@@ -182,8 +215,8 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include\;c:\OSGeo4W\apps\qgis\include;$(QT5DIR_OSGEO)\include;$(QT5DIR_OSGEO)\include\ActiveQt\;$(QT5DIR_OSGEO)\include\Qt\;$(QT5DIR_OSGEO)\include\QtCore\;$(QT5DIR_OSGEO)\include\QtGui\;$(QT5DIR_OSGEO)\include\QtSvg\;$(QT5DIR_OSGEO)\include\QtWidgets\;$(QT5DIR_OSGEO)\include\QtXml\;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN64;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;QT_DLL;QT_THREAD_SUPPORT;CORE_EXPORT=;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include;c:\OSGeo4W\apps\qgis\include;$(QT5DIR_OSGEO)\include;$(QT5DIR_OSGEO)\include\ActiveQt\;$(QT5DIR_OSGEO)\include\Qt\;$(QT5DIR_OSGEO)\include\QtCore\;$(QT5DIR_OSGEO)\include\QtGui\;$(QT5DIR_OSGEO)\include\QtSvg\;$(QT5DIR_OSGEO)\include\QtWidgets\;$(QT5DIR_OSGEO)\include\QtXml\;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN64;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;QT_DLL;QT_THREAD_SUPPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AssemblerListingLocation>.\Release/</AssemblerListingLocation>
@@ -193,16 +226,17 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0809</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;qgis_core.lib;qgis_gui.lib;qgis_analysis.lib;netcdf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;qgis_core.lib;qgis_gui.lib;qgis_analysis.lib;netcdf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>c:\OSGeo4W\apps\qgis\plugins\$(ProjectName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>c:\OSGeo4W\apps\Qt5\lib;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QT5DIR_OSGEO)\lib;c:\OSGeo4W\apps\qgis\lib\;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -217,7 +251,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
-      <Command>call ..\scripts\git_insert_hash.cmd .\include qgis_umesh_version.h
+      <Command>call ..\scripts\git_insert_hash.cmd .\include qgis_sumesh_version.h
 call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     </PreBuildEvent>
     <Midl>
@@ -230,8 +264,8 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include\;c:\OSGeo4W\apps\qgis\include;$(QT5DIR_OSGEO)\include;$(QT5DIR_OSGEO)\include\ActiveQt\;$(QT5DIR_OSGEO)\include\Qt\;$(QT5DIR_OSGEO)\include\QtCore\;$(QT5DIR_OSGEO)\include\QtGui\;$(QT5DIR_OSGEO)\include\QtSvg\;$(QT5DIR_OSGEO)\include\QtWidgets\;$(QT5DIR_OSGEO)\include\QtXml\;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN64;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;CORE_EXPORT=;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include;c:\OSGeo4W\apps\qgis\include;$(QT5DIR_OSGEO)\include;$(QT5DIR_OSGEO)\include\ActiveQt\;$(QT5DIR_OSGEO)\include\Qt\;$(QT5DIR_OSGEO)\include\QtCore\;$(QT5DIR_OSGEO)\include\QtGui\;$(QT5DIR_OSGEO)\include\QtSvg\;$(QT5DIR_OSGEO)\include\QtWidgets\;$(QT5DIR_OSGEO)\include\QtXml\;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN64;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AssemblerListingLocation>.\Debug/</AssemblerListingLocation>
       <ObjectFileName>.\Debug/</ObjectFileName>
@@ -240,16 +274,17 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BrowseInformation>true</BrowseInformation>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0413</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;qgis_core.lib;qgis_gui.lib;qgis_analysis.lib;netcdf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>;qgis_core.lib;qgis_gui.lib;qgis_analysis.lib;netcdf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>c:\OSGeo4W\apps\qgis\plugins\$(ProjectName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>c:\OSGeo4W\apps\Qt5\lib;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>c:\OSGeo4W\apps\Qt5\lib;c:\OSGeo4W\apps\qgis\lib\;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>

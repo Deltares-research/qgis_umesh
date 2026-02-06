@@ -13,8 +13,8 @@ At this moment the development environment is based on Visual Studio 2017.
  
 ## Environment variables
 Environment variables (example)
-QT5DIR_OSGEO=c:\OSGeo4W64\apps\Qt5
-BOOST_ROOT_DIR=c:\boost\boost_1_85_0
+QT5DIR_OSGEO=c:\OSGeo4W\apps\Qt5
+BOOST_ROOT_DIR=c:\boost\boost_1_87_0
 NETCDF_DIR=c:\Program Files\netCDF 4.9.2
 
 ## Link Libraries
@@ -23,18 +23,6 @@ debug and release folder contain the same libraries
 ./lib/x64/release/netcdf.lib
 ./lib/x64/debug/netcdf.lib
               
-qgis library:
-debug and release folder contain the same libraries
-./lib/x64/release/qgis_analysis.lib
-                 /qgis_core.lib
-                 /qgis_gui.lib
-                 /qgis_networkanalysis.lib
-./lib/x64/debug/qgis_analysis.lib
-               /qgis_core.lib
-               /qgis_gui.lib
-               /qgis_networkanalysis.lib
-
-
 
 ## Installing QGIS from OSGeo4W
 Installing QGIS from OSGeo4W network installer (64 bit)

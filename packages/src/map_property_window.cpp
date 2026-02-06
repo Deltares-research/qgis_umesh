@@ -192,7 +192,7 @@ void MapPropertyWindow::set_dynamic_limits_enabled(bool enabled)
 {
     if (object_count != 0)
     {
-        m_ckb->setEnabled(enabled);
+        m_ckb->setChecked(enabled);
     }
 }
 void MapPropertyWindow::clicked_apply()

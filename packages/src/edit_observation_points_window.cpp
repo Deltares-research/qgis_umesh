@@ -5,7 +5,7 @@
 int EditObsPoints::object_count = 0;
 
 
-EditObsPoints::EditObsPoints(QgsMapLayer * obs_layer, QgsMapLayer * geom_layer, UGRID * ugrid_file, QgisInterface * QGisIface) :
+EditObsPoints::EditObsPoints(QgsMapLayer * obs_layer, QgsMapLayer * geom_layer, GRID * grid_file, QgisInterface * QGisIface) :
     QDockWidget()
 {
     object_count++;
@@ -14,8 +14,8 @@ EditObsPoints::EditObsPoints(QgsMapLayer * obs_layer, QgsMapLayer * geom_layer, 
     QGisIface->mapCanvas();
     m_obs_layer = obs_layer;
     m_geom_layer = geom_layer;
-    m_ugrid_files = ugrid_file;
-    m_ntw_geom = ugrid_file->get_network_geometry();
+    m_grid_files = grid_file;
+    m_ntw_geom = grid_file->get_network_geometry();
 
     create_window(); //QMessageBox::information(0, "Information", "DockWindow::DockWindow()");
 

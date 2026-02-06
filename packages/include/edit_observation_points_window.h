@@ -31,7 +31,6 @@
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
 
-#include "ugrid.h"
 #include "MyDrawingCanvas.h"
 
 class EditObsPoints
@@ -49,7 +48,7 @@ class EditObsPoints
         void MyMouseReleaseEvent(QgsMapMouseEvent *);
 
     public:
-        EditObsPoints(QgsMapLayer *, QgsMapLayer *, UGRID *, QgisInterface *);
+        EditObsPoints(QgsMapLayer *, QgsMapLayer *, GRID *, QgisInterface *);
         ~EditObsPoints();
         static int get_count();
 
@@ -61,7 +60,7 @@ class EditObsPoints
         QgsMapCanvas * m_QgsMapcanvas;
         QgsMapLayer * m_obs_layer;
         QgsMapLayer * m_geom_layer;
-        UGRID * m_ugrid_files;
+        GRID * m_grid_files;
         MyCanvas * m_MyCanvas;
         struct _ntw_geom * m_ntw_geom;
 

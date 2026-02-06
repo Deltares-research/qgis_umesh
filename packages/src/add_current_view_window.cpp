@@ -89,11 +89,11 @@ void AddCurrentViewWindow::create_window()
 
     vl_main->addWidget(table);
 
-    QPushButton * pb_add = new QPushButton("Add");
-    QPushButton * pb_close = new QPushButton("Close");
+    QPushButton* pb_addclose = new QPushButton("Add/Close");
+    QPushButton* pb_close = new QPushButton("Close");
 
     hl->addStretch();
-    hl->addWidget(pb_add);
+    hl->addWidget(pb_addclose);
     hl->addWidget(pb_close);
 
     vl_main->addLayout(hl);  // push buttons
@@ -101,9 +101,8 @@ void AddCurrentViewWindow::create_window()
 
     wid->show();
 
-    connect(pb_add, &QPushButton::clicked, this, &AddCurrentViewWindow::clicked_add);
+    connect(pb_addclose, &QPushButton::clicked, this, &AddCurrentViewWindow::clicked_addclose);
     connect(pb_close, &QPushButton::clicked, this, &AddCurrentViewWindow::clicked_close);
-
 }
 void AddCurrentViewWindow::clicked(QModelIndex indx)
 {
@@ -113,14 +112,13 @@ void AddCurrentViewWindow::clicked(QModelIndex indx)
     Q_UNUSED(selCol);
 
 }
-void AddCurrentViewWindow::clicked_add()
+void AddCurrentViewWindow::clicked_addclose()
 {
-    //QMessageBox::information(0, "Information", "AddCurrentViewWindow::clicked_ok()");
     create_vector_layer();
+    this->close();
 }
 void AddCurrentViewWindow::clicked_close()
 {
-    //QMessageBox::information(0, "Information", "AddCurrentViewWindow::clicked_cancel()");
     this->close();
 }
 void AddCurrentViewWindow::create_vector_layer()
@@ -151,10 +149,6 @@ void AddCurrentViewWindow::create_vector_layer()
         QString field_name = m_quantity;
         lMyAttribField << QgsField(field_name, QMetaType::Double);
         nr_attrib_fields++;
-        lMyAttribField << QgsField("Point Id (0-based)", QMetaType::QString);
-        nr_attrib_fields++;
-        lMyAttribField << QgsField("Point Id (1-based)", QMetaType::QString);
-        nr_attrib_fields++;
 
         QString uri = QString("Point?crs=epsg:") + QString::number(m_epsg);
         vl = new QgsVectorLayer(uri, layer_name, "memory");
@@ -179,15 +173,12 @@ void AddCurrentViewWindow::create_vector_layer()
             int k = -1;
             k++;
             MyFeature.setAttribute(k, m_z_value[j]);
-            k++;
-            MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
-            k++;
-            MyFeature.setAttribute(k, QString("%1:1").arg(j + 1));
 
             dp_vl->addFeature(MyFeature);
         }
         vl->commitChanges();
         vl->serverProperties()->setTitle(field_name);
+        setLabelFontSize(vl, 8);
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setStrokeStyle(Qt::NoPen);
@@ -229,5 +220,25 @@ void AddCurrentViewWindow::add_layer_to_group(QgsVectorLayer * vl, QgsLayerTreeG
     QgsMapLayer * map_layer = QgsProject::instance()->addMapLayer(vl, false);
     treeGroup->addLayer(map_layer);
     root->removeLayer(map_layer);
+}
+//------------------------------------------------------------------------------
+void AddCurrentViewWindow::setLabelFontSize(QgsVectorLayer *layer, double size)
+{
+    // Create labeling settings
+    QgsPalLayerSettings palSettings;
+
+    // Prepare a text format
+    QgsTextFormat textFormat;
+    QFont font("Arial");
+    font.setPointSizeF(size);               // <-- Set font size here
+    textFormat.setFont(font);
+    textFormat.setSize(size);               // <-- QGIS uses this too
+
+    palSettings.setFormat(textFormat);
+
+    // Apply labeling to the layer
+    layer->setLabeling(new QgsVectorLayerSimpleLabeling(palSettings));
+    layer->setLabelsEnabled(true);
+    layer->triggerRepaint();
 }
 

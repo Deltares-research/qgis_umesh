@@ -6,10 +6,8 @@
 #include <string.h>
 
 #define DLL_EXPORT
-#include <qmath.h>
-//#include "MyEditTool.h"
+#include "MyEditTool.h"
 
-#define GUI_EXPORT __declspec(dllimport)
 #include "qgsmapcanvas.h"
 #include "qgsmapcanvasmap.h"
 #include "qgsmaptopixel.h"

@@ -7,22 +7,22 @@
 
 #include <assert.h>
 
-#define GUI_EXPORT __declspec(dllimport)
 
-#include <QtCore/QVector>
-#include <QtCore/QObject>
-#include <QtCore/QPointer>
 
-#include <QtGui/QColor>
-#include <QtGui/QCursor>
-#include <QtGui/QKeyEvent>
-#include <QtGui/QMouseEvent>
-#include <QtGui/QPainter>
-#include <QtGui/QWheelEvent>
+#include <QVector>
+#include <QObject>
+#include <QPointer>
 
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QVBoxLayout>
+#include <QColor>
+#include <QCursor>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QWheelEvent>
+
+#include <QLabel>
+#include <QMessageBox>
+#include <QVBoxLayout>
 
 #include "qgisinterface.h"
 #include "qgsmaptool.h"

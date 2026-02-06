@@ -3,8 +3,7 @@ message("*** Enter packages directory")
 set(CMAKE_AUTOMOC ON)
 set(AUTOMOC_EXECUTABLE "$ENV{QT5DIR_OSGEO}/bin/moc.exe")
 
-
-set(PROJECT_NAME qgis_umesh)
+set(PROJECT_NAME qgis_sumesh)
 
 ################################################################################
 # Source groups
@@ -24,6 +23,7 @@ set(Header_Files
     "include/handle_vector_layers.h"
     "include/his_cf.h"
     "include/json_reader.h"
+    "include/legend_overlay.h"
     "include/map_property.h"
     "include/map_property_window.h"
     "include/map_time_manager_window.h"
@@ -33,14 +33,14 @@ set(Header_Files
     "include/netcdf.h"
 #   "include/pattern.xpm"
     "include/perf_timer.h"
-    "include/QColorRampEditor.h"
-    "include/qgis_umesh.h"
-#   "include/qgis_umesh_version.h"
+    "include/qgis_sumesh.h"
+    "include/qgis_sumesh_version.h"
 #   "include/qgis_umesh_version.h.vcs"
 #   "include/qgis_umesh_version.rc"
 #   "include/qqis_umesh_version.rc"
 #   "include/qqis_umesh_version.rc.vcs"
-    "include/ugrid.h"
+    "include/grid.h"
+    "include/unit_vector_overlay.h"
 #   "include/vsi.xpm"
 #   "include/vsi_disabled.xpm"
 )
@@ -57,11 +57,10 @@ set(Source_Files
     "src/MyDrawingCanvas.cpp"
 #    "src/MyEditTool.cpp"
     "src/perf_timer.cpp"
-    "src/QColorRampEditor.cpp"
-    "src/qgis_umesh.cpp"
-    "src/qgis_umesh_version.cpp"
+    "src/qgis_sumesh.cpp"
+    "src/qgis_sumesh_version.cpp"
     "src/read_json.cpp"
-    "src/ugrid.cpp"
+    "src/grid.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
 
@@ -87,15 +86,15 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # Target name
 ################################################################################
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    TARGET_NAME_DEBUG   "qgis_umesh"
-    TARGET_NAME_RELEASE "qgis_umesh"
+    TARGET_NAME_DEBUG   "qgis_sumesh"
+    TARGET_NAME_RELEASE "qgis_sumesh"
 )
 ################################################################################
 # Output directory
 ################################################################################
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    OUTPUT_DIRECTORY_DEBUG   "${CMAKE_SOURCE_DIR}/bin/$ENV{platform}/$<CONFIG>"
-    OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/$ENV{platform}/$<CONFIG>"
+    OUTPUT_DIRECTORY_DEBUG   "c:/OSGeo4W/apps/qgis/plugins"
+    OUTPUT_DIRECTORY_RELEASE "c:/OSGeo4W/apps/qgis/plugins"
 )
 ################################################################################
 # MSVC runtime library
@@ -126,7 +125,6 @@ if (MSVC)
         "c:/OSGeo4W/apps/qgis/include;"
         "$ENV{QT5DIR_OSGEO}/include;"
         "$ENV{QT5DIR_OSGEO}/include/ActiveQt;"
-        "$ENV{QT5DIR_OSGEO}/include/Qt;"
         "$ENV{QT5DIR_OSGEO}/include/QtCore;"
         "$ENV{QT5DIR_OSGEO}/include/QtGui;"
         "$ENV{QT5DIR_OSGEO}/include/QtSvg;"
@@ -209,22 +207,18 @@ add_custom_command_if(
 ################################################################################
 set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "$<$<CONFIG:Debug>:"
-        "qtmain"
         "Qt5Core"
         "Qt5Gui"
         "Qt5Widgets"
         "Qt5PrintSupport"
-        "qgis_analysis"
         "qgis_core"
         "qgis_gui"
     ">"
     "$<$<CONFIG:Release>:"
-        "qtmain"
         "Qt5Core"
         "Qt5Gui"
         "Qt5Widgets"
         "Qt5PrintSupport"
-        "qgis_analysis"
         "qgis_core"
         "qgis_gui"
     ">"
@@ -234,8 +228,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE "${ADDITIONAL_LIBRARY_DEPENDENCIES
 
 target_link_directories(${PROJECT_NAME} PRIVATE
     "$ENV{QT5DIR_OSGEO}/lib;"
-    "c:/OSGeoW/apps/qgis/lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../lib/${CMAKE_VS_PLATFORM_NAME}/$<CONFIG>"
+    "c:/OSGeo4W/apps/qgis/lib"
+    "c:/Program Files/netCDF 4.9.2/lib"
 )
 
 message("*** Exiting packages directory") 

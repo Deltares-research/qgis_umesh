@@ -6,7 +6,7 @@ m_QGisIface(iface)
 {
 }
 //------------------------------------------------------------------------------
-//HVL::CVL(QgsMapLayer * obs_layer, QgsMapLayer * geom_layer, UGRID * ugrid_file, QgisInterface * QGisIface)
+//HVL::CVL(QgsMapLayer * obs_layer, QgsMapLayer * geom_layer, GRID * grid_file, QgisInterface * QGisIface)
 //{
 //}
 //------------------------------------------------------------------------------
@@ -14,9 +14,9 @@ HVL::~HVL()
 {
 }
 //------------------------------------------------------------------------------
-void HVL::set_ugrid_file(std::vector<UGRID *> ugrid_file)
+void HVL::set_grid_file(std::vector<GRID *> grid_file)
 {
-    m_ugrid_file = ugrid_file;
+    m_grid_file = grid_file;
 }
 //------------------------------------------------------------------------------
 void HVL::CrsChanged()
@@ -46,13 +46,13 @@ void HVL::CrsChanged()
                 //QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Selected group: %1\nNew CRS: %2\nPrev. CRS: %3\nScreen CRS: %4").arg(selNode->name()).arg(new_crs.authid()).arg(m_crs.authid()).arg(s_crs.authid()));
                 //QMessageBox::information(0, "qgis_umesh::CrsChanged()", QString("Layer[0] name: %1.").arg(layer[0]->layer()->name()));
                 // Change coordinates to new_crs, by overwriting the mapping->epsg and mapping->epsg_code
-                UGRID* active_ugrid_file = get_active_ugrid_file(layer[0]->layer()->id());
-                if (active_ugrid_file != nullptr)
+                GRID* active_grid_file = get_active_grid_file(layer[0]->layer()->id());
+                if (active_grid_file != nullptr)
                 {
                     QString epsg_code = new_crs.authid();
                     QStringList parts = epsg_code.split(':');
                     long epsg = parts.at(1).toInt();
-                    active_ugrid_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
+                    active_grid_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
                 }
             }
         }
@@ -117,43 +117,48 @@ void HVL::create_vector_layer_nodes(QString fname, QString layer_name, struct _f
             QgsFeatureList MyFeatures;
             QgsFeature MyFeature;
             QgsGeometry MyPoints;
+            QgsPointXY p1;
+            QgsPointXY miss_point;
+            double missing_value = nodes->fill_value;
+            miss_point = QgsPointXY(missing_value, missing_value);
             // int nsig = long( log10(nodes->count) ) + 1;
-            START_TIMER(create_vector_layer_nodes_add_features);
+            //START_TIMER(create_vector_layer_nodes_add_features);
             for (int j = 0; j < nodes->count; j++)
             {
                 int k = -1;
-                MyPoints = QgsGeometry::fromPointXY(QgsPointXY(nodes->x[j], nodes->y[j]));
-                MyFeature.setGeometry(MyPoints);
+                p1 = QgsPointXY(QgsPointXY(nodes->x[j], nodes->y[j]));
+                if (p1 != miss_point)
+                {
+                    MyPoints = QgsGeometry::fromPointXY(p1);
+                    MyFeature.setGeometry(MyPoints);
 
-                MyFeature.initAttributes(nr_attrib_fields);
-                if (nodes->name.size() != 0)
-                {
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    if (nodes->name.size() != 0)
+                    {
+                        ++k;
+                        attribute[k] = QString("%1").arg(QString::fromUtf8((nodes->name[j]).c_str()).trimmed());
+                    }
+                    if (nodes->long_name.size() != 0)
+                    {
+                        ++k;
+                        attribute[k] = QString("%1").arg(QString::fromUtf8((nodes->long_name[j]).c_str()).trimmed());
+                    }
                     ++k;
-                    attribute[k] = QString("%1").arg(QString::fromStdString(nodes->name[j]).trimmed());
-                }
-                if (nodes->long_name.size() != 0)
-                {
+                    attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
                     ++k;
-                    attribute[k] = QString("%1").arg(QString::fromStdString(nodes->long_name[j]).trimmed());
+                    attribute[k] = QString("%1:1").arg(j + 1);
+                    MyFeature.setAttributes(attribute);
+                    MyFeature.setValid(true);
+                    MyFeatures.append(MyFeature);
                 }
-                ++k;
-                attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
-                ++k;
-                attribute[k] = QString("%1:1").arg(j + 1);
-                MyFeature.setAttributes(attribute);
-                MyFeature.setValid(true);
-                MyFeatures.append(MyFeature);
             }
-            STOP_TIMER(create_vector_layer_nodes_add_features);
-            START_TIMER(create_vector_layer_nodes_add_features_data_provider);
             dp_vl->addFeatures(MyFeatures);
-            STOP_TIMER(create_vector_layer_nodes_add_features_data_provider);
-            START_TIMER(create_vector_layer_nodes_add_features_commit);
             vl->commitChanges();
-            STOP_TIMER(create_vector_layer_nodes_add_features_commit);
+            //STOP_TIMER(create_vector_layer_nodes_add_features);
 
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
-
+            setLabelFontSize(vl, 8);
+            
             if (layer_name == QString("Mesh1D Connection nodes") ||
                 layer_name == QString("Mesh1D nodes") ||
                 layer_name == QString("Mesh2D nodes") ||
@@ -208,7 +213,7 @@ void HVL::create_vector_layer_data_on_edges(QString fname, _variable * var, stru
     {
         START_TIMERN(create_vector_layer_data_on_edges);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
-        QString layer_name = QString::fromStdString(var->long_name).trimmed();
+        QString layer_name = QString::fromUtf8((var->long_name).c_str()).trimmed();
 
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
@@ -237,6 +242,9 @@ void HVL::create_vector_layer_data_on_edges(QString fname, _variable * var, stru
             vl->updatedFields();
 
             QVector<QgsPointXY> point(2);
+            double missing_value = nodes->fill_value;
+            QgsPointXY miss_point;
+            miss_point = QgsPointXY(missing_value, missing_value);
             QgsPolylineXY line;
             QgsFeatureList MyFeatures;
             MyFeatures.reserve(edges->count);
@@ -255,17 +263,21 @@ void HVL::create_vector_layer_data_on_edges(QString fname, _variable * var, stru
                 //QMessageBox::warning(0, tr("Warning"), tr("Edge: %1 (%2, %3)->(%4, %5).").arg(j).arg(x1).arg(y1).arg(x2).arg(y2));
                 line = point;
 
-                QgsFeature MyFeature;
-                MyFeature.setGeometry(QgsGeometry::fromPolylineXY(line));
+                if (point[0] != miss_point && point[1] != miss_point)
+                {
+                    QgsFeature MyFeature;
+                    MyFeature.setGeometry(QgsGeometry::fromPolylineXY(line));
 
-                MyFeature.initAttributes(nr_attrib_fields);
-                MyFeature.setAttribute(0, z_value[j]);
-                MyFeature.setValid(true);
-                MyFeatures.append(MyFeature);
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    MyFeature.setAttribute(0, z_value[j]);
+                    MyFeature.setValid(true);
+                    MyFeatures.append(MyFeature);
+                }
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.5);
@@ -301,7 +313,7 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
         {
             for (int i = 0; i < var->flag_meanings.size(); ++i)
             {
-                QString layer_name = QString::fromStdString(var->flag_meanings[i]);
+                QString layer_name = QString::fromUtf8((var->flag_meanings[i]).c_str()).trimmed();
 
                 QgsVectorLayer * vl;
                 QgsVectorDataProvider * dp_vl;
@@ -319,6 +331,9 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
                 vl->updatedFields();
 
                 QVector<QgsPointXY> point(2);
+                double missing_value = nodes->fill_value;
+                QgsPointXY miss_point;
+                miss_point = QgsPointXY(missing_value, missing_value);
                 QgsFeatureList MyFeatures;
                 MyFeatures.reserve(edges->count);
 
@@ -331,13 +346,16 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
                         point[0] = QgsPointXY(nodes->x[p1], nodes->y[p1]);
                         point[1] = QgsPointXY(nodes->x[p2], nodes->y[p2]);
 
-                        QgsFeature MyFeature;
-                        MyFeature.setGeometry(QgsGeometry::fromPolylineXY(point));
+                        if (point[0] != miss_point && point[1] != miss_point)
+                        {
+                            QgsFeature MyFeature;
+                            MyFeature.setGeometry(QgsGeometry::fromPolylineXY(point));
 
-                        MyFeature.initAttributes(nr_attrib_fields);
-                        MyFeature.setAttribute(0, z_value[j]);
-                        MyFeature.setValid(true);
-                        MyFeatures.append(MyFeature);
+                            MyFeature.initAttributes(nr_attrib_fields);
+                            MyFeature.setAttribute(0, z_value[j]);
+                            MyFeature.setValid(true);
+                            MyFeatures.append(MyFeature);
+                        }
                     }
                 }
                 dp_vl->addFeatures(MyFeatures);
@@ -346,6 +364,7 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
                 if (vl->featureCount() != 0)
                 {
                     vl->serverProperties()->setTitle(layer_name + ": " + fname);
+                    setLabelFontSize(vl, 8);
 
                     QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
                     if (i == 0) {
@@ -396,7 +415,7 @@ void HVL::create_vector_layer_data_on_nodes(QString fname, _variable * var, stru
     {
         START_TIMERN(create_vector_layer_data_on_nodes);
         QList <QgsLayerTreeLayer *> tmp_layers = treeGroup->findLayers();
-        QString layer_name = QString::fromStdString(var->long_name).trimmed();
+        QString layer_name = QString::fromUtf8(var->long_name.c_str()).trimmed();
 
         bool layer_found = false;
         for (int i = 0; i < tmp_layers.length(); i++)
@@ -426,19 +445,29 @@ void HVL::create_vector_layer_data_on_nodes(QString fname, _variable * var, stru
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
+            QgsPointXY p1;
+            double missing_value = nodes->fill_value;
+            QgsPointXY miss_point;
+            miss_point = QgsPointXY(missing_value, missing_value);
+            
             QgsFeatureList MyFeatures;
             QgsFeature MyFeature;
             for (int j = 0; j < nodes->count; j++)
             {
-                MyFeature.setGeometry(QgsGeometry::fromPointXY(QgsPointXY(nodes->x[j], nodes->y[j])));
+                p1 = QgsPointXY(nodes->x[j], nodes->y[j]);
+                if (p1 != miss_point)
+                {
+                    MyFeature.setGeometry(QgsGeometry::fromPointXY(p1));
 
-                MyFeature.initAttributes(nr_attrib_fields);
-                MyFeature.setAttribute(0, z_value[j]);
-                MyFeatures.append(MyFeature);
+                    MyFeature.initAttributes(nr_attrib_fields);
+                    MyFeature.setAttribute(0, z_value[j]);
+                    MyFeatures.append(MyFeature);
+                }
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
             simple_marker->setStrokeStyle(Qt::NoPen);
@@ -556,12 +585,12 @@ void HVL::create_vector_layer_geometry(QString fname, QString layer_name, struct
                     if (ntw_geom->geom[i]->name.size() != 0)
                     {
                         k++;
-                        MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(ntw_geom->geom[i]->name[j]).trimmed()));
+                        MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((ntw_geom->geom[i]->name[j]).c_str()).trimmed()));
                     }
                     if (ntw_geom->geom[i]->long_name.size() != 0)
                     {
                         k++;
-                        MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(ntw_geom->geom[i]->long_name[j]).trimmed()));
+                        MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((ntw_geom->geom[i]->long_name[j]).c_str()).trimmed()));
                     }
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
@@ -573,6 +602,7 @@ void HVL::create_vector_layer_geometry(QString fname, QString layer_name, struct
                 vl->commitChanges();
             }
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             if (layer_name == QString("Mesh1D geometry"))
             {
@@ -649,6 +679,9 @@ void HVL::create_vector_layer_edges(QString fname, QString layer_name, struct _f
             vl->updatedFields();
 
             QVector<QgsPointXY> point(2);
+            double missing_value = nodes->fill_value;
+            QgsPointXY miss_point;
+            miss_point = QgsPointXY(missing_value, missing_value);
             QgsFeatureList MyFeatures;
             QgsFeature MyFeature;
 
@@ -659,45 +692,50 @@ void HVL::create_vector_layer_edges(QString fname, QString layer_name, struct _f
             {
                 point[0] = QgsPointXY(nodes->x[edges->edge_nodes[j][0]], nodes->y[edges->edge_nodes[j][0]]);
                 point[1] = QgsPointXY(nodes->x[edges->edge_nodes[j][1]], nodes->y[edges->edge_nodes[j][1]]);
-                MyFeature.setGeometry(QgsGeometry::fromPolylineXY(point));
-
-                int k = -1;
-                if (edges->edge_length.size() > 0)
+                if (point[0] != miss_point && point[1] != miss_point)
                 {
-                    ++k;
-                    attribute[k] = edges->edge_length[j];
-                    if (edges->edge_length[j] < 0)
+                    MyFeature.setGeometry(QgsGeometry::fromPolylineXY(point));
+
+                    int k = -1;
+                    if (edges->edge_length.size() > 0)
                     {
-                        if (!msg_given)
+                        ++k;
+                        attribute[k] = edges->edge_length[j];
+                        if (edges->edge_length[j] < 0)
                         {
-                            QString msg = QString("Some edge lengths are negative (due to an error in the orientation of the edge) \'%1\'.").arg(layer_name);
-                            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
-                            msg_given = true;
+                            if (!msg_given)
+                            {
+                                QString msg = QString("Some edge lengths are negative (due to an error in the orientation of the edge) \'%1\'.").arg(layer_name);
+                                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+                                msg_given = true;
+                            }
                         }
                     }
-                }
-                if (edges->name.size() > 0)
-                {
+                    if (edges->name.size() > 0)
+                    {
+                        ++k;
+                        attribute[k] = QString("%1").arg(QString::fromUtf8((edges->name[j]).c_str()).trimmed());
+                    }
+                    if (edges->long_name.size() > 0)
+                    {
+                        ++k;
+                        attribute[k] = QString("%1").arg(QString::fromUtf8((edges->long_name[j]).c_str()).trimmed());
+                    }
                     ++k;
-                    attribute[k] = QString("%1").arg(QString::fromStdString(edges->name[j]).trimmed());
-                }
-                if (edges->long_name.size() > 0)
-                {
+                    attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
                     ++k;
-                    attribute[k] = QString("%1").arg(QString::fromStdString(edges->long_name[j]).trimmed());
+                    attribute[k] = QString("%1:1").arg(j + 1);
+                    MyFeature.setAttributes(attribute);
+                    MyFeature.setValid(true);
+                    MyFeatures.append(MyFeature);
                 }
-                ++k;
-                attribute[k] = QString("%1:0").arg(j);  // arg(j, nsig, 10, QLatin1Char('0')));
-                ++k;
-                attribute[k] = QString("%1:1").arg(j + 1);
-                MyFeature.setAttributes(attribute);
-                MyFeature.setValid(true);
-                MyFeatures.append(MyFeature);
+
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             //STOP_TIMER(create_vector_layer_edges_add_features);
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
             if (layer_name == QString("Mesh2D edges"))
@@ -784,7 +822,7 @@ void HVL::create_vector_layer_observation_point(QString fname, QString layer_nam
                 if (obs_points->location[j].name != nullptr)
                 {
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString(obs_points->location[j].name).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString(obs_points->location[j].name)));
                 }
                 k++;
                 MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
@@ -795,6 +833,7 @@ void HVL::create_vector_layer_observation_point(QString fname, QString layer_nam
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSymbol * marker = new QgsMarkerSymbol();
             if (std::string(obs_points->location_dim_name).find("lateral") != std::string::npos)
@@ -898,7 +937,7 @@ void HVL::create_vector_layer_observation_polyline(QString fname, QString layer_
                     if (obs_points->location[i].name != nullptr)
                     {
                         k++;
-                        MyFeature.setAttribute(k, QString("%1").arg(QString(obs_points->location[i].name).trimmed()));
+                        MyFeature.setAttribute(k, QString("%1").arg(QString(obs_points->location[i].name)));
                     }
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
@@ -910,6 +949,7 @@ void HVL::create_vector_layer_observation_polyline(QString fname, QString layer_
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
             vl->serverProperties()->setTitle(layer_name + ": " + fname);
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -938,7 +978,7 @@ void HVL::create_vector_layer_observation_polyline(QString fname, QString layer_
 }
 //------------------------------------------------------------------------------
 // Create vector layer for the structures defined by the chainage on a branch, so it is a point
-void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_1D_structure(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (prop_tree != nullptr)
     {
@@ -1013,8 +1053,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
 
         if (id.size() != total_cnt)
         {
-            QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Not all structure locations are supported.\nInvestigate file \"%1\".")).arg(fname);
+            QString qname = QString::fromUtf8(prop_tree->get_filename().c_str()).trimmed();
+            QString msg = QString(tr("Not all structure locations are supported.\nInvestigate file \"%1\".")).arg(qname);
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
         }
         //
@@ -1049,8 +1089,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1067,7 +1107,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1078,7 +1118,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_bridge_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1135,8 +1176,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1153,7 +1194,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1164,7 +1205,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_bridgepillar_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1221,8 +1263,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1242,12 +1284,13 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             {
                 ++j;
                 ++m;
+                if (j == id.size()) {
+                    do_while = false;
+                    continue;
+                }
                 if (structure_type[j] == "dambreak")
                 {
                     ++j;
-                }
-                if (j == id.size()) {
-                    do_while = false;
                 }
                 if (structure_type[j] == "compound")
                 {
@@ -1277,7 +1320,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1288,7 +1331,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_compound_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1345,8 +1389,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1363,7 +1407,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str())).trimmed());
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1374,7 +1418,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_culvert_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1435,8 +1480,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1453,7 +1498,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1464,7 +1509,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_extra_resistance_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1521,8 +1567,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1539,7 +1585,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1550,7 +1596,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_general_structure_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1606,8 +1653,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1624,7 +1671,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1635,7 +1682,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_inverted_siphon_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1692,8 +1740,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1710,7 +1758,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1721,7 +1769,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_orifice_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1778,8 +1827,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1796,7 +1845,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1807,7 +1856,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_pump_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1864,8 +1914,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1882,7 +1932,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1893,7 +1943,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_riverweir_1d.svg"));
             simple_marker->setSize(5.0);
@@ -1954,8 +2005,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             vl->updatedFields();
 
             QgsPointXY janm;
-            struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -1972,7 +2023,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
                     MyFeature.initAttributes(nr_attrib_fields);
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(id[j]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((id[j]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -1983,7 +2034,8 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/structure_weir_1d.svg"));
             simple_marker->setSize(5.0);
@@ -2012,7 +2064,7 @@ void HVL::create_vector_layer_1D_structure(UGRID * ugrid_file, JSON_READER * pro
     }  // end proptree != nullptr
 }
 //------------------------------------------------------------------------------
-void HVL::create_vector_layer_observation_point(UGRID * ugrid_file, JSON_READER * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_observation_point(GRID * grid_file, JSON_READER * pt_structures, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (pt_structures != nullptr)
     {
@@ -2024,21 +2076,21 @@ void HVL::create_vector_layer_observation_point(UGRID * ugrid_file, JSON_READER 
         if (version[0] == "1.00")
         {
             // observation point defined by coordinate reference systeem (crs)
-            create_vector_layer_crs_observation_point(ugrid_file, pt_structures, epsg_code, treeGroup);
+            create_vector_layer_crs_observation_point(grid_file, pt_structures, epsg_code, treeGroup);
         }
         else if (version[0] == "2.00")
         {
             // observation point defined by chainage
-            create_vector_layer_chainage_observation_point(ugrid_file, pt_structures, epsg_code, treeGroup);
+            create_vector_layer_chainage_observation_point(grid_file, pt_structures, epsg_code, treeGroup);
         }
         STOP_TIMER(create_vector_layer_observation_point);
     }
 }
 //------------------------------------------------------------------------------
 // observation point defined by coordinate reference systeem (crs)
-void HVL::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_crs_observation_point(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    Q_UNUSED(ugrid_file);
+    Q_UNUSED(grid_file);
     START_TIMERN(create_vector_layer_crs_observation_point);
 
     long status = -1;
@@ -2047,7 +2099,7 @@ void HVL::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_REA
     status = prop_tree->get(json_key, obs_name);
     if (obs_name.size() == 0)
     {
-        QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of observation points is zero. JSON data: ")) + QString::fromStdString(json_key));
+        QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of observation points is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
         STOP_TIMER(create_vector_layer_crs_observation_point);
         return;
     }
@@ -2056,7 +2108,7 @@ void HVL::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_REA
     status = prop_tree->get(json_key, x);
     if (x.size() == 0)
     {
-        QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of x-coordinates is zero. JSON data: ")) + QString::fromStdString(json_key));
+        QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of x-coordinates is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
         STOP_TIMER(create_vector_layer_crs_observation_point);
         return;
     }
@@ -2065,7 +2117,7 @@ void HVL::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_REA
     status = prop_tree->get(json_key, y);
     if (y.size() == 0)
     {
-        QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of y-coordinates is zero. JSON data: ")) + QString::fromStdString(json_key));
+        QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of y-coordinates is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
         STOP_TIMER(create_vector_layer_crs_observation_point);
         return;
     }
@@ -2103,7 +2155,7 @@ void HVL::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_REA
         MyFeature.initAttributes(nr_attrib_fields);
         int k = -1;
         k++;
-        MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(obs_name[j]).trimmed()));
+        MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((obs_name[j]).c_str()).trimmed()));
         k++;
         MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
         k++;
@@ -2113,7 +2165,8 @@ void HVL::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_REA
     dp_vl->addFeatures(MyFeatures);
     vl->commitChanges();
     std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-    vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+    vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+    setLabelFontSize(vl, 8);
 
     QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
     simple_marker->setSize(4.0);
@@ -2136,7 +2189,7 @@ void HVL::create_vector_layer_crs_observation_point(UGRID * ugrid_file, JSON_REA
 }
 //------------------------------------------------------------------------------
 // observation point defined by chainage
-void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_chainage_observation_point(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (prop_tree != nullptr)
     {
@@ -2151,7 +2204,7 @@ void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSO
             status = prop_tree->get(json_key, obs_name);
             if (obs_name.size() == 0)
             {
-                QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of observation points is zero. JSON data: ")) + QString::fromStdString(json_key));
+                QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of observation points is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
                 STOP_TIMER(create_vector_layer_chainage_observation_point);
                 return;
             }
@@ -2161,7 +2214,7 @@ void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSO
         status = prop_tree->get(json_key, branch_name);
         if (branch_name.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
             STOP_TIMER(create_vector_layer_chainage_observation_point);
             return;
         }
@@ -2170,16 +2223,17 @@ void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSO
         status = prop_tree->get(json_key, chainage);
         if (chainage.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
             STOP_TIMER(create_vector_layer_chainage_observation_point);
             return;
         }
         if (obs_name.size() != branch_name.size() || branch_name.size() != chainage.size() || obs_name.size() != chainage.size())
         {
-            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
+            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), 
+            QString(tr("Inconsistent data set. JSON data: ") + QString::fromUtf8(json_key.c_str()).trimmed()
                 + "\nObservation points: " + (int)obs_name.size()
                 + "\nBranches: " + (int)branch_name.size()
-                + "\nChainage: " + (int)chainage.size());
+                + "\nChainage: " + (int)chainage.size()));
             STOP_TIMER(create_vector_layer_chainage_observation_point);
             return;
         }
@@ -2212,8 +2266,8 @@ void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSO
         QgsFeatureList MyFeatures;
         MyFeatures.reserve(obs_name.size());
 
-        struct _ntw_geom * ntw_geom = ugrid_file->get_network_geometry();
-        struct _ntw_edges * ntw_edges = ugrid_file->get_network_edges();
+        struct _ntw_geom * ntw_geom = grid_file->get_network_geometry();
+        struct _ntw_edges * ntw_edges = grid_file->get_network_edges();
 
         double xp;
         double yp;
@@ -2228,7 +2282,7 @@ void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSO
             MyFeature.initAttributes(nr_attrib_fields);
             int k = -1;
             k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(obs_name[j]).trimmed()));
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((obs_name[j]).c_str()).trimmed()));
             k++;
             MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
@@ -2238,7 +2292,8 @@ void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSO
         dp_vl->addFeatures(MyFeatures);
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setSize(4.0);
@@ -2271,9 +2326,9 @@ void HVL::create_vector_layer_chainage_observation_point(UGRID * ugrid_file, JSO
 }
 //------------------------------------------------------------------------------
 // sample point (x, y,z) defined by coordinate reference systeem (crs)
-void HVL::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_sample_point(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    Q_UNUSED(ugrid_file);
+    Q_UNUSED(grid_file);
     START_TIMERN(create_vector_layer_sample_point);
 
     long status = -1;
@@ -2282,7 +2337,7 @@ void HVL::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READER * pro
     status = prop_tree->get(json_key, z_value);
     if (z_value.size() == 0)
     {
-        QMessageBox::warning(0, tr("Message: create_vector_layer_sample_point"), QString(tr("Number of sample points is zero. JSON data: ")) + QString::fromStdString(json_key));
+        QMessageBox::warning(0, tr("Message: create_vector_layer_sample_point"), QString(tr("Number of sample points is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
         STOP_TIMER(create_vector_layer_sample_point);
         return;
     }
@@ -2336,7 +2391,8 @@ void HVL::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READER * pro
     dp_vl->addFeatures(MyFeatures);
     vl->commitChanges();
     std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-    vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+    vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+    setLabelFontSize(vl, 8);
 
     QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
     simple_marker->setSize(2.4);
@@ -2359,7 +2415,7 @@ void HVL::create_vector_layer_sample_point(UGRID * ugrid_file, JSON_READER * pro
 }
 //------------------------------------------------------------------------------
 // Observation cross-section (D-Flow FM) filename given in mdu-file
-void HVL::create_vector_layer_observation_cross_section(UGRID * ugrid_file, JSON_READER *prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_observation_cross_section(GRID * grid_file, JSON_READER *prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     START_TIMERN(create_vector_layer_observation_cross_section);
 
@@ -2370,17 +2426,17 @@ void HVL::create_vector_layer_observation_cross_section(UGRID * ugrid_file, JSON
     status = prop_tree->get("data.path.name", tmp_line_name);
     if (tmp_point_name.size() > 0)
     {
-        create_vector_layer_1D_observation_cross_section(ugrid_file, prop_tree, epsg_code, treeGroup);
+        create_vector_layer_1D_observation_cross_section(grid_file, prop_tree, epsg_code, treeGroup);
     }
     if (tmp_line_name.size() > 0)
     {
-        create_vector_layer_2D_observation_cross_section(ugrid_file, prop_tree, epsg_code, treeGroup);
+        create_vector_layer_2D_observation_cross_section(grid_file, prop_tree, epsg_code, treeGroup);
     }
     STOP_TIMER(create_vector_layer_observation_cross_section);
 }
 //------------------------------------------------------------------------------
 // Observation cross-section (D-Flow 1D) filename given in mdu-file, point object when 1D simulation
-void HVL::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
+void HVL::create_vector_layer_1D_observation_cross_section(GRID* grid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
 {
     if (prop_tree != nullptr)
     {
@@ -2395,7 +2451,7 @@ void HVL::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JS
         status = prop_tree->get(json_key, branch_name);
         if (branch_name.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_vector_layer_observation_point"), QString(tr("Number of branch names is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
             STOP_TIMER(create_vector_layer_1D_observation_cross_section);
             return;
         }
@@ -2404,13 +2460,13 @@ void HVL::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JS
         status = prop_tree->get(json_key, chainage);
         if (chainage.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
             STOP_TIMER(create_vector_layer_1D_observation_cross_section);
             return;
         }
         if (names.size() != branch_name.size() || branch_name.size() != chainage.size() || names.size() != chainage.size())
         {
-            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
+            QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
                 + "\nObservation points: " + (int)names.size()
                 + "\nBranches: " + (int)branch_name.size()
                 + "\nChainage: " + (int)chainage.size());
@@ -2446,8 +2502,8 @@ void HVL::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JS
         QgsFeatureList MyFeatures;
         MyFeatures.reserve(names.size());
 
-        struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-        struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+        struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+        struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
         double xp;
         double yp;
@@ -2462,7 +2518,7 @@ void HVL::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JS
             MyFeature.initAttributes(nr_attrib_fields);
             int k = -1;
             k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(names[j]).trimmed()));
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((names[j]).c_str()).trimmed()));
             k++;
             MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
@@ -2472,7 +2528,8 @@ void HVL::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JS
         dp_vl->addFeatures(MyFeatures);
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleMarkerSymbolLayer* simple_marker = new QgsSimpleMarkerSymbolLayer();
         simple_marker->setSize(2.5);
@@ -2503,7 +2560,7 @@ void HVL::create_vector_layer_1D_observation_cross_section(UGRID* ugrid_file, JS
 }
 //------------------------------------------------------------------------------
 // Observation cross-section (D-Flow FM) filename given in mdu-file, line object when 2D simulation
-void HVL::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
+void HVL::create_vector_layer_2D_observation_cross_section(GRID* grid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
 {
     START_TIMERN(create_vector_layer_2D_observation_cross_section);
 
@@ -2543,13 +2600,13 @@ void HVL::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_file, JS
         //dp_vl->createSpatialIndex();
         vl->updatedFields();
 
-        QFileInfo ug_file = ugrid_file->get_filename();
+        QFileInfo g_file = grid_file->get_filename();
         QVector<QgsPointXY> point;
         QgsMultiPolylineXY lines;
 
         if (poly_lines.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_vector_layer_observation_cross_section"), QString(tr("JSON data: ")) + QString::fromStdString("data.path.name"));
+            QMessageBox::warning(0, tr("Message: create_vector_layer_observation_cross_section"), QString(tr("JSON data: ")) + QString("data.path.name"));
             STOP_TIMER(create_vector_layer_2D_observation_cross_section);
             return;
         }
@@ -2629,7 +2686,7 @@ void HVL::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_file, JS
 
             int k = -1;
             k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((line_name[ii]).c_str()).trimmed()));
             k++;
             MyFeature.setAttribute(k, QString("%1:0").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
@@ -2639,7 +2696,8 @@ void HVL::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_file, JS
         dp_vl->addFeatures(MyFeatures);
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -2660,7 +2718,7 @@ void HVL::create_vector_layer_2D_observation_cross_section(UGRID* ugrid_file, JS
 }
 //------------------------------------------------------------------------------
 // Structures (D-Flow FM) filename given in mdu-file
-void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_structure(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     START_TIMERN(create_vector_layer_structure);
 
@@ -2674,13 +2732,14 @@ void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_t
         status = prop_tree->get(json_key, fname);
         if (fname.size() == 0)
         {
-            QString qname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Structure polylines are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+            QString qname = QString::fromUtf8((prop_tree->get_filename()).c_str()).trimmed();
+            QString msg = QString(tr("Structure polylines are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
         {
-            create_vector_layer_1D_structure(ugrid_file, prop_tree, epsg_code, treeGroup);
+            create_vector_layer_1D_structure(grid_file, prop_tree, epsg_code, treeGroup);
         }
     }
     else
@@ -2711,7 +2770,7 @@ void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_t
         //dp_vl->createSpatialIndex();
         vl->updatedFields();
 
-        QFileInfo ug_file = ugrid_file->get_filename();
+        QFileInfo ug_file = grid_file->get_filename();
         QVector<QgsPointXY> point;
         QgsMultiPolylineXY lines;
         QgsFeatureList MyFeatures;
@@ -2726,7 +2785,7 @@ void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_t
             point.clear();
             poly_lines.clear();
             line_name.clear();
-            QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
+            QString filename = ug_file.absolutePath() + "/" + QString::fromUtf8((fname[i]).c_str()).trimmed();
             JSON_READER * json_file = new JSON_READER(filename.toStdString());
 
             status = json_file->get("data.path.name", line_name);
@@ -2734,7 +2793,7 @@ void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_t
 
             if (poly_lines.size() == 0)
             {
-                QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+                QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
                 STOP_TIMER(create_vector_layer_structure);
                 return;
             }
@@ -2810,7 +2869,7 @@ void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_t
 
                 int k = -1;
                 k++;
-                MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+                MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((line_name[ii]).c_str()).trimmed()));
                 k++;
                 MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
@@ -2819,7 +2878,8 @@ void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_t
             }
             dp_vl->addFeatures(MyFeatures);
             vl->commitChanges();
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(fname[i]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((fname[i]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
         }
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
@@ -2841,9 +2901,9 @@ void HVL::create_vector_layer_structure(UGRID * ugrid_file, JSON_READER * prop_t
 }
 //------------------------------------------------------------------------------
 // DryPointsFile (Dryareas) (D-Flow FM) filename given in mdu-file
-void HVL::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_drypoints(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
-    Q_UNUSED(ugrid_file);
+    Q_UNUSED(grid_file);
     START_TIMERN(create_vector_layer_drypoints);
 
     int status = -1;
@@ -2888,7 +2948,7 @@ void HVL::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER * prop_t
 
         if (poly_lines.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"), QString(tr("JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
             STOP_TIMER(create_vector_layer_drypoints);
             return;
         }
@@ -2911,7 +2971,7 @@ void HVL::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER * prop_t
 
             int k = -1;
             k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((line_name[ii]).c_str()).trimmed()));
             k++;
             MyFeature.setAttribute(k, QString("%1:0").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
@@ -2921,7 +2981,8 @@ void HVL::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER * prop_t
         dp_vl->addFeatures(MyFeatures);
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " +  QString::fromStdString(token[token.size() - 1]));
+        vl->serverProperties()->setTitle(layer_name + ": " +  QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -2941,7 +3002,7 @@ void HVL::create_vector_layer_drypoints(UGRID * ugrid_file, JSON_READER * prop_t
     STOP_TIMER(create_vector_layer_drypoints);
 }
 //------------------------------------------------------------------------------
-void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     if (prop_tree != nullptr)
     {
@@ -2955,8 +3016,9 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
         status = prop_tree->get(json_key, fname);
         if (fname.size() == 0)
         {
-            QString qname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Sources and sinks are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+            QString qname = QString::fromUtf8(prop_tree->get_filename().c_str()).trimmed();
+            QString msg = QString(tr("Sources and sinks are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                .arg(QString::fromUtf8(json_key.c_str()).trimmed()).arg(qname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -2999,7 +3061,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             dp_vl_points->addAttributes(lMyAttribField);
             vl_points->updatedFields();
 
-            QFileInfo ug_file = ugrid_file->get_filename();
+            QFileInfo ug_file = grid_file->get_filename();
 
             std::vector<std::string> line_name;
             std::vector<std::vector<std::vector<double>>> poly_lines;
@@ -3020,7 +3082,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                 poly_lines.clear();
                 poly_points.clear();
                 line_name.clear();
-                QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
+                QString filename = ug_file.absolutePath() + "/" + QString::fromUtf8((fname[i]).c_str()).trimmed();
                 JSON_READER * json_file = new JSON_READER(filename.toStdString());
 
                 status = json_file->get("data.path.name", line_name);
@@ -3032,7 +3094,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                     if (poly_points.size() == 0)
                     {
                         QMessageBox::warning(0, tr("Message: create_vector_layer_1D_external_forcing"),
-                            QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
+                            QString(tr("JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed() + "\nFile: " + QString::fromUtf8(fname[i].c_str()).trimmed());
                         STOP_TIMER(create_vector_layer_1D_external_forcing);
                         return;
                     }
@@ -3043,7 +3105,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
 
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[0]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((line_name[0]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -3070,7 +3132,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
 
                         int k = -1;
                         k++;
-                        MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+                        MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((line_name[ii]).c_str()).trimmed()));
                         k++;
                         MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                         k++;
@@ -3084,7 +3146,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
             if (vl_points->featureCount() != 0)
             {
-                vl_points->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+                vl_points->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
 
                 QgsSimpleMarkerSymbolLayer* simple_marker = new QgsSimpleMarkerSymbolLayer();
                 simple_marker->setStrokeStyle(Qt::NoPen);
@@ -3101,7 +3163,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             }
             if (vl_lines->featureCount() != 0)
             {
-                vl_lines->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+                vl_lines->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
                 QgsSimpleLineSymbolLayer* line_marker = new QgsSimpleLineSymbolLayer();
                 line_marker->setWidth(0.75);
                 line_marker->setColor(QColor(255, 165, 0));  //  orange
@@ -3128,8 +3190,9 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             status = prop_tree->get(json_key_old, fname);
             if (fname.size() == 0)
             {
-                QString qname = QString::fromStdString(prop_tree->get_filename());
-                QString msg = QString(tr("Boundary polylines are skipped.\nTag \"%1\" or \"%2\" does not exist in file \"%3\".").arg(QString::fromStdString(json_key)).arg(QString::fromStdString(json_key_old)).arg(qname));
+                QString qname = QString::fromUtf8(prop_tree->get_filename().c_str()).trimmed();
+                QString msg = QString(tr("Boundary polylines are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                    .arg(QString::fromUtf8(json_key.c_str()).trimmed()).arg(qname));
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             }
         }
@@ -3162,7 +3225,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            QFileInfo ug_file = ugrid_file->get_filename();
+            QFileInfo ug_file = grid_file->get_filename();
             QgsMultiPolylineXY lines;
 
             std::vector<std::string> line_name;
@@ -3182,7 +3245,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
 
                 poly_lines.clear();
                 line_name.clear();
-                QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
+                QString filename = ug_file.absolutePath() + "/" + QString::fromUtf8((fname[i]).c_str()).trimmed();
                 JSON_READER * json_file = new JSON_READER(filename.toStdString());
 
                 status = json_file->get("data.path.name", line_name);
@@ -3191,7 +3254,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                 if (poly_lines.size() == 0)
                 {
                     QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"),
-                        QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
+                        QString(tr("JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed() + "\nFile: " + QString::fromUtf8(fname[i].c_str()).trimmed());
                     STOP_TIMER(data.boundary.locationfile);
                     return;
                 }
@@ -3212,7 +3275,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
 
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[0]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((line_name[0]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -3223,7 +3286,8 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                 }
             }
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -3248,8 +3312,9 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
         status = prop_tree->get(json_key, fname);
         if (fname.size() == 0)
         {
-            QString qname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Lateral areas are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+            QString qname = QString::fromUtf8(prop_tree->get_filename().c_str()).trimmed();
+            QString msg = QString(tr("Lateral areas are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                .arg(QString::fromUtf8(json_key.c_str()).trimmed()).arg(qname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3281,7 +3346,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            QFileInfo ug_file = ugrid_file->get_filename();
+            QFileInfo ug_file = grid_file->get_filename();
             QgsMultiLineString * polylines = new QgsMultiLineString();
 
             std::vector<std::string> line_name;
@@ -3301,7 +3366,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
 
                 poly_lines.clear();
                 line_name.clear();
-                QString filename = ug_file.absolutePath() + "/" + QString::fromStdString(fname[i]);
+                QString filename = ug_file.absolutePath() + "/" + QString::fromUtf8((fname[i]).c_str()).trimmed();
                 JSON_READER * json_file = new JSON_READER(filename.toStdString());
 
                 status = json_file->get("data.path.name", line_name);
@@ -3310,7 +3375,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                 if (poly_lines.size() == 0)
                 {
                     QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"),
-                        QString(tr("JSON data: ")) + QString::fromStdString(json_key) + "\nFile: " + QString::fromStdString(fname[i]));
+                        QString(tr("JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed() + "\nFile: " + QString::fromUtf8(fname[i].c_str()).trimmed());
                     STOP_TIMER(data.lateral.locationfile);
                     return;
                 }
@@ -3331,7 +3396,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
 
                     int k = -1;
                     k++;
-                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[0]).trimmed()));
+                    MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((line_name[0]).c_str()).trimmed()));
                     k++;
                     MyFeature.setAttribute(k, QString("%1:0").arg(i));  // arg(j, nsig, 10, QLatin1Char('0')));
                     k++;
@@ -3342,7 +3407,8 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                 }
             }
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.75);
@@ -3367,8 +3433,9 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
         status = prop_tree->get(json_key, lateral_name);
         if (lateral_name.size() == 0)
         {
-            QString qname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Lateral discharges are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+            QString qname = QString::fromUtf8((prop_tree->get_filename()).c_str()).trimmed();
+            QString msg = QString(tr("Lateral discharges are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3379,8 +3446,9 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             status = prop_tree->get(json_key, branch_name);
             if (branch_name.size() == 0)
             {
-                QString name = QString::fromStdString(prop_tree->get_filename());
-                QString msg = QString(tr("Lateral discharges are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(name));
+                QString qname = QString::fromUtf8((prop_tree->get_filename()).c_str()).trimmed();
+                QString msg = QString(tr("Lateral discharges are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                    .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
                 STOP_TIMER(data.lateral.id);
                 return;
@@ -3390,13 +3458,13 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             status = prop_tree->get(json_key, chainage);
             if (chainage.size() == 0)
             {
-                QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+                QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
                 STOP_TIMER(data.lateral.id);
                 return;
             }
             if (lateral_name.size() != branch_name.size() || branch_name.size() != chainage.size() || lateral_name.size() != chainage.size())
             {
-                QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
+                QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
                     + "\nLateral points: " + (int)lateral_name.size()
                     + "\nBranches: " + (int)branch_name.size()
                     + "\nChainage: " + (int)chainage.size());
@@ -3432,8 +3500,8 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            struct _ntw_geom * ntw_geom = ugrid_file->get_network_geometry();
-            struct _ntw_edges * ntw_edges = ugrid_file->get_network_edges();
+            struct _ntw_geom * ntw_geom = grid_file->get_network_geometry();
+            struct _ntw_edges * ntw_edges = grid_file->get_network_edges();
 
             double xp;
             double yp;
@@ -3448,7 +3516,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                 MyFeature.initAttributes(nr_attrib_fields);
                 int k = -1;
                 k++;
-                MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(lateral_name[j]).trimmed()));
+                MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((lateral_name[j]).c_str()).trimmed()));
                 k++;
                 MyFeature.setAttribute(k, QString("%1").arg(rotation));
                 k++;
@@ -3460,7 +3528,8 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/lateral.svg"));
             simple_marker->setSize(2.7);
@@ -3487,7 +3556,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             }
             connect(vl, SIGNAL(crsChanged()), this, SLOT(CrsChanged()));  // changing coordinate system of a layer
             STOP_TIMER(data.lateral.id);
-     }
+        }
 //------------------------------------------------------------------------------
         status = -1;
         json_key = "data.boundary.nodeid";
@@ -3495,8 +3564,9 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
         status = prop_tree->get(json_key, bnd_name);
         if (bnd_name.size() == 0)
         {
-            QString qname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Boundary nodes are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+            QString qname = QString::fromUtf8(prop_tree->get_filename().c_str()).trimmed();
+            QString msg = QString(tr("Boundary nodes are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                .arg(QString::fromUtf8(json_key.c_str()).trimmed()).arg(qname));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -3528,7 +3598,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            struct _ntw_nodes * ntw_nodes = ugrid_file->get_connection_nodes();
+            struct _ntw_nodes * ntw_nodes = grid_file->get_connection_nodes();
 
             double xp;
             double yp;
@@ -3543,7 +3613,7 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
                 MyFeature.initAttributes(nr_attrib_fields);
                 int k = -1;
                 k++;
-                MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(bnd_name[j]).trimmed()));
+                MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((bnd_name[j]).c_str()).trimmed()));
                 k++;
                 MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
                 k++;
@@ -3553,7 +3623,8 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
             }
             vl->commitChanges();
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSimpleMarkerSymbolLayer * simple_marker = new QgsSimpleMarkerSymbolLayer();
             //QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("d:/checkouts/git/qgis_plugins/qgis_umesh/svg/tmp_bridge_tui.svg"));
@@ -3578,15 +3649,16 @@ void HVL::create_vector_layer_1D_external_forcing(UGRID * ugrid_file, JSON_READE
         status = prop_tree->get(json_key, fname);
         if (fname.size() >= 1)
         {
-            QString qname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Coefficients are skipped.\nTag \"%1\" in not supported for file \"%2\".").arg(QString::fromStdString(json_key)).arg(qname));
+            QString qname = QString::fromUtf8((prop_tree->get_filename()).c_str()).trimmed();
+            QString msg = QString(tr("Coefficients are skipped.\nTag \"%1\" in not supported for file \"%2\".")
+                .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         STOP_TIMER(create_vector_layer_1D_external_forcing)
     }
 }
 //------------------------------------------------------------------------------
-void HVL::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_thin_dams(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     std::vector<std::string> tmp_line_name;
@@ -3630,12 +3702,12 @@ void HVL::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER * prop_t
         dp_vl->addAttributes(lMyAttribField);
         vl->updatedFields();
 
-        QFileInfo ug_file = ugrid_file->get_filename();
+        QFileInfo ug_file = grid_file->get_filename();
         QgsMultiLineString * polylines = new QgsMultiLineString();
 
         if (poly_lines.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
             STOP_TIMER(create_vector_layer_thin_dams);
             return;
         }
@@ -3656,7 +3728,7 @@ void HVL::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER * prop_t
 
             int k = -1;
             k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((line_name[ii]).c_str()).trimmed()));
             k++;
             MyFeature.setAttribute(k, QString("%1:0").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
@@ -3666,7 +3738,8 @@ void HVL::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER * prop_t
             vl->commitChanges();
         }
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
@@ -3686,7 +3759,7 @@ void HVL::create_vector_layer_thin_dams(UGRID * ugrid_file, JSON_READER * prop_t
     }
 }
 //------------------------------------------------------------------------------
-void HVL::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_fixed_weir(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     int status = -1;
     std::vector<std::string> tmp_line_name;
@@ -3701,7 +3774,7 @@ void HVL::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER * prop_
         subTreeGroup = get_subgroup(mainTreeGroup, QString("Fixed weirs"));
         std::filesystem::path fname = prop_tree->get_filename();
         std::string stem = fname.stem().generic_string();
-        QString layer_name = QString::fromStdString(stem);
+        QString layer_name = QString::fromUtf8((stem).c_str()).trimmed();
         // create the vector
         QgsVectorLayer * vl;
         QgsVectorDataProvider * dp_vl;
@@ -3733,11 +3806,11 @@ void HVL::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER * prop_
         dp_vl->addAttributes(lMyAttribField);
         vl->updatedFields();
 
-        QFileInfo ug_file = ugrid_file->get_filename();
+        QFileInfo ug_file = grid_file->get_filename();
 
         if (poly_lines.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
             STOP_TIMER(create_vector_layer_fixed_weir);
             return;
         }
@@ -3758,7 +3831,7 @@ void HVL::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER * prop_
 
             int k = -1;
             k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(line_name[ii]).trimmed()));
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((line_name[ii]).c_str()).trimmed()));
             k++;
             MyFeature.setAttribute(k, QString("%1:0").arg(ii));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
@@ -3768,8 +3841,9 @@ void HVL::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER * prop_
             vl->commitChanges();
         }
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
 
+        setLabelFontSize(vl, 8);
         QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
         line_marker->setWidth(0.75);
         line_marker->setColor(QColor(128, 0, 128));
@@ -3788,7 +3862,7 @@ void HVL::create_vector_layer_fixed_weir(UGRID * ugrid_file, JSON_READER * prop_
     }
 }
 //------------------------------------------------------------------------------
-void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
+void HVL::create_vector_layer_1D_cross_section(GRID * grid_file, JSON_READER * prop_tree, long epsg_code, QgsLayerTreeGroup * treeGroup)
 {
     long status = -1;
 
@@ -3797,8 +3871,9 @@ void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER *
     status = prop_tree->get(json_key, crosssection_name);
     if (crosssection_name.size() == 0)
     {
-        QString fname = QString::fromStdString(prop_tree->get_filename());
-        QString msg = QString(tr("Cross-section locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+        QString qname = QString::fromUtf8(prop_tree->get_filename().c_str()).trimmed();
+        QString msg = QString(tr("Cross-section locations are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+            .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
     }
     else
@@ -3809,8 +3884,9 @@ void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER *
         status = prop_tree->get(json_key, branch_name);
         if (branch_name.size() == 0)
         {
-            QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Cross-section are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+            QString qname = QString::fromUtf8((prop_tree->get_filename()).c_str()).trimmed();
+            QString msg = QString(tr("Cross-section are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             STOP_TIMER(create_vector_layer_1D_cross_section);
             return;
@@ -3820,13 +3896,13 @@ void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER *
         status = prop_tree->get(json_key, chainage);
         if (chainage.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
             STOP_TIMER(create_vector_layer_1D_cross_section);
             return;
         }
         if (crosssection_name.size() != branch_name.size() || branch_name.size() != chainage.size() || crosssection_name.size() != chainage.size())
         {
-            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
                 + "\nCross-section names: " + (int)crosssection_name.size()
                 + "\nBranches: " + (int)branch_name.size()
                 + "\nChainage: " + (int)chainage.size());
@@ -3860,8 +3936,8 @@ void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER *
         //dp_vl->createSpatialIndex();
         vl->updatedFields();
 
-        struct _ntw_geom * ntw_geom = ugrid_file->get_network_geometry();
-        struct _ntw_edges * ntw_edges = ugrid_file->get_network_edges();
+        struct _ntw_geom * ntw_geom = grid_file->get_network_geometry();
+        struct _ntw_edges * ntw_edges = grid_file->get_network_edges();
 
         double xp;
         double yp;
@@ -3876,7 +3952,7 @@ void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER *
             MyFeature.initAttributes(nr_attrib_fields);
             int k = -1;
             k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(crosssection_name[j]).trimmed()));
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((crosssection_name[j]).c_str()).trimmed()));
             k++;
             MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
@@ -3886,7 +3962,8 @@ void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER *
         }
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSvgMarkerSymbolLayer * simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/cross_section_location_1d.svg"));
         simple_marker->setSize(5.0);
@@ -3915,7 +3992,7 @@ void HVL::create_vector_layer_1D_cross_section(UGRID * ugrid_file, JSON_READER *
     }
 }
 //------------------------------------------------------------------------------
-void HVL::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
+void HVL::create_vector_layer_1D_retention(GRID* grid_file, JSON_READER* prop_tree, long epsg_code, QgsLayerTreeGroup* treeGroup)
 {
     long status = -1;
 
@@ -3924,8 +4001,9 @@ void HVL::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_
     status = prop_tree->get(json_key, retention_name);
     if (retention_name.size() == 0)
     {
-        QString fname = QString::fromStdString(prop_tree->get_filename());
-        QString msg = QString(tr("Retention locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+        QString qname = QString::fromUtf8((prop_tree->get_filename()).c_str()).trimmed();
+        QString msg = QString(tr("Retention locations are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+            .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
         QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
     }
     else
@@ -3936,8 +4014,9 @@ void HVL::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_
         status = prop_tree->get(json_key, branch_name);
         if (branch_name.size() == 0)
         {
-            QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Retention locations are skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+            QString qname = QString::fromUtf8((prop_tree->get_filename()).c_str()).trimmed();
+            QString msg = QString(tr("Retention locations are skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
             STOP_TIMER(create_vector_layer_1D_retention);
             return;
@@ -3947,13 +4026,13 @@ void HVL::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_
         status = prop_tree->get(json_key, chainage);
         if (chainage.size() == 0)
         {
-            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromStdString(json_key));
+            QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Number of chainages is zero. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed());
             STOP_TIMER(create_vector_layer_1D_retention);
             return;
         }
         if (retention_name.size() != branch_name.size() || branch_name.size() != chainage.size() || retention_name.size() != chainage.size())
         {
-            QMessageBox::warning(0, tr("Message: create_vector_layer_1D_retention"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
+            QMessageBox::warning(0, tr("Message: create_vector_layer_1D_retention"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
                 + "\nRetention names: " + (int)retention_name.size()
                 + "\nBranches: " + (int)branch_name.size()
                 + "\nChainage: " + (int)chainage.size());
@@ -3987,8 +4066,8 @@ void HVL::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_
         //dp_vl->createSpatialIndex();
         vl->updatedFields();
 
-        struct _ntw_geom* ntw_geom = ugrid_file->get_network_geometry();
-        struct _ntw_edges* ntw_edges = ugrid_file->get_network_edges();
+        struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
+        struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
 
         double xp;
         double yp;
@@ -4003,7 +4082,7 @@ void HVL::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_
             MyFeature.initAttributes(nr_attrib_fields);
             int k = -1;
             k++;
-            MyFeature.setAttribute(k, QString("%1").arg(QString::fromStdString(retention_name[j]).trimmed()));
+            MyFeature.setAttribute(k, QString("%1").arg(QString::fromUtf8((retention_name[j]).c_str()).trimmed()));
             k++;
             MyFeature.setAttribute(k, QString("%1:0").arg(j));  // arg(j, nsig, 10, QLatin1Char('0')));
             k++;
@@ -4013,7 +4092,8 @@ void HVL::create_vector_layer_1D_retention(UGRID* ugrid_file, JSON_READER* prop_
         }
         vl->commitChanges();
         std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+        vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+        setLabelFontSize(vl, 8);
 
         QgsSvgMarkerSymbolLayer* simple_marker = new QgsSvgMarkerSymbolLayer(QString("c:/Program Files/Deltares/qgis_umesh/icons/retention_location_1d.svg"));
         simple_marker->setSize(5.0);
@@ -4051,8 +4131,9 @@ void HVL::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long epsg_code)
         status = prop_tree->get(json_key, link_1d_point);
         if (link_1d_point.size() == 0)
         {
-            QString fname = QString::fromStdString(prop_tree->get_filename());
-            QString msg = QString(tr("Links between 1D and 2D mesh is skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+            QString qname = QString::fromUtf8((prop_tree->get_filename()).c_str()).trimmed();
+            QString msg = QString(tr("Links between 1D and 2D mesh is skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
             QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
         }
         else
@@ -4063,15 +4144,16 @@ void HVL::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long epsg_code)
             status = prop_tree->get(json_key, link_2d_point);
             if (link_2d_point.size() == 0)
             {
-                QString fname = QString::fromStdString(prop_tree->get_filename());
-                QString msg = QString(tr("Links between 1D and 2D mesh is skipped.\nTag \"%1\" does not exist in file \"%2\".").arg(QString::fromStdString(json_key)).arg(fname));
+                QString qname = QString::fromUtf8(prop_tree->get_filename().c_str()).trimmed();
+                QString msg = QString(tr("Links between 1D and 2D mesh is skipped.\nTag \"%1\" does not exist in file \"%2\".")
+                    .arg(QString::fromUtf8(json_key.c_str()).trimmed().arg(qname)));
                 QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Info, true);
                 STOP_TIMER(create_1D2D_link_vector_layer);
                 return;
             }
             if (link_1d_point.size() != link_2d_point.size())
             {
-                QMessageBox::warning(0, tr("Message: create_1D2D_link_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromStdString(json_key)
+                QMessageBox::warning(0, tr("Message: create_1D2D_link_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
                     + "\nPoints on 1D mesh: " + (int)link_1d_point.size()
                     + "\nPoints on 2D mesh: " + (int)link_2d_point.size());
                 STOP_TIMER(create_1D2D_link_vector_layer);
@@ -4129,7 +4211,8 @@ void HVL::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long epsg_code)
                 vl->commitChanges();
             }
             std::vector<std::string> token = tokenize(prop_tree->get_filename(), '/');
-            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromStdString(token[token.size() - 1]));
+            vl->serverProperties()->setTitle(layer_name + ": " + QString::fromUtf8((token[token.size() - 1]).c_str()).trimmed());
+            setLabelFontSize(vl, 8);
 
             QgsSimpleLineSymbolLayer * line_marker = new QgsSimpleLineSymbolLayer();
             line_marker->setWidth(0.25);
@@ -4163,7 +4246,7 @@ long HVL::compute_location_along_geometry(struct _ntw_geom * ntw_geom, struct _n
     for (int branch = 0; branch < ntw_geom->geom[nr_ntw - 1]->count; branch++)  // loop over the geometries
     {
         if (status == 0) { break; }
-        if (QString::fromStdString(ntw_geom->geom[nr_ntw - 1]->name[branch]).trimmed() == QString::fromStdString(branch_name).trimmed())  // todo Check on preformance
+        if (QString::fromUtf8(ntw_geom->geom[nr_ntw - 1]->name[branch].c_str()).trimmed() == QString::fromUtf8(branch_name.c_str()).trimmed())  // todo Check on preformance
         {
             double branch_length = ntw_edges->edge[nr_ntw - 1]->edge_length[branch];
             size_t geom_nodes_count = ntw_geom->geom[nr_ntw - 1]->nodes[branch]->count;
@@ -4230,7 +4313,7 @@ long HVL::find_location_boundary(struct _ntw_nodes * ntw_nodes, std::string bnd_
     long status = -1;
     for (int i = 0; i < ntw_nodes->node[0]->count; i++)
     {
-        if (QString::fromStdString(ntw_nodes->node[0]->name[i]).trimmed() == QString::fromStdString(bnd_name))
+        if (QString::fromUtf8(ntw_nodes->node[0]->name[i].c_str()).trimmed() == QString::fromUtf8(bnd_name.c_str()).trimmed())
         {
             *xp = ntw_nodes->node[0]->x[i];
             *yp = ntw_nodes->node[0]->y[i];
@@ -4244,7 +4327,7 @@ long HVL::find_location_boundary(struct _ntw_nodes * ntw_nodes, std::string bnd_
 //
 //-----------------------------------------------------------------------------
 //
-UGRID* HVL::get_active_ugrid_file(QString layer_id)
+GRID* HVL::get_active_grid_file(QString layer_id)
 {
     // Function to find the filename belonging by the highlighted layer,
     // or to which group belongs the highligthed layer,
@@ -4252,7 +4335,7 @@ UGRID* HVL::get_active_ugrid_file(QString layer_id)
     QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
     QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
     QgsMapLayer* active_layer = NULL;
-    UGRID* active_ugrid_file = nullptr;
+    GRID* active_grid_file = nullptr;
 
     if (layer_id == "")
     {
@@ -4267,7 +4350,7 @@ UGRID* HVL::get_active_ugrid_file(QString layer_id)
         //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nActive layer: %1.").arg(active_layer->name()));
         // if there is an active layer, belongs it to a Mesh-group?
         QList< QgsLayerTreeGroup* > myGroups = treeRoot->findGroups();
-        for (int j = 0; j < m_ugrid_file.size(); j++)
+        for (int j = 0; j < m_grid_file.size(); j++)
         {
             for (int i = 0; i < myGroups.size(); i++)
             {
@@ -4281,9 +4364,9 @@ UGRID* HVL::get_active_ugrid_file(QString layer_id)
                         {
                             //QMessageBox::information(0, "Information", QString("qgis_umesh::get_active_layer()\nGroup name: %1\nActive layer: %2.").arg(myGroup->name()).arg(active_layer->name()));
                             // get the full file name
-                            if (myGroups[i]->name().contains(m_ugrid_file[j]->get_filename().fileName()))
+                            if (myGroups[i]->name().contains(m_grid_file[j]->get_filename().fileName()))
                             {
-                                active_ugrid_file = m_ugrid_file[j];
+                                active_grid_file = m_grid_file[j];
                             }
                         }
                     }
@@ -4295,7 +4378,7 @@ UGRID* HVL::get_active_ugrid_file(QString layer_id)
     //{
     //    QMessageBox::information(0, "Information", QString("No layer selected, determination of output files is not possible."));
     //}
-    return active_ugrid_file;
+    return active_grid_file;
 }
 
 //------------------------------------------------------------------------------
@@ -4338,6 +4421,29 @@ void HVL::add_layer_to_group(QgsVectorLayer* vl, QgsLayerTreeGroup* treeGroup)
     root->removeLayer(map_layer);
     STOP_TIMER(add_layer_to_group);
 }
+//------------------------------------------------------------------------------
+void HVL::setLabelFontSize(QgsVectorLayer *layer, double size)
+{
+    // Create labeling settings
+    QgsPalLayerSettings palSettings;
+
+    // Prepare a text format
+    QgsTextFormat textFormat;
+    QFont font("Arial");
+    font.setPointSizeF(size);               // <-- Set font size here
+    textFormat.setFont(font);
+    textFormat.setSize(size);               // <-- QGIS uses this too
+
+    // Attach format to labeling
+    palSettings.setFormat(textFormat);
+
+
+    // Apply labeling to the layer
+    layer->setLabeling(new QgsVectorLayerSimpleLabeling(palSettings));
+    layer->setLabelsEnabled(true);
+    layer->triggerRepaint();
+}
+//------------------------------------------------------------------------------
 std::vector<std::string> HVL::tokenize(const std::string& s, char c) {
     auto end = s.cend();
     auto start = end;

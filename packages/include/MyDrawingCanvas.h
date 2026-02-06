@@ -8,9 +8,11 @@
 #include <math.h>       /* sqrt */
 
 #include "AbstractCanvas.h"
-#include "ugrid.h"
-#include "QColorRampEditor.h"
+#include "grid.h"
 #include "map_property.h"
+#include "legend_overlay.h"
+#include "unit_vector_overlay.h"
+
 
 #define GUI_EXPORT __declspec(dllimport)
 #include <qgisinterface.h>
@@ -29,22 +31,22 @@
 #include <qgsrubberband.h>
 
 
-#include <QtCore/QVector>
-#include <QtCore/QObject>
-#include <QtCore/QPointer>
+#include <QVector>
+#include <QObject>
+#include <QPointer>
 
-#include <QtGui/QColor>
-#include <QtGui/QCursor>
-#include <QtGui/QKeyEvent>
-#include <QtGui/QMouseEvent>
-#include <QtGui/QPainter>
-#include <QtGui/QPen>
-#include <QtGui/QWheelEvent>
+#include <QColor>
+#include <QCursor>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QPen>
+#include <QWheelEvent>
 
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QWidget>
+#include <QLabel>
+#include <QMessageBox>
+#include <QVBoxLayout>
+#include <QWidget>
 
 
 #define IMAGE_WIDTH  3840 // 1420 // 
@@ -170,7 +172,7 @@ public:
     void setFullExtend(double minX, double maxX, double minY, double maxY);
     void zoomToExtend(double minX, double maxX, double minY, double maxY);
 
-    void setUgridFile(UGRID *);
+    void set_grid_file(GRID *);
     void reset_min_max();
     void set_variable(struct _variable *);
     void set_variables(struct _mesh_variable * variables);
@@ -180,26 +182,27 @@ public:
     void set_bed_layer(int);
     void set_hydro_layer(int);
     void set_current_step(int);
-    void setColorRamp(QColorRampEditor *);
-    void setColorRampVector(QColorRampEditor *);
     void set_draw_vector(vector_quantity);
+
+    void setRamp(QgsColorRamp * color_ramp);
 
     void draw_dot_at_edge();
     void draw_dot_at_face();
     void draw_dot_at_node();
-    void draw_data_along_edge();
+    void draw_data_1d_along_edge();
     void draw_data_at_face();
-    void draw_line_at_edge();
-    void draw_vector_arrow_at_face();
+    void draw_data_at_node();   // isofill of the control volume around node
+    void draw_data_2d_along_edge();
+    void draw_vector_arrow();
     void draw_vector_direction_at_face();
+    void draw_vector_direction_at_node();
 
     double * z_value = nullptr;
     double * u_value = nullptr;
     double * v_value = nullptr;
     double m_z_min;
     double m_z_max;
-    QColorRampEditor * m_ramph;
-    QColorRampEditor * m_ramph_vec_dir;
+    NumericLegendOverlay * m_overlay;
 
 protected:
     // From world (document) coordinates to Qt
@@ -222,6 +225,7 @@ private:
     QPointer<QgsMapCanvas> mMapCanvasItem;
     QPixmap * mMapCanvasMap;
     AbstractCanvas * mCanvas;
+    UnitVectorOverlay * mUnitVectorOverlay; 
 
     AbstractCanvasListener* listener;
     bool drawing;
@@ -257,7 +261,7 @@ private:
     void InitDrawEachCaches(void);
     void DrawEachCaches(void);
 
-    UGRID * m_ugrid_file;
+    GRID * m_grid_file;
     struct _variable * m_variable;
     struct _mesh_variable * m_variables;
     QStringList m_coordinate_type;
@@ -272,6 +276,9 @@ private:
     bool m_vscale_determined;
     double m_vec_length;
     vector_quantity m_vector_draw;
+    QgsColorRamp * m_color_ramp;
+
+    bool m_permuted;
 };
 
 #endif  /* _INC_MyCanvas */

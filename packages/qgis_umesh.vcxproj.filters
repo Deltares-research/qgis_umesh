@@ -12,16 +12,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="generated\moc_qgis_umesh.cpp">
+    <ClCompile Include="generated\moc_MyEditTool.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\qgis_umesh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ugrid.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\qgis_umesh_version.cpp">
+    <ClCompile Include="src\MyEditTool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\map_time_manager_window.cpp">
@@ -42,17 +36,8 @@
     <ClCompile Include="src\my_date_time_edit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="generated\moc_QColorRampEditor.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\QColorRampEditor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\map_property.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="generated\moc_map_property.cpp">
-      <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="src\map_property_window.cpp">
       <Filter>Source Files</Filter>
@@ -66,6 +51,12 @@
     <ClCompile Include="src\read_json.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\edit_observation_points_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generated\moc_edit_observation_points_window.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
     <ClCompile Include="generated\moc_add_current_view_window.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
@@ -75,33 +66,51 @@
     <ClCompile Include="src\perf_timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\handle_vector_layers.cpp">
+    <ClCompile Include="src\grid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="generated\moc_handle_vector_layers.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\handle_vector_layers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generated\moc_qgis_sumesh.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\qgis_sumesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\qgis_sumesh_version.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generated\moc_legend_overlay.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\legend_overlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\unit_vector_overlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="include\qgis_umesh.h">
+    <CustomBuild Include="include\map_time_manager_window.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="include\map_time_manager_window.h">
+    <CustomBuild Include="include\MyEditTool.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="include\MyDrawingCanvas.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="include\QColorRampEditor.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="include\my_date_time_edit.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="include\map_property.h">
+    <CustomBuild Include="include\map_property_window.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="include\map_property_window.h">
+    <CustomBuild Include="include\edit_observation_points_window.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="include\add_current_view_window.h">
@@ -110,12 +119,15 @@
     <CustomBuild Include="include\handle_vector_layers.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="include\qgis_sumesh.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="include\legend_overlay.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\netcdf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ugrid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\AbstractCanvas.h">
@@ -136,7 +148,16 @@
     <ClInclude Include="include\perf_timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\qgis_umesh_version.h">
+    <ClInclude Include="include\map_property.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\qgis_sumesh_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\unit_vector_overlay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -144,5 +165,7 @@
     <None Include="include\version_number.ini">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="cpp.hint" />
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

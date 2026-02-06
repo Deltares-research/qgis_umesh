@@ -1,24 +1,26 @@
 #ifndef _INC_ADD_CURRENT_VIEW_WINDOW
 #define _INC_ADD_CURRENT_VIEW_WINDOW
-#include <QtWidgets\QCheckBox>
-#include <QtWidgets\QDateTimeEdit>
-#include <QtWidgets\QDockWidget>
-#include <QtWidgets\QGroupBox>
-#include <QtWidgets\QGridLayout>
-#include <QtWidgets\QHBoxLayout>
-#include <QtWidgets\QLabel>
-#include <QtWidgets\QLineEdit>
-#include <QtWidgets\QMessageBox>
-#include <QtWidgets\QPushButton>
-#include <QtWidgets\QTableView>
-#include <QtWidgets\QSizePolicy>
-#include <QtWidgets\QTableWidget>
-#include <QtWidgets\QTableWidgetItem>
-#include <QtGui\QStandardItem>
-#include <QtGui\QStandardItemModel>
-#include <QtWidgets\QVBoxLayout>
-#include <QtWidgets\QHeaderView>
+#include <QCheckBox>
+#include <QDateTimeEdit>
+#include <QDockWidget>
+#include <QGroupBox>
+#include <QGridLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QTableView>
+#include <QSizePolicy>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QStandardItem>
+#include <QStandardItemModel>
+#include <QVBoxLayout>
+#include <QHeaderView>
 
+#include <qgis.h>
+#include <qgis_core.h>
 #include <qgisinterface.h>
 #include <qgslayertree.h>
 #include <qgslayertreegroup.h>
@@ -26,8 +28,8 @@
 #include <qgslayertreeview.h>
 #include <qgsvectorlayer.h>
 #include <qgsmarkersymbollayer.h>
-#include <QgsSingleSymbolRenderer.h>
-#include <QgsSymbol.h>
+#include <qgssinglesymbolrenderer.h>
+#include <qgssymbol.h>
 
 class AddCurrentViewWindow 
     : public QWidget
@@ -50,7 +52,7 @@ public:
 
 public slots:
     void close();
-    void clicked_add();
+    void clicked_addclose();
     void clicked_close();
     void clicked(QModelIndex);
 
@@ -59,6 +61,7 @@ private:
     void create_window();
     QgsLayerTreeGroup * get_subgroup(QgsLayerTreeGroup *, QString);
     void add_layer_to_group(QgsVectorLayer *, QgsLayerTreeGroup *);
+    void setLabelFontSize(QgsVectorLayer *layer, double size);
 
     QgisInterface * m_QGisIface; // Pointer to the QGIS interface object
     static AddCurrentViewWindow * obj;

@@ -1,5 +1,5 @@
-#ifndef __JSON_READER_H
-#define __JSON_READER_H
+#ifndef __JSON_READER_H__
+#define __JSON_READER_H__
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ptree_fwd.hpp>
@@ -25,4 +25,4 @@ private:
     std::string m_filename;
     boost::property_tree::iptree m_ptrtree;
 };
-#endif  // __JSON_READER_H
+#endif  // __JSON_READER_H__

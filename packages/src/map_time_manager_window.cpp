@@ -5,7 +5,7 @@
 int MapTimeManagerWindow::object_count = 0;
 MapProperty * MapProperty::obj;  // Initialize static member of class MapProperty (Singleton)
 
-MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ugrid_file, MyCanvas * MyCanvas) : QDockWidget()
+MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, GRID * grid_file, MyCanvas * MyCanvas) : QDockWidget()
 {
     object_count = 1;
     m_QGisIface = QGisIface;
@@ -13,14 +13,13 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_sb_bed_layer_vec = nullptr;
     m_sb_hydro_layer = nullptr;
     m_sb_hydro_layer_vec = nullptr;
-    m_ramph_vec_dir = nullptr;
     m_map_property_window = nullptr;
     m_cur_view = nullptr;
-    m_ugrid_file = ugrid_file;
+    m_grid_file = grid_file;
     m_MyCanvas = MyCanvas;
-    m_MyCanvas->setUgridFile(m_ugrid_file);
-    m_q_times = m_ugrid_file->get_qdt_times();
-    m_vars = m_ugrid_file->get_variables();  // before create window
+    m_MyCanvas->set_grid_file(m_grid_file);
+    m_q_times = m_grid_file->get_qdt_times();
+    m_vars = m_grid_file->get_variables();  // before create window
     create_window(); //QMessageBox::information(0, "Information", "DockWindow::DockWindow()");
     m_MyCanvas->empty_caches();
     m_current_step = 0;
@@ -35,11 +34,20 @@ MapTimeManagerWindow::MapTimeManagerWindow(QgisInterface * QGisIface, UGRID * ug
     m_property = MapProperty::getInstance();
     m_vector_draw = VECTOR_NONE;
 
-    connect(m_ramph, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
-    if (m_ramph_vec_dir != nullptr)
-    {
-        connect(m_ramph_vec_dir, &QColorRampEditor::rampChanged, this, &MapTimeManagerWindow::ramp_changed);
-    }
+    QgsMapCanvas * qgs_map_canvas = QGisIface->mapCanvas();
+    mUnitVectorOverlay = UnitVectorOverlay::getInstance(qgs_map_canvas);
+
+    mLegendOverlay = NumericLegendOverlay::getInstance(qgs_map_canvas);
+    mLegendOverlay->setTitle("My Numeric Legend");
+    mLegendOverlay->setRange(0.0, 100.0);
+    mLegendOverlay->setRamp(mRampButton->colorRamp());
+    m_MyCanvas->setRamp(mRampButton->colorRamp());
+
+    // Live updates when the user changes the ramp
+    connect(mRampButton, &QgsColorRampButton::colorRampChanged, this, [this]() {
+        mLegendOverlay->setRamp(mRampButton->colorRamp());  // drawing the legend
+        m_MyCanvas->setRamp(mRampButton->colorRamp());  // drawing the data
+        });    
 }
 MapTimeManagerWindow::~MapTimeManagerWindow()
 {
@@ -55,30 +63,20 @@ void MapTimeManagerWindow::ramp_changed()
     //QMessageBox::information(0, "Information", "MapTimeManagerWindow::ramp_changed()");
     m_MyCanvas->draw_all();
 }
-
 void MapTimeManagerWindow::contextMenu(const QPoint & point)
 {
     Q_UNUSED(point);
-    QRect crec = m_ramph->geometry();
-    QPoint p1 = m_ramph->parentWidget()->mapFromGlobal(QCursor::pos());
-    if (crec.contains(p1)) // test mouse is in ramp
-    {
-        // the mouse release event will be catched by the QCOlorRampEditor
-    }
-    else
-    {  // not in ramp
-        if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
-        {
-            m_map_property_window = new MapPropertyWindow(m_MyCanvas);
-        }
-        m_map_property_window->set_dynamic_limits_enabled(true);
-        if (m_vector_draw == VECTOR_DIRECTION)
-        {
-            // set ramp limits en/disabled
-            m_map_property_window->set_dynamic_limits_enabled(false);
-        }
-    }
 
+    if (MapPropertyWindow::get_count() == 0)  // create a window if it is not already there.
+    {
+        m_map_property_window = new MapPropertyWindow(m_MyCanvas);
+    }
+    m_map_property_window->set_dynamic_limits_enabled(true);
+    if (m_vector_draw == VECTOR_DIRECTION)
+    {
+        // set ramp limits en/disabled
+        m_map_property_window->set_dynamic_limits_enabled(false);
+    }
 }
 //
 //-----------------------------------------------------------------------------
@@ -108,6 +106,14 @@ void MapTimeManagerWindow::closeEvent(QCloseEvent * ce)
     {
         m_map_property_window->close();
         m_map_property_window = nullptr;
+    }
+    if (mLegendOverlay->get_count() >= 1)
+    {
+        mLegendOverlay->deleteInstance();
+    }
+    if (mUnitVectorOverlay->get_count() >= 1)
+    {
+        mUnitVectorOverlay->deleteInstance();
     }
 }
 int MapTimeManagerWindow::get_count()
@@ -180,11 +186,49 @@ void MapTimeManagerWindow::create_window()
 
     wid->setLayout(vl);
     this->setWidget(wid);
+
+    connect(tw, &QTabWidget::currentChanged, this, &MapTimeManagerWindow::stacked_window_changed);
+    connect(iso_patch, &QWidget::activateWindow, this, &MapTimeManagerWindow::show_hide_overlay_legend);
+    connect(vectors, &QWidget::activateWindow, this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
+
     return;
+}
+void MapTimeManagerWindow::stacked_window_changed(int idx)
+{
+    for (int i = 0; i < m_cb_2d->count(); ++i)
+    {
+        QVariant k = m_cb_2d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+    for (int i = 0; i < m_cb_vec_2d->count(); ++i)
+    {
+        QVariant k = m_cb_vec_2d->itemData(i);
+        int kk = k.toInt();
+        struct _variable* var = m_vars->variable[kk];
+        var->draw = false;
+    }
+    // TODO 1D, 1D2D, 3D
+    m_MyCanvas->empty_caches();
+    mUnitVectorOverlay->setShow(false);
+    if (idx == 0) { 
+        m_stacked_window = 0; 
+        color_ramped_changed();
+        show_hide_overlay_legend();
+        mUnitVectorOverlay->setShow(false);  // visable as idx=1
+        show_hide_map_data_2d();
+    }
+    if (idx == 1) { 
+        m_stacked_window = 1; 
+        color_ramped_changed_dir();
+        show_hide_overlay_legend_dir();
+        show_hide_map_vector_2d();
+    }
 }
 QGridLayout * MapTimeManagerWindow::create_date_time_layout()
 {
-    m_q_times = m_ugrid_file->get_qdt_times();
+    m_q_times = m_grid_file->get_qdt_times();
     nr_times = m_q_times.size();
     first_date_time_indx = 0;
     last_date_time_indx = nr_times - 1;
@@ -297,64 +341,20 @@ QHBoxLayout * MapTimeManagerWindow::create_push_buttons_layout_steps()
     pb_end->setMinimumWidth(5);
 
     connect(pb_begin, SIGNAL(released()), this, SLOT(goto_begin()));
+    connect(pb_begin, &QPushButton::released, this, &MapTimeManagerWindow::pause_time_loop);
     connect(pb_back, SIGNAL(released()), this, SLOT(one_step_backward()));
+    connect(pb_back, &QPushButton::released, this, &MapTimeManagerWindow::pause_time_loop);
     connect(pb_step, SIGNAL(released()), this, SLOT(one_step_forward()));
+    connect(pb_step, &QPushButton::released, this, &MapTimeManagerWindow::pause_time_loop);
     connect(pb_end, SIGNAL(released()), this, SLOT(goto_end()));
-    
+    connect(pb_end, &QPushButton::released, this, &MapTimeManagerWindow::pause_time_loop);
+
     hl->addWidget(pb_begin);
     hl->addWidget(pb_back);
     hl->addWidget(pb_step);
     hl->addWidget(pb_end);
     
     return hl;
-}
-QColorRampEditor * MapTimeManagerWindow::create_color_ramp(vector_quantity vector_draw)
-{
-    QColorRampEditor* ramph = new QColorRampEditor(NULL, Qt::Horizontal);
-    m_vector_draw = vector_draw;
-    if (vector_draw == VECTOR_NONE)
-    {
-        QVector<QPair<qreal, QColor> > initramp;
-        initramp.push_back(QPair<qreal, QColor>(0.00, QColor(0, 0, 128)));
-        initramp.push_back(QPair<qreal, QColor>(0.125, QColor(0, 0, 255)));
-        initramp.push_back(QPair<qreal, QColor>(0.375, QColor(0, 255, 255)));
-        initramp.push_back(QPair<qreal, QColor>(0.50, QColor(0, 255, 0)));
-        initramp.push_back(QPair<qreal, QColor>(0.625, QColor(255, 255, 0)));
-        initramp.push_back(QPair<qreal, QColor>(0.875, QColor(255, 0, 0)));
-        initramp.push_back(QPair<qreal, QColor>(1.00, QColor(128, 0, 0)));
-
-        ramph->setSlideUpdate(true);
-        ramph->setMappingTextVisualize(true);
-        ramph->setMappingTextColor(Qt::black);
-        ramph->setMappingTextAccuracy(2);
-        ramph->setNormRamp(initramp);
-        ramph->setRamp(initramp);
-        ramph->setFixedHeight(40);  // bar breedte 40 - text(= 16) - indicator
-
-        m_MyCanvas->setColorRamp(ramph);
-    }
-    else if (vector_draw == VECTOR_DIRECTION)
-    {
-        QVector<QPair<qreal, QColor> > initramp;
-        initramp.push_back(QPair<qreal, QColor>(0.00, QColor(0, 0, 255)));  // west
-        initramp.push_back(QPair<qreal, QColor>(0.25, QColor(255, 0, 0)));  // south
-        initramp.push_back(QPair<qreal, QColor>(0.50, QColor(255, 255, 255)));  // east
-        initramp.push_back(QPair<qreal, QColor>(0.75, QColor(0, 255, 0)));  // north
-        initramp.push_back(QPair<qreal, QColor>(1.00, QColor(0, 0, 255)));  // west
-
-        ramph->setSlideUpdate(true);
-        ramph->setMappingTextVisualize(true);
-        ramph->setMappingTextColor(Qt::black);
-        ramph->setMappingTextAccuracy(2);
-        ramph->setNormRamp(initramp);
-        ramph->setRamp(initramp);
-        ramph->setFixedHeight(40);  // bar breedte 40 - text(= 16) - indicator
-        ramph->setMinMax(-180.0, 180.0);
-
-        m_MyCanvas->setColorRampVector(ramph);
-    }
-
-    return ramph;
 }
 void MapTimeManagerWindow::button_group_pressed(int)
 {
@@ -518,11 +518,11 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d(QString text)
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
-            QString unit = QString::fromStdString(m_vars->variable[i]->units).trimmed();
+            QString name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());
+            QString unit = QString::fromUtf8((m_vars->variable[i]->units).c_str());
             name = name + " [" + unit + "]";
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
+            QString mesh_var_name = QString::fromUtf8((m_vars->variable[i]->mesh).c_str());
             if (mesh_var_name == text)
             {
                 cb->addItem(name, map[name]);
@@ -547,14 +547,19 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
-            QString unit = QString::fromStdString(m_vars->variable[i]->units).trimmed();
+            QString comment = QString::fromUtf8((m_vars->variable[i]->comment).c_str());
+            QString name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());
+            QString unit = QString::fromUtf8((m_vars->variable[i]->units).c_str());
             name = name + " [" + unit + "]";
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
+            QString mesh_var_name = QString::fromUtf8((m_vars->variable[i]->mesh).c_str());
             if (mesh_var_name == text)
             {
                 cb->addItem(name, map[name]);
+                if (comment.size() > 0)
+                {
+                    cb->setItemData(cb->count() - 1, comment, Qt::ToolTipRole);
+                }
             }
         }
     }
@@ -562,13 +567,21 @@ QComboBox * MapTimeManagerWindow::create_parameter_selection_1d2d(QString text)
     cb->blockSignals(false);
 
     connect(cb, SIGNAL(activated(int)), this, SLOT(cb_clicked_1d2d(int)));
+    connect(cb,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this,
+            [=](int index)
+            {
+                cb->setToolTip(cb->itemData(index, Qt::ToolTipRole).toString());
+            }
+    );
 
     return cb;
 }
 int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboBox * cb_2d, QComboBox * cb_3d)
 {
     cb_2d->setMinimumSize(100, 22);
-    cb_3d->setMinimumSize(100, 22);
+    cb_3d->setMinimumSize(100, 22); 
 
     cb_2d->blockSignals(true);
     cb_3d->blockSignals(true);
@@ -581,29 +594,45 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();
-            QString unit = QString::fromStdString(m_vars->variable[i]->units).trimmed();
+            QString comment = QString::fromUtf8((m_vars->variable[i]->comment).c_str());
+            QString name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());
+            QString unit = QString::fromUtf8((m_vars->variable[i]->units).c_str());
             name = name + " [" + unit + "]";
             map[name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
-            if (m_vars->variable[i]->dims.size() == 2)  // Todo: HACK: assumed time, xy-space
+            QString mesh_var_name = QString::fromUtf8((m_vars->variable[i]->mesh).c_str());
+            if (m_vars->variable[i]->dims.size() == 2 ||
+                m_vars->variable[i]->dims.size() == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
+                m_vars->variable[i]->dims.size() == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS)  // Todo: HACK: assumed time, xy-space
             {
                 if (mesh_var_name == text)
                 {
                     cb_2d->addItem(name, map[name]);
+                    if (comment.size() > 0)
+                    {
+                        cb_2d->setItemData(cb_2d->count() - 1, comment, Qt::ToolTipRole);
+                    }
                 }
             }
             else if (m_vars->variable[i]->dims.size() == 3)  // Todo: HACK: assumed time, xy-space, layer
             {
                 if (mesh_var_name == text)
                 {
-                    if (m_vars->variable[i]->sediment_index != -1)
+                    if (m_vars->variable[i]->sediment_index != -1 ||
+                        m_grid_file->get_file_type() == FILE_TYPE::KISS)
                     {
                         cb_2d->addItem(name, map[name]);
+                        if (comment.size() > 0)
+                        {
+                            cb_2d->setItemData(cb_2d->count() - 1, comment, Qt::ToolTipRole);
+                        }
                     }
                     else
                     {
                         cb_3d->addItem(name, map[name]);
+                        if (comment.size() > 0)
+                        {
+                            cb_3d->setItemData(cb_2d->count() - 1, comment, Qt::ToolTipRole);
+                        }
                     }
                 }
             }
@@ -612,6 +641,10 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
                 if (mesh_var_name == text)
                 {
                     cb_3d->addItem(name, map[name]);
+                    if (comment.size() > 0)
+                    {
+                        cb_3d->setItemData(cb_2d->count() - 1, comment, Qt::ToolTipRole);
+                    }
                 }
             }
         }
@@ -623,7 +656,24 @@ int MapTimeManagerWindow::create_parameter_selection_2d_3d(QString text, QComboB
     cb_3d->blockSignals(false);
 
     connect(cb_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_2d(int)));
+    connect(cb_2d,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this,
+            [=](int index)
+            {
+                cb_2d->setToolTip(cb_2d->itemData(index, Qt::ToolTipRole).toString());
+            }
+    );
+
     connect(cb_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_3d(int)));
+    connect(cb_3d,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this,
+            [=](int index)
+            {
+                cb_3d->setToolTip(cb_3d->itemData(index, Qt::ToolTipRole).toString());
+            }
+    );
 
     return 0;
 }
@@ -636,31 +686,31 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
 
     int status = 1;
     int row = 0;
-    struct _mesh1d_string ** m1d = m_ugrid_file->get_mesh1d_string();
-    if (m_ugrid_file->get_mesh1d_string() != nullptr)
+    struct _mesh1d_string ** m1d = m_grid_file->get_mesh1d_string();
+    if (m_grid_file->get_mesh1d_string() != nullptr)
     {
         m_show_check_1d = check_parameter_1d();
         hl->addWidget(m_show_check_1d, row, 0);
-        QString txt = QString::fromStdString(m1d[0]->var_name);
+        QString txt = QString::fromUtf8((m1d[0]->var_name).c_str());
         m_cb_1d = create_parameter_selection_1d(txt);
         hl->addWidget(m_cb_1d, row, 1);
     }
 
-    struct _mesh_contact_string ** m1d2d = m_ugrid_file->get_mesh_contact_string();
-    if (m_ugrid_file->get_mesh_contact_string() != nullptr)
+    struct _mesh_contact_string ** m1d2d = m_grid_file->get_mesh_contact_string();
+    if (m_grid_file->get_mesh_contact_string() != nullptr)
     {
         row += 1;
         m_show_check_1d2d = check_parameter_1d2d();
         hl->addWidget(m_show_check_1d2d, row, 0);
-        QString txt = QString::fromStdString(m1d2d[0]->mesh_contact);
+        QString txt = QString::fromUtf8((m1d2d[0]->mesh_contact).c_str());
         m_cb_1d2d = create_parameter_selection_1d2d(txt);
         hl->addWidget(m_cb_1d2d, row, 1);
     }
 
-    struct _mesh2d_string ** m2d = m_ugrid_file->get_mesh2d_string();
-    if (m_ugrid_file->get_mesh2d_string() != nullptr)
+    struct _mesh2d_string ** m2d = m_grid_file->get_mesh2d_string();
+    if (m_grid_file->get_mesh2d_string() != nullptr)
     {
-        QString txt = QString::fromStdString(m2d[0]->var_name);
+        QString txt = QString::fromUtf8((m2d[0]->var_name).c_str());
         m_cb_2d = new QComboBox();
         m_cb_3d = new QComboBox();
         status = create_parameter_selection_2d_3d(txt, m_cb_2d, m_cb_3d);
@@ -687,7 +737,7 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             {
                 m_layerLabelPrefix = new QLabel(tr("Layer"));
                 m_layerLabelSuffix = new QLabel(tr("[0,0]"));
-                m_layerLabelSuffix->setText(tr("[1,%1]").arg(var->layer_center[var->nr_hydro_layers - 1]));
+                m_layerLabelSuffix->setText(tr("[1,%1]").arg(var->nr_hydro_layers));
                 m_sb_hydro_layer = spinbox_layer(var->nr_hydro_layers);
                 connect(m_sb_hydro_layer, SIGNAL(valueChanged(int)), this, SLOT(spinbox_value_changed(int)));
 
@@ -719,27 +769,77 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
                 hl->addLayout(sp_group_3d_bed, row, 1);
             }
         }
+
+        //======================================================================
+        m_crb_check = new QCheckBox();  // color ramp button check box
+        m_crb_check->setChecked(true);
+        mRampButton = new QgsColorRampButton();
+        mRampButton->setShowNull(false);
+        mRampButton->setColorRamp(QgsStyle::defaultStyle()->colorRamp("Turbo"));
+        mRampButton->setMaximumWidth(300);
+
+        row += 1;
+        hl->addWidget(m_crb_check, row, 0);
+        hl->addWidget(mRampButton, row, 1);
+
+        connect(mRampButton, &QgsColorRampButton::colorRampChanged,
+                this, &MapTimeManagerWindow::color_ramped_changed);
+        connect(mRampButton, &QgsColorRampButton::colorRampChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend);
+        connect(m_crb_check, &QCheckBox::stateChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend);
+        connect(m_crb_check, &QCheckBox::stateChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend);
+
+        vl_tw_iso->addLayout(hl);
+        vl_tw_iso->addStretch();
+
+        return vl_tw_iso;
     }
-    vl_tw_iso->addLayout(hl);
-    m_ramph = create_color_ramp(VECTOR_NONE);
-    vl_tw_iso->addWidget(m_ramph);
-
-    vl_tw_iso->addStretch();
-
-    return vl_tw_iso;
 }
+void MapTimeManagerWindow::color_ramped_changed()
+{
+    if (!mRampButton || !mLegendOverlay)
+        return;
+
+    QgsColorRamp* buttonRamp = mRampButton->colorRamp();
+    if (!buttonRamp)
+        return;
+
+    // Set ramp in overlay (overlay clones it internally)
+    mLegendOverlay->setRamp(buttonRamp);
+    m_MyCanvas->setRamp(buttonRamp);
+
+    // Force immediate repaint of overlay
+    mLegendOverlay->update();
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+void MapTimeManagerWindow::show_hide_overlay_legend()
+{
+    mLegendOverlay->setShow(false);
+    if (m_show_check_2d->checkState() == Qt::Checked &&
+        m_crb_check->checkState() == Qt::Checked)
+    {
+        QgsColorRamp* buttonRamp = mRampButton->colorRamp();
+        mLegendOverlay->setRamp(buttonRamp);
+        m_MyCanvas->setRamp(buttonRamp);
+        mLegendOverlay->setShow(true);
+    }
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+
 QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
 {
     int status = 1;
     int row = -1;
 
-    struct _mesh2d_string ** m2d = m_ugrid_file->get_mesh2d_string();
+    struct _mesh2d_string ** m2d = m_grid_file->get_mesh2d_string();
     if (m2d == nullptr) { return nullptr; }
 
     m_cb_vec_2d = new QComboBox();
     m_cb_vec_3d = new QComboBox();
     m_cb_vec_2d->setMinimumSize(100, 22);
-    QString text = QString::fromStdString(m2d[0]->var_name);
+    QString text = QString::fromUtf8((m2d[0]->var_name).c_str());
     status = create_parameter_selection_vector_2d_3d(text, m_cb_vec_2d, m_cb_vec_3d);
     if (m_cb_vec_2d->count() == 0 && m_cb_vec_3d->count() == 0) { return nullptr;  }
 
@@ -768,7 +868,7 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
         struct _variable * var = m_vars->variable[strings[3].toInt()];
         m_layerLabelPrefix_vec = new QLabel(tr("Layer"));
         m_layerLabelSuffix_vec = new QLabel(tr("[0,0]"));
-        m_layerLabelSuffix_vec->setText(tr("[1,%1]").arg(var->layer_center[var->nr_hydro_layers - 1]));
+        m_layerLabelSuffix_vec->setText(tr("[1,%1]").arg(var->layer_center[var->nr_hydro_layers]));
         m_sb_hydro_layer_vec = spinbox_layer(var->nr_hydro_layers);
         connect(m_sb_hydro_layer_vec, SIGNAL(valueChanged(int)), this, SLOT(spinbox_vec_value_changed(int)));
 
@@ -780,17 +880,86 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
         row += 1;
         gl->addLayout(sp_group_vec, row, 1);
     }
-    
+
+        //======================================================================
+        m_crb_check_vec = new QCheckBox();  // color ramp button check box
+        mRampButton_vec = new QgsColorRampButton();
+        mRampButton_vec->setShowNull(false);
+        mRampButton_vec->setColorRamp(QgsStyle::defaultStyle()->colorRamp("Turbo"));
+        mRampButton_vec->setMaximumWidth(300);
+
+        row += 1;
+        gl->addWidget(m_crb_check_vec, row, 0);
+        gl->addWidget(mRampButton_vec, row, 1);
+
+        connect(mRampButton_vec, &QgsColorRampButton::colorRampChanged,
+                this, &MapTimeManagerWindow::color_ramped_changed_dir);
+        connect(mRampButton_vec, &QgsColorRampButton::colorRampChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
+        connect(m_crb_check_vec, &QCheckBox::stateChanged,
+                this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
+
+        connect(mRampButton_vec, &QgsColorRampButton::colorRampChanged, this, [this]() {
+        mLegendOverlay->setRamp(mRampButton_vec->colorRamp());  // drawing the legend
+        m_MyCanvas->setRamp(mRampButton_vec->colorRamp());  // drawing the data
+        });    
+
     vl_tw_vec->addLayout(gl);
-    m_ramph_vec_dir = create_color_ramp(VECTOR_DIRECTION);
-    vl_tw_vec->addWidget(m_ramph_vec_dir);
     vl_tw_vec->addStretch();
 
     connect(m_cb_vec_2d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_2d(int)));
+    connect(m_cb_vec_2d, &QComboBox::releaseMouse, this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
+    //connect(m_cb_vec_2d, &QComboBox::releaseMouse, this, &MapTimeManagerWindow::show_hide_overlay_unit_vector);
     connect(m_cb_vec_3d, SIGNAL(activated(int)), this, SLOT(cb_clicked_vec_3d(int)));
 
     return vl_tw_vec;
 }
+void MapTimeManagerWindow::show_hide_overlay_legend_dir()
+{
+    mLegendOverlay->setShow(false);
+    if (m_cb_vec_2d->currentIndex() == 0) { return; }
+    if (m_show_check_vec_2d->checkState() == Qt::Checked &&
+        m_crb_check_vec->checkState() == Qt::Checked)
+    {
+        QgsColorRamp* buttonRamp = mRampButton_vec->colorRamp();
+        mLegendOverlay->setRamp(buttonRamp);
+        m_MyCanvas->setRamp(buttonRamp);
+        mLegendOverlay->setShow(true);
+    }
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+void MapTimeManagerWindow::show_hide_overlay_unit_vector()
+{
+    mUnitVectorOverlay->setShow(false);
+    if (m_cb_vec_2d->currentIndex() == 1) { return; }
+
+    if (m_show_check_vec_2d->checkState() == Qt::Checked)
+    {
+        mUnitVectorOverlay->setShow(true);
+    }
+    else if (m_show_check_vec_2d->checkState() == Qt::Unchecked)
+    {
+    }
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+void MapTimeManagerWindow::color_ramped_changed_dir()
+{
+    if (!mRampButton_vec || !mLegendOverlay)
+        return;
+
+    QgsColorRamp* buttonRamp = mRampButton_vec->colorRamp();
+    if (!buttonRamp)
+        return;
+
+    // Set ramp in overlay (overlay clones it internally)
+    mLegendOverlay->setRamp(buttonRamp);
+    m_MyCanvas->setRamp(buttonRamp);
+
+    // Force immediate repaint of overlay
+    mLegendOverlay->update();
+    m_QGisIface->mapCanvas()->refresh();  // redraw canvas immediately
+}
+
 int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, QComboBox * cb_vec_2d, QComboBox * cb_vec_3d)
 {
     int vec_cartesian_component_2dh = 0;
@@ -812,28 +981,30 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
         if (m_vars->variable[i]->time_series)
         {
             QMap<QString, int> map;
-            QString std_name = QString::fromStdString(m_vars->variable[i]->standard_name).trimmed();
+            QString std_name = QString::fromUtf8((m_vars->variable[i]->standard_name).c_str());
             if (std_name.isEmpty())
             {
-                std_name = QString::fromStdString(m_vars->variable[i]->long_name).trimmed();  // Todo: HACK for sediment, they do not have standard names
+                std_name = QString::fromUtf8((m_vars->variable[i]->long_name).c_str());  // Todo: HACK for sediment, they do not have standard names
             }
             map[std_name] = i;
-            QString mesh_var_name = QString::fromStdString(m_vars->variable[i]->mesh).trimmed();
-            if (m_vars->variable[i]->dims.size() == 2)  // Todo: HACK: assumed time, xy-space
+            QString mesh_var_name = QString::fromUtf8((m_vars->variable[i]->mesh).c_str());
+            if (m_vars->variable[i]->dims.size() == 2 ||
+                m_vars->variable[i]->dims.size() == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
+                m_vars->variable[i]->dims.size() == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS)  // Todo: HACK: assumed time, xy-space
             {
                 if (mesh_var_name == text)
                 {
                     if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                     {
                         vec_cartesian_component_2dh += 1;
-                        if (std_name.contains("sea_water_x_velocity")) { cart_2dh[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                        if (std_name.contains("sea_water_y_velocity")) { cart_2dh[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                        if (std_name.contains("sea_water_x_velocity")) { cart_2dh[1] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
+                        if (std_name.contains("sea_water_y_velocity")) { cart_2dh[2] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
                     }
                     if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                     {
                         vec_spherical_component_2dh += 1;
-                        if (std_name.contains("eastward_sea_water_velocity")) { spher_2dh[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                        if (std_name.contains("northward_sea_water_velocity")) { spher_2dh[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                        if (std_name.contains("eastward_sea_water_velocity")) { spher_2dh[1] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
+                        if (std_name.contains("northward_sea_water_velocity")) { spher_2dh[2] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
                     }
                     if (vec_cartesian_component_2dh == 2 || vec_spherical_component_2dh == 2)
                     {
@@ -861,14 +1032,14 @@ int MapTimeManagerWindow::create_parameter_selection_vector_2d_3d(QString text, 
                 if (std_name.contains("sea_water_x_velocity") || std_name.contains("sea_water_y_velocity"))
                 {
                     vec_cartesian_component += 1;
-                    if (std_name.contains("sea_water_x_velocity")) { cart_layer[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                    if (std_name.contains("sea_water_y_velocity")) { cart_layer[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                    if (std_name.contains("sea_water_x_velocity")) { cart_layer[1] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
+                    if (std_name.contains("sea_water_y_velocity")) { cart_layer[2] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
                 }
                 if (std_name.contains("eastward_sea_water_velocity") || std_name.contains("northward_sea_water_velocity"))
                 {
                     vec_spherical_component += 1;
-                    if (std_name.contains("eastward_sea_water_velocity")) { spher_layer[1] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
-                    if (std_name.contains("northward_sea_water_velocity")) { spher_layer[2] = QString::fromStdString(m_vars->variable[i]->var_name).trimmed(); }
+                    if (std_name.contains("eastward_sea_water_velocity")) { spher_layer[1] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
+                    if (std_name.contains("northward_sea_water_velocity")) { spher_layer[2] = QString::fromUtf8((m_vars->variable[i]->var_name).c_str()); }
                 }
                 if (vec_cartesian_component == 2 || vec_spherical_component == 2)
                 {
@@ -928,6 +1099,7 @@ void MapTimeManagerWindow::start_reverse()
 void MapTimeManagerWindow::pause_time_loop()
 {
     //QMessageBox::warning(0, tr("Message"), QString("Goto_begin pressed"));
+    pb_pauze->setChecked(true);
     stop_time_loop = true;
 }
 void MapTimeManagerWindow::start_forward()
@@ -1220,7 +1392,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
             m_sb_hydro_layer->setValue(var->nr_hydro_layers);
         }
         int i_lay = m_sb_hydro_layer->value();
-        m_layerLabelSuffix->setText(tr("[1,%1]").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("[1,%1]").arg(var->nr_hydro_layers));
     }
 
     if (var->nr_bed_layers > 0)
@@ -1231,7 +1403,7 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
             m_sb_bed_layer->setValue(var->nr_bed_layers);
         }
         int i_lay = m_sb_bed_layer->value();
-        m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->nr_bed_layers));
     }
     
     m_MyCanvas->reset_min_max();
@@ -1285,6 +1457,15 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_3d != nullptr) { m_show_check_vec_3d->setChecked(false); }
         draw_time_dependent_vector(m_cb_vec_2d, item);
+        
+        if (m_cb_vec_2d->currentIndex() == 0) { 
+            mLegendOverlay->setShow(false); 
+            mUnitVectorOverlay->setShow(true); 
+        }
+        if (m_cb_vec_2d->currentIndex() == 1) { 
+            show_hide_overlay_legend_dir();
+            mUnitVectorOverlay->setShow(false); 
+        }
     }
 }
 void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
@@ -1311,7 +1492,7 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
         m_sb_hydro_layer_vec->setValue(var->nr_hydro_layers);
     }
     int i_lay = m_sb_hydro_layer_vec->value();
-    m_layerLabelSuffix_vec->setText(tr("[1,%1]").arg(var->layer_center[i_lay - 1]));
+    m_layerLabelSuffix_vec->setText(tr("[1,%1]").arg(var->nr_hydro_layers));
 
     m_MyCanvas->reset_min_max();
     if (!m_show_map_vector_3d)
@@ -1495,6 +1676,7 @@ void MapTimeManagerWindow::show_hide_map_data_1d2d()
             m_pb_cur_view->setEnabled(false);
         }
     }
+
     cb_clicked_1d2d(m_cb_1d2d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_2d()
@@ -1513,7 +1695,7 @@ void MapTimeManagerWindow::show_hide_map_data_2d()
             m_pb_cur_view->setEnabled(false);
         }
     }
-
+    show_hide_overlay_legend();
     cb_clicked_2d(m_cb_2d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_3d()
@@ -1539,10 +1721,14 @@ void MapTimeManagerWindow::show_hide_map_vector_2d()
     if (m_show_check_vec_2d->checkState() == Qt::Checked)
     {
         m_show_map_vector_2d = true;
+        if (m_cb_vec_2d->currentIndex() == 0) {
+            mUnitVectorOverlay->setShow(true);
+        }
     }
     else if (m_show_check_vec_2d->checkState() == Qt::Unchecked)
     {
         m_show_map_vector_2d = false;
+        mUnitVectorOverlay->setShow(false);
     }
     cb_clicked_vec_2d(m_cb_vec_2d->currentIndex());
 }
@@ -1567,11 +1753,11 @@ void MapTimeManagerWindow::spinbox_value_changed(int i_lay)
     struct _variable * var = m_vars->variable[jj];
     if (var->nr_hydro_layers > 0)
     {
-        m_layerLabelSuffix->setText(tr("[1,%1]").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("[1,%1]").arg(var->nr_hydro_layers ));
     }
     if (var->nr_bed_layers > 0)
     {
-        m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->layer_center[i_lay - 1]));
+        m_layerLabelSuffix->setText(tr("Bed layer: %1").arg(var->nr_bed_layers));
     }
     m_show_check_3d->setChecked(false);
     m_show_check_3d->setChecked(true);
@@ -1586,7 +1772,7 @@ void MapTimeManagerWindow::spinbox_vec_value_changed(int i_lay)
     int jj = slist[3].toInt();
 
     struct _variable * var = m_vars->variable[jj];
-    m_layerLabelSuffix_vec->setText(tr("[1,%1]").arg(var->layer_center[i_lay - 1]));
+    m_layerLabelSuffix_vec->setText(tr("[1,%1]").arg(var->nr_hydro_layers));
     m_show_check_vec_3d->setChecked(false);
     m_show_check_vec_3d->setChecked(true);
     return;
@@ -1598,8 +1784,8 @@ void MapTimeManagerWindow::clicked_current_view()
     {
         if (m_show_map_data_1d)
         {
-            struct _mesh1d* mesh1d = m_ugrid_file->get_mesh_1d();
-            struct _mapping* mapping = m_ugrid_file->get_grid_mapping();
+            struct _mesh1d* mesh1d = m_grid_file->get_mesh_1d();
+            struct _mapping* mapping = m_grid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
@@ -1623,8 +1809,8 @@ void MapTimeManagerWindow::clicked_current_view()
         }
         else if (m_show_map_data_2d)
         {
-            struct _mesh2d * mesh2d = m_ugrid_file->get_mesh_2d();
-            struct _mapping * mapping = m_ugrid_file->get_grid_mapping();
+            struct _mesh2d * mesh2d = m_grid_file->get_mesh_2d();
+            struct _mapping * mapping = m_grid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());
@@ -1653,8 +1839,8 @@ void MapTimeManagerWindow::clicked_current_view()
         }
         else if (m_show_map_data_3d)
         {
-            struct _mesh2d* mesh2d = m_ugrid_file->get_mesh_2d();
-            struct _mapping* mapping = m_ugrid_file->get_grid_mapping();
+            struct _mesh2d* mesh2d = m_grid_file->get_mesh_2d();
+            struct _mapping* mapping = m_grid_file->get_grid_mapping();
 
             QString date_time = curr_date_time->dateTime().toString("yyyy-MM-dd, HH:mm:ss");
             int time_indx = m_q_times.indexOf(curr_date_time->dateTime());

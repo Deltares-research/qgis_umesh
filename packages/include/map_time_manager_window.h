@@ -32,14 +32,22 @@
 
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
+#include <memory>
 
-#include "ugrid.h"
+#include "grid.h"
 #include "MyDrawingCanvas.h"
 #include "my_date_time_edit.h"
-#include "QColorRampEditor.h"
 #include "map_property_window.h"
 #include "map_property.h"
 #include "add_current_view_window.h"
+#include "QgsColorRampButton.h"
+#include "QgsStyle.h"
+#include <qgslinesymbollayer.h>
+#include <QgsTextRenderer.h>
+#include <QgsRenderContext.h>
+
+#include "legend_overlay.h"
+#include "unit_vector_overlay.h"
 
 #if defined WIN64
 #define _sleep _sleep
@@ -55,7 +63,7 @@ public:
     static int object_count;
 
     public:
-        MapTimeManagerWindow(QgisInterface *, UGRID *, MyCanvas *);
+        MapTimeManagerWindow(QgisInterface *, GRID *, MyCanvas *);
         ~MapTimeManagerWindow();
         static int get_count();
 
@@ -91,17 +99,27 @@ public:
         void show_hide_map_data_3d();
         void show_hide_map_vector_2d();
         void show_hide_map_vector_3d();
+        void show_hide_overlay_legend();
+        void show_hide_overlay_legend_dir();
+        void show_hide_overlay_unit_vector();
         void spinbox_value_changed(int);
         void spinbox_vec_value_changed(int);
         void contextMenu(const QPoint &);
         void clicked_current_view();
+
+        void stacked_window_changed(int idx);
+
+
+    private:
+        void color_ramped_changed();
+        void color_ramped_changed_dir();
 
     public:
         QDockWidget * map_panel;
 
     private:
         QgisInterface * m_QGisIface; // Pointer to the QGIS interface object
-        UGRID * m_ugrid_file;
+        GRID * m_grid_file;
         MyCanvas * m_MyCanvas;
         void create_window();
         QGridLayout * create_date_time_layout();
@@ -124,12 +142,9 @@ public:
         QVBoxLayout * create_vector_selection_2d_3d();
         int create_parameter_selection_vector_2d_3d(QString, QComboBox *, QComboBox *);
 
-        QColorRampEditor * create_color_ramp(vector_quantity);
         void draw_time_dependent_data_1d(QComboBox *, int);
         void draw_time_dependent_data(QComboBox *, int);
         void draw_time_dependent_vector(QComboBox *, int);
-        QColorRampEditor * m_ramph;
-        QColorRampEditor * m_ramph_vec_dir;
 
         void setValue(int);
         void setSliderValue(QDateTime);
@@ -163,6 +178,8 @@ public:
         QCheckBox * m_show_check_3d = nullptr;
         QCheckBox * m_show_check_vec_2d = nullptr;
         QCheckBox * m_show_check_vec_3d = nullptr;
+        QCheckBox * m_crb_check = nullptr;  // color ramp button
+        QCheckBox * m_crb_check_vec = nullptr;  // color ramp button (vector direction)
         QLabel * m_layerLabelPrefix;
         QLabel * m_layerLabelPrefix_vec;
         QLabel * m_layerLabelSuffix;
@@ -183,6 +200,14 @@ public:
         vector_quantity m_vector_draw;
         MapPropertyWindow * m_map_property_window;
         AddCurrentViewWindow * m_cur_view;
+
+        NumericLegendOverlay * mLegendOverlay;
+        UnitVectorOverlay * mUnitVectorOverlay;
+
+        QgsColorRampButton * mRampButton;
+        QgsColorRampButton * mRampButton_vec;
+        QString m_ramp_name;
+        int m_stacked_window;
 };
 
 #endif

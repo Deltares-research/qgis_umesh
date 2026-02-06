@@ -1,10 +1,10 @@
+#ifndef __PERF_TIMER_H__
+#define __PERF_TIMER_H__
 //
 // Programmer: Jan Mooiman
 // Date: 14 April 2021
 // Email: jan.mooiman@deltares.nl
 //
-#ifndef PERF_TIMER_H
-#define PERF_TIMER_H
 #include <cstdlib>
 #include <vector>
 #include <iostream>
@@ -13,7 +13,7 @@
 #include <chrono>
 #include <iterator>
 
-#define DO_TIMING 0
+#define DO_TIMING 1
 #if DO_TIMING == 1
 #   define TOSTRING(x) #x
 #   define START_TIMER(x) tt = TestTimer::get_instance(); tt->start(TOSTRING(x), __FILE__, __FUNCTION__, __LINE__);
@@ -45,17 +45,15 @@ public:
         level(level), name(std::move(name)), filename(std::move(fileName)), functionname(std::move(functionName)), line_number(lineNumber)
     {
         start = std::chrono::high_resolution_clock::now();
-        elapse_time = 0.0;
-        level = 0;
         nr_calls = 1;
     }
 
-    bool running;
-    std::string name;
+    bool running = false;
+    std::string name = "";
     int level;
     int line_number;
     int nr_calls;
-    double elapse_time;
+    double elapse_time = 0.0;
     std::string filename;
     std::string functionname;
     std::chrono::high_resolution_clock::time_point start;
@@ -106,4 +104,4 @@ public:
         std::string m_functionname;
         int m_line_number;
 };
-#endif  // PERF_TIMER_H
+#endif  // __PERF_TIMER_H__
