@@ -114,28 +114,22 @@ After selecting \menu{Output\menuarrow Show map output} the window \window{Map O
 \begin{subfigure}[b]{0.48\textwidth}
 	\centering
 	\includegraphics[width=\textwidth]{pictures/map_output_animation_window_scalar.png}
-	\caption{Layout scalar quantities; sigma layer at $\sigma = -0.1$ (near the surface)\label{fig:map_output_a}}
+	\caption{Layout scalar quantities.\label{fig:map_output_a}}
 	% file used for this picture: ugrid_1d2d3d_map.nc
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.48\textwidth}
 	\centering
 	\includegraphics[width=\textwidth]{pictures/map_output_animation_window_vector.png}
-	\caption{Layout vector quantities; fixed layer at $z = -1.99402$ (near the surface).}
+	\caption{Layout vector quantities.}
 \end{subfigure}
     \caption{\window{Map Output Animation} window for scalars and vector.}
-	% file used for this picture: agulhas_map.nc
+	% file used for this picture: FM-VZM_0004_map.nc.nc
 \end{figure}
 
 After pressing the right mouse button in this window, the window \window{Map Output Settings} will appear (see  \autoref{sec:map_output_settings} and \autoref{fig:map_output_settings}).
 
-After pressing the right mouse button on a square of the colorramp support point the window \window{Set Colorramp Value} appear.
-With this window you are able to change the value of the colorramp support points (see \autoref{fig:set_colorramp_value.p}).
-\begin{figure}[H]
-	%\centering
-	\includegraphics[width=0.625\textwidth]{pictures/set_colorramp_value.png}
-	\caption{Window \window{Set Colorramp Value}\label{fig:currentviewlayerpanel}}
-\end{figure}
+The colorramp can be changed by using the QGIS standard operations on colorramps.
 %------------------------------------------------------------------------------
 \subparagraph*{Add current view to QGIS layer panel}
 \Note This button is only enabled for scalar quantities.
@@ -187,7 +181,7 @@ The following quantities can be specified in the window presented by \autoref{fi
 	Minimum value: \quad specify the minimum value for the scalar.\newline
 	Maximum value: \quad specify the maximum value for the scalar.\\
 	\textbf{Vector scaling} & \\
-	Vector scaling & The vector of length 1 (ex.\ \SI{1}{\metre\per\second}) is scaled with this factor. The drawing length is based on the averaged cell size.
+	Vector scaling & The vector of length 1 (ex.\ \SI{1}{[\metre\per\second]}) is scaled with this factor. The drawing length is based on the averaged cell size.
 \end{longtable}
 %--------------------------------------------------------------------------------
 \subsection{Help}
@@ -212,7 +206,7 @@ Shows the user manual
 Shows the about box.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.4\textwidth]{pictures/menu_help_about.png}
+    \includegraphics[width=0.6\textwidth]{pictures/menu_help_about.png}
     \caption{About box}
 \end{figure}
 %--------------------------------------------------------------------------------
@@ -238,7 +232,7 @@ Some \qgis panels are shown after reading a \netcdf map-file.
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.95\textwidth]{pictures/panel_log_message.png}
-	\caption{The \qgis layer panel after reading a \netcdf map-file.\label{fig:panel_layer}}
+	\caption{The \qgis layer panel after reading a \netcdf map-file.\label{fig:log_panel_layer}}
 \end{figure}
 %------------------------------------------------------------------------------
 \section{Examples figures}

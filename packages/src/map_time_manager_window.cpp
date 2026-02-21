@@ -769,33 +769,33 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
                 hl->addLayout(sp_group_3d_bed, row, 1);
             }
         }
-
-        //======================================================================
-        m_crb_check = new QCheckBox();  // color ramp button check box
-        m_crb_check->setChecked(true);
-        mRampButton = new QgsColorRampButton();
-        mRampButton->setShowNull(false);
-        mRampButton->setColorRamp(QgsStyle::defaultStyle()->colorRamp("Turbo"));
-        mRampButton->setMaximumWidth(300);
-
-        row += 1;
-        hl->addWidget(m_crb_check, row, 0);
-        hl->addWidget(mRampButton, row, 1);
-
-        connect(mRampButton, &QgsColorRampButton::colorRampChanged,
-                this, &MapTimeManagerWindow::color_ramped_changed);
-        connect(mRampButton, &QgsColorRampButton::colorRampChanged,
-                this, &MapTimeManagerWindow::show_hide_overlay_legend);
-        connect(m_crb_check, &QCheckBox::stateChanged,
-                this, &MapTimeManagerWindow::show_hide_overlay_legend);
-        connect(m_crb_check, &QCheckBox::stateChanged,
-                this, &MapTimeManagerWindow::show_hide_overlay_legend);
-
-        vl_tw_iso->addLayout(hl);
-        vl_tw_iso->addStretch();
-
-        return vl_tw_iso;
     }
+
+    //======================================================================
+    m_crb_check = new QCheckBox();  // color ramp button check box
+    m_crb_check->setChecked(true);
+    mRampButton = new QgsColorRampButton();
+    mRampButton->setShowNull(false);
+    mRampButton->setColorRamp(QgsStyle::defaultStyle()->colorRamp("Turbo"));
+    mRampButton->setMaximumWidth(300);
+
+    row += 1;
+    hl->addWidget(m_crb_check, row, 0);
+    hl->addWidget(mRampButton, row, 1);
+
+    connect(mRampButton, &QgsColorRampButton::colorRampChanged,
+            this, &MapTimeManagerWindow::color_ramped_changed);
+    connect(mRampButton, &QgsColorRampButton::colorRampChanged,
+            this, &MapTimeManagerWindow::show_hide_overlay_legend);
+    connect(m_crb_check, &QCheckBox::stateChanged,
+            this, &MapTimeManagerWindow::show_hide_overlay_legend);
+    connect(m_crb_check, &QCheckBox::stateChanged,
+            this, &MapTimeManagerWindow::show_hide_overlay_legend);
+
+    vl_tw_iso->addLayout(hl);
+    vl_tw_iso->addStretch();
+
+    return vl_tw_iso;
 }
 void MapTimeManagerWindow::color_ramped_changed()
 {
@@ -817,7 +817,35 @@ void MapTimeManagerWindow::color_ramped_changed()
 void MapTimeManagerWindow::show_hide_overlay_legend()
 {
     mLegendOverlay->setShow(false);
-    if (m_show_check_2d->checkState() == Qt::Checked &&
+    if (m_show_check_1d != nullptr &&
+        m_show_check_1d->checkState() == Qt::Checked &&
+        m_crb_check->checkState() == Qt::Checked)
+    {
+        QgsColorRamp* buttonRamp = mRampButton->colorRamp();
+        mLegendOverlay->setRamp(buttonRamp);
+        m_MyCanvas->setRamp(buttonRamp);
+        mLegendOverlay->setShow(true);
+    }
+    if (m_show_check_1d2d != nullptr &&
+        m_show_check_1d2d->checkState() == Qt::Checked &&
+        m_crb_check->checkState() == Qt::Checked)
+    {
+        QgsColorRamp* buttonRamp = mRampButton->colorRamp();
+        mLegendOverlay->setRamp(buttonRamp);
+        m_MyCanvas->setRamp(buttonRamp);
+        mLegendOverlay->setShow(true);
+    }
+    if (m_show_check_2d != nullptr &&
+        m_show_check_2d->checkState() == Qt::Checked &&
+        m_crb_check->checkState() == Qt::Checked)
+    {
+        QgsColorRamp* buttonRamp = mRampButton->colorRamp();
+        mLegendOverlay->setRamp(buttonRamp);
+        m_MyCanvas->setRamp(buttonRamp);
+        mLegendOverlay->setShow(true);
+    }
+    if (m_show_check_3d != nullptr &&
+        m_show_check_3d->checkState() == Qt::Checked &&
         m_crb_check->checkState() == Qt::Checked)
     {
         QgsColorRamp* buttonRamp = mRampButton->colorRamp();
@@ -1511,6 +1539,14 @@ void MapTimeManagerWindow::cb_clicked_vec_3d(int item)
         if (m_show_check_3d != nullptr) { m_show_check_3d->setChecked(false); }
         if (m_show_check_vec_2d != nullptr) { m_show_check_vec_2d->setChecked(false); }
         draw_time_dependent_vector(m_cb_vec_3d, item);
+        if (m_cb_vec_3d->currentIndex() == 0) { 
+            mLegendOverlay->setShow(false); 
+            mUnitVectorOverlay->setShow(true); 
+        }
+        if (m_cb_vec_3d->currentIndex() == 1) { 
+            show_hide_overlay_legend_dir();
+            mUnitVectorOverlay->setShow(false); 
+        }
     }
 }
 void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
@@ -1658,6 +1694,7 @@ void MapTimeManagerWindow::show_hide_map_data_1d()
             m_pb_cur_view->setEnabled(false);
         }
     }
+    show_hide_overlay_legend();
     cb_clicked_1d(m_cb_1d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_1d2d()
@@ -1676,7 +1713,7 @@ void MapTimeManagerWindow::show_hide_map_data_1d2d()
             m_pb_cur_view->setEnabled(false);
         }
     }
-
+    show_hide_overlay_legend();
     cb_clicked_1d2d(m_cb_1d2d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_data_2d()
@@ -1714,6 +1751,7 @@ void MapTimeManagerWindow::show_hide_map_data_3d()
             m_pb_cur_view->setEnabled(false);
         }
     }
+    show_hide_overlay_legend();
     cb_clicked_3d(m_cb_3d->currentIndex());
 }
 void MapTimeManagerWindow::show_hide_map_vector_2d()
