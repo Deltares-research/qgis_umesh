@@ -1,5 +1,5 @@
-#ifndef dock_window_H
-#define dock_window_H
+#ifndef __DOCK_WINDOW_H__
+#define __DOCK_WINDOW_H__
 
 #include <QObject>
 #include <QAction>
@@ -8,7 +8,6 @@
 #include <QComboBox>
 #include <QDateTime>
 #include <QDateTimeEdit>
-#include <QDesktopWidget>
 #include <QDockWidget>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -30,6 +29,7 @@
 #include <qgisinterface.h>
 #include <qgisplugin.h>
 
+#include <algorithm>  // std::max
 #include <direct.h> // for getcwd
 #include <stdlib.h> // for MAX_PATH
 #include <memory>

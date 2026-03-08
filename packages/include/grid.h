@@ -447,7 +447,7 @@ private:
     int get_attribute(int, int, char *, char **);
     int get_attribute(int, int, char *, std::string *);
     int get_attribute(int, int, std::string, std::string *);
-    int get_attribute(int, int, char *, double *);
+    int get_attribute(int, int, const char *, double *);
     int get_attribute(int, int, char *, int *);
     int get_attribute(int, int, char *, long *);
     int get_dimension(int, char *, size_t *);
@@ -455,13 +455,13 @@ private:
     int get_dimension_var(int, std::string, size_t *);
     std::vector<std::string> get_string_var(int, std::string);
     std::vector<std::string> get_dimension_names(int, std::string);
-    int get_coordinate(char *, char *, int, double *, double *);
+    //int get_coordinate(char *, char *, int, double *, double *);
 
     int read_variables_with_cf_role(int, std::string, std::string, int, int *);
     int read_grid_mapping(int, std::string);
     int determine_mesh1d_edge_length(struct _mesh1d*, struct _ntw_edges*);
     int create_mesh1d_nodes(struct _mesh1d *, struct _ntw_edges *, struct _ntw_geom *);
-    int create_mesh_contacts(struct _ntw_nodes *, struct _ntw_edges *, struct _ntw_geom *);
+    //int create_mesh_contacts(struct _ntw_nodes *, struct _ntw_edges *, struct _ntw_geom *);
 
     double * permute_array(double *, std::vector<long>, std::vector<long>);
     long get_index_in_c_array(long, long, long, long, long, long, long, long);

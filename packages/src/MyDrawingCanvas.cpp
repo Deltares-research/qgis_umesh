@@ -493,7 +493,7 @@ void MyCanvas::draw_vector_arrow()
         vector<double> coord_by(2);
         vector<double> dx(5);
         vector<double> dy(5);
-        size_t dimens = -1;
+        size_t dimens = SIZE_MAX;
         double vscale;
         double missing_value = -INFINITY;
         double b_len;
@@ -567,7 +567,7 @@ void MyCanvas::draw_vector_arrow()
                 dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
                 dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jamx)
             {
-                std::string std_string = m_coordinate_type[1].toUtf8();
+                std::string std_string = m_coordinate_type[1].toStdString();
                 DataValuesProvider2D<double>std_u_vec_at_node = m_grid_file->get_variable_values(std_string);
                 u_value = std_u_vec_at_node.GetValueAtIndex(m_current_step, 0);
                 numXY = std_u_vec_at_node.m_numXY;
@@ -579,7 +579,7 @@ void MyCanvas::draw_vector_arrow()
             {
                 if (m_hydro_layer > 0)
                 {
-                    std::string std_string = m_coordinate_type[1].toUtf8();
+                    std::string std_string = m_coordinate_type[1].toStdString();
                     DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(std_string);
                     numXY = std_u_vec_at_face_3d.m_numXY;
                     u_value = std_u_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
@@ -731,7 +731,7 @@ void MyCanvas::draw_vector_arrow()
             pix_dy = getPixelHeight(coord_x[0], coord_y[0]);
                 
             int tw = getTextWidth("Unit vector");
-            int th = getTextHeight("Unit vector");
+            // int th = getTextHeight("Unit vector");  // text height is not used
             int vw = 2 * tw;  // vector width (length)
 
             double v_length = wx(vw) - wx(0);
@@ -755,12 +755,12 @@ void MyCanvas::draw_vector_arrow()
 
             std::vector<int> pix_x(5);
             std::vector<int> pix_y(5);
-            for (int i = coord_x.size()-1; i >= 0; --i)
+            for (int i = coord_x.size() - 1; i >= 0; --i)  // counter 'i' have to be an integer, there is a test on >=
             {
                 pix_x[i] = qx(coord_x[i] - coord_x[0]);
                 pix_y[i] = qy(coord_y[i] - coord_y[0]);
             }
-            for (int i = coord_x.size()-1; i >= 0; --i)
+            for (int i = coord_x.size() - 1; i >= 0; --i)  // counter 'i' have to be an integer, there is a test on >=
             {
                 pix_x[i] = pix_x[i] - pix_x[0];
                 pix_y[i] = pix_y[i] - pix_y[0];
@@ -811,10 +811,10 @@ void MyCanvas::draw_vector_direction_at_face()
             dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::SGRID ||
             dimens == 3 && m_grid_file->get_file_type() == FILE_TYPE::KISS) // 2D: time, nodes (= imax*jmax)
         {
-            std::string std_string = m_coordinate_type[1].toUtf8();
+            std::string std_string = m_coordinate_type[1].toStdString();
             DataValuesProvider2D<double>std_u_vec_at_face = m_grid_file->get_variable_values(std_string);
             u_value = std_u_vec_at_face.GetValueAtIndex(m_current_step, 0);
-            std_string = m_coordinate_type[2].toUtf8();
+            std_string = m_coordinate_type[2].toStdString();
             DataValuesProvider2D<double>std_v_vec_at_face = m_grid_file->get_variable_values(std_string);
             v_value = std_v_vec_at_face.GetValueAtIndex(m_current_step, 0);
         }
@@ -822,10 +822,10 @@ void MyCanvas::draw_vector_direction_at_face()
         {
             if (m_hydro_layer > 0)
             {
-                std::string std_string = m_coordinate_type[1].toUtf8();
+                std::string std_string = m_coordinate_type[1].toStdString();
                 DataValuesProvider3D<double> std_u_vec_at_face_3d = m_grid_file->get_variable_3d_values(std_string);
                 u_value = std_u_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
-                std_string = m_coordinate_type[2].toUtf8();
+                std_string = m_coordinate_type[2].toStdString();
                 DataValuesProvider3D<double> std_v_vec_at_face_3d = m_grid_file->get_variable_3d_values(std_string);
                 v_value = std_v_vec_at_face_3d.GetValueAtIndex(m_current_step, m_hydro_layer - 1, 0);
             }
@@ -1013,7 +1013,7 @@ void MyCanvas::draw_vector_direction_at_node()
                 // draw polygon
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
                 double z = (direction - m_z_min)/(m_z_max-m_z_min);
-                QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
+                col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
 
@@ -1422,11 +1422,13 @@ void MyCanvas::set_grid_file(GRID * grid_file)
     m_grid_file = grid_file;
 }
 //-----------------------------------------------------------------------------
-void MyCanvas::determine_min_max(double * z, int length, double * z_min, double * z_max, vector<QColor> &rgb_color, double missing_value)
+void MyCanvas::determine_min_max(double * z, size_t length, double * z_min, double * z_max, vector<QColor> &rgb_color, double missing_value)
 {
+    *z_min = INFINITY;
+    *z_max = -INFINITY;
     if (m_property->get_dynamic_legend())
     {
-        for (int i = 0; i < length; i++)
+        for (size_t i = 0; i < length; i++)
         {
             if (z[i] != missing_value)
             {
@@ -1462,13 +1464,13 @@ void MyCanvas::determine_min_max(double * z, int length, double * z_min, double 
     }
     m_overlay->setRange(*z_min, *z_max);
 }
-void MyCanvas::determine_min_max(double * z, int length, double * z_min, double * z_max, double missing_value)
+void MyCanvas::determine_min_max(double * z, size_t length, double * z_min, double * z_max, double missing_value)
 {
+    *z_min = INFINITY;
+    *z_max = -INFINITY;
     if (m_property->get_dynamic_legend())
     {
-        *z_min = INFINITY;
-        *z_max = -INFINITY;
-        for (int i = 0; i < length; i++)
+        for (size_t i = 0; i < length; i++)
         {
             if (z[i] != missing_value)
             {
@@ -2314,6 +2316,7 @@ void MyCanvas::MyMouseMoveEvent      ( QMouseEvent * me)
     if (listener != NULL)
     {
         //QMessageBox::warning(0, "Message", QString(tr("MyCanvas::MyMouseMoveEvent: %1").arg(me->button())));
+        //qt6 listener->onMouseMove(wx(me->position().x()), wy(me->position().y()), (AbstractCanvasListener::ButtonState) me->button() );
         listener->onMouseMove(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
     }
 }
@@ -2324,6 +2327,7 @@ void MyCanvas::MyMousePressEvent     ( QMouseEvent * me)
 {
     if (listener != NULL)
     {
+        //qt6 listener->onMouseDown(wx(me->position().x()), wy(me->position().y()), (AbstractCanvasListener::ButtonState) me->button() );
         listener->onMouseDown(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
     }
 }
@@ -2340,6 +2344,8 @@ void MyCanvas::MyMouseReleaseEvent   (QgsMapMouseEvent * me)
     //    distance_calc.setEllipsoid(crs.ellipsoidAcronym())
     //    distance_calc.setEllipsoidalMode(crs.geographicFlag())
     //    distance = distance_calc.measureLine([self._startPt, endPt]) / 1000
+    //qt6 QgsPointXY p1 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->position().x(), me->position().y()));
+    //qt6 QgsPointXY p2 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->position().x()+50, me->position().y()+50));  // 
     QgsPointXY p1 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x(), me->y()));
     QgsPointXY p2 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x()+50, me->y()+50));  // 
     length = 12345.0;
@@ -2354,6 +2360,7 @@ void MyCanvas::MyMouseReleaseEvent   (QgsMapMouseEvent * me)
     );
     if (listener != NULL)
     {
+        //qt6 listener->onMouseUp(wx(me->position().x()), wy(me->position().y()), (AbstractCanvasListener::ButtonState) me->button() );
         listener->onMouseUp(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
     }
     mMapCanvas->update();

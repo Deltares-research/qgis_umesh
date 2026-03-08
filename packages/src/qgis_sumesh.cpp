@@ -63,7 +63,7 @@ void qgis_umesh::onWillRemoveChildren(QgsLayerTreeNode* node, int indexFrom, int
             // Remove the file entry belonging to this group
 
             QString timings_file(m_working_dir + QString("/qgis_sumesh_timing.log"));
-            std::string std_string = timings_file.toUtf8();
+            std::string std_string = timings_file.toStdString();
             PRINT_TIMERN(std_string);
             CLEAR_TIMER();
             m_working_dir = QString("");  // make it empty
@@ -341,7 +341,7 @@ QIcon qgis_umesh::get_icon_file(QDir home_dir, QString file)
     // if file does not exists, return the default icon
 #include "pattern.xpm"
     QIcon icon_path;
-    QFileInfo path = QString(home_dir.canonicalPath()) + file;
+    QFileInfo path = QFileInfo( QString(home_dir.canonicalPath()) + file );
     if (path.exists())
     {
         icon_path = QIcon(path.absoluteFilePath());  // todo: Should be from the PlotCFTS install directory
@@ -498,21 +498,16 @@ void qgis_umesh::about()
 {
     char* text;
     char* source_url;
-    QString* qtext;
-    QString* qsource_url;
     QString* msg_text;
     text = getversionstring_qgis_umesh();
-    qtext = new QString(text);
     source_url = getsourceurlstring_qgis_umesh();
-    qsource_url = new QString(source_url);
 
     msg_text = new QString("Deltares\n");
     msg_text->append("Plot results on UGRID/SGRID compliant meshes. 1D mesh with its geometry, 1D2D, 2D and 3D meshes.\n");
-    msg_text->append(qtext);
+    msg_text->append(text);
     msg_text->append("\nSource: ");
-    msg_text->append(qsource_url);
+    msg_text->append(source_url);
     QMessageBox::about(NULL, tr("About"), *msg_text);
-
 }
 //
 //-----------------------------------------------------------------------------
@@ -674,7 +669,7 @@ void qgis_umesh::open_file_his_cf(QFileInfo ncfile)
 #if DO_TIMING == 1
     auto start = std::chrono::steady_clock::now();
 #endif
-    char* fname = strdup(ncfile.absoluteFilePath().toUtf8());
+    char* fname = strdup(ncfile.absoluteFilePath().toStdString().data());
     int status = nc_open(fname, NC_NOWRITE, &ncid);
     (void)nc_close(ncid);
     if (status != NC_NOERR)
@@ -761,7 +756,7 @@ void qgis_umesh::open_file_mdu()
 void qgis_umesh::open_file_mdu(QString ffname)
 {
     QFileInfo jsonfile(ffname);
-    std::string fname = jsonfile.absoluteFilePath().toUtf8();
+    std::string fname = jsonfile.absoluteFilePath().toStdString();
     JSON_READER* pt_mdu = new JSON_READER(fname);
     if (pt_mdu == nullptr)
     {
@@ -821,10 +816,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = obser_file.toUtf8();
+                fname = obser_file.toStdString();
                 JSON_READER* pt_obs = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Observations\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str())).arg(grid_file->get_filename().fileName()));
@@ -856,10 +851,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = extold_file.toUtf8();
+                fname = extold_file.toStdString();
                 JSON_READER* pt_extold_file = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("External forcing (old format)\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str())).arg(grid_file->get_filename().fileName()));
@@ -891,10 +886,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = ext_file.toUtf8();
+                fname = ext_file.toStdString();
                 JSON_READER* pt_ext_file = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("External forcing\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str())).arg(grid_file->get_filename().fileName()));
@@ -925,10 +920,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = struct_file.toUtf8();
+                fname = struct_file.toStdString();
                 JSON_READER* pt_struct_file = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Structures\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str())).arg(grid_file->get_filename().fileName()));
@@ -959,10 +954,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = drypoints_file.toUtf8();
+                fname = drypoints_file.toStdString();
                 JSON_READER* pt_file = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Dry points\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str())).arg(grid_file->get_filename().fileName()));
@@ -993,10 +988,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = abs_fname.toUtf8();
+                fname = abs_fname.toStdString();
                 JSON_READER* pt_profloc = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Profile location\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str())).arg(grid_file->get_filename().fileName()));
@@ -1027,10 +1022,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = obs_cross_file.toUtf8();
+                fname = obs_cross_file.toStdString();
                 JSON_READER* pt_obs_cross_file = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                 std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                 std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Observation cross-sections\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str())).arg(grid_file->get_filename().fileName()));
@@ -1061,10 +1056,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = thin_dam_file.toUtf8();
+                fname = thin_dam_file.toStdString();
                 JSON_READER* pt_thin_dam_file = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Thin dams\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str()).arg(grid_file->get_filename().fileName())));
@@ -1095,10 +1090,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = fix_weir_file.toUtf8();
+                fname = fix_weir_file.toStdString();
                 JSON_READER* pt_file = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Fixed weirs\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str()).arg(grid_file->get_filename().fileName())));
@@ -1130,10 +1125,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = full_file_name.toUtf8();
+                fname = full_file_name.toStdString();
                 JSON_READER* pt_file = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Cross-section\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8((ncfile[0]).c_str()).arg(grid_file->get_filename().fileName())));
@@ -1164,10 +1159,10 @@ void qgis_umesh::open_file_mdu(QString ffname)
             }
             else
             {
-                fname = full_file_name.toUtf8();
+                fname = full_file_name.toStdString();
                 JSON_READER* pt_file = new JSON_READER(fname);
                 GRID* grid_file = m_grid_file[_fil_index];
-                std::string std_string = grid_file->get_filename().fileName().toUtf8();
+                std::string std_string = grid_file->get_filename().fileName().toStdString();
                 if (std_string != ncfile[0])
                 {
                     //QMessageBox::warning(0, tr("qgis_umesh::open_file_mdu"), tr("Retention\nMesh files not the same:\n\"%1\",\n\"%2\".").arg(QString::fromUtf8(ncfile[0].c_str())).arg(grid_file->get_filename().fileName()));
@@ -1224,7 +1219,7 @@ void qgis_umesh::open_file_link1d2d_json()
 
         for (QStringList::Iterator it = QFilenames->begin(); it != QFilenames->end(); ++it) {
             fname = *it;
-            open_file_link1d2d_json(fname);
+            open_file_link1d2d_json(QFileInfo(fname));
         }
 
         this->pgBar->setValue(1000);
@@ -1238,7 +1233,7 @@ void qgis_umesh::open_file_link1d2d_json()
 }
 void qgis_umesh::open_file_link1d2d_json(QFileInfo jsonfile)
 {
-    std::string fname = jsonfile.absoluteFilePath().toUtf8();
+    std::string fname = jsonfile.absoluteFilePath().toStdString();
     JSON_READER* pt_link1d2d = new JSON_READER(fname);
     if (pt_link1d2d == nullptr)
     {
@@ -1291,7 +1286,7 @@ void qgis_umesh::open_file_obs_point_json()
 
         for (QStringList::Iterator it = QFilenames->begin(); it != QFilenames->end(); ++it) {
             fname = *it;
-            open_file_obs_point_json(fname);
+            open_file_obs_point_json(QFileInfo(fname));
         }
 
         this->pgBar->setValue(1000);
@@ -1306,7 +1301,7 @@ void qgis_umesh::open_file_obs_point_json()
 }
 void qgis_umesh::open_file_obs_point_json(QFileInfo jsonfile)
 {
-    std::string fname = jsonfile.absoluteFilePath().toUtf8();
+    std::string fname = jsonfile.absoluteFilePath().toStdString();
     JSON_READER* pt_file = new JSON_READER(fname);
     if (pt_file == nullptr)
     {
@@ -1497,7 +1492,7 @@ void qgis_umesh::activate_layers()
                 QString epsg_code = _crs.authid();
                 QStringList parts = epsg_code.split(':');
                 long epsg = parts.at(1).toInt();
-                grid_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
+                grid_file->set_grid_mapping_epsg(epsg, epsg_code.toStdString());
             }
             fname = grid_file->get_filename().fileName();  // just the filename
 
@@ -1734,7 +1729,7 @@ void qgis_umesh::activate_observation_layers()
                 QString epsg_code = _crs.authid();
                 QStringList parts = epsg_code.split(':');
                 long epsg = parts.at(1).toInt();
-                long status = _his_cf_file->set_grid_mapping_epsg(epsg, epsg_code.toUtf8().constData());
+                long status = _his_cf_file->set_grid_mapping_epsg(epsg, epsg_code.toStdString());
             }
             int pgbar_value = 500;  // start of pgbar counter
 

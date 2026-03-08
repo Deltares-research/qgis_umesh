@@ -244,18 +244,22 @@ QGridLayout * MapTimeManagerWindow::create_date_time_layout()
     QString format_date_time = QString("yyyy-MM-dd HH:mm:ss");
 
     // TODO set minimum and maximum within range first datetime and last datetime
+    //qt6 QTimeZone utcZone = QTimeZone::utc();  // Creates a QTimeZone for UTC
+    //qt6 first_date_time->setTimeZone(utcZone);
     first_date_time->setTimeSpec(Qt::UTC);
     first_date_time->setToolTip(QString("Time frame UTC"));
     first_date_time->setDateTime(m_q_times[0]);
     first_date_time->setDisplayFormat(format_date_time);
     first_date_time->setWrapping(true);
     
+    //qt6 curr_date_time->setTimeZone(utcZone);
     curr_date_time->setTimeSpec(Qt::UTC);
     curr_date_time->setToolTip(QString("Time frame UTC"));
     curr_date_time->setDateTime(m_q_times[0]);
     curr_date_time->setDisplayFormat(format_date_time);
     curr_date_time->setWrapping(true);
     
+    //qt6 last_date_time->setTimeZone(utcZone);
     last_date_time->setTimeSpec(Qt::UTC);
     last_date_time->setToolTip(QString("Time frame UTC"));
     last_date_time->setDateTime(m_q_times[m_q_times.size() - 1]);
@@ -1915,7 +1919,7 @@ QIcon MapTimeManagerWindow::get_icon_file(QDir home_dir, QString file)
     // if file does not exists, return the default icon 
 #include "pattern.xpm"
     QIcon icon_path;
-    QFileInfo path = QString(home_dir.canonicalPath()) + file;
+    QFileInfo path = QFileInfo(QString(home_dir.canonicalPath()) + file);
     if (path.exists())
     {
         icon_path = QIcon(path.absoluteFilePath());  // todo: Should be from the PlotCFTS install directory

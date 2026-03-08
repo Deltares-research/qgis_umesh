@@ -7,7 +7,6 @@
 #include <QComboBox>
 #include <QDateTime>
 #include <QDateTimeEdit>
-#include <QDesktopWidget>
 #include <QDockWidget>
 #include <QFont>
 #include <QGridLayout>

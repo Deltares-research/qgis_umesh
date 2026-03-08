@@ -1,5 +1,6 @@
-#ifndef _INC_ADD_CURRENT_VIEW_WINDOW
-#define _INC_ADD_CURRENT_VIEW_WINDOW
+#ifndef __INC_ADD_CURRENT_VIEW_WINDOW_H__
+#define __INC_ADD_CURRENT_VIEW_WINDOW_H__
+
 #include <QCheckBox>
 #include <QDateTimeEdit>
 #include <QDockWidget>

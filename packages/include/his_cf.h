@@ -33,7 +33,7 @@ struct _observation {
 };
 
 struct _location {
-    QString name;  // needed QString due to using the QTextCode
+    QString name;
     std::vector<double> x;
     std::vector<double> y;
 };
@@ -67,7 +67,6 @@ public:
     long read_parameters();
 
     long read_times();
-    long read_variables();
 
     struct _global_attributes * get_global_attributes(void);
     std::vector<_location_type *> get_observation_location();

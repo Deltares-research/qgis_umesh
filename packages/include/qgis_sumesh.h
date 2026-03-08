@@ -9,7 +9,6 @@
 
 #include <QAction>
 #include <QComboBox>
-#include <QDesktopWidget>
 #include <QIcon>
 #include <QLayout> 
 #include <QMenu>

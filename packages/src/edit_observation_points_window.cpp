@@ -52,9 +52,9 @@ void EditObsPoints::create_window()
     this->setWindowTitle(QString("Edit observation points"));
     QFrame * frame = new QFrame(this);
     QWidget * wid = new QWidget(frame);
-    QVBoxLayout * vl = new QVBoxLayout();
+    //QVBoxLayout * vl = new QVBoxLayout();
     QGridLayout * gl = new QGridLayout();
-    QAction * _show_p = new QAction();
+    //QAction * _show_p = new QAction();
 
     QFrame* line = new QFrame();
     line->setFrameShape(QFrame::HLine);

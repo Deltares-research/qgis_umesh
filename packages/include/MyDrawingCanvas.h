@@ -215,8 +215,8 @@ protected:
 private:
     // functions
     void paint( QPainter * );
-    void determine_min_max(double *, int, double *, double *, std::vector<QColor> &, double);
-    void determine_min_max(double *, int, double *, double *, double);
+    void determine_min_max(double *, size_t, double *, double *, std::vector<QColor> &, double);
+    void determine_min_max(double *, size_t, double *, double *, double);
     double statistics_averaged_length_of_cell(struct _variable *);
 
     // variables

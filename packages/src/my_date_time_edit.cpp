@@ -29,7 +29,7 @@ void MyQDateTimeEdit::stepBy(int step)
     case 1:
         if (maximumDateTime() > _qdt[_nsteps])
         {
-            _nsteps = std::min(_qdt.size()-1, _nsteps + step);
+            _nsteps = std::min(int(_qdt.size()-1), _nsteps + step);
             setDateTime(_qdt[_nsteps]);
         }
         break;

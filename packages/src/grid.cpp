@@ -212,7 +212,7 @@ long GRID::get_global_attribute_value(std::string att_name, std::string* att_val
     bool att_name_found = false;
     for (int i = 0; i < global_attributes->count; i++)
     {
-        if (att_name_found) { exit; }
+        if (att_name_found) { exit(1); }
         if (global_attributes->attribute[i]->name == att_name)
         {
             att_name_found = true;
@@ -238,7 +238,7 @@ char* GRID::get_filename()
 #else
 QFileInfo GRID::get_filename()
 {
-    return m_grid_file_name;
+    return QFileInfo(m_grid_file_name);
 }
 #endif
 //------------------------------------------------------------------------------
@@ -720,6 +720,10 @@ long GRID::read_times()
 
                     QDate date = QDate::fromString(date_time.at(2), "yyyy-MM-dd");
                     QTime time = QTime::fromString(date_time.at(3), "hh:mm:ss");
+
+                    //qt6 QTimeZone utcZone = QTimeZone::utc();  // Creates a QTimeZone for UTC
+                    //qt6 RefDate = new QDateTime(date, time);
+                    //qt6 RefDate->setTimeZone(utcZone);
                     RefDate = new QDateTime(date, time, Qt::UTC);
 
 #if defined(DEBUG)
@@ -919,6 +923,7 @@ long GRID::read_ugrid_variables()
                 status = nc_inq_dimname(this->m_ncid, var_dimids[j], var_name_c);
                 
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // Todo: HACK typecast: size_t -> long
+                //qt6 if (time_series[0].nr_times > 0 && QString::fromUtf8(m_dim_names[var_dimids[j]]) == *(time_series[0].dim_name))
                 if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == time_series[0].dim_name)
                 {
                     m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
@@ -941,7 +946,7 @@ long GRID::read_ugrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
                     {
                         contains_time_dimension = true;
                         break;
@@ -994,7 +999,7 @@ long GRID::read_ugrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
                     {
                         contains_time_dimension = true;
                         break;
@@ -1203,7 +1208,7 @@ long GRID::read_ugrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
                     {
                         contains_time_dimension = true;
                         break;
@@ -1422,7 +1427,7 @@ long GRID::read_sgrid_variables()
                 status = nc_inq_dimname(this->m_ncid, var_dimids[j], var_name_c);
 
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // Todo: HACK typecast: size_t -> long
-                if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == time_series[0].dim_name)
+                if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == *(time_series[0].dim_name))
                 {
                     m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
                 }
@@ -1446,7 +1451,7 @@ long GRID::read_sgrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
                     {
                         contains_time_dimension = true;
                         break;
@@ -1499,7 +1504,7 @@ long GRID::read_sgrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
                     {
                         contains_time_dimension = true;
                         break;
@@ -1706,7 +1711,7 @@ long GRID::read_sgrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
                     {
                         contains_time_dimension = true;
                         break;
@@ -2239,15 +2244,15 @@ DataValuesProvider4D<double> GRID::get_variable_4d_values(const std::string var_
                     {
                         if (m_mesh_vars->variable[i]->location == "edge")
                         {
-                            dims[3] = m2d->edge[0]->x.size();
+                            dims[3] = (long)m2d->edge[0]->x.size();
                         }
                         if (m_mesh_vars->variable[i]->location == "face")
                         {
-                            dims[3] = m2d->face[0]->x.size();
+                            dims[3] = (long)m2d->face[0]->x.size();
                         }
                         if (m_mesh_vars->variable[i]->location == "node")
                         {
-                            dims[3] = m2d->node[0]->x.size();
+                            dims[3] = (long)m2d->node[0]->x.size();
                         }
                         dim_to[j] = 3;
                         if (j != 3)
@@ -2734,6 +2739,9 @@ std::vector<std::string> GRID::get_string_var(int ncid, std::string var_name)
                 janm = QString("");
                 for (int k2 = 0; k2 < name_len; k2++)
                 {
+                    //qt6 auto toUtf8 = QStringDecoder(QStringDecoder::Utf8);
+                    //qt6 QByteArray encodedString = *(location_strings + k * name_len + k2);
+                    //qt6 QString str = toUtf8(encodedString);
                     QTextCodec* codec2 = QTextCodec::codecForName("UTF-8");
                     QString str = codec2->toUnicode(*(location_strings + k * name_len + k2));
                     janm = janm + str;
@@ -3385,7 +3393,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             m_mesh2d->node[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->node[nr_mesh2d - 1]->count);
             status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_node_name.c_str(), &var_id);
             status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-            status = get_attribute(this->m_ncid, var_id, "_FillValue", &m_mesh2d->node[nr_mesh2d - 1]->fill_value);
+            status = get_attribute(this->m_ncid, var_id, "_FillValue", &(m_mesh2d->node[nr_mesh2d - 1]->fill_value));
             if (att_value == "projection_x_coordinate" || att_value == "longitude")
             {
                 status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->node[nr_mesh2d - 1]->x.data());
@@ -3409,7 +3417,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                     m_mesh2d->edge[nr_mesh2d - 1]->y = std::vector<double>(m_mesh2d->edge[nr_mesh2d - 1]->count);
                     status = nc_inq_varid(this->m_ncid, m_mesh2d_strings[nr_mesh2d - 1]->x_edge_name.c_str(), &var_id);
                     status = get_attribute(this->m_ncid, var_id, "standard_name", &att_value);
-                    status = get_attribute(this->m_ncid, var_id, "_FillValue", &m_mesh2d->edge[nr_mesh2d - 1]->fill_value);
+                    status = get_attribute(this->m_ncid, var_id, "_FillValue", &(m_mesh2d->edge[nr_mesh2d - 1]->fill_value));
                     if (att_value == "projection_x_coordinate" || att_value == "longitude")
                     {
                         status = nc_get_var_double(this->m_ncid, var_id, m_mesh2d->edge[nr_mesh2d - 1]->x.data());
@@ -3524,8 +3532,8 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                 START_TIMERN(edge_node_connectivity);
 
                 // TODO improve the performance of this algorithm
-                int max_edges_per_face = m_dimids[dimids[0]] + m_dimids[dimids[1]] - m_mesh2d->face_nodes.size();  // only applicable if number of dimensions is two
-                int total_edges = m_dimids[dimids[0]] * m_dimids[dimids[1]];
+                size_t max_edges_per_face = m_dimids[dimids[0]] + m_dimids[dimids[1]] - m_mesh2d->face_nodes.size();  // only applicable if number of dimensions is two
+                size_t total_edges = m_dimids[dimids[0]] * m_dimids[dimids[1]];
                 mesh2d_edge_nodes = (int*)malloc(sizeof(int) * total_edges * _two);
                 m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes = (int**)malloc(sizeof(int*) * total_edges);
                 for (int i = 0; i < total_edges; i++)
@@ -3533,11 +3541,11 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                     m_mesh2d->edge[nr_mesh2d - 1]->edge_nodes[i] = mesh2d_edge_nodes + _two * i;
                 }
 
-                int edge_i;
-                int jp;
-                for (int k = 0; k < m_mesh2d->face_nodes.size(); k++)
+                size_t edge_i;
+                size_t jp;
+                for (size_t k = 0; k < m_mesh2d->face_nodes.size(); k++)
                 {
-                    for (int j = 0; j < max_edges_per_face; j++)
+                    for (size_t j = 0; j < max_edges_per_face; j++)
                     {
                         edge_i = k * max_edges_per_face + j;  // edge number
                         jp = j < max_edges_per_face - 1 ? j + 1 : 0;
@@ -3587,7 +3595,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
                         ummap.insert(mypair);
                     }
                 }
-                size_t cnt = -1;
+                size_t cnt = SIZE_MAX;
                 for (auto it = ummap.begin(); it != ummap.end(); ++it)
                 {
                     cnt++;
@@ -3672,7 +3680,7 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             status = nc_inq_varndims(this->m_ncid, var_id, &ndims);
             dimids = (int*)malloc(sizeof(int) * ndims);
             status = nc_inq_vardimid(this->m_ncid, var_id, dimids);
-            int imax_node = m_dimids[dimids[0]];
+            int imax_node = (int)m_dimids[dimids[0]];
             int jmax_node = 0;
             if (m_ftype == FILE_TYPE::KISS)
             {
@@ -3847,8 +3855,8 @@ int GRID::read_variables_with_cf_role(int i_var, std::string var_name, std::stri
             }
             else
             {
-                m_max = m_dimids[dimids[0]] + 1;  // HACK: 1 more node then faces, only true for structured grids
-                n_max = m_dimids[dimids[1]] + 1;  // HACK: 1 more node then faces, only true for structured grids
+                m_max = (int)m_dimids[dimids[0]] + 1;  // HACK: 1 more node then faces, only true for structured grids
+                n_max = (int)m_dimids[dimids[1]] + 1;  // HACK: 1 more node then faces, only true for structured grids
             }
 
             std::vector<int> value;
@@ -4093,7 +4101,7 @@ int GRID::get_attribute(int ncid, int i_var, std::string att_name, std::string *
     return status;
 }
 //------------------------------------------------------------------------------
-int GRID::get_attribute(int ncid, int i_var, char * att_name, double * att_value)
+int GRID::get_attribute(int ncid, int i_var, const char * att_name, double * att_value)
 {
     int status = -1;
 

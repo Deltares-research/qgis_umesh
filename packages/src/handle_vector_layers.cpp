@@ -247,9 +247,9 @@ void HVL::create_vector_layer_data_on_edges(QString fname, _variable * var, stru
             miss_point = QgsPointXY(missing_value, missing_value);
             QgsPolylineXY line;
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(edges->count);
+            MyFeatures.reserve((int)edges->count);
 
-            for (int j = 0; j < edges->count; j++)
+            for (size_t j = 0; j < edges->count; j++)
             {
                 point.clear();
                 int p1 = edges->edge_nodes[j][0];
@@ -335,9 +335,9 @@ void HVL::create_vector_layer_edge_type(QString fname, _variable * var, struct _
                 QgsPointXY miss_point;
                 miss_point = QgsPointXY(missing_value, missing_value);
                 QgsFeatureList MyFeatures;
-                MyFeatures.reserve(edges->count);
+                MyFeatures.reserve((int)edges->count);
 
-                for (int j = 0; j < edges->count; j++)
+                for (size_t j = 0; j < edges->count; j++)
                 {
                     if (var->flag_values[i] == int(z_value[j]))
                     {
@@ -565,11 +565,11 @@ void HVL::create_vector_layer_geometry(QString fname, QString layer_name, struct
             for (int i = 0; i < ntw_geom->nr_ntw; i++)
             {
                 QgsFeatureList MyFeatures;
-                MyFeatures.reserve(ntw_geom->geom[i]->count);
-                for (int j = 0; j < ntw_geom->geom[i]->count; j++)
+                MyFeatures.reserve((int)ntw_geom->geom[i]->count);
+                for (size_t j = 0; j < ntw_geom->geom[i]->count; j++)
                 {
                     // int nsig = long(log10(ntw_geom->geom[i]->nodes[j]->count)) + 1;
-                    QVector<QgsPointXY> points(ntw_geom->geom[i]->nodes[j]->count);
+                    QVector<QgsPointXY> points((int)ntw_geom->geom[i]->nodes[j]->count);
                     for (int k = 0; k < ntw_geom->geom[i]->nodes[j]->count; k++)
                     {
                         double x1 = ntw_geom->geom[i]->nodes[j]->x[k];
@@ -807,9 +807,9 @@ void HVL::create_vector_layer_observation_point(QString fname, QString layer_nam
             vl->updatedFields();
 
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(obs_points->location.size());
+            MyFeatures.reserve((int)obs_points->location.size());
             // int nsig = long(log10(obs_points->location.size())) + 1;
-            for (int j = 0; j < obs_points->location.size(); j++)
+            for (size_t j = 0; j < obs_points->location.size(); j++)
             {
                 //QMessageBox::warning(0, tr("Warning"), tr("Count: %1, %5\nCoord: (%2,%3)\nName : %4\nLong name: %5").arg(ntw_nodes->nodes[i]->count).arg(ntw_nodes->nodes[i]->x[j]).arg(ntw_nodes->nodes[i]->y[j]).arg(ntw_nodes->nodes[i]->id[j]).arg(ntw_nodes->nodes[i]->name[j]));
 
@@ -912,9 +912,9 @@ void HVL::create_vector_layer_observation_polyline(QString fname, QString layer_
 
             QVector<QgsPointXY> point;
             QgsFeatureList MyFeatures;
-            MyFeatures.reserve(obs_points->location.size());
+            MyFeatures.reserve((int)obs_points->location.size());
 
-            for (int i = 0; i < obs_points->location.size(); i++)
+            for (size_t i = 0; i < obs_points->location.size(); i++)
             {
                 //for (int j = 0; j < obs_points->location[i]; j++)
                 {
@@ -2144,9 +2144,9 @@ void HVL::create_vector_layer_crs_observation_point(GRID * grid_file, JSON_READE
     dp_vl->addAttributes(lMyAttribField);
     vl->updatedFields();
     QgsFeatureList MyFeatures;
-    MyFeatures.reserve(obs_name.size());
+    MyFeatures.reserve((int)obs_name.size());
 
-    for (int j = 0; j < obs_name.size(); j++)
+    for (size_t j = 0; j < obs_name.size(); j++)
     {
         QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(x[j], y[j]));
         QgsFeature MyFeature;
@@ -2231,9 +2231,9 @@ void HVL::create_vector_layer_chainage_observation_point(GRID * grid_file, JSON_
         {
             QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), 
             QString(tr("Inconsistent data set. JSON data: ") + QString::fromUtf8(json_key.c_str()).trimmed()
-                + "\nObservation points: " + (int)obs_name.size()
-                + "\nBranches: " + (int)branch_name.size()
-                + "\nChainage: " + (int)chainage.size()));
+                + "\nObservation points: " + QString::number(obs_name.size())
+                + "\nBranches: " + QString::number(branch_name.size())
+                + "\nChainage: " + QString::number(chainage.size())));
             STOP_TIMER(create_vector_layer_chainage_observation_point);
             return;
         }
@@ -2264,7 +2264,7 @@ void HVL::create_vector_layer_chainage_observation_point(GRID * grid_file, JSON_
         //dp_vl->createSpatialIndex();
         vl->updatedFields();
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(obs_name.size());
+        MyFeatures.reserve((int)obs_name.size());
 
         struct _ntw_geom * ntw_geom = grid_file->get_network_geometry();
         struct _ntw_edges * ntw_edges = grid_file->get_network_edges();
@@ -2272,7 +2272,7 @@ void HVL::create_vector_layer_chainage_observation_point(GRID * grid_file, JSON_
         double xp;
         double yp;
         double rotation;
-        for (int j = 0; j < obs_name.size(); j++)
+        for (size_t j = 0; j < obs_name.size(); j++)
         {
             status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
             QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
@@ -2371,8 +2371,8 @@ void HVL::create_vector_layer_sample_point(GRID * grid_file, JSON_READER * prop_
     dp_vl->addAttributes(lMyAttribField);
     vl->updatedFields();
     QgsFeatureList MyFeatures;
-    MyFeatures.reserve(z_value.size());
-    for (int j = 0; j < z_value.size(); j++)
+    MyFeatures.reserve((int)z_value.size());
+    for (size_t j = 0; j < z_value.size(); j++)
     {
         QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(x[j], y[j]));
         QgsFeature MyFeature;
@@ -2467,9 +2467,9 @@ void HVL::create_vector_layer_1D_observation_cross_section(GRID* grid_file, JSON
         if (names.size() != branch_name.size() || branch_name.size() != chainage.size() || names.size() != chainage.size())
         {
             QMessageBox::warning(0, tr("Message: create_1D_observation_point_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
-                + "\nObservation points: " + (int)names.size()
-                + "\nBranches: " + (int)branch_name.size()
-                + "\nChainage: " + (int)chainage.size());
+                + "\nObservation points: " + QString::number(names.size())
+                + "\nBranches: " + QString::number(branch_name.size())
+                + "\nChainage: " + QString::number(chainage.size()));
             STOP_TIMER(create_vector_layer_1D_observation_cross_section);
             return;
         }
@@ -2500,7 +2500,7 @@ void HVL::create_vector_layer_1D_observation_cross_section(GRID* grid_file, JSON
         //dp_vl->createSpatialIndex();
         vl->updatedFields();
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(names.size());
+        MyFeatures.reserve((int)names.size());
 
         struct _ntw_geom* ntw_geom = grid_file->get_network_geometry();
         struct _ntw_edges* ntw_edges = grid_file->get_network_edges();
@@ -2508,7 +2508,7 @@ void HVL::create_vector_layer_1D_observation_cross_section(GRID* grid_file, JSON
         double xp;
         double yp;
         double rotation;
-        for (int j = 0; j < names.size(); j++)
+        for (size_t j = 0; j < names.size(); j++)
         {
             status = compute_location_along_geometry(ntw_geom, ntw_edges, branch_name[j], chainage[j], &xp, &yp, &rotation);
             QgsGeometry MyPoints = QgsGeometry::fromPointXY(QgsPointXY(xp, yp));
@@ -2612,12 +2612,12 @@ void HVL::create_vector_layer_2D_observation_cross_section(GRID* grid_file, JSON
         }
 
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(poly_lines.size());
-        for (int ii = 0; ii < poly_lines.size(); ii++)
+        MyFeatures.reserve((int)poly_lines.size());
+        for (size_t ii = 0; ii < poly_lines.size(); ii++)
         {
             point.clear();
             lines.clear();
-            for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
+            for (size_t j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
             {
                 double x1 = poly_lines[ii][0][j];
                 double y1 = poly_lines[ii][1][j];
@@ -2626,10 +2626,10 @@ void HVL::create_vector_layer_2D_observation_cross_section(GRID* grid_file, JSON
             lines.append(point);
 
             point.clear();
-            int nr_points = poly_lines[ii][0].size();
+            size_t nr_points = poly_lines[ii][0].size();
             std::vector<double> chainage(nr_points);
             chainage[0] = 0.0;
-            for (int j = 1; j < nr_points; j++)
+            for (size_t j = 1; j < nr_points; j++)
             {
                 double x1 = poly_lines[ii][0][j - 1];
                 double y1 = poly_lines[ii][1][j - 1];
@@ -2774,12 +2774,12 @@ void HVL::create_vector_layer_structure(GRID * grid_file, JSON_READER * prop_tre
         QVector<QgsPointXY> point;
         QgsMultiPolylineXY lines;
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(fname.size());
+        MyFeatures.reserve((int)fname.size());
 
         std::vector<std::string> line_name;
         std::vector<std::vector<std::vector<double>>> poly_lines;
 
-        for (int i = 0; i < fname.size(); i++)
+        for (size_t i = 0; i < fname.size(); i++)
         {
             lines.clear();
             point.clear();
@@ -2809,10 +2809,10 @@ void HVL::create_vector_layer_structure(GRID * grid_file, JSON_READER * prop_tre
                 lines.append(point);
 
                 point.clear();
-                int nr_points = poly_lines[ii][0].size();
+                size_t nr_points = poly_lines[ii][0].size();
                 std::vector<double> chainage(nr_points);
                 chainage[0] = 0.0;
-                for (int j = 1; j < nr_points; j++)
+                for (size_t j = 1; j < nr_points; j++)
                 {
                     double x1 = poly_lines[ii][0][j - 1];
                     double y1 = poly_lines[ii][1][j - 1];
@@ -2954,10 +2954,10 @@ void HVL::create_vector_layer_drypoints(GRID * grid_file, JSON_READER * prop_tre
         }
 
         QgsFeatureList MyFeatures;
-        MyFeatures.reserve(poly_lines.size());
-        for (int ii = 0; ii < poly_lines.size(); ii++)
+        MyFeatures.reserve((int)poly_lines.size());
+        for (size_t ii = 0; ii < poly_lines.size(); ii++)
         {
-            QVector<QgsPointXY> point(poly_lines[ii][0].size());
+            QVector<QgsPointXY> point((int)poly_lines[ii][0].size());
             for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
             {
                 double x1 = poly_lines[ii][0][j];
@@ -3116,9 +3116,9 @@ void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER 
                 }
                 else
                 {
-                    for (int ii = 0; ii < poly_lines.size(); ii++)
+                    for (size_t ii = 0; ii < poly_lines.size(); ii++)
                     {
-                        QVector<QgsPointXY> point(poly_lines[ii][0].size());
+                        QVector<QgsPointXY> point((int)poly_lines[ii][0].size());
                         for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
                         {
                             double x1 = poly_lines[ii][0][j];
@@ -3259,9 +3259,9 @@ void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER 
                     return;
                 }
 
-                for (int ii = 0; ii < poly_lines.size(); ii++)
+                for (size_t ii = 0; ii < poly_lines.size(); ii++)
                 {
-                    QVector<QgsPointXY> point(poly_lines[ii][0].size());
+                    QVector<QgsPointXY> point((int)poly_lines[ii][0].size());
                     for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
                     {
                         double x1 = poly_lines[ii][0][j];
@@ -3347,7 +3347,6 @@ void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER 
             vl->updatedFields();
 
             QFileInfo ug_file = grid_file->get_filename();
-            QgsMultiLineString * polylines = new QgsMultiLineString();
 
             std::vector<std::string> line_name;
             std::vector<std::vector<std::vector<double>>> poly_lines;
@@ -3380,9 +3379,9 @@ void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER 
                     return;
                 }
 
-                for (int ii = 0; ii < poly_lines.size(); ii++)
+                for (size_t ii = 0; ii < poly_lines.size(); ii++)
                 {
-                    QVector<QgsPointXY> point(poly_lines[ii][0].size());
+                    QVector<QgsPointXY> point((int)poly_lines[ii][0].size());
                     for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
                     {
                         double x1 = poly_lines[ii][0][j];
@@ -3465,9 +3464,9 @@ void HVL::create_vector_layer_1D_external_forcing(GRID * grid_file, JSON_READER 
             if (lateral_name.size() != branch_name.size() || branch_name.size() != chainage.size() || lateral_name.size() != chainage.size())
             {
                 QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
-                    + "\nLateral points: " + (int)lateral_name.size()
-                    + "\nBranches: " + (int)branch_name.size()
-                    + "\nChainage: " + (int)chainage.size());
+                    + "\nLateral points: " + QString::number(lateral_name.size())
+                    + "\nBranches: " + QString::number(branch_name.size())
+                    + "\nChainage: " + QString::number(chainage.size()));
                 STOP_TIMER(data.lateral.id);
                 return;
             }
@@ -3703,7 +3702,6 @@ void HVL::create_vector_layer_thin_dams(GRID * grid_file, JSON_READER * prop_tre
         vl->updatedFields();
 
         QFileInfo ug_file = grid_file->get_filename();
-        QgsMultiLineString * polylines = new QgsMultiLineString();
 
         if (poly_lines.size() == 0)
         {
@@ -3712,9 +3710,9 @@ void HVL::create_vector_layer_thin_dams(GRID * grid_file, JSON_READER * prop_tre
             return;
         }
 
-        for (int ii = 0; ii < poly_lines.size(); ii++)
+        for (size_t ii = 0; ii < poly_lines.size(); ii++)
         {
-            QVector<QgsPointXY> point(poly_lines[ii][0].size());
+            QVector<QgsPointXY> point((int)poly_lines[ii][0].size());
             for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
             {
                 double x1 = poly_lines[ii][0][j];
@@ -3817,7 +3815,7 @@ void HVL::create_vector_layer_fixed_weir(GRID * grid_file, JSON_READER * prop_tr
 
         for (int ii = 0; ii < poly_lines.size(); ii++)
         {
-            QVector<QgsPointXY> point(poly_lines[ii][0].size());
+            QVector<QgsPointXY> point((int)poly_lines[ii][0].size());
             for (int j = 0; j < poly_lines[ii][0].size(); j++)  // number of x-coordinates
             {
                 double x1 = poly_lines[ii][0][j];
@@ -3903,9 +3901,9 @@ void HVL::create_vector_layer_1D_cross_section(GRID * grid_file, JSON_READER * p
         if (crosssection_name.size() != branch_name.size() || branch_name.size() != chainage.size() || crosssection_name.size() != chainage.size())
         {
             QMessageBox::warning(0, tr("Message: create_1D_external_forcing_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
-                + "\nCross-section names: " + (int)crosssection_name.size()
-                + "\nBranches: " + (int)branch_name.size()
-                + "\nChainage: " + (int)chainage.size());
+                + "\nCross-section names: " + QString::number(crosssection_name.size())
+                + "\nBranches: " + QString::number(branch_name.size())
+                + "\nChainage: " + QString::number(chainage.size()));
             STOP_TIMER(create_vector_layer_1D_cross_section);
             return;
         }
@@ -4033,9 +4031,9 @@ void HVL::create_vector_layer_1D_retention(GRID* grid_file, JSON_READER* prop_tr
         if (retention_name.size() != branch_name.size() || branch_name.size() != chainage.size() || retention_name.size() != chainage.size())
         {
             QMessageBox::warning(0, tr("Message: create_vector_layer_1D_retention"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
-                + "\nRetention names: " + (int)retention_name.size()
-                + "\nBranches: " + (int)branch_name.size()
-                + "\nChainage: " + (int)chainage.size());
+                + "\nRetention names: " + QString::number(retention_name.size())
+                + "\nBranches: " + QString::number(branch_name.size())
+                + "\nChainage: " + QString::number(chainage.size()));
             STOP_TIMER(create_vector_layer_1D_retention);
             return;
         }
@@ -4154,8 +4152,8 @@ void HVL::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long epsg_code)
             if (link_1d_point.size() != link_2d_point.size())
             {
                 QMessageBox::warning(0, tr("Message: create_1D2D_link_vector_layer"), QString(tr("Inconsistent data set. JSON data: ")) + QString::fromUtf8(json_key.c_str()).trimmed()
-                    + "\nPoints on 1D mesh: " + (int)link_1d_point.size()
-                    + "\nPoints on 2D mesh: " + (int)link_2d_point.size());
+                    + "\nPoints on 1D mesh: " + QString::number(link_1d_point.size())
+                    + "\nPoints on 2D mesh: " + QString::number(link_2d_point.size()));
                 STOP_TIMER(create_1D2D_link_vector_layer);
                 return;
             }
@@ -4182,7 +4180,6 @@ void HVL::create_vector_layer_1D2D_link(JSON_READER * prop_tree, long epsg_code)
             //dp_vl->createSpatialIndex();
             vl->updatedFields();
 
-            QgsMultiLineString * polylines = new QgsMultiLineString();
             QVector<QgsPointXY> point;
             QgsMultiPolylineXY lines;
 
