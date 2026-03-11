@@ -16,6 +16,7 @@ class MapProperty
 public:
     MapProperty();  // Constructor
     ~MapProperty();  // Destructor
+//    static MapProperty * getInstance();
     static MapProperty * getInstance()
     {
         if (obj == nullptr)

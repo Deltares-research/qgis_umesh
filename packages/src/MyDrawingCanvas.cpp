@@ -270,7 +270,7 @@ void MyCanvas::draw_data_at_face()
                 }
                 if (in_view)
                 {
-                    double z = (z_value[i] - m_z_min)/(m_z_max-m_z_min);
+                    double z = (z_value[i] - m_z_min)/(m_z_max - m_z_min);
                     QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
@@ -394,7 +394,7 @@ void MyCanvas::draw_data_at_node()
                     vertex_x.push_back(edge_x_31);
                     vertex_y.push_back(edge_y_31);
                     // draw polygon
-                    double z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
+                    double z = (z_value[p0] - m_z_min)/(m_z_max - m_z_min);
                     QColor col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
@@ -413,7 +413,7 @@ void MyCanvas::draw_data_at_node()
                     vertex_x.push_back(edge_x_01);
                     vertex_y.push_back(edge_y_01);
                     // draw polygon
-                    z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
+                    z = (z_value[p0] - m_z_min)/(m_z_max - m_z_min);
                     col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
@@ -432,7 +432,7 @@ void MyCanvas::draw_data_at_node()
                     vertex_x.push_back(edge_x_12);
                     vertex_y.push_back(edge_y_12);
                     // draw polygon
-                    z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
+                    z = (z_value[p0] - m_z_min)/(m_z_max - m_z_min);
                     col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
@@ -451,7 +451,7 @@ void MyCanvas::draw_data_at_node()
                     vertex_x.push_back(edge_x_23);
                     vertex_y.push_back(edge_y_23);
                     // draw polygon
-                    z = (z_value[p0] - m_z_min)/(m_z_max-m_z_min);
+                    z = (z_value[p0] - m_z_min)/(m_z_max - m_z_min);
                     col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     this->setFillColor(col);
                     this->drawPolygon(vertex_x, vertex_y);
@@ -720,7 +720,6 @@ void MyCanvas::draw_vector_arrow()
                 }
             }
 
-            // set scaled unit vector in right lower corner 
             this->setLineWidth(1);
             double alpha = 0.95;
             double unitv_x_head = (1.0 - alpha) * getMinVisibleX() + alpha * getMaxVisibleX();
@@ -730,11 +729,12 @@ void MyCanvas::draw_vector_arrow()
             pix_dx = getPixelWidth(coord_x[0], coord_y[0]);
             pix_dy = getPixelHeight(coord_x[0], coord_y[0]);
                 
-            int tw = getTextWidth("Unit vector");
+            //int tw = getTextWidth("Unit vector");
             // int th = getTextHeight("Unit vector");  // text height is not used
-            int vw = 2 * tw;  // vector width (length)
+            //int vw = 2 * tw;  // vector width (length)
 
-            double v_length = wx(vw) - wx(0);
+            //double v_length = wx(vw) - wx(0);
+            double v_length = 0.075 * (getMaxVisibleX() - getMinVisibleX()); 
             coord_x.clear();
             coord_y.clear();
             coord_x.push_back(unitv_x_head - v_length);
@@ -1012,7 +1012,7 @@ void MyCanvas::draw_vector_direction_at_node()
                 vertex_y.push_back(edge_y_31);
                 // draw polygon
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                double z = (direction - m_z_min)/(m_z_max-m_z_min);
+                double z = (direction - m_z_min)/(m_z_max - m_z_min);
                 col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
@@ -1031,7 +1031,7 @@ void MyCanvas::draw_vector_direction_at_node()
                 vertex_y.push_back(edge_y_01);
                 // draw polygon
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                z = (direction - m_z_min)/(m_z_max-m_z_min);
+                z = (direction - m_z_min)/(m_z_max - m_z_min);
                 col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
@@ -1050,7 +1050,7 @@ void MyCanvas::draw_vector_direction_at_node()
                 vertex_y.push_back(edge_y_12);
                 // draw polygon
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                z = (direction - m_z_min)/(m_z_max-m_z_min);
+                z = (direction - m_z_min)/(m_z_max - m_z_min);
                 col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
@@ -1069,7 +1069,7 @@ void MyCanvas::draw_vector_direction_at_node()
                 vertex_y.push_back(edge_y_23);
                 // draw polygon
                 direction = atan2(v_value[p0], u_value[p0]) * 360.0 / (2.0 * M_PI);
-                z = (direction - m_z_min)/(m_z_max-m_z_min);
+                z = (direction - m_z_min)/(m_z_max - m_z_min);
                 col = m_color_ramp->color(std::clamp(z,0.0,1.0));
                 this->setFillColor(col);
                 this->drawPolygon(vertex_x, vertex_y);
@@ -1344,9 +1344,9 @@ void MyCanvas::draw_data_1d_along_edge()
                         edge_x[1] = mesh1d->node[0]->x[p2];
                         edge_y[1] = mesh1d->node[0]->y[p2];
 
-                        double z = (z_value[p1] - m_z_min)/(m_z_max-m_z_min);
+                        double z = (z_value[p1] - m_z_min)/(m_z_max - m_z_min);
                         edge_color[0] = m_color_ramp->color(std::clamp(z,0.0,1.0));
-                        z = (z_value[p2] - m_z_min)/(m_z_max-m_z_min);
+                        z = (z_value[p2] - m_z_min)/(m_z_max - m_z_min);
                         edge_color[1] = m_color_ramp->color(std::clamp(z,0.0,1.0));
 
                         this->drawLineGradient(edge_x, edge_y, edge_color);
@@ -1357,7 +1357,7 @@ void MyCanvas::draw_data_1d_along_edge()
                     m_rgb_color.resize(length);
                     for (int j = 0; j < length; j++)
                     {
-                        double z = (z_value[j] - m_z_min)/(m_z_max-m_z_min);
+                        double z = (z_value[j] - m_z_min)/(m_z_max - m_z_min);
                         m_rgb_color[j] = m_color_ramp->color(std::clamp(z,0.0,1.0));
                     }
                     this->drawMultiDot(mesh1d->node[0]->x, mesh1d->node[0]->y, m_rgb_color);
@@ -2316,8 +2316,8 @@ void MyCanvas::MyMouseMoveEvent      ( QMouseEvent * me)
     if (listener != NULL)
     {
         //QMessageBox::warning(0, "Message", QString(tr("MyCanvas::MyMouseMoveEvent: %1").arg(me->button())));
-        //qt6 listener->onMouseMove(wx(me->position().x()), wy(me->position().y()), (AbstractCanvasListener::ButtonState) me->button() );
-        listener->onMouseMove(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
+        listener->onMouseMove(wx(me->position().x()), wy(me->position().y()), (AbstractCanvasListener::ButtonState) me->button() );
+        //qt5 listener->onMouseMove(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
     }
 }
 //
@@ -2327,8 +2327,8 @@ void MyCanvas::MyMousePressEvent     ( QMouseEvent * me)
 {
     if (listener != NULL)
     {
-        //qt6 listener->onMouseDown(wx(me->position().x()), wy(me->position().y()), (AbstractCanvasListener::ButtonState) me->button() );
-        listener->onMouseDown(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
+        listener->onMouseDown(wx(me->position().x()), wy(me->position().y()), (AbstractCanvasListener::ButtonState) me->button() );
+        //qt5 listener->onMouseDown(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
     }
 }
 //
@@ -2344,10 +2344,10 @@ void MyCanvas::MyMouseReleaseEvent   (QgsMapMouseEvent * me)
     //    distance_calc.setEllipsoid(crs.ellipsoidAcronym())
     //    distance_calc.setEllipsoidalMode(crs.geographicFlag())
     //    distance = distance_calc.measureLine([self._startPt, endPt]) / 1000
-    //qt6 QgsPointXY p1 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->position().x(), me->position().y()));
-    //qt6 QgsPointXY p2 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->position().x()+50, me->position().y()+50));  // 
-    QgsPointXY p1 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x(), me->y()));
-    QgsPointXY p2 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x()+50, me->y()+50));  // 
+    QgsPointXY p1 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->position().x(), me->position().y()));
+    QgsPointXY p2 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->position().x()+50, me->position().y()+50));  // 
+    //qt5 QgsPointXY p1 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x(), me->y()));
+    //qt5 QgsPointXY p2 = QgsMapCanvasItem::toMapCoordinates(QPoint(me->x()+50, me->y()+50));  // 
     length = 12345.0;
     QgsDistanceArea da;
     // QgsCoordinateReferenceSystem new_crs = layer[0]->layer()->crs();
@@ -2360,8 +2360,8 @@ void MyCanvas::MyMouseReleaseEvent   (QgsMapMouseEvent * me)
     );
     if (listener != NULL)
     {
-        //qt6 listener->onMouseUp(wx(me->position().x()), wy(me->position().y()), (AbstractCanvasListener::ButtonState) me->button() );
-        listener->onMouseUp(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
+        listener->onMouseUp(wx(me->position().x()), wy(me->position().y()), (AbstractCanvasListener::ButtonState) me->button() );
+        //qt5 listener->onMouseUp(wx(me->x()), wy(me->y()), (AbstractCanvasListener::ButtonState) me->button() );
     }
     mMapCanvas->update();
 }

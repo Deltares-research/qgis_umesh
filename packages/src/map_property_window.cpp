@@ -107,10 +107,10 @@ void MapPropertyWindow::create_window()
     str = QString("%1").arg(m_property->get_maximum());
     le_max->setText(str);
 
-    gl->addWidget(lbl_min, 0, 0);
-    gl->addWidget(lbl_max, 1, 0);
-    gl->addWidget(le_min, 0, 1);
-    gl->addWidget(le_max, 1, 1);
+    gl->addWidget(lbl_max, 0, 0);
+    gl->addWidget(le_max, 0, 1);
+    gl->addWidget(lbl_min, 1, 0);
+    gl->addWidget(le_min, 1, 1);
     vl->addLayout(gl);
 
     // Vector scaling
@@ -154,7 +154,7 @@ void MapPropertyWindow::create_window()
     this->show();
 
     connect(this, &MapPropertyWindow::close_map, this, &MapPropertyWindow::close);
-    connect(m_ckb, &QCheckBox::stateChanged, this, &MapPropertyWindow::state_changed);
+    connect(m_ckb, &QCheckBox::checkStateChanged, this, &MapPropertyWindow::state_changed);
     connect(pb_apply, &QPushButton::clicked, this, &MapPropertyWindow::clicked_apply);
     connect(pb_ok, &QPushButton::clicked, this, &MapPropertyWindow::clicked_ok);
     connect(pb_cancel, &QPushButton::clicked, this, &MapPropertyWindow::clicked_cancel);
@@ -186,14 +186,8 @@ void MapPropertyWindow::state_changed(int state)
         le_max->setEnabled(false);
     }
     //  not supported: Qt::PartiallyChecked
+    clicked_apply();
     return;
-}
-void MapPropertyWindow::set_dynamic_limits_enabled(bool enabled)
-{
-    if (object_count != 0)
-    {
-        m_ckb->setChecked(enabled);
-    }
 }
 void MapPropertyWindow::clicked_apply()
 {
@@ -202,7 +196,6 @@ void MapPropertyWindow::clicked_apply()
     double mod_opacity = std::max(0.0, std::min(opacity, 1.0));
     m_property->set_opacity(mod_opacity);
     m_property->set_refresh_time(le_refresh_time->text().toDouble());
-
     m_property->set_dynamic_legend(m_ckb->isChecked());
     m_property->set_minimum(le_min->text().toDouble());
     m_property->set_maximum(le_max->text().toDouble());

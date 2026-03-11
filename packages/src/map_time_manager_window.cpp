@@ -71,12 +71,6 @@ void MapTimeManagerWindow::contextMenu(const QPoint & point)
     {
         m_map_property_window = new MapPropertyWindow(m_MyCanvas);
     }
-    m_map_property_window->set_dynamic_limits_enabled(true);
-    if (m_vector_draw == VECTOR_DIRECTION)
-    {
-        // set ramp limits en/disabled
-        m_map_property_window->set_dynamic_limits_enabled(false);
-    }
 }
 //
 //-----------------------------------------------------------------------------
@@ -244,23 +238,23 @@ QGridLayout * MapTimeManagerWindow::create_date_time_layout()
     QString format_date_time = QString("yyyy-MM-dd HH:mm:ss");
 
     // TODO set minimum and maximum within range first datetime and last datetime
-    //qt6 QTimeZone utcZone = QTimeZone::utc();  // Creates a QTimeZone for UTC
-    //qt6 first_date_time->setTimeZone(utcZone);
-    first_date_time->setTimeSpec(Qt::UTC);
+    QTimeZone utcZone = QTimeZone::utc();  // Creates a QTimeZone for UTC
+    first_date_time->setTimeZone(utcZone);
+    //qt5 first_date_time->setTimeSpec(Qt::UTC);
     first_date_time->setToolTip(QString("Time frame UTC"));
     first_date_time->setDateTime(m_q_times[0]);
     first_date_time->setDisplayFormat(format_date_time);
     first_date_time->setWrapping(true);
     
-    //qt6 curr_date_time->setTimeZone(utcZone);
-    curr_date_time->setTimeSpec(Qt::UTC);
+    curr_date_time->setTimeZone(utcZone);
+    //qt5 curr_date_time->setTimeSpec(Qt::UTC);
     curr_date_time->setToolTip(QString("Time frame UTC"));
     curr_date_time->setDateTime(m_q_times[0]);
     curr_date_time->setDisplayFormat(format_date_time);
     curr_date_time->setWrapping(true);
     
-    //qt6 last_date_time->setTimeZone(utcZone);
-    last_date_time->setTimeSpec(Qt::UTC);
+    last_date_time->setTimeZone(utcZone);
+    //qt5 last_date_time->setTimeSpec(Qt::UTC);
     last_date_time->setToolTip(QString("Time frame UTC"));
     last_date_time->setDateTime(m_q_times[m_q_times.size() - 1]);
     last_date_time->setDisplayFormat(format_date_time);
@@ -391,7 +385,7 @@ QCheckBox * MapTimeManagerWindow::check_parameter_1d()
     checkb->setChecked(false);
     checkb->setEnabled(true);
     m_show_map_data_1d = false;
-    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_1d);
+    connect(checkb, &QCheckBox::checkStateChanged, this, &MapTimeManagerWindow::show_hide_map_data_1d);
 
     return checkb;
 }
@@ -407,7 +401,7 @@ QCheckBox * MapTimeManagerWindow::check_parameter_1d2d()
     checkb->setChecked(false);
     checkb->setEnabled(true);
     m_show_map_data_1d2d = false;
-    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_1d2d);
+    connect(checkb, &QCheckBox::checkStateChanged, this, &MapTimeManagerWindow::show_hide_map_data_1d2d);
 
     return checkb;
 }
@@ -423,7 +417,7 @@ QCheckBox * MapTimeManagerWindow::check_parameter_2d()
     checkb->setChecked(false);
     checkb->setEnabled(true);
     m_show_map_data_2d = false;
-    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_2d);
+    connect(checkb, &QCheckBox::checkStateChanged, this, &MapTimeManagerWindow::show_hide_map_data_2d);
 
     return checkb;
 }
@@ -438,7 +432,7 @@ QCheckBox * MapTimeManagerWindow::check_parameter_3d()
     checkb->setChecked(false);
     checkb->setEnabled(true);
     m_show_map_data_3d = false;
-    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_data_3d);
+    connect(checkb, &QCheckBox::checkStateChanged, this, &MapTimeManagerWindow::show_hide_map_data_3d);
 
     return checkb;
 }
@@ -453,7 +447,7 @@ QCheckBox * MapTimeManagerWindow::check_vector_2d()
     checkb->setChecked(false);
     checkb->setEnabled(true);
     m_show_map_vector_2d = false;
-    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_vector_2d);
+    connect(checkb, &QCheckBox::checkStateChanged, this, &MapTimeManagerWindow::show_hide_map_vector_2d);
 
     return checkb;
 }
@@ -468,7 +462,7 @@ QCheckBox * MapTimeManagerWindow::check_vector_3d()
     checkb->setChecked(false);
     checkb->setEnabled(true);
     m_show_map_vector_3d = false;
-    connect(checkb, &QCheckBox::stateChanged, this, &MapTimeManagerWindow::show_hide_map_vector_3d);
+    connect(checkb, &QCheckBox::checkStateChanged, this, &MapTimeManagerWindow::show_hide_map_vector_3d);
 
     return checkb;
 }
@@ -791,9 +785,9 @@ QVBoxLayout * MapTimeManagerWindow::create_scalar_selection_1d_2d_3d()
             this, &MapTimeManagerWindow::color_ramped_changed);
     connect(mRampButton, &QgsColorRampButton::colorRampChanged,
             this, &MapTimeManagerWindow::show_hide_overlay_legend);
-    connect(m_crb_check, &QCheckBox::stateChanged,
+    connect(m_crb_check, &QCheckBox::checkStateChanged,
             this, &MapTimeManagerWindow::show_hide_overlay_legend);
-    connect(m_crb_check, &QCheckBox::stateChanged,
+    connect(m_crb_check, &QCheckBox::checkStateChanged,
             this, &MapTimeManagerWindow::show_hide_overlay_legend);
 
     vl_tw_iso->addLayout(hl);
@@ -928,7 +922,7 @@ QVBoxLayout * MapTimeManagerWindow::create_vector_selection_2d_3d()
                 this, &MapTimeManagerWindow::color_ramped_changed_dir);
         connect(mRampButton_vec, &QgsColorRampButton::colorRampChanged,
                 this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
-        connect(m_crb_check_vec, &QCheckBox::stateChanged,
+        connect(m_crb_check_vec, &QCheckBox::checkStateChanged,
                 this, &MapTimeManagerWindow::show_hide_overlay_legend_dir);
 
         connect(mRampButton_vec, &QgsColorRampButton::colorRampChanged, this, [this]() {
@@ -1285,10 +1279,6 @@ void MapTimeManagerWindow::cb_clicked_1d(int item)
 
     m_MyCanvas->reset_min_max();
     m_MyCanvas->set_draw_vector(VECTOR_NONE);
-    if (m_map_property_window != nullptr)
-    {
-        m_map_property_window->set_dynamic_limits_enabled(true);
-    }
 
     if (!m_show_map_data_1d)
     {
@@ -1327,10 +1317,6 @@ void MapTimeManagerWindow::cb_clicked_1d2d(int item)
 
     m_MyCanvas->reset_min_max();
     m_MyCanvas->set_draw_vector(VECTOR_NONE);
-    if (m_map_property_window != nullptr)
-    {
-        m_map_property_window->set_dynamic_limits_enabled(true);
-    }
 
     if (!m_show_map_data_1d2d)
     {
@@ -1369,10 +1355,6 @@ void MapTimeManagerWindow::cb_clicked_2d(int item)
 
     m_MyCanvas->reset_min_max();
     m_MyCanvas->set_draw_vector(VECTOR_NONE);
-    if (m_map_property_window != nullptr)
-    {
-        m_map_property_window->set_dynamic_limits_enabled(true);
-    }
 
     if (!m_show_map_data_2d)
     {
@@ -1405,10 +1387,6 @@ void MapTimeManagerWindow::cb_clicked_3d(int item)
     m_MyCanvas->empty_caches();
 
     m_MyCanvas->set_draw_vector(VECTOR_NONE);
-    if (m_map_property_window != nullptr)
-    {
-        m_map_property_window->set_dynamic_limits_enabled(true);
-    }
 
     QString str = m_cb_3d->itemText(item);
     QVariant j = m_cb_3d->itemData(item);
@@ -1467,12 +1445,7 @@ void MapTimeManagerWindow::cb_clicked_vec_2d(int item)
         var->draw = false;
     }
     m_MyCanvas->empty_caches();
-
     m_MyCanvas->reset_min_max();
-    if (m_map_property_window != nullptr)
-    {
-        m_map_property_window->set_dynamic_limits_enabled(true);
-    }
     if (!m_show_map_vector_2d)
     {
         QStringList coord;
@@ -1579,10 +1552,6 @@ void MapTimeManagerWindow::draw_time_dependent_vector(QComboBox * cb, int item)
     else
     {
         m_vector_draw = VECTOR_DIRECTION; // draw the vector direction
-        if (m_map_property_window != nullptr)
-        {
-            m_map_property_window->set_dynamic_limits_enabled(false);
-        }
     }
     m_MyCanvas->set_draw_vector(m_vector_draw);
 }

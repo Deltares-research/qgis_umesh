@@ -721,10 +721,10 @@ long GRID::read_times()
                     QDate date = QDate::fromString(date_time.at(2), "yyyy-MM-dd");
                     QTime time = QTime::fromString(date_time.at(3), "hh:mm:ss");
 
-                    //qt6 QTimeZone utcZone = QTimeZone::utc();  // Creates a QTimeZone for UTC
-                    //qt6 RefDate = new QDateTime(date, time);
-                    //qt6 RefDate->setTimeZone(utcZone);
-                    RefDate = new QDateTime(date, time, Qt::UTC);
+                    QTimeZone utcZone = QTimeZone::utc();  // Creates a QTimeZone for UTC
+                    RefDate = new QDateTime(date, time);
+                    RefDate->setTimeZone(utcZone);
+                    //qt5 RefDate = new QDateTime(date, time, Qt::UTC);
 
 #if defined(DEBUG)
                     QString janm1 = date.toString("yyyy-MM-dd");
@@ -923,8 +923,8 @@ long GRID::read_ugrid_variables()
                 status = nc_inq_dimname(this->m_ncid, var_dimids[j], var_name_c);
                 
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // Todo: HACK typecast: size_t -> long
-                //qt6 if (time_series[0].nr_times > 0 && QString::fromUtf8(m_dim_names[var_dimids[j]]) == *(time_series[0].dim_name))
-                if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == time_series[0].dim_name)
+                if (time_series[0].nr_times > 0 && QString::fromUtf8(m_dim_names[var_dimids[j]]) == *(time_series[0].dim_name))
+                //qt5 if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == time_series[0].dim_name)
                 {
                     m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
                 }
@@ -2739,11 +2739,11 @@ std::vector<std::string> GRID::get_string_var(int ncid, std::string var_name)
                 janm = QString("");
                 for (int k2 = 0; k2 < name_len; k2++)
                 {
-                    //qt6 auto toUtf8 = QStringDecoder(QStringDecoder::Utf8);
-                    //qt6 QByteArray encodedString = *(location_strings + k * name_len + k2);
-                    //qt6 QString str = toUtf8(encodedString);
-                    QTextCodec* codec2 = QTextCodec::codecForName("UTF-8");
-                    QString str = codec2->toUnicode(*(location_strings + k * name_len + k2));
+                    auto toUtf8 = QStringDecoder(QStringDecoder::Utf8);
+                    QByteArray encodedString = *(location_strings + k * name_len + k2);
+                    QString str = toUtf8(encodedString);
+                    //qt5 QTextCodec* codec2 = QTextCodec::codecForName("UTF-8");
+                    //qt5 QString str = codec2->toUnicode(*(location_strings + k * name_len + k2));
                     janm = janm + str;
                 }
                 result.push_back(janm.toStdString());

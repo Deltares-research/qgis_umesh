@@ -40,7 +40,6 @@ public:
 
     void create_window();
     static int get_count();
-    void set_dynamic_limits_enabled(bool);
 
 public slots:
     void close();

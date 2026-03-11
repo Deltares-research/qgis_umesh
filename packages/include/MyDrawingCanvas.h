@@ -13,7 +13,6 @@
 #include "legend_overlay.h"
 #include "unit_vector_overlay.h"
 
-
 #define GUI_EXPORT __declspec(dllimport)
 #include <qgisinterface.h>
 #include <qgsmaptool.h>
@@ -100,7 +99,6 @@ private slots:
 
 
 public:
-    MyCanvas();
     MyCanvas(QgisInterface *);
     ~MyCanvas();
 

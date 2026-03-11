@@ -299,11 +299,11 @@ long HISCF::read_locations()
                         janm = QString("");
                         for (int k2 = 0; k2 < name_len; k2++)
                         {
-                            //qt6 auto toUtf8 = QStringDecoder(QStringDecoder::Utf8);
-                            //qt6 QByteArray encodedString = *(location_strings + k * name_len + k2);
-                            //qt6 QString str = toUtf8(encodedString);
-                            QTextCodec *codec2 = QTextCodec::codecForName("UTF-8");
-                            QString str = codec2->toUnicode(*(location_strings + k * name_len + k2));
+                            auto toUtf8 = QStringDecoder(QStringDecoder::Utf8);
+                            QByteArray encodedString = *(location_strings + k * name_len + k2);
+                            QString str = toUtf8(encodedString);
+                            //qt5 QTextCodec *codec2 = QTextCodec::codecForName("UTF-8");
+                            //qt5 QString str = codec2->toUnicode(*(location_strings + k * name_len + k2));
                             janm = janm + str;
                         }
                         struct _location loc;

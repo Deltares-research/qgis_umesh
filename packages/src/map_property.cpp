@@ -12,6 +12,12 @@ MapProperty::MapProperty()
 MapProperty::~MapProperty()
 {
 }
+//MapProperty* MapProperty::getInstance()
+//{
+//    if (obj == nullptr)
+///        obj = new MapProperty();
+//    return obj;
+//}
 void MapProperty::set_dynamic_legend(bool dynamic)
 {
     prop_dynamic_min_max = dynamic;

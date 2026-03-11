@@ -6,7 +6,7 @@
 #include <QDate>
 #include <QFileInfo>
 #include <QTime>
-#include <qtextcodec.h>
+//qt5 #include <qtextcodec.h>
 #include <qdebug.h>
 
 #include <QMessageBox>
