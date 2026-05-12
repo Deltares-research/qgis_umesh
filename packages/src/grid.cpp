@@ -669,7 +669,7 @@ long GRID::read_times()
                     units_cpp = "seconds since 2000-01-01 00:00:00";
                 }
             }
-            QString units = QString::fromUtf8((units_cpp).c_str());
+            QString units = QString::fromUtf8(units_cpp.c_str());
             units.replace("T", " ");  // "seconds since 1970-01-01T00:00:00" changed into "seconds since 1970-01-01 00:00:00"
             date_time = units.split(" ");
             if (date_time.count() >= 2)
@@ -681,20 +681,20 @@ long GRID::read_times()
                     length = (size_t) -1;
                     status = nc_inq_var(this->m_ncid, i_var, var_name_c, NULL, &ndims, &dimids, &natts);
                     status = nc_inq_dimname(this->m_ncid, dimids, var_name_c);
-                    time_series[0].dim_name = new QString(var_name_c);
+                    time_series[0].dim_name = QString(var_name_c);
                     status = nc_inq_attlen(this->m_ncid, i_var, "long_name", &length);
                     if (status == NC_NOERR)
                     {
                         char * c_label = (char *)malloc(sizeof(char) * (length + 1));
                         c_label[length] = '\0';
                         status = nc_get_att(this->m_ncid, i_var, "long_name", c_label);
-                        time_series[0].long_name = new QString(c_label);
+                        time_series[0].long_name = QString(c_label);
                         free(c_label); 
                         c_label = nullptr;
                     }
                     else
                     {
-                        time_series[0].long_name = new QString(var_name_c);
+                        time_series[0].long_name = QString(var_name_c);
                     }
                     //status = get_dimension_names(this->m_ncid, var_name_c, &time_series[0].dim_name);
 
@@ -716,7 +716,7 @@ long GRID::read_times()
 
                     qdt_times.reserve((int)time_series[0].nr_times);  // Todo: HACK typecast
                     // ex. date_time = "seconds since 2017-02-25 15:26:00"   year, yr, day, d, hour, hr, h, minute, min, second, sec, s and all plural forms
-                    time_series[0].unit = new QString(date_time.at(0));
+                    time_series[0].unit = QString(date_time.at(0));
 
                     QDate date = QDate::fromString(date_time.at(2), "yyyy-MM-dd");
                     QTime time = QTime::fromString(date_time.at(3), "hh:mm:ss");
@@ -739,27 +739,27 @@ long GRID::read_times()
                         dt = time_series[0].times[1] - time_series[0].times[0];
                     }
 
-                    if (time_series[0].unit->contains("sec") ||
-                        time_series[0].unit->trimmed() == "s")  // seconds, second, sec, s
+                    if (time_series[0].unit.contains("sec") ||
+                        time_series[0].unit.trimmed() == "s")  // seconds, second, sec, s
                     {
-                        time_series[0].unit = new QString("sec");
+                        time_series[0].unit = QString("sec");
                     }
-                    else if (time_series[0].unit->contains("min"))  // minutes, minute, min
+                    else if (time_series[0].unit.contains("min"))  // minutes, minute, min
                     {
-                        time_series[0].unit = new QString("min");
+                        time_series[0].unit = QString("min");
                     }
-                    else if (time_series[0].unit->contains("h"))  // hours, hour, hrs, hr, h
+                    else if (time_series[0].unit.contains("h"))  // hours, hour, hrs, hr, h
                     {
-                        time_series[0].unit = new QString("hour");
+                        time_series[0].unit = QString("hour");
                     }
-                    else if (time_series[0].unit->contains("d"))  // days, day, d
+                    else if (time_series[0].unit.contains("d"))  // days, day, d
                     {
-                        time_series[0].unit = new QString("day");
+                        time_series[0].unit = QString("day");
                     }
                     for (int j = 0; j < time_series[0].nr_times; j++)
                     {
-                        if (time_series[0].unit->contains("sec") ||
-                            time_series[0].unit->trimmed() == "s")  // seconds, second, sec, s
+                        if (time_series[0].unit.contains("sec") ||
+                            time_series[0].unit.trimmed() == "s")  // seconds, second, sec, s
                         {
                             //QMessageBox::warning(NULL, "Warning", QString("RefDate: %1").arg(RefDate->addSecs(time_series[0].times[j]).toString()));
                             if (dt < 1.0)
@@ -771,15 +771,15 @@ long GRID::read_times()
                                 qdt_times.append(RefDate->addSecs(time_series[0].times[j]));  // seconds as smallest time unit
                             }
                         }
-                        else if (time_series[0].unit->contains("min"))  // minutes, minute, min
+                        else if (time_series[0].unit.contains("min"))  // minutes, minute, min
                         {
                             qdt_times.append(RefDate->addSecs(time_series[0].times[j] * 60.0));
                         }
-                        else if (time_series[0].unit->contains("h"))  // hours, hour, hrs, hr, h
+                        else if (time_series[0].unit.contains("h"))  // hours, hour, hrs, hr, h
                         {
                             qdt_times.append(RefDate->addSecs(time_series[0].times[j] * 3600.0));
                         }
-                        else if (time_series[0].unit->contains("d"))  // days, day, d
+                        else if (time_series[0].unit.contains("d"))  // days, day, d
                         {
                             qdt_times.append(RefDate->addSecs(time_series[0].times[j] * 24.0 * 3600.0));
                         }
@@ -923,8 +923,7 @@ long GRID::read_ugrid_variables()
                 status = nc_inq_dimname(this->m_ncid, var_dimids[j], var_name_c);
                 
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // Todo: HACK typecast: size_t -> long
-                if (time_series[0].nr_times > 0 && QString::fromUtf8(m_dim_names[var_dimids[j]]) == *(time_series[0].dim_name))
-                //qt5 if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == time_series[0].dim_name)
+                if (time_series[0].nr_times > 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == time_series[0].dim_name)
                 {
                     m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
                 }
@@ -946,7 +945,7 @@ long GRID::read_ugrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -999,7 +998,7 @@ long GRID::read_ugrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -1208,7 +1207,7 @@ long GRID::read_ugrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -1427,7 +1426,7 @@ long GRID::read_sgrid_variables()
                 status = nc_inq_dimname(this->m_ncid, var_dimids[j], var_name_c);
 
                 m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.push_back((long)m_dimids[var_dimids[j]]);  // Todo: HACK typecast: size_t -> long
-                if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == *(time_series[0].dim_name))
+                if (time_series[0].nr_times != 0 && QString::fromUtf8(m_dim_names[var_dimids[j]].c_str()) == time_series[0].dim_name)
                 {
                     m_mesh_vars->variable[m_nr_mesh_var - 1]->time_series = true;
                 }
@@ -1451,7 +1450,7 @@ long GRID::read_sgrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -1504,7 +1503,7 @@ long GRID::read_sgrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;
@@ -1711,7 +1710,7 @@ long GRID::read_sgrid_variables()
                 for (int i = 0; i < m_mesh_vars->variable[m_nr_mesh_var - 1]->dims.size(); i++)
                 {
                     // check if one of the dimension is the time dimension
-                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == *(time_series[0].dim_name))
+                    if (QString::fromUtf8(m_mesh_vars->variable[m_nr_mesh_var - 1]->dim_names[i].c_str()) == time_series[0].dim_name)
                     {
                         contains_time_dimension = true;
                         break;

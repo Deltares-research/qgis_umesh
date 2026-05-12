@@ -128,9 +128,9 @@ enum class FILE_TYPE {
 
 struct _time_series {
     size_t nr_times;
-    QString * long_name;
-    QString * unit;
-    QString * dim_name;
+    QString long_name;
+    QString unit;
+    QString dim_name;
     std::vector<double> times;  // vector of seconds
     std::map<std::string, std::string> map_dim_name;
 };

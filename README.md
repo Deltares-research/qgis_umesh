@@ -13,7 +13,7 @@ At this moment the development environment is based on Visual Studio 2022.
  
 ## Environment variables
 Environment variables (example)
-QT5DIR_OSGEO=c:\OSGeo4W\apps\Qt5
+QT6DIR_OSGEO=c:\OSGeo4W\apps\Qt6
 BOOST_ROOT_DIR=c:\boost\boost_1_90_0
 NETCDF_DIR=c:\Program Files\netCDF 4.9.2              
 
@@ -26,14 +26,14 @@ Desktop:
     qgis-full: QGIS Full Desktop (meta package for express install)
 Libs: 
     QGIS-devel: QGIS development files
-    qt5-libs: Qt5 runtime libraries
-    qt5-libs-debug
-    qt5-libs-debug-pdb
-    qt5-libs-pdb
-    qt5-devel; qt5 headers and libraries (Development)
+    qt6-libs: Qt5 runtime libraries
+    qt6-libs-debug
+    qt6-libs-debug-pdb
+    qt6-libs-pdb
+    qt6-devel; qt5 headers and libraries (Development)
 Probably not needed
-    qt5-qml: Qt5 QML
-    qt5-tools: Qt5Designe & linguist (Development)
+    qt6-qml: Qt5 QML
+    qt6-tools: Qt5Designe & linguist (Development)
             
 ##Note (QGIS 3.18.01 and higher)
 When compiling the source code I had to adjusted the file qgsdistancearea.h.
@@ -75,6 +75,5 @@ Line 172
 
 ## Note (QGIS 3.16.00)
 When QGIS 3.16.00 does close/crash without any message if reading a netCDF file, please use QGIS 3.16.01.
- 
+
 end document
-          
