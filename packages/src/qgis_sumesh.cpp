@@ -7,7 +7,7 @@
 #  define strdup _strdup
 #endif
 
-#define EXPERIMENT 1
+#define EXPERIMENT 0
 
 /* static */ const QString qgis_umesh::s_ident = QObject::tr("@(#)" qgis_umesh_company ", " qgis_umesh_program ", " qgis_umesh_version_number ", " qgis_umesh_arch", " __DATE__", " __TIME__);
 /* static */ const QString qgis_umesh::s_name = QObject::tr("" qgis_umesh_company ", " qgis_umesh_program " Development");
@@ -255,12 +255,7 @@ void qgis_umesh::initGui()
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
 
 //------------------------------------------------------------------------------
-    _menuToolBar = new QToolBar();
-
-    QMenuBar* janm = new QMenuBar();
-    janm->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
-    menu_file = janm->addMenu("File");
+    menu_file = new QMenu("File");
     menu_file->addAction(open_action_map);
     menu_file->addAction(open_action_his_cf);
 
@@ -340,7 +335,6 @@ void qgis_umesh::set_enabled()
     {
         //QMessageBox::warning(0, tr("Message"), QString("Plugin will be enabled.\n"));
         mainAction->setChecked(true);
-        _menuToolBar->setEnabled(true);
         open_action_map->setEnabled(true);
         open_action_his_cf->setEnabled(true);
         open_action_mdu->setEnabled(true);
@@ -454,9 +448,6 @@ void qgis_umesh::mapPropertyWindow()
 //
 void qgis_umesh::ShowUserManual()
 {
-    char pdf_reader[1024];
-    int spawn_err = 0;
-
     QString program_files = QProcessEnvironment::systemEnvironment().value("ProgramFiles", "");
     program_files = program_files + QString("/deltares/qgis_umesh");
     QDir program_files_dir = QDir(program_files);
@@ -466,20 +457,18 @@ void qgis_umesh::ShowUserManual()
     char* pdf_document = manual.data();
 
     FILE* fp = fopen(pdf_document, "r");
-    if (fp != NULL)
+    errno_t err = fopen_s(&fp, pdf_document, "r");
+    if (err == 0)
     {
         fclose(fp);
-        long res = (long)FindExecutableA((LPCSTR)pdf_document, NULL, (LPSTR)pdf_reader);
-        if (res >= 32)
-        {
-            spawn_err = QT_SpawnProcess(NO_WAIT_MODE, pdf_reader, &pdf_document);
-        }
+        QDesktopServices::openUrl(QUrl::fromUserInput(pdf_document));
     }
     else
     {
         QMessageBox::warning(NULL, QObject::tr("Warning"), QObject::tr("Cannot open file: %1").arg(user_manual));
     }
 }
+
 /* @@-------------------------------------------------
 Function:   QT_SpawnProcess
 Author:     Jan Mooiman
@@ -623,7 +612,7 @@ void qgis_umesh::openFile(QFileInfo ncfile)
     }
     m_grid_file.push_back(grid_file);
     grid_file = m_grid_file.back();
-    _fil_index = m_grid_file.size() - 1;
+    _fil_index = (int) m_grid_file.size() - 1;
 
     stat = grid_file->read();
     m_hvl->set_grid_file(m_grid_file);
@@ -1480,231 +1469,216 @@ void qgis_umesh::activate_layers()
 
     QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
 
-    //if (mainAction->isChecked())
-    if (true)
+    QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
+    for (int i = 0; i < groups.length(); i++)
     {
-        QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
-        for (int i = 0; i < groups.length(); i++)
+        //QMessageBox::warning(0, "Message", QString("_fil_index: %1+1.").arg(_fil_index+1));
+        for (int j = 0; j < _fil_index + 1; j++)
         {
-            //QMessageBox::warning(0, "Message", QString("_fil_index: %1+1.").arg(_fil_index+1));
-            for (int j = 0; j < _fil_index + 1; j++)
+            QgsLayerTreeGroup* myGroup = treeRoot->findGroup(QString("GRID Mesh - %1").arg(j + 1));
+            if (myGroup != nullptr)
             {
-                QgsLayerTreeGroup* myGroup = treeRoot->findGroup(QString("GRID Mesh - %1").arg(j + 1));
-                if (myGroup != nullptr)
-                {
-                    myGroup->setItemVisibilityChecked(true);
-                }
+                myGroup->setItemVisibilityChecked(true);
             }
         }
+    }
 
-        QgsLayerTreeGroup* treeGroup = treeRoot->findGroup(QString("GRID - %1").arg(m_grid_file[_fil_index]->get_filename().fileName()));
-        if (treeGroup == nullptr)
+    QgsLayerTreeGroup* treeGroup = treeRoot->findGroup(QString("GRID - %1").arg(m_grid_file[_fil_index]->get_filename().fileName()));
+    if (treeGroup == nullptr)
+    {
+        QString fname = m_grid_file[_fil_index]->get_filename().fileName();
+        QString name = QString("GRID - %1").arg(fname);
+        treeGroup = treeRoot->insertGroup(_fil_index, name);  // set this group on top if _fil_index == 0
+        treeGroup->setExpanded(true);  // true is the default
+        treeGroup->setItemVisibilityChecked(true);
+        treeGroup->setItemVisibilityCheckedRecursive(true);
+    }
+
+    if (_fil_index != -1)
+    {
+        GRID* grid_file = m_grid_file[_fil_index];
+        struct _mapping* mapping = grid_file->get_grid_mapping();
+        QString fname = grid_file->get_filename().canonicalFilePath();
+        if (mapping->epsg == 0)
         {
-            QString fname = m_grid_file[_fil_index]->get_filename().fileName();
-            QString name = QString("GRID - %1").arg(fname);
-            treeGroup = treeRoot->insertGroup(_fil_index, name);  // set this group on top if _fil_index == 0
-            treeGroup->setExpanded(true);  // true is the default
-            treeGroup->setItemVisibilityChecked(true);
-            treeGroup->setItemVisibilityCheckedRecursive(true);
+            QString msg = QString("%1\nThe CRS code on file \'%2\' is not known.\nThe CRS code is set to the same CRS code as the presentation map (see lower right corner).\nPlease change the CRS code after loading the file, if necessary.").arg(grid_file->get_filename().fileName()).arg(fname);
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true );
+
+            // get the crs of the presentation (lower right corner of the qgis main-window)
+            QgsCoordinateReferenceSystem _crs = QgsProject::instance()->crs();
+            QString epsg_code = _crs.authid();
+            QStringList parts = epsg_code.split(':');
+            long epsg = parts.at(1).toInt();
+            grid_file->set_grid_mapping_epsg(epsg, epsg_code.toStdString());
+        }
+        fname = grid_file->get_filename().fileName();  // just the filename
+
+        int pgbar_value = 500;  // start of pgbar counter
+
+                                // Mesh 1D edges and mesh 1D nodes
+
+        mesh_1d = grid_file->get_mesh_1d();
+        //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes."));
+        if (mesh_1d != nullptr)
+        {
+            m_hvl->create_vector_layer_nodes(fname, QString("Mesh1D nodes"), mesh_1d->node[0], mapping->epsg, treeGroup);
+            QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
+            for (int i = 0; i < tmp_layers.size(); i++)
+            {
+                if (tmp_layers[i]->name() == "Mesh1D nodes")
+                {
+                    tmp_layers[i]->setItemVisibilityChecked(false);
+                }
+            }
+            pgbar_value += 10;
+            this->pgBar->setValue(pgbar_value);
+            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D edges."));
+            m_hvl->create_vector_layer_edges(fname, QString("Mesh1D edges"), mesh_1d->node[0], mesh_1d->edge[0], mapping->epsg, treeGroup);
+            pgbar_value += 10;
+            this->pgBar->setValue(pgbar_value);
         }
 
-        if (_fil_index != -1)
+        // Mesh1D Topology Edges between connection nodes, Network Connection node, Network geometry
+        ntw_nodes = grid_file->get_connection_nodes();
+        ntw_edges = grid_file->get_network_edges();
+        ntw_geom = grid_file->get_network_geometry();
+
+        if (ntw_nodes != nullptr)
         {
-            GRID* grid_file = m_grid_file[_fil_index];
-            struct _mapping* mapping = grid_file->get_grid_mapping();
-            QString fname = grid_file->get_filename().canonicalFilePath();
-            if (mapping->epsg == 0)
-            {
-                QString msg = QString("%1\nThe CRS code on file \'%2\' is not known.\nThe CRS code is set to the same CRS code as the presentation map (see lower right corner).\nPlease change the CRS code after loading the file, if necessary.").arg(grid_file->get_filename().fileName()).arg(fname);
-                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true );
-
-                // get the crs of the presentation (lower right corner of the qgis main-window)
-                QgsCoordinateReferenceSystem _crs = QgsProject::instance()->crs();
-                QString epsg_code = _crs.authid();
-                QStringList parts = epsg_code.split(':');
-                long epsg = parts.at(1).toInt();
-                grid_file->set_grid_mapping_epsg(epsg, epsg_code.toStdString());
-            }
-            fname = grid_file->get_filename().fileName();  // just the filename
-
-            int pgbar_value = 500;  // start of pgbar counter
-
-                                    // Mesh 1D edges and mesh 1D nodes
-
-            mesh_1d = grid_file->get_mesh_1d();
-            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes."));
-            if (mesh_1d != nullptr)
-            {
-                m_hvl->create_vector_layer_nodes(fname, QString("Mesh1D nodes"), mesh_1d->node[0], mapping->epsg, treeGroup);
-                QList <QgsLayerTreeLayer*> tmp_layers = treeGroup->findLayers();
-                for (int i = 0; i < tmp_layers.size(); i++)
-                {
-                    if (tmp_layers[i]->name() == "Mesh1D nodes")
-                    {
-                        tmp_layers[i]->setItemVisibilityChecked(false);
-                    }
-                }
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D edges."));
-                m_hvl->create_vector_layer_edges(fname, QString("Mesh1D edges"), mesh_1d->node[0], mesh_1d->edge[0], mapping->epsg, treeGroup);
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
-            }
-
-            // Mesh1D Topology Edges between connection nodes, Network Connection node, Network geometry
-            ntw_nodes = grid_file->get_connection_nodes();
-            ntw_edges = grid_file->get_network_edges();
-            ntw_geom = grid_file->get_network_geometry();
-
-            if (ntw_nodes != nullptr)
-            {
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Connection nodes."));
-                QString layer_name = QString("Mesh1D Connection nodes");
-                m_hvl->create_vector_layer_nodes(fname, layer_name, ntw_nodes->node[0], mapping->epsg, treeGroup);
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
-
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D geometry."));
-                m_hvl->create_vector_layer_geometry(fname, QString("Mesh1D geometry"), ntw_geom, mapping->epsg, treeGroup);
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
-
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Topology edges."));
-                m_hvl->create_vector_layer_edges(fname, QString("Mesh1D Topology edges"), ntw_nodes->node[0], ntw_edges->edge[0], mapping->epsg, treeGroup);
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
-            }
-
-            // Mesh1D Topology Edges between connection nodes, Network Connection node, Network geometry
-
-            mesh_contact = grid_file->get_mesh_contact();
-
-            if (mesh_contact != nullptr)
-            {
-                m_hvl->create_vector_layer_edges(fname, QString("Mesh contact edges"), mesh_contact->node[0], mesh_contact->edge[0], mapping->epsg, treeGroup);
-            }
-
-            // Mesh 2D edges and Mesh 2D nodes
-
-            mesh_2d = grid_file->get_mesh_2d();
-            if (mesh_2d != nullptr)
-            {
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes."));
-                if (mesh_2d->face[0]->count > 0)
-                {
-                    m_hvl->create_vector_layer_nodes(fname, QString("Mesh2D faces"), mesh_2d->face[0], mapping->epsg, treeGroup);
-                    pgbar_value += 10;
-                    this->pgBar->setValue(pgbar_value);
-                }
-
-                //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes."));
-                m_hvl->create_vector_layer_nodes(fname, QString("Mesh2D nodes"), mesh_2d->node[0], mapping->epsg, treeGroup);
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
-
-                if (mesh_2d->edge[0]->count > 0)
-                {
-                    m_hvl->create_vector_layer_edges(fname, QString("Mesh2D edges"), mesh_2d->node[0], mesh_2d->edge[0], mapping->epsg, treeGroup);
-                    pgbar_value += 10;
-                    this->pgBar->setValue(pgbar_value);
-                }
-            }
-            pgbar_value = 600;  // start of pgbar counter
-
+            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Connection nodes."));
+            QString layer_name = QString("Mesh1D Connection nodes");
+            m_hvl->create_vector_layer_nodes(fname, layer_name, ntw_nodes->node[0], mapping->epsg, treeGroup);
+            pgbar_value += 10;
             this->pgBar->setValue(pgbar_value);
 
-            //
-            // get the time independent variables and list them in the layer-panel as treegroup
-            //
-            struct _mesh_variable* var = grid_file->get_variables();
+            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D geometry."));
+            m_hvl->create_vector_layer_geometry(fname, QString("Mesh1D geometry"), ntw_geom, mapping->epsg, treeGroup);
+            pgbar_value += 10;
+            this->pgBar->setValue(pgbar_value);
 
-            bool time_independent_data = false;
-            if (mesh_2d != nullptr && var != nullptr)
+            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D Topology edges."));
+            m_hvl->create_vector_layer_edges(fname, QString("Mesh1D Topology edges"), ntw_nodes->node[0], ntw_edges->edge[0], mapping->epsg, treeGroup);
+            pgbar_value += 10;
+            this->pgBar->setValue(pgbar_value);
+        }
+
+        // Mesh1D Topology Edges between connection nodes, Network Connection node, Network geometry
+
+        mesh_contact = grid_file->get_mesh_contact();
+
+        if (mesh_contact != nullptr)
+        {
+            m_hvl->create_vector_layer_edges(fname, QString("Mesh contact edges"), mesh_contact->node[0], mesh_contact->edge[0], mapping->epsg, treeGroup);
+        }
+
+        // Mesh 2D edges and Mesh 2D nodes
+
+        mesh_2d = grid_file->get_mesh_2d();
+        if (mesh_2d != nullptr)
+        {
+            //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes."));
+            if (mesh_2d->face[0]->count > 0)
             {
+                m_hvl->create_vector_layer_nodes(fname, QString("Mesh2D faces"), mesh_2d->face[0], mapping->epsg, treeGroup);
+                pgbar_value += 10;
+                this->pgBar->setValue(pgbar_value);
+            }
+
+            //QMessageBox::warning(0, tr("Warning"), tr("Mesh2D nodes."));
+            m_hvl->create_vector_layer_nodes(fname, QString("Mesh2D nodes"), mesh_2d->node[0], mapping->epsg, treeGroup);
+            pgbar_value += 10;
+            this->pgBar->setValue(pgbar_value);
+
+            if (mesh_2d->edge[0]->count > 0)
+            {
+                m_hvl->create_vector_layer_edges(fname, QString("Mesh2D edges"), mesh_2d->node[0], mesh_2d->edge[0], mapping->epsg, treeGroup);
+                pgbar_value += 10;
+                this->pgBar->setValue(pgbar_value);
+            }
+        }
+        pgbar_value = 600;  // start of pgbar counter
+
+        this->pgBar->setValue(pgbar_value);
+
+        //
+        // get the time independent variables and list them in the layer-panel as treegroup
+        //
+        struct _mesh_variable* var = grid_file->get_variables();
+
+        bool time_independent_data = false;
+        if (mesh_2d != nullptr && var != nullptr)
+        {
+            for (int i = 0; i < var->nr_vars; i++)
+            {
+                if (!var->variable[i]->time_series)
+                {
+                    time_independent_data = true;
+                    break;
+                }
+            }
+            if (time_independent_data)
+            {
+                QString name = QString("Geometry data");
+                treeGroup->insertGroup(0, name);  // insert at top of group
+                QgsLayerTreeGroup* subTreeGroup = treeGroup->findGroup(name);
+
+                subTreeGroup->setExpanded(false);  // true is the default
+                subTreeGroup->setItemVisibilityChecked(true);
+                //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
+                subTreeGroup->setItemVisibilityCheckedRecursive(true);
+
+                //cb->blockSignals(true);
                 for (int i = 0; i < var->nr_vars; i++)
                 {
-                    if (!var->variable[i]->time_series)
+                    if (!var->variable[i]->time_series && var->variable[i]->coordinates != "")
                     {
-                        time_independent_data = true;
-                        break;
-                    }
-                }
-                if (time_independent_data)
-                {
-                    QString name = QString("Geometry data");
-                    treeGroup->insertGroup(0, name);  // insert at top of group
-                    QgsLayerTreeGroup* subTreeGroup = treeGroup->findGroup(name);
-
-                    subTreeGroup->setExpanded(false);  // true is the default
-                    subTreeGroup->setItemVisibilityChecked(true);
-                    //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
-                    subTreeGroup->setItemVisibilityCheckedRecursive(true);
-
-                    //cb->blockSignals(true);
-                    for (int i = 0; i < var->nr_vars; i++)
-                    {
-                        if (!var->variable[i]->time_series && var->variable[i]->coordinates != "")
+                        QString qname = QString::fromUtf8((var->variable[i]->long_name).c_str());
+                        QString var_name = QString::fromUtf8((var->variable[i]->var_name).c_str());
+                        if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
                         {
-                            QString qname = QString::fromUtf8((var->variable[i]->long_name).c_str());
-                            QString var_name = QString::fromUtf8((var->variable[i]->var_name).c_str());
-                            if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
-                            {
-                                DataValuesProvider2D<double>std_data_at_edge = grid_file->get_variable_values(var->variable[i]->var_name);
-                                double* z_value = std_data_at_edge.GetValueAtIndex(0, 0);
-                                m_hvl->create_vector_layer_data_on_edges(fname, var->variable[i], mesh_2d->node[0], mesh_2d->edge[0], z_value, mapping->epsg, subTreeGroup);
-                            }
-                            if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_INT)
-                            {
-                                QString name1 = QString("Edge type");
-                                subTreeGroup->addGroup(name1);
-                                QgsLayerTreeGroup* sGroup = treeGroup->findGroup(name1);
+                            DataValuesProvider2D<double>std_data_at_edge = grid_file->get_variable_values(var->variable[i]->var_name);
+                            double* z_value = std_data_at_edge.GetValueAtIndex(0, 0);
+                            m_hvl->create_vector_layer_data_on_edges(fname, var->variable[i], mesh_2d->node[0], mesh_2d->edge[0], z_value, mapping->epsg, subTreeGroup);
+                        }
+                        if (var->variable[i]->location == "edge" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_INT)
+                        {
+                            QString name1 = QString("Edge type");
+                            subTreeGroup->addGroup(name1);
+                            QgsLayerTreeGroup* sGroup = treeGroup->findGroup(name1);
 
-                                DataValuesProvider2D<double>std_data_at_edge = grid_file->get_variable_values(var->variable[i]->var_name);
-                                double* z_value = std_data_at_edge.GetValueAtIndex(0, 0);
-                                m_hvl->create_vector_layer_edge_type(fname, var->variable[i], mesh_2d->node[0], mesh_2d->edge[0], z_value, mapping->epsg, sGroup);
-                            }
-                            if (var->variable[i]->location == "face" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
+                            DataValuesProvider2D<double>std_data_at_edge = grid_file->get_variable_values(var->variable[i]->var_name);
+                            double* z_value = std_data_at_edge.GetValueAtIndex(0, 0);
+                            m_hvl->create_vector_layer_edge_type(fname, var->variable[i], mesh_2d->node[0], mesh_2d->edge[0], z_value, mapping->epsg, sGroup);
+                        }
+                        if (var->variable[i]->location == "face" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
+                        {
+                            if (var->variable[i]->sediment_index == -1)
                             {
-                                if (var->variable[i]->sediment_index == -1)
-                                {
-                                    DataValuesProvider2D<double>std_data_at_face = grid_file->get_variable_values(var->variable[i]->var_name, var->variable[i]->sediment_index);
-                                    double* z_value = std_data_at_face.GetValueAtIndex(0, 0);
-                                    m_hvl->create_vector_layer_data_on_nodes(fname, var->variable[i], mesh_2d->face[0], z_value, mapping->epsg, subTreeGroup);
-                                }
-                                else
-                                {
-                                    QgsLayerTreeGroup* Group = m_hvl->get_subgroup(subTreeGroup, QString("Sediment"));
+                                DataValuesProvider2D<double>std_data_at_face = grid_file->get_variable_values(var->variable[i]->var_name, var->variable[i]->sediment_index);
+                                double* z_value = std_data_at_face.GetValueAtIndex(0, 0);
+                                m_hvl->create_vector_layer_data_on_nodes(fname, var->variable[i], mesh_2d->face[0], z_value, mapping->epsg, subTreeGroup);
+                            }
+                            else
+                            {
+                                QgsLayerTreeGroup* Group = m_hvl->get_subgroup(subTreeGroup, QString("Sediment"));
 
-                                    DataValuesProvider2D<double>std_data_at_face = grid_file->get_variable_values(var->variable[i]->var_name, var->variable[i]->sediment_index);
-                                    double* z_value = std_data_at_face.GetValueAtIndex(var->variable[i]->sediment_index, 0);
-                                    m_hvl->create_vector_layer_data_on_nodes(fname, var->variable[i], mesh_2d->face[0], z_value, mapping->epsg, Group);
-                                    Group->setExpanded(false);
-                                }
-                            }
-                            if (var->variable[i]->location == "node" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
-                            {
-                                DataValuesProvider2D<double>std_data_at_node = grid_file->get_variable_values(var->variable[i]->var_name);
-                                double* z_value = std_data_at_node.GetValueAtIndex(0, 0);
-                                m_hvl->create_vector_layer_data_on_nodes(fname, var->variable[i], mesh_2d->node[0], z_value, mapping->epsg, subTreeGroup);
+                                DataValuesProvider2D<double>std_data_at_face = grid_file->get_variable_values(var->variable[i]->var_name, var->variable[i]->sediment_index);
+                                double* z_value = std_data_at_face.GetValueAtIndex(var->variable[i]->sediment_index, 0);
+                                m_hvl->create_vector_layer_data_on_nodes(fname, var->variable[i], mesh_2d->face[0], z_value, mapping->epsg, Group);
+                                Group->setExpanded(false);
                             }
                         }
+                        if (var->variable[i]->location == "node" && var->variable[i]->topology_dimension == 2 && var->variable[i]->nc_type == NC_DOUBLE)
+                        {
+                            DataValuesProvider2D<double>std_data_at_node = grid_file->get_variable_values(var->variable[i]->var_name);
+                            double* z_value = std_data_at_node.GetValueAtIndex(0, 0);
+                            m_hvl->create_vector_layer_data_on_nodes(fname, var->variable[i], mesh_2d->node[0], z_value, mapping->epsg, subTreeGroup);
+                        }
                     }
-                    //cb->blockSignals(false);
                 }
-            }  // end mesh_2d != nullptr
-        }
-
-    }
-    else
-    {
-        QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
-        for (int i = 0; i < groups.length(); i++)
-        {
-            QString name = groups[i]->name();
-            QgsLayerTreeGroup* myGroup = treeRoot->findGroup(name);
-            myGroup->setItemVisibilityChecked(false);
-        }
+                //cb->blockSignals(false);
+            }
+        }  // end mesh_2d != nullptr
     }
 }
 //
@@ -1718,88 +1692,74 @@ void qgis_umesh::activate_observation_layers()
 
     QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
 
-    //if (mainAction->isChecked())
-    if (true)
+    QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
+    for (int i = 0; i < groups.length(); i++)
     {
-        QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
-        for (int i = 0; i < groups.length(); i++)
+        //QMessageBox::warning(0, "Message", QString("_fil_index: %1_b1.").arg(_fil_index+1));
+        for (int j = 0; j < _his_cf_fil_index + 1; j++)
         {
-            //QMessageBox::warning(0, "Message", QString("_fil_index: %1_b1.").arg(_fil_index+1));
-            for (int j = 0; j < _his_cf_fil_index + 1; j++)
+            QgsLayerTreeGroup* myGroup = treeRoot->findGroup(QString("History - %1").arg(m_his_cf_file[_his_cf_fil_index]->get_filename().fileName()));
+            if (myGroup != nullptr)
             {
-                QgsLayerTreeGroup* myGroup = treeRoot->findGroup(QString("History - %1").arg(m_his_cf_file[_his_cf_fil_index]->get_filename().fileName()));
-                if (myGroup != nullptr)
-                {
-                    myGroup->setItemVisibilityChecked(true);
-                }
-            }
-        }
-
-        QgsLayerTreeGroup* treeGroup = treeRoot->findGroup(QString("History - %1").arg(m_his_cf_file[_his_cf_fil_index]->get_filename().fileName()));
-        if (treeGroup == nullptr)
-        {
-            QString name = QString("History - %1").arg(m_his_cf_file[_his_cf_fil_index]->get_filename().fileName());
-            treeGroup = treeRoot->insertGroup(_his_cf_fil_index, name);
-            treeGroup->setExpanded(true);  // true is the default
-            treeGroup->setItemVisibilityChecked(true);
-            //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
-            treeGroup->setItemVisibilityCheckedRecursive(true);
-        }
-        if (_his_cf_fil_index != -1)
-        {
-            HISCF* _his_cf_file = m_his_cf_file[_his_cf_fil_index];
-            struct _mapping* mapping;
-            mapping = _his_cf_file->get_grid_mapping();
-            if (mapping->epsg == 0)
-            {
-                QString fname = _his_cf_file->get_filename().canonicalFilePath();
-                QString msg = QString("%1\nThe CRS code on file \'%2\' is not known.\nThe CRS code is set to the same CRS code as the presentation map (see lower right corner).\nPlease change the CRS code after loading the file, if necessary.").arg(_his_cf_file->get_filename().fileName()).arg(fname);
-                QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
-
-                // get the crs of the presentation (lower right corner of the qgis main-window)
-                QgsCoordinateReferenceSystem _crs = QgsProject::instance()->crs();
-                QString epsg_code = _crs.authid();
-                QStringList parts = epsg_code.split(':');
-                long epsg = parts.at(1).toInt();
-                long status = _his_cf_file->set_grid_mapping_epsg(epsg, epsg_code.toStdString());
-            }
-            int pgbar_value = 500;  // start of pgbar counter
-
-                                    // Mesh 1D edges and mesh 1D nodes
-
-            obs_type = _his_cf_file->get_observation_location();
-            QString fname = _his_cf_file->get_filename().fileName();
-            //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes."));
-            if (obs_type.size() > 0)
-            {
-                for (int i = 0; i < obs_type.size(); i++)
-                {
-                    if (obs_type[i]->type == OBSERVATION_TYPE::OBS_POINT)
-                    {
-                        m_hvl->create_vector_layer_observation_point(fname, QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
-                    }
-                    else if (obs_type[i]->type == OBSERVATION_TYPE::OBS_POLYLINE)
-                    {
-                        m_hvl->create_vector_layer_observation_polyline(fname, QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
-                    }
-                    else
-                    {
-                        QMessageBox::information(0, QString("Information"), QString("Only \'point\' and \'line\' are supported as observation location."));
-                    }
-                }
-                pgbar_value += 10;
-                this->pgBar->setValue(pgbar_value);
+                myGroup->setItemVisibilityChecked(true);
             }
         }
     }
-    else
+
+    QgsLayerTreeGroup* treeGroup = treeRoot->findGroup(QString("History - %1").arg(m_his_cf_file[_his_cf_fil_index]->get_filename().fileName()));
+    if (treeGroup == nullptr)
     {
-        QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
-        for (int i = 0; i < groups.length(); i++)
+        QString name = QString("History - %1").arg(m_his_cf_file[_his_cf_fil_index]->get_filename().fileName());
+        treeGroup = treeRoot->insertGroup(_his_cf_fil_index, name);
+        treeGroup->setExpanded(true);  // true is the default
+        treeGroup->setItemVisibilityChecked(true);
+        //QMessageBox::warning(0, "Message", QString("Create group: %1.").arg(name));
+        treeGroup->setItemVisibilityCheckedRecursive(true);
+    }
+    if (_his_cf_fil_index != -1)
+    {
+        HISCF* _his_cf_file = m_his_cf_file[_his_cf_fil_index];
+        struct _mapping* mapping;
+        mapping = _his_cf_file->get_grid_mapping();
+        if (mapping->epsg == 0)
         {
-            QString name = groups[i]->name();
-            QgsLayerTreeGroup* myGroup = treeRoot->findGroup(name);
-            myGroup->setItemVisibilityChecked(false);
+            QString fname = _his_cf_file->get_filename().canonicalFilePath();
+            QString msg = QString("%1\nThe CRS code on file \'%2\' is not known.\nThe CRS code is set to the same CRS code as the presentation map (see lower right corner).\nPlease change the CRS code after loading the file, if necessary.").arg(_his_cf_file->get_filename().fileName()).arg(fname);
+            QgsMessageLog::logMessage(msg, "QGIS umesh", Qgis::Warning, true);
+
+            // get the crs of the presentation (lower right corner of the qgis main-window)
+            QgsCoordinateReferenceSystem _crs = QgsProject::instance()->crs();
+            QString epsg_code = _crs.authid();
+            QStringList parts = epsg_code.split(':');
+            long epsg = parts.at(1).toInt();
+            long status = _his_cf_file->set_grid_mapping_epsg(epsg, epsg_code.toStdString());
+        }
+        int pgbar_value = 500;  // start of pgbar counter
+
+                                // Mesh 1D edges and mesh 1D nodes
+
+        obs_type = _his_cf_file->get_observation_location();
+        QString fname = _his_cf_file->get_filename().fileName();
+        //QMessageBox::warning(0, tr("Warning"), tr("Mesh1D nodes."));
+        if (obs_type.size() > 0)
+        {
+            for (int i = 0; i < obs_type.size(); i++)
+            {
+                if (obs_type[i]->type == OBSERVATION_TYPE::OBS_POINT)
+                {
+                    m_hvl->create_vector_layer_observation_point(fname, QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
+                }
+                else if (obs_type[i]->type == OBSERVATION_TYPE::OBS_POLYLINE)
+                {
+                    m_hvl->create_vector_layer_observation_polyline(fname, QString(obs_type[i]->location_long_name), obs_type[i], mapping->epsg, treeGroup);
+                }
+                else
+                {
+                    QMessageBox::information(0, QString("Information"), QString("Only \'point\' and \'line\' are supported as observation location."));
+                }
+            }
+            pgbar_value += 10;
+            this->pgBar->setValue(pgbar_value);
         }
     }
 }

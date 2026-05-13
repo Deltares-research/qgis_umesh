@@ -9,6 +9,7 @@
 
 #include <QAction>
 #include <QComboBox>
+#include <QDesktopServices>
 #include <QIcon>
 #include <QLayout> 
 #include <QMenu>
@@ -130,10 +131,6 @@ class qgis_umesh
         QMenu * fileMenu;
 
         QToolBar * tbar;  // complete toolbar for plugin (ie menu and icons)
-        QToolBar * _menuToolBar;
-        QToolBar * _iconToolBar;
-
-        QMenuBar * menu_bar;
 
         QMenu * menu_file;
         QMenu * menu_output;

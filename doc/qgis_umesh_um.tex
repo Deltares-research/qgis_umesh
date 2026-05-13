@@ -17,8 +17,8 @@
 \memoVersion{001}
 \memoFrom{Jan Mooiman}
 \memoTelephone{---}
-\memoEmail{jan.mooiman@deltares nl}
-\memoSubject{Manual to plot result files of \dflowfm in QGIS 3.28 (map- and history-files)}
+\memoEmail{---}
+\memoSubject{Manual to plot result files of \dflowfm in QGIS 4.0 (map- and history-files)}
 \memoCopy{}
 %
 \deltarestitle
@@ -27,7 +27,7 @@
 \setgitdirectory{../.git}\vspace{-\baselineskip}
 \subsection*{Version control information}
 \begin{tabular}{@{}p{35.0mm}@{}p{0mm}p{\textwidth-27mm-24pt}}
-    \textbf{Git repository} & \textbf{:} & \url{\gitrepository} \\
+    \textbf{Git repository} & \textbf{:} & \href{\gitrepository}{\gitrepository} \\
     \textbf{Git branch} & \textbf{:} & \gitbranch \\
     \textbf{Git revision (short)} & \textbf{:} & \githash
 \end{tabular}
@@ -52,6 +52,7 @@
 \endfoot
 \bottomline
 \endlastfoot
+0.30.00  &  - Upgrade to QGIS4. \\
 0.21.00  &  - Update for the menu option 'Trials', w.r.t. 1D structures. \\
          &  - Fixed wiers set into one layer-group. \\
 0.20.01  &  - If no start\_index is given in the \netcdf-file, assume zero. \\
@@ -90,13 +91,13 @@
 \end{figure}
 
 %--------------------------------------------------------------------------------
-\subsubsection{Open UGRID}
-When selecting this option you are able to select \netcdf files which are meet the UGRID standard.
-Example files are the mesh- and map-file of the \dflowfm program (\file{$\ast$\_net.nc}, \file{$\ast$\_map.nc}).
+\subsubsection{Open GRID}
+When selecting this option, you can choose \netcdf files which meet the UGRID standard.
+Example files are the mesh- and map-files of the \dflowfm program (\file{$\ast$\_net.nc}, \file{$\ast$\_map.nc}).
 Only the map-file could contain time series.
 %--------------------------------------------------------------------------------
 \subsubsection{Open HisCF}
-When selecting this option you are able to select \netcdf files which are meet the climate and forecast history file standard.
+When selecting this option, you can choose \netcdf files that meet the Climate and Forecast (CF) history file standard.
 Example files are the history output files of the program \dflowfm (\file{$\ast$\_his.nc}).
 %--------------------------------------------------------------------------------
 \subsection{Output}
@@ -109,7 +110,7 @@ Example files are the history output files of the program \dflowfm (\file{$\ast$
 
 %------------------------------------------------------------------------------
 \subsubsection{Show map output}
-After selecting \menu{Output\menuarrow Show map output} the window \window{Map Output Animation} will open, see as example \autoref{fig:map_output_a}.
+After selecting \menu{Output\menuarrow Show map output} the window \window{Map Output Animation} will open, see as example \autoref{fig:map_output}.
 \begin{figure}[H]
 \begin{subfigure}[b]{0.48\textwidth}
 	\centering
@@ -121,13 +122,13 @@ After selecting \menu{Output\menuarrow Show map output} the window \window{Map O
 \begin{subfigure}[b]{0.48\textwidth}
 	\centering
 	\includegraphics[width=\textwidth]{pictures/map_output_animation_window_vector.png}
-	\caption{Layout vector quantities.}
+	\caption{Layout vector quantities.\label{fig:map_output_b}}
 \end{subfigure}
-    \caption{\window{Map Output Animation} window for scalars and vector.}
+    \caption{\window{Map Output Animation} window for scalars and vector.\label{fig:map_output}}
 	% file used for this picture: FM-VZM_0004_map.nc.nc
 \end{figure}
 
-After pressing the right mouse button in this window, the window \window{Map Output Settings} will appear (see  \autoref{sec:map_output_settings} and \autoref{fig:map_output_settings}).
+After pressing the \textbf{right} mouse button in this window, the window \window{Map Output Settings} will appear (see  \autoref{sec:map_output_settings} and \autoref{fig:map_output_settings}).
 
 The colorramp can be changed by using the QGIS standard operations on colorramps.
 %------------------------------------------------------------------------------
@@ -178,9 +179,8 @@ The following quantities can be specified in the window presented by \autoref{fi
 	\underline{checked} & Colorramp limits are determined by the minimum and maximum value of the scalar.
 	These values reach their extreme values after all timestep are visualised.\\
 	\underline{unchecked} &
-	Minimum value: \quad specify the minimum value for the scalar.\newline
-	Maximum value: \quad specify the maximum value for the scalar.\\
-	\textbf{Vector scaling} & \\
+	Maximum value: \quad specify the maximum value for the scalar.\newline
+	Minimum value: \quad specify the minimum value for the scalar.\\	\textbf{Vector scaling} & \\
 	Vector scaling & The vector of length 1 (ex.\ \SI{1}{[\metre\per\second]}) is scaled with this factor. The drawing length is based on the averaged cell size.
 \end{longtable}
 %--------------------------------------------------------------------------------
