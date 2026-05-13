@@ -7,7 +7,7 @@
 #  define strdup _strdup
 #endif
 
-#define EXPERIMENT 0
+#define EXPERIMENT 1
 
 /* static */ const QString qgis_umesh::s_ident = QObject::tr("@(#)" qgis_umesh_company ", " qgis_umesh_program ", " qgis_umesh_version_number ", " qgis_umesh_arch", " __DATE__", " __TIME__);
 /* static */ const QString qgis_umesh::s_name = QObject::tr("" qgis_umesh_company ", " qgis_umesh_program " Development");
