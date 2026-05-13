@@ -29,7 +29,8 @@ qgis_umesh::qgis_umesh(QgisInterface* iface):
     mQGisIface = iface;
     icon_picture = new QIcon();
     icon_picture->addPixmap(QPixmap(vsi), QIcon::Normal, QIcon::On);
-    icon_picture->addPixmap(QPixmap(vsi_disabled), QIcon::Normal, QIcon::Off);
+    icon_picture->addPixmap(QPixmap(vsi), QIcon::Normal, QIcon::Off);
+    //icon_picture->addPixmap(QPixmap(vsi_disabled), QIcon::Normal, QIcon::Off);
 
     _fil_index = -1;
     _his_cf_fil_index = -1;
@@ -143,15 +144,16 @@ void qgis_umesh::initGui()
     //
     QIcon actionIcon = *icon_picture;
 
-    mainAction = new QAction(actionIcon, tr("&Enable/Disable showing meshes"));
-    mainAction->setToolTip("Enable/Disable showing meshes");
-    mainAction->setCheckable(true);
-    mainAction->setChecked(true);
-    mainAction->setEnabled(true);
+    mainAction = new QAction();
+    mainAction->setIcon(actionIcon);
+    //mainAction->setText(tr("&Enable/Disable showing meshes"));
+    //mainAction->setToolTip("Enable/Disable showing meshes");
+    //mainAction->setCheckable(true);
+    //mainAction->setChecked(true);
+    //mainAction->setEnabled(true);
 
     tbar = mQGisIface->addToolBar("Delft3D FM (1D, 2D and 1D2D)");
     tbar->addAction(mainAction);
-    tbar->addSeparator();
 
     connect(mainAction, SIGNAL(changed()), this, SLOT(set_enabled()));
     connect(mainAction, SIGNAL(changed()), this, SLOT(activate_layers()));
@@ -258,34 +260,62 @@ void qgis_umesh::initGui()
     QMenuBar* janm = new QMenuBar();
     janm->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    QMenu* janm1 = janm->addMenu("File");
-    janm1->addAction(open_action_map);
-    janm1->addAction(open_action_his_cf);
+    menu_file = janm->addMenu("File");
+    menu_file->addAction(open_action_map);
+    menu_file->addAction(open_action_his_cf);
 
-    janm1 = janm->addMenu("Output");
-    janm1->addAction(inspectAction);
-    janm1->addAction(plotcftsAction);
+    menu_output = new QMenu("Output");
+    menu_output->addAction(inspectAction);
+    menu_output->addAction(plotcftsAction);
 
-    janm1 = janm->addMenu("Settings");
-    janm1->addAction(mapoutputAction);
+    menu_settings = new QMenu("Settings");
+    menu_settings->addAction(mapoutputAction);
 
-    janm1 = janm->addMenu("Help");
-    janm1->addAction(showUserManualAct);
-    janm1->addSeparator();
-    janm1->addAction(aboutAction);
+    menu_help = new QMenu("Help");
+    menu_help->addAction(showUserManualAct);
+    menu_help->addSeparator();
+    menu_help->addAction(aboutAction);
 
+    menu_trials = new QMenu("Trials");
+    menu_trials->addAction(open_action_mdu);
+    menu_trials->addAction(open_action_link1d2d_json);
+    menu_trials->addAction(open_action_obs_point_json);
+    menu_trials->addAction(edit_action_1d_obs_points);
+    menu_trials->addAction(trial_experiment);
+
+    QToolButton* toolButton_file = new QToolButton();
+    toolButton_file->setText("File"); // Optional: button text
+    toolButton_file->setMenu(menu_file);
+    toolButton_file->setPopupMode(QToolButton::InstantPopup); // alternative: show menu immediately
+
+    QToolButton* toolButton_output = new QToolButton();
+    toolButton_output->setText("Output"); // Optional: button text
+    toolButton_output->setMenu(menu_output);
+    toolButton_output->setPopupMode(QToolButton::InstantPopup); // alternative: show menu immediately
+
+    QToolButton* toolButton_settings = new QToolButton();
+    toolButton_settings->setText("Settings"); // Optional: button text
+    toolButton_settings->setMenu(menu_settings);
+    toolButton_settings->setPopupMode(QToolButton::InstantPopup); // alternative: show menu immediately
+
+    QToolButton* toolButton_help = new QToolButton();
+    toolButton_help->setText("Help"); // Optional: button text
+    toolButton_help->setMenu(menu_help);
+    toolButton_help->setPopupMode(QToolButton::InstantPopup); // alternative: show menu immediately
+
+    QToolButton* toolButton_trials = new QToolButton();
+    toolButton_trials->setText("Trials"); // Optional: button text
+    toolButton_trials->setMenu(menu_trials);
+    toolButton_trials->setPopupMode(QToolButton::InstantPopup); // alternative: show menu immediately
+
+    tbar->addWidget(toolButton_file);
+    tbar->addWidget(toolButton_output);
+    tbar->addWidget(toolButton_settings);
 #if EXPERIMENT
-    janm1 = janm->addMenu("Trials");
-    janm1->addAction(open_action_mdu);
-    janm1->addAction(open_action_link1d2d_json);
-    janm1->addAction(open_action_obs_point_json);
-    janm1->addAction(edit_action_1d_obs_points);
-    janm1->addAction(trial_experiment);
+    tbar->addWidget(toolButton_trials);
 #endif
-    _menuToolBar->addWidget(janm);
-    tbar->addWidget(_menuToolBar);
-    tbar->addSeparator();
-    //tbar->addAction(openAction);
+    tbar->addWidget(toolButton_help);
+
     tbar->addAction(inspectAction);
     tbar->addAction(plotcftsAction);
 
@@ -306,7 +336,7 @@ void qgis_umesh::initGui()
 //
 void qgis_umesh::set_enabled()
 {
-    if (mainAction->isChecked())
+    //if (mainAction->isChecked())
     {
         //QMessageBox::warning(0, tr("Message"), QString("Plugin will be enabled.\n"));
         mainAction->setChecked(true);
@@ -322,16 +352,16 @@ void qgis_umesh::set_enabled()
             inspectAction->setEnabled(true);
         }
     }
-    else
-    {
-        //QMessageBox::warning(0, tr("Message"), QString("Plugin will be disabled.\n"));
-        mainAction->setChecked(false);
-        _menuToolBar->setEnabled(false);
-        open_action_map->setEnabled(false);
-        inspectAction->setEnabled(false);
-        open_action_his_cf->setEnabled(false);
-        open_action_mdu->setEnabled(false);
-    }
+    //else
+    //{
+    //    //QMessageBox::warning(0, tr("Message"), QString("Plugin will be disabled.\n"));
+    //    mainAction->setChecked(false);
+    //    _menuToolBar->setEnabled(false);
+    //    open_action_map->setEnabled(false);
+    //    inspectAction->setEnabled(false);
+    //    open_action_his_cf->setEnabled(false);
+    //    open_action_mdu->setEnabled(false);
+    //}
 }
 //
 //-----------------------------------------------------------------------------
@@ -1450,7 +1480,8 @@ void qgis_umesh::activate_layers()
 
     QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
 
-    if (mainAction->isChecked())
+    //if (mainAction->isChecked())
+    if (true)
     {
         QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
         for (int i = 0; i < groups.length(); i++)
@@ -1687,7 +1718,8 @@ void qgis_umesh::activate_observation_layers()
 
     QgsLayerTree* treeRoot = QgsProject::instance()->layerTreeRoot();  // root is invisible
 
-    if (mainAction->isChecked())
+    //if (mainAction->isChecked())
+    if (true)
     {
         QList <QgsLayerTreeGroup*> groups = treeRoot->findGroups();
         for (int i = 0; i < groups.length(); i++)

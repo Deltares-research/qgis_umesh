@@ -135,6 +135,18 @@ class qgis_umesh
 
         QMenuBar * menu_bar;
 
+        QMenu * menu_file;
+        QMenu * menu_output;
+        QMenu * menu_settings;
+        QMenu * menu_help;
+        QMenu * menu_trials;
+
+        QToolButton* toolButton_file;
+        QToolButton* toolButton_settings;
+        QToolButton* toolButton_output;
+        QToolButton* toolButton_help;
+        QToolButton* toolButton_trials;
+
         QIcon * icon_picture;
         QIcon icon_open;
         QIcon icon_open_his_cf;

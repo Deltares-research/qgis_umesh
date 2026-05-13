@@ -263,7 +263,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>.\include;c:\OSGeo4W\include;c:\OSGeo4W\apps\qgis\include;$(QT6DIR_OSGEO)\include;$(QT6DIR_OSGEO)\include\ActiveQt\;$(QT6DIR_OSGEO)\include\Qt\;$(QT6DIR_OSGEO)\include\QtCore\;$(QT6DIR_OSGEO)\include\QtGui\;$(QT6DIR_OSGEO)\include\QtSvg\;$(QT6DIR_OSGEO)\include\QtWidgets\;$(QT6DIR_OSGEO)\include\QtXml\;$(NETCDF_DIR)\include;$(BOOST_ROOT_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -273,7 +273,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <BrowseInformation>true</BrowseInformation>
+      <BrowseInformation>false</BrowseInformation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalOptions>/Zc:__cplusplus /permissive- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -288,7 +288,7 @@ call ..\scripts\git_insert_hash.cmd .\include qqis_umesh_version.rc</Command>
       <AdditionalLibraryDirectories>$(QT6DIR_OSGEO)\lib;c:\OSGeo4W\apps\qgis\lib\;..\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
